@@ -125,7 +125,6 @@ sub get_latest_version {
 }
 
 sub run_build {
-    # FIXME: we're currently not using the third parameter
     my ( $self, $category, $package_name, $package_args ) = @_;
 
     my $full_package_name = "$category/$package_name";
@@ -193,7 +192,7 @@ sub run_build {
                 my $prereq ( keys %{ $system_prereqs->{$prereq_category} } )
             {
                 $self->run_build( 'system', $prereq,
-                    $system_prereqs->{$prereq} );
+                    $system_prereqs->{$prereq_category}{$prereq} );
             }
         }
     }
@@ -202,7 +201,8 @@ sub run_build {
         foreach my $prereq_category (qw<configure runtime>) {
             foreach my $prereq ( keys %{ $perl_prereqs->{$prereq_category} } )
             {
-                $self->run_build( 'perl', $prereq, $perl_prereqs->{$prereq} );
+                $self->run_build( 'perl', $prereq,
+                    $perl_prereqs->{$prereq_category}{$prereq} );
             }
         }
     }
