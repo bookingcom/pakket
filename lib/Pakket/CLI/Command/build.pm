@@ -79,7 +79,7 @@ sub validate_args {
         -d $opt->{'build_dir'}
             or die "You asked to use a build dir that does not exist.\n";
 
-        $self->{'build_dir'} = $opt->{'build_dir'};
+        $self->{'builder'}{'build_dir'} = path( $opt->{'build_dir'} );
     }
 
     $self->{'builder'}{'keep_build_dir'} = $opt->{'keep_build_dir'};
