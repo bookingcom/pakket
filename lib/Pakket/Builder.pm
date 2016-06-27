@@ -220,23 +220,12 @@ sub run_build {
     # starting with system libraries
     # FIXME: we're currently not using the third parameter
 
-    if ( my $system_prereqs = $config->{'Prereqs'}{'system'} ) {
-        foreach my $prereq_category (qw<configure runtime>) {
-            foreach
-                my $prereq ( keys %{ $system_prereqs->{$prereq_category} } )
-            {
-                $self->run_build( 'system', $prereq,
-                    $system_prereqs->{$prereq_category}{$prereq} );
-            }
-        }
-    }
-
-    if ( my $perl_prereqs = $config->{'Prereqs'}{'perl'} ) {
-        foreach my $prereq_category (qw<configure runtime>) {
-            foreach my $prereq ( keys %{ $perl_prereqs->{$prereq_category} } )
-            {
-                $self->run_build( 'perl', $prereq,
-                    $perl_prereqs->{$prereq_category}{$prereq} );
+    foreach my $type ( qw< system perl nodejs > ) {
+        if ( my $prereqs = $config->{'Prereqs'}{$type} ) {
+            foreach my $category (qw<configure runtime>) {
+                foreach my $prereq ( keys %{ $prereqs->{$category} } ) {
+                    $self->run_build( $type, $prereq, $prereqs->{$category}{$prereq} );
+                }
             }
         }
     }
@@ -294,6 +283,21 @@ sub run_build {
             $package_name,    # ZMQ::Constants
             $package_dst_dir, # /tmp/BUILD-1/src/perl/ZMQ-Constants-...
             $main_build_dir,  # /tmp/BUILD-1/main
+        );
+    } elsif ( $config_category eq 'nodejs' ) {
+        my $package_dst_dir = path(
+            $top_build_dir,
+            'src',
+            $category,
+            basename($package_src_dir),
+        );
+
+        dircopy( $package_src_dir, $package_dst_dir );
+
+        $self->build_nodejs_package(
+            $package_name,    #
+            $package_dst_dir, #
+            $main_build_dir,  #
         );
     } else {
         exit log_critical { $_[0] }
@@ -485,6 +489,31 @@ sub build_perl_package {
     } else {
         die "Could not find an installer (Makefile.PL/Build.PL)\n";
     }
+
+    chdir $original_dir;
+
+    log_info { "Done preparing $package" };
+}
+
+sub build_nodejs_package {
+    my ( $self, $package, $build_dir, $prefix ) = @_;
+
+    log_info { "Building NodeJS module: $package" };
+
+    my $opts = {
+        env => {
+            LD_LIBRARY_PATH => $prefix->absolute->stringify . ':'
+                . ( $ENV{'LD_LIBRARY_PATH'} // '' ),
+
+            PATH => $prefix->child('bin')->absolute->stringify . ':'
+                . ( $ENV{'PATH'} // '' ),
+        },
+    };
+
+    my $original_dir = Path::Tiny->cwd;
+    my $install_base = $prefix->absolute;
+
+    $self->run_command( $build_dir, [ qw< npm install -g >, $build_dir  ], $opts );
 
     chdir $original_dir;
 
