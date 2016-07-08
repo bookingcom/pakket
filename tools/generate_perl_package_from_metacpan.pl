@@ -136,6 +136,12 @@ sub create_config_for {
                 printf "=> Translating module '%s' to distribution '%s'\n",
                     $module, $dist_name;
 
+                my $module_version = $level_prereqs->{$module};
+                if ( $module_version eq '0' ) {
+                    $prereq_data->{$dist_name} = { version => '0' };
+                    next;
+                }
+
                 my $release;
                 eval {
                     $release = $mcpan->release($dist_name);
