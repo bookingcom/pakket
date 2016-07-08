@@ -1,0 +1,23 @@
+[Package]
+category = "perl"
+name = "Class-C3-Componentised"
+version = "1.001000"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Class-C3]
+version = "0.31"
+[Prereqs.perl.runtime.Class-Inspector]
+version = "0"
+[Prereqs.perl.runtime.MRO-Compat]
+version = "0"
+[Prereqs.perl.runtime.Test-Exception]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

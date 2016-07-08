@@ -1,0 +1,73 @@
+[Package]
+category = "perl"
+name = "MooX-Options"
+version = "4.022"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.configure.perl]
+version = "5.024000"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Data-Record]
+version = "0"
+[Prereqs.perl.runtime.Getopt-Long]
+version = "v2.49.1"
+[Prereqs.perl.runtime.Getopt-Long-Descriptive]
+version = "0.099"
+[Prereqs.perl.runtime.JSON-MaybeXS]
+version = "0"
+[Prereqs.perl.runtime.Module-Metadata]
+version = "1.000027"
+[Prereqs.perl.runtime.Moo]
+version = "2.002004"
+[Prereqs.perl.runtime.MooX-ConfigFromFile]
+version = "0"
+[Prereqs.perl.runtime.Path-Class]
+version = "0.36"
+[Prereqs.perl.runtime.Pod-Usage]
+version = "0"
+[Prereqs.perl.runtime.Regexp-Common]
+version = "0"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Term-Size-Any]
+version = "0"
+[Prereqs.perl.runtime.Unicode-LineBreak]
+version = "0"
+[Prereqs.perl.runtime.libintl-perl]
+version = "0"
+[Prereqs.perl.runtime.parent]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Capture-Tiny]
+version = "0"
+[Prereqs.perl.test.IO]
+version = "0"
+[Prereqs.perl.test.Import-Into]
+version = "0"
+[Prereqs.perl.test.Moo]
+version = "2.002004"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Role-Tiny]
+version = "0"
+[Prereqs.perl.test.Test-Requires]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.Test-Trap]
+version = "0"
+[Prereqs.perl.test.Try-Tiny]
+version = "0"
+[Prereqs.perl.test.lib]
+version = "0"
+[Prereqs.perl.test.namespace-clean]
+version = "0"
+[Prereqs.perl.test.perl]
+version = "0"

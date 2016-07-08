@@ -6,16 +6,16 @@ version = "1.07"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Carp-Assert]
 version = "0.21"
 [Prereqs.perl.runtime.File-Temp]
 version = "0.2304"
 [Prereqs.perl.runtime.IPC-Cmd]
-version = "0.94"
+version = "0"
 [Prereqs.perl.runtime.PathTools]
 version = "3.62"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test]

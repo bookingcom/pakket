@@ -1,0 +1,21 @@
+[Package]
+category = "perl"
+name = "Catalyst-Plugin-Session-State-Cookie"
+version = "0.17"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Catalyst-Plugin-Session]
+version = "0.40"
+[Prereqs.perl.runtime.Catalyst-Runtime]
+version = "5.90106"
+[Prereqs.perl.runtime.MRO-Compat]
+version = "0"
+[Prereqs.perl.runtime.Moose]
+version = "0"
+[Prereqs.perl.runtime.namespace-autoclean]
+version = "0"
+[Prereqs.perl.test]

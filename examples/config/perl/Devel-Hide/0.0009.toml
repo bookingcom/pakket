@@ -1,0 +1,17 @@
+[Package]
+category = "perl"
+name = "Devel-Hide"
+version = "0.0009"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Test-Pod]
+version = "1.51"
+[Prereqs.perl.runtime.Test-Pod-Coverage]
+version = "1.10"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.test]

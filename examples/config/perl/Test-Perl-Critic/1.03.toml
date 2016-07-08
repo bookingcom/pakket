@@ -9,13 +9,13 @@ version = "1.03"
 version = "0.4218"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Carp]
-version = "1.38"
+version = "0"
 [Prereqs.perl.runtime.MCE]
-version = "1.708"
+version = "1.802"
 [Prereqs.perl.runtime.Perl-Critic]
 version = "1.126"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]

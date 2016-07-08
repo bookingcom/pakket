@@ -9,5 +9,5 @@ version = "1.02"
 [Prereqs.perl.runtime.Pod-Simple]
 version = "3.32"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.test]

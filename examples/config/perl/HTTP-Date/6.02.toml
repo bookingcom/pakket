@@ -6,12 +6,12 @@ version = "6.02"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Time-Local]
-version = "1.2300"
+version = "0"
 [Prereqs.perl.runtime.TimeDate]
-version = "2.30"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]

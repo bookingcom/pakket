@@ -1,0 +1,19 @@
+[Package]
+category = "perl"
+name = "constant-defer"
+version = "6"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.test.Test]
+version = "0"
+[Prereqs.perl.test.lib]
+version = "0"

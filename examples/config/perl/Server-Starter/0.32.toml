@@ -12,10 +12,10 @@ version = "0.4218"
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.IO-Socket-IP]
-version = "0.37"
+version = "0"
 [Prereqs.perl.test.Test-Requires]
-version = "0.10"
+version = "0"
 [Prereqs.perl.test.Test-SharedFork]
-version = "0.35"
+version = "0"
 [Prereqs.perl.test.Test-TCP]
 version = "2.16"

@@ -11,7 +11,7 @@ version = "7.18"
 [Prereqs.perl.runtime.Exporter]
 version = "5.72"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]

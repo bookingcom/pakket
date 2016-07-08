@@ -6,8 +6,8 @@ version = "1.21"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Storable]
-version = "2.51"
+version = "0"
 [Prereqs.perl.test]

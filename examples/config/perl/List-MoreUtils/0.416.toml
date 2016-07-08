@@ -1,0 +1,35 @@
+[Package]
+category = "perl"
+name = "List-MoreUtils"
+version = "0.416"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Carp]
+version = "0"
+[Prereqs.perl.configure.Config-AutoConf]
+version = "0.313"
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.configure.File-Path]
+version = "0"
+[Prereqs.perl.configure.IPC-Cmd]
+version = "0"
+[Prereqs.perl.configure.PathTools]
+version = "0"
+[Prereqs.perl.configure.base]
+version = "0"
+[Prereqs.perl.configure.inc-latest]
+version = "0.500"
+[Prereqs.perl.configure.perl]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Exporter-Tiny]
+version = "0.042"
+[Prereqs.perl.runtime.XSLoader]
+version = "0.22"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Test-LeakTrace]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

@@ -1,0 +1,29 @@
+[Package]
+category = "perl"
+name = "Archive-Extract"
+version = "0.76"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.File-Path]
+version = "0"
+[Prereqs.perl.runtime.IPC-Cmd]
+version = "0.94"
+[Prereqs.perl.runtime.Locale-Maketext-Simple]
+version = "0"
+[Prereqs.perl.runtime.Module-Load-Conditional]
+version = "0.64"
+[Prereqs.perl.runtime.Params-Check]
+version = "0.38"
+[Prereqs.perl.runtime.PathTools]
+version = "3.62"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.runtime.perl_mlb]
+version = "0"
+[Prereqs.perl.test]

@@ -6,12 +6,12 @@ version = "6.03"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Encode]
 version = "2.84"
 [Prereqs.perl.runtime.HTML-Parser]
-version = "3.72"
+version = "0"
 [Prereqs.perl.runtime.HTTP-Message]
 version = "6.11"
 [Prereqs.perl.runtime.URI]

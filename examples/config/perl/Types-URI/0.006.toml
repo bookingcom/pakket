@@ -1,0 +1,33 @@
+[Package]
+category = "perl"
+name = "Types-URI"
+version = "0.006"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Type-Tiny]
+version = "0"
+[Prereqs.perl.runtime.Types-Path-Tiny]
+version = "0"
+[Prereqs.perl.runtime.Types-UUID]
+version = "0"
+[Prereqs.perl.runtime.URI]
+version = "0"
+[Prereqs.perl.runtime.URI-FromHash]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]
+[Prereqs.perl.test.IRI]
+version = "0.005"
+[Prereqs.perl.test.Moose]
+version = "2.1804"
+[Prereqs.perl.test.RDF-Trine]
+version = "0"
+[Prereqs.perl.test.Test-Requires]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

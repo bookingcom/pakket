@@ -7,11 +7,11 @@ version = "0.16"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.IO]
-version = "1.25"
+version = "0"
 [Prereqs.perl.runtime.JSON]
 version = "2.90"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
@@ -22,4 +22,4 @@ version = "1.51"
 [Prereqs.perl.test.Test-Pod-Coverage]
 version = "1.10"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"

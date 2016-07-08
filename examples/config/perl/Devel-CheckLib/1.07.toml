@@ -1,0 +1,19 @@
+[Package]
+category = "perl"
+name = "Devel-CheckLib"
+version = "1.07"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Exporter]
+version = "0"
+[Prereqs.perl.runtime.File-Temp]
+version = "0.2304"
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

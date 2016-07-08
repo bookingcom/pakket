@@ -1,0 +1,31 @@
+[Package]
+category = "perl"
+name = "MooseX-Types-Path-Class-MoreCoercions"
+version = "0.003"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Moose]
+version = "0"
+[Prereqs.perl.runtime.MooseX-Types]
+version = "0"
+[Prereqs.perl.runtime.MooseX-Types-Path-Class]
+version = "0"
+[Prereqs.perl.runtime.MooseX-Types-Stringlike]
+version = "0"
+[Prereqs.perl.runtime.Path-Class]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]
+[Prereqs.perl.test.File-Temp]
+version = "0"
+[Prereqs.perl.test.File-pushd]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.perl]
+version = "0"

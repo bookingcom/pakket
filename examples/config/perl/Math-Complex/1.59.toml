@@ -1,0 +1,21 @@
+[Package]
+category = "perl"
+name = "Math-Complex"
+version = "1.59"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Exporter]
+version = "0"
+[Prereqs.perl.runtime.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "1.45"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]

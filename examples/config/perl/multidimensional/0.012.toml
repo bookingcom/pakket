@@ -6,24 +6,24 @@ version = "0.012"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.B-Hooks-OP-Check]
-version = "0.19"
+version = "0"
 [Prereqs.perl.configure.CPAN-Meta]
 version = "2.150005"
 [Prereqs.perl.configure.ExtUtils-Depends]
-version = "0.405"
+version = "0"
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.B-Hooks-OP-Check]
 version = "0.19"
 [Prereqs.perl.runtime.Lexical-SealRequireHints]
 version = "0.010"
 [Prereqs.perl.runtime.XSLoader]
-version = "0.20"
+version = "0"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.lib]
-version = "0.63"
+version = "0"

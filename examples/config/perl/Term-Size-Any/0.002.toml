@@ -1,0 +1,19 @@
+[Package]
+category = "perl"
+name = "Term-Size-Any"
+version = "0.002"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Devel-Hide]
+version = "0"
+[Prereqs.perl.runtime.Module-Load-Conditional]
+version = "0"
+[Prereqs.perl.runtime.Term-Size-Perl]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.test]

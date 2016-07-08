@@ -6,18 +6,18 @@ version = "1.54"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.B-Debug]
 version = "1.23"
 [Prereqs.perl.runtime.B-Flags]
 version = "0.16"
 [Prereqs.perl.runtime.IPC-Run]
-version = "0.94"
+version = "0"
 [Prereqs.perl.runtime.Opcodes]
 version = "0.14"
 [Prereqs.perl.runtime.Time-HiRes]
-version = "1.9733"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]

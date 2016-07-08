@@ -11,15 +11,15 @@ version = "7.18"
 [Prereqs.perl.runtime.Class-Load]
 version = "0.23"
 [Prereqs.perl.runtime.Moose]
-version = "2.1803"
+version = "2.1804"
 [Prereqs.perl.runtime.Task-Weaken]
-version = "1.04"
+version = "0"
 [Prereqs.perl.runtime.Tie-ToObject]
 version = "0.03"
 [Prereqs.perl.runtime.namespace-clean]
 version = "0.27"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Requires]
-version = "0.10"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"

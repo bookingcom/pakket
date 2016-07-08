@@ -1,0 +1,15 @@
+[Package]
+category = "perl"
+name = "Error"
+version = "0.17024"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]

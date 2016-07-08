@@ -6,34 +6,34 @@ version = "0.18"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.configure.perl]
 version = "5.024000"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Carp]
-version = "1.38"
+version = "0"
 [Prereqs.perl.runtime.Class-Tiny]
-version = "1.004"
+version = "0"
 [Prereqs.perl.runtime.Scalar-List-Utils]
-version = "1.45"
+version = "0"
 [Prereqs.perl.runtime.Sub-Exporter]
-version = "0.987"
+version = "0"
 [Prereqs.perl.runtime.namespace-clean]
 version = "0.27"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.CPAN-Meta]
 version = "2.150005"
 [Prereqs.perl.test.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.test.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.test.Test-Warn]
-version = "0.30"
+version = "0"
 [Prereqs.perl.test.perl]
 version = "5.024000"
 [Prereqs.perl.test.perl_mlb]
-version = 0
+version = "0"

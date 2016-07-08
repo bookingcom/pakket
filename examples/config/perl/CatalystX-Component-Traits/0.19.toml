@@ -1,0 +1,45 @@
+[Package]
+category = "perl"
+name = "CatalystX-Component-Traits"
+version = "0.19"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Catalyst-Runtime]
+version = "0"
+[Prereqs.perl.runtime.Class-Load]
+version = "0"
+[Prereqs.perl.runtime.List-MoreUtils]
+version = "0"
+[Prereqs.perl.runtime.Moose]
+version = "0"
+[Prereqs.perl.runtime.MooseX-Traits-Pluggable]
+version = "0"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.namespace-autoclean]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Catalyst-Runtime]
+version = "0"
+[Prereqs.perl.test.IO]
+version = "0"
+[Prereqs.perl.test.Moose]
+version = "0"
+[Prereqs.perl.test.MooseX-MethodAttributes]
+version = "0.31"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "0"
+[Prereqs.perl.test.base]
+version = "0"
+[Prereqs.perl.test.perl]
+version = "0"
+[Prereqs.perl.test.version]
+version = "0"

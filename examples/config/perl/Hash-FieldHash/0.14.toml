@@ -6,12 +6,12 @@ version = "0.14"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.CPAN-Meta]
-version = "2.150005"
+version = "0"
 [Prereqs.perl.configure.Module-Build]
 version = "0.4218"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.XSLoader]
-version = "0.20"
+version = "0.22"
 [Prereqs.perl.runtime.parent]
 version = "0.234"
 [Prereqs.perl.runtime.perl]

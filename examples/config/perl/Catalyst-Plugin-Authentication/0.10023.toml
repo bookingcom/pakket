@@ -11,21 +11,21 @@ version = "7.18"
 [Prereqs.perl.runtime.Catalyst-Plugin-Session]
 version = "0.40"
 [Prereqs.perl.runtime.Catalyst-Runtime]
-version = "5.90104"
+version = "0"
 [Prereqs.perl.runtime.Class-Inspector]
-version = "1.28"
+version = "0"
 [Prereqs.perl.runtime.MRO-Compat]
-version = "0.12"
+version = "0"
 [Prereqs.perl.runtime.Moose]
-version = "2.1803"
+version = "0"
 [Prereqs.perl.runtime.MooseX-Emulate-Class-Accessor-Fast]
-version = "0.00903"
+version = "0"
 [Prereqs.perl.runtime.String-RewritePrefix]
-version = "0.007"
+version = "0"
 [Prereqs.perl.runtime.Try-Tiny]
-version = "0.24"
+version = "0"
 [Prereqs.perl.runtime.namespace-autoclean]
-version = "0.28"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]

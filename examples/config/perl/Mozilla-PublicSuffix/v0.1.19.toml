@@ -6,20 +6,20 @@ version = "v0.1.19"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.HTTP-Tiny]
-version = "0.058"
+version = "0"
 [Prereqs.perl.configure.IO]
-version = "1.25"
+version = "0"
 [Prereqs.perl.configure.Module-Build]
 version = "0.4218"
 [Prereqs.perl.configure.Tie-File]
-version = "1.00"
+version = "0"
 [Prereqs.perl.configure.URI]
-version = "1.71"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Exporter]
-version = "5.72"
+version = "0"
 [Prereqs.perl.runtime.URI]
-version = "1.71"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]

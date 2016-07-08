@@ -9,9 +9,9 @@ version = "0.012"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Type-Tiny]
-version = "1.000005"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"

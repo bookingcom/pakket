@@ -1,0 +1,45 @@
+[Package]
+category = "perl"
+name = "DateTime-Locale"
+version = "1.05"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Dist-CheckConflicts]
+version = "0.11"
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Dist-CheckConflicts]
+version = "0.11"
+[Prereqs.perl.runtime.Exporter]
+version = "0"
+[Prereqs.perl.runtime.Params-Validate]
+version = "0"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "1.45"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.test.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Storable]
+version = "0"
+[Prereqs.perl.test.Test-Fatal]
+version = "0"
+[Prereqs.perl.test.Test-Requires]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.Test-Warnings]
+version = "0"
+[Prereqs.perl.test.base]
+version = "0"
+[Prereqs.perl.test.perl]
+version = "0"

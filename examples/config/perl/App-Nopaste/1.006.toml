@@ -8,60 +8,60 @@ version = "1.006"
 [Prereqs.perl.configure.CPAN-Meta-Requirements]
 version = "2.140"
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.configure.Module-Metadata]
-version = "1.000027"
+version = "0"
 [Prereqs.perl.configure.perl]
 version = "5.024000"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Browser-Open]
-version = "0.04"
+version = "0"
 [Prereqs.perl.runtime.Class-Load]
-version = "0.23"
+version = "0"
 [Prereqs.perl.runtime.Clipboard]
-version = "0.13"
+version = "0"
 [Prereqs.perl.runtime.Exporter]
-version = "5.72"
+version = "0"
 [Prereqs.perl.runtime.File-Temp]
-version = "0.2304"
+version = "0"
 [Prereqs.perl.runtime.Getopt-Long-Descriptive]
-version = "0.099"
+version = "0"
 [Prereqs.perl.runtime.JSON-MaybeXS]
-version = "1.003005"
+version = "0"
 [Prereqs.perl.runtime.Module-Pluggable]
-version = "5.2"
+version = "0"
 [Prereqs.perl.runtime.Module-Runtime]
-version = "0.014"
+version = "0"
 [Prereqs.perl.runtime.Path-Tiny]
-version = "0.094"
+version = "0"
 [Prereqs.perl.runtime.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.runtime.URI]
-version = "1.71"
+version = "0"
 [Prereqs.perl.runtime.WWW-Mechanize]
-version = "1.75"
+version = "0"
 [Prereqs.perl.runtime.WWW-Pastebin-PastebinCom-Create]
 version = "1.003"
 [Prereqs.perl.runtime.base]
-version = "2.23"
+version = "0"
 [Prereqs.perl.runtime.namespace-clean]
 version = "0.27"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.CPAN-Meta]
 version = "2.150005"
 [Prereqs.perl.test.Module-Metadata]
-version = "1.000027"
+version = "0"
 [Prereqs.perl.test.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.test.Test-Deep]
-version = "1.120"
+version = "0"
 [Prereqs.perl.test.Test-Fatal]
-version = "0.014"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.libwww-perl]
-version = "6.15"
+version = "0"
 [Prereqs.perl.test.perl]
 version = "5.024000"

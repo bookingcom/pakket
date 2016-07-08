@@ -6,12 +6,12 @@ version = "1.003"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.Module-Build]
-version = "0.4218"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Moo]
-version = "2.001001"
+version = "2.002004"
 [Prereqs.perl.runtime.WWW-Mechanize]
 version = "1.75"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]

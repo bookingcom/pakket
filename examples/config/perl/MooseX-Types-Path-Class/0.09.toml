@@ -1,0 +1,37 @@
+[Package]
+category = "perl"
+name = "MooseX-Types-Path-Class"
+version = "0.09"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build-Tiny]
+version = "0.039"
+[Prereqs.perl.configure.perl]
+version = "5.024000"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.MooseX-Getopt]
+version = "0"
+[Prereqs.perl.runtime.MooseX-Types]
+version = "0"
+[Prereqs.perl.runtime.Path-Class]
+version = "0.36"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.runtime.perl_mlb]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.test.Module-Metadata]
+version = "0"
+[Prereqs.perl.test.Moose]
+version = "0"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Needs]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "0"
+[Prereqs.perl.test.perl]
+version = "5.024000"

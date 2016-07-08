@@ -1,0 +1,37 @@
+[Package]
+category = "perl"
+name = "BackPAN-Index"
+version = "0.42"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.App-Cache]
+version = "0.37"
+[Prereqs.perl.runtime.Archive-Extract]
+version = "0"
+[Prereqs.perl.runtime.CLASS]
+version = "1.00"
+[Prereqs.perl.runtime.CPAN-DistnameInfo]
+version = "0.12"
+[Prereqs.perl.runtime.DBD-SQLite]
+version = "1.50"
+[Prereqs.perl.runtime.DBIx-Class]
+version = "0.082840"
+[Prereqs.perl.runtime.Mouse]
+version = "v2.4.5"
+[Prereqs.perl.runtime.Path-Class]
+version = "0.36"
+[Prereqs.perl.runtime.URI]
+version = "1.71"
+[Prereqs.perl.runtime.autodie]
+version = "0"
+[Prereqs.perl.runtime.libwww-perl]
+version = "0"
+[Prereqs.perl.runtime.parent]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

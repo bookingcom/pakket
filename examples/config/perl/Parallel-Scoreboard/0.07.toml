@@ -11,9 +11,9 @@ version = "7.18"
 [Prereqs.perl.runtime.Class-Accessor-Lite]
 version = "0.08"
 [Prereqs.perl.runtime.Filter]
-version = "1.55"
+version = "0"
 [Prereqs.perl.runtime.HTML-Parser]
-version = "3.72"
+version = "0"
 [Prereqs.perl.runtime.JSON]
-version = "2.90"
+version = "0"
 [Prereqs.perl.test]

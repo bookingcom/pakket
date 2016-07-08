@@ -25,21 +25,21 @@ version = "0.34"
 [Prereqs.perl.runtime.File-Find-Object]
 version = "v0.2.13"
 [Prereqs.perl.runtime.IO-Capture]
-version = "0.05"
+version = "0.04"
 [Prereqs.perl.runtime.JSON-MaybeXS]
-version = "1.003005"
+version = "0"
 [Prereqs.perl.runtime.Module-ExtractUse]
 version = "0.341"
 [Prereqs.perl.runtime.Module-Pluggable]
 version = "5.2"
 [Prereqs.perl.runtime.Set-Scalar]
-version = "1.29"
+version = "0"
 [Prereqs.perl.runtime.Software-License]
 version = "0.103012"
 [Prereqs.perl.runtime.Software-License-CCpack]
-version = "1.11"
+version = "0"
 [Prereqs.perl.runtime.Text-Balanced]
-version = "2.03"
+version = "0"
 [Prereqs.perl.runtime.version]
 version = "0.9917"
 [Prereqs.perl.test]

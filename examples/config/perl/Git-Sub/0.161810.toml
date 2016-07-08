@@ -1,0 +1,29 @@
+[Package]
+category = "perl"
+name = "Git-Sub"
+version = "0.161810"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.File-Which]
+version = "0"
+[Prereqs.perl.runtime.System-Sub]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.File-Temp]
+version = "0"
+[Prereqs.perl.test.IO]
+version = "0"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "0"
+[Prereqs.perl.test.perl]
+version = "0"

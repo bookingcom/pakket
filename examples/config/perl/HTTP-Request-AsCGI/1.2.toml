@@ -7,15 +7,15 @@ version = "1.2"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Carp]
-version = "1.38"
+version = "0"
 [Prereqs.perl.runtime.Class-Accessor]
-version = "0.34"
+version = "0"
 [Prereqs.perl.runtime.HTTP-Message]
-version = "6.11"
+version = "0"
 [Prereqs.perl.runtime.IO]
-version = "1.25"
+version = "0"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.runtime.URI]
-version = "1.71"
+version = "0"
 [Prereqs.perl.test]

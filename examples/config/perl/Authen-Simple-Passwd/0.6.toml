@@ -9,5 +9,5 @@ version = "0.6"
 [Prereqs.perl.runtime.Authen-Simple]
 version = "0.5"
 [Prereqs.perl.runtime.IO]
-version = "1.25"
+version = "0"
 [Prereqs.perl.test]

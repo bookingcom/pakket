@@ -9,29 +9,29 @@ version = "1.05"
 version = "0.4218"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Class-Accessor]
-version = "0.34"
+version = "0"
 [Prereqs.perl.runtime.File-Temp]
-version = "0.2304"
+version = "0"
 [Prereqs.perl.runtime.IO-Socket-SSL]
-version = "2.027"
+version = "2.030"
 [Prereqs.perl.runtime.JSON-XS]
-version = 3.02
+version = "0"
 [Prereqs.perl.runtime.LWP-Protocol-https]
-version = "6.06"
+version = "0"
 [Prereqs.perl.runtime.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.runtime.Term-ANSIColor]
-version = "4.05"
+version = "0"
 [Prereqs.perl.runtime.Term-ShellUI]
-version = "0.92"
+version = "0"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.runtime.URI]
-version = "1.71"
+version = "0"
 [Prereqs.perl.runtime.YAML]
-version = "1.15"
+version = "0"
 [Prereqs.perl.runtime.libwww-perl]
 version = "6.15"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]

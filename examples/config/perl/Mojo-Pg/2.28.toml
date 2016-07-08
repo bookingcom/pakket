@@ -1,0 +1,17 @@
+[Package]
+category = "perl"
+name = "Mojo-Pg"
+version = "2.28"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.DBD-Pg]
+version = "3.5.3"
+[Prereqs.perl.runtime.Mojolicious]
+version = "6.66"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

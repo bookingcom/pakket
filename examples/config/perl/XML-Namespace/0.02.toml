@@ -1,0 +1,9 @@
+[Package]
+category = "perl"
+name = "XML-Namespace"
+version = "0.02"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.test]

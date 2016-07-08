@@ -1,0 +1,17 @@
+[Package]
+category = "perl"
+name = "HTML-FormatText-WithLinks"
+version = "0.15"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.HTML-Formatter]
+version = "2.14"
+[Prereqs.perl.runtime.HTML-Tree]
+version = "0"
+[Prereqs.perl.runtime.URI]
+version = "0"
+[Prereqs.perl.test]

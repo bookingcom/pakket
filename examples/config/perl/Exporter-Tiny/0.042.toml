@@ -12,8 +12,8 @@ version = "7.18"
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Fatal]
-version = "0.014"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.Test-Warnings]
-version = "0.026"
+version = "0"

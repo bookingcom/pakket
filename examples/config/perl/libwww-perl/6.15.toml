@@ -6,34 +6,36 @@ version = "6.15"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.configure.Getopt-Long]
-version = "2.48"
+version = "0"
 [Prereqs.perl.configure.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Digest-MD5]
-version = "2.55"
+version = "0"
 [Prereqs.perl.runtime.Encode]
 version = "2.84"
 [Prereqs.perl.runtime.Encode-Locale]
-version = "1.05"
+version = "0"
 [Prereqs.perl.runtime.File-Listing]
 version = "6.04"
 [Prereqs.perl.runtime.HTML-Parser]
-version = "3.72"
+version = "0"
 [Prereqs.perl.runtime.HTTP-Cookies]
 version = "6.01"
 [Prereqs.perl.runtime.HTTP-Daemon]
 version = "6.01"
 [Prereqs.perl.runtime.HTTP-Date]
 version = "6.02"
+[Prereqs.perl.runtime.HTTP-GHTTP]
+version = "0"
 [Prereqs.perl.runtime.HTTP-Message]
 version = "6.11"
 [Prereqs.perl.runtime.HTTP-Negotiate]
 version = "6.01"
 [Prereqs.perl.runtime.IO]
-version = "1.25"
+version = "0"
 [Prereqs.perl.runtime.LWP-MediaTypes]
 version = "6.02"
 [Prereqs.perl.runtime.LWP-Protocol-https]
@@ -45,7 +47,7 @@ version = "1.09"
 [Prereqs.perl.runtime.Net-HTTP]
 version = "6.09"
 [Prereqs.perl.runtime.URI]
-version = "1.71"
+version = "0"
 [Prereqs.perl.runtime.WWW-RobotRules]
 version = "6.02"
 [Prereqs.perl.runtime.libnet]
@@ -54,8 +56,8 @@ version = "3.08"
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test]
-version = "1.26"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.test.perl]
-version = "5.024000"
+version = "0"

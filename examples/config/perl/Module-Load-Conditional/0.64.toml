@@ -6,18 +6,18 @@ version = "0.64"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Locale-Maketext-Simple]
-version = "0.21"
+version = "0"
 [Prereqs.perl.runtime.Module-CoreList]
-version = "5.20160520"
+version = "5.20160620"
 [Prereqs.perl.runtime.Module-Load]
 version = "0.32"
 [Prereqs.perl.runtime.Module-Metadata]
 version = "1.000027"
 [Prereqs.perl.runtime.Params-Check]
-version = "0.38"
+version = "0"
 [Prereqs.perl.runtime.version]
 version = "0.9917"
 [Prereqs.perl.test]

@@ -9,5 +9,5 @@ version = "0.013"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Carp-Clan]
-version = "6.06"
+version = "0"
 [Prereqs.perl.test]

@@ -1,0 +1,37 @@
+[Package]
+category = "perl"
+name = "MooX-Cmd"
+version = "0.015"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.List-MoreUtils]
+version = "0.416"
+[Prereqs.perl.runtime.Module-Pluggable]
+version = "5.2"
+[Prereqs.perl.runtime.Module-Runtime]
+version = "0"
+[Prereqs.perl.runtime.Moo]
+version = "2.002004"
+[Prereqs.perl.runtime.Package-Stash]
+version = "0.37"
+[Prereqs.perl.runtime.Params-Util]
+version = "1.07"
+[Prereqs.perl.runtime.Regexp-Common]
+version = "2016060801"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Text-ParseWords]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Capture-Tiny]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

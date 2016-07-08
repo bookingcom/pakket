@@ -1,0 +1,33 @@
+[Package]
+category = "perl"
+name = "Net-OpenID-Consumer"
+version = "1.18"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Digest-SHA]
+version = "0"
+[Prereqs.perl.runtime.HTTP-Message]
+version = "0"
+[Prereqs.perl.runtime.JSON]
+version = "0"
+[Prereqs.perl.runtime.MIME-Base64]
+version = "0"
+[Prereqs.perl.runtime.Net-OpenID-Common]
+version = "1.20"
+[Prereqs.perl.runtime.Storable]
+version = "0"
+[Prereqs.perl.runtime.Time-Local]
+version = "0"
+[Prereqs.perl.runtime.URI]
+version = "0"
+[Prereqs.perl.runtime.libwww-perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CGI]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "0"

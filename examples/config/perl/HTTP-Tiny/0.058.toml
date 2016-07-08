@@ -13,45 +13,45 @@ version = "2.27400"
 version = "5.024000"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Carp]
-version = "1.38"
+version = "0"
 [Prereqs.perl.runtime.HTTP-CookieJar]
 version = "0.008"
 [Prereqs.perl.runtime.IO]
-version = "1.25"
+version = "0"
 [Prereqs.perl.runtime.IO-Socket-IP]
 version = "0.37"
 [Prereqs.perl.runtime.IO-Socket-SSL]
-version = "2.027"
+version = "2.030"
 [Prereqs.perl.runtime.MIME-Base64]
-version = "3.15"
+version = "0"
 [Prereqs.perl.runtime.Mozilla-CA]
 version = "20160104"
 [Prereqs.perl.runtime.Net-SSLeay]
 version = "1.74"
 [Prereqs.perl.runtime.Socket]
-version = "2.021"
+version = "0"
 [Prereqs.perl.runtime.Time-Local]
-version = "1.2300"
+version = "0"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.CPAN-Meta]
 version = "2.150005"
 [Prereqs.perl.test.Data-Dumper]
-version = "2.154"
+version = "0"
 [Prereqs.perl.test.Exporter]
-version = "5.72"
+version = "0"
 [Prereqs.perl.test.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.test.File-Temp]
-version = "0.2304"
+version = "0"
 [Prereqs.perl.test.IO]
-version = "1.25"
+version = "0"
 [Prereqs.perl.test.IPC-Cmd]
-version = "0.94"
+version = "0"
 [Prereqs.perl.test.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.perl]
-version = "5.024000"
+version = "0"

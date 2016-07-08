@@ -1,0 +1,9 @@
+[Package]
+category = "perl"
+name = "Data-Denter"
+version = "0.15"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.test]

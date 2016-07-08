@@ -1,0 +1,29 @@
+[Package]
+category = "perl"
+name = "MooseX-Attribute-Chained"
+version = "1.0.2"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Moose]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.runtime.Try-Tiny]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.test.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.test.IO]
+version = "0"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.perl]
+version = "0"

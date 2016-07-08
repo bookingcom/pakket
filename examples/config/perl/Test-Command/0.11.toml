@@ -1,0 +1,9 @@
+[Package]
+category = "perl"
+name = "Test-Command"
+version = "0.11"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.test]

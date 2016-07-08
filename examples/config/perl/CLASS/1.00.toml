@@ -1,0 +1,11 @@
+[Package]
+category = "perl"
+name = "CLASS"
+version = "1.00"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test]

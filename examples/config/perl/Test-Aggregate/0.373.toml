@@ -1,0 +1,23 @@
+[Package]
+category = "perl"
+name = "Test-Aggregate"
+version = "0.373"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Data-Dump-Streamer]
+version = "2.39"
+[Prereqs.perl.runtime.Perl-Tidy]
+version = "20160302"
+[Prereqs.perl.runtime.Test-Harness]
+version = "3.36"
+[Prereqs.perl.runtime.Test-NoWarnings]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

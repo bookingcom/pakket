@@ -1,0 +1,33 @@
+[Package]
+category = "perl"
+name = "Archive-Any"
+version = "0.0945"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Archive-Tar]
+version = "0"
+[Prereqs.perl.runtime.Archive-Zip]
+version = "0"
+[Prereqs.perl.runtime.File-MMagic]
+version = "0"
+[Prereqs.perl.runtime.MIME-Types]
+version = "0"
+[Prereqs.perl.runtime.Module-Find]
+version = "0"
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.base]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Test-Simple]
+version = "0"
+[Prereqs.perl.test.Test-Warn]
+version = "0"

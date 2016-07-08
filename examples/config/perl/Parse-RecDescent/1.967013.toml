@@ -9,7 +9,7 @@ version = "1.967013"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.runtime.Text-Balanced]
 version = "2.03"
 [Prereqs.perl.test]

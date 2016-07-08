@@ -1,0 +1,29 @@
+[Package]
+category = "perl"
+name = "HTML-FormatExternal"
+version = "26"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.File-Temp]
+version = "0.2304"
+[Prereqs.perl.runtime.IPC-Run]
+version = "0"
+[Prereqs.perl.runtime.PathTools]
+version = "3.62"
+[Prereqs.perl.runtime.URI]
+version = "1.71"
+[Prereqs.perl.runtime.constant-defer]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]
+[Prereqs.perl.test.HTML-Tree]
+version = "0"
+[Prereqs.perl.test.Taint-Util]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "0"

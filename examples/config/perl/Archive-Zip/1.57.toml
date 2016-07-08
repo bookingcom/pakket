@@ -6,20 +6,20 @@ version = "1.57"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Compress-Raw-Zlib]
 version = "2.069"
 [Prereqs.perl.runtime.File-Path]
-version = "2.12"
+version = "0"
 [Prereqs.perl.runtime.File-Temp]
-version = "0.2304"
+version = "0"
 [Prereqs.perl.runtime.IO]
-version = "1.25"
+version = "0"
 [Prereqs.perl.runtime.PathTools]
 version = "3.62"
 [Prereqs.perl.runtime.Time-Local]
-version = "1.2300"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]

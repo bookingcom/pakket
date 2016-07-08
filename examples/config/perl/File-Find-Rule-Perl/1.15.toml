@@ -6,18 +6,18 @@ version = "1.15"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.File-Find-Rule]
 version = "0.34"
 [Prereqs.perl.runtime.Params-Util]
 version = "1.07"
 [Prereqs.perl.runtime.Parse-CPAN-Meta]
-version = "1.4417"
+version = "1.4422"
 [Prereqs.perl.runtime.PathTools]
 version = "3.62"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "0"

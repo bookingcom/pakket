@@ -1,0 +1,19 @@
+[Package]
+category = "perl"
+name = "Text-Aligner"
+version = "0.13"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Exporter]
+version = "0"
+[Prereqs.perl.runtime.Term-ANSIColor]
+version = "4.05"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

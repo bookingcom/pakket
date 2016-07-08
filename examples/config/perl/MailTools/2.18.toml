@@ -1,0 +1,19 @@
+[Package]
+category = "perl"
+name = "MailTools"
+version = "2.18"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.IO]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.TimeDate]
+version = "0"
+[Prereqs.perl.runtime.libnet]
+version = "3.08"
+[Prereqs.perl.test]

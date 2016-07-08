@@ -1,0 +1,27 @@
+[Package]
+category = "perl"
+name = "MooseX-Types-ElasticSearch"
+version = "0.0.4"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.DateTime-Format-Epoch]
+version = "0"
+[Prereqs.perl.runtime.DateTime-Format-ISO8601]
+version = "0"
+[Prereqs.perl.runtime.MooseX-Types]
+version = "0"
+[Prereqs.perl.runtime.Search-Elasticsearch]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.IO]
+version = "0"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.perl]
+version = "0"

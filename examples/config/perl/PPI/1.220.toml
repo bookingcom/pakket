@@ -15,7 +15,7 @@ version = "2.55"
 [Prereqs.perl.runtime.IO-String]
 version = "1.08"
 [Prereqs.perl.runtime.List-MoreUtils]
-version = "0.415"
+version = "0.416"
 [Prereqs.perl.runtime.Params-Util]
 version = "1.07"
 [Prereqs.perl.runtime.PathTools]
@@ -25,7 +25,7 @@ version = "1.45"
 [Prereqs.perl.runtime.Storable]
 version = "2.51"
 [Prereqs.perl.runtime.Task-Weaken]
-version = "1.04"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]

@@ -9,15 +9,15 @@ version = "0.06"
 version = "0.4218"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Cookie-Baker-XS]
-version = "0.06"
+version = "0"
 [Prereqs.perl.runtime.Exporter]
-version = "5.72"
+version = "0"
 [Prereqs.perl.runtime.URI]
-version = "1.71"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.Test-Time]
-version = "0.04"
+version = "0"

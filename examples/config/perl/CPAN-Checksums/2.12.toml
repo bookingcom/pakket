@@ -1,0 +1,33 @@
+[Package]
+category = "perl"
+name = "CPAN-Checksums"
+version = "2.12"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Compress-Bzip2]
+version = "0"
+[Prereqs.perl.runtime.Data-Compare]
+version = "0"
+[Prereqs.perl.runtime.Data-Dumper]
+version = "0"
+[Prereqs.perl.runtime.Digest-MD5]
+version = "2.55"
+[Prereqs.perl.runtime.Digest-SHA]
+version = "0"
+[Prereqs.perl.runtime.File-Temp]
+version = "0"
+[Prereqs.perl.runtime.IO]
+version = "1.25"
+[Prereqs.perl.runtime.IO-Compress]
+version = "0"
+[Prereqs.perl.runtime.Module-Signature]
+version = "0"
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]

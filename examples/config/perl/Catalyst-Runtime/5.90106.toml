@@ -1,0 +1,107 @@
+[Package]
+category = "perl"
+name = "Catalyst-Runtime"
+version = "5.90106"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.CGI-Simple]
+version = "1.115"
+[Prereqs.perl.runtime.CGI-Struct]
+version = "0"
+[Prereqs.perl.runtime.Carp]
+version = "1.38"
+[Prereqs.perl.runtime.Class-C3-Adopt-NEXT]
+version = "0.14"
+[Prereqs.perl.runtime.Class-Data-Inheritable]
+version = "0"
+[Prereqs.perl.runtime.Class-Load]
+version = "0.23"
+[Prereqs.perl.runtime.Data-Dump]
+version = "0"
+[Prereqs.perl.runtime.Data-OptList]
+version = "0"
+[Prereqs.perl.runtime.Encode]
+version = "2.84"
+[Prereqs.perl.runtime.HTML-Parser]
+version = "0"
+[Prereqs.perl.runtime.HTTP-Body]
+version = "1.22"
+[Prereqs.perl.runtime.HTTP-Message]
+version = "6.11"
+[Prereqs.perl.runtime.HTTP-Request-AsCGI]
+version = "1.2"
+[Prereqs.perl.runtime.Hash-MultiValue]
+version = "0"
+[Prereqs.perl.runtime.JSON-MaybeXS]
+version = "1.003005"
+[Prereqs.perl.runtime.List-MoreUtils]
+version = "0"
+[Prereqs.perl.runtime.MRO-Compat]
+version = "0"
+[Prereqs.perl.runtime.Module-Pluggable]
+version = "5.2"
+[Prereqs.perl.runtime.Moose]
+version = "2.1804"
+[Prereqs.perl.runtime.MooseX-Emulate-Class-Accessor-Fast]
+version = "0.00903"
+[Prereqs.perl.runtime.MooseX-Getopt]
+version = "0.71"
+[Prereqs.perl.runtime.MooseX-MethodAttributes]
+version = "0.31"
+[Prereqs.perl.runtime.MooseX-Role-WithOverloading]
+version = "0.17"
+[Prereqs.perl.runtime.Path-Class]
+version = "0.36"
+[Prereqs.perl.runtime.Plack]
+version = "0"
+[Prereqs.perl.runtime.Plack-Middleware-FixMissingBodyInRedirect]
+version = "0.12"
+[Prereqs.perl.runtime.Plack-Middleware-MethodOverride]
+version = "0.15"
+[Prereqs.perl.runtime.Plack-Middleware-RemoveRedundantBody]
+version = "0.05"
+[Prereqs.perl.runtime.Plack-Middleware-ReverseProxy]
+version = "0.15"
+[Prereqs.perl.runtime.Plack-Test-ExternalServer]
+version = "0"
+[Prereqs.perl.runtime.Safe-Isa]
+version = "0"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Stream-Buffered]
+version = "0"
+[Prereqs.perl.runtime.String-RewritePrefix]
+version = "0.007"
+[Prereqs.perl.runtime.Sub-Exporter]
+version = "0"
+[Prereqs.perl.runtime.Task-Weaken]
+version = "0"
+[Prereqs.perl.runtime.Text-Balanced]
+version = "0"
+[Prereqs.perl.runtime.Text-SimpleTable]
+version = "2.03"
+[Prereqs.perl.runtime.Time-HiRes]
+version = "0"
+[Prereqs.perl.runtime.Tree-Simple]
+version = "1.29"
+[Prereqs.perl.runtime.Tree-Simple-VisitorFactory]
+version = "0"
+[Prereqs.perl.runtime.Try-Tiny]
+version = "0.24"
+[Prereqs.perl.runtime.URI]
+version = "1.71"
+[Prereqs.perl.runtime.URI-ws]
+version = "0.03"
+[Prereqs.perl.runtime.libwww-perl]
+version = "6.15"
+[Prereqs.perl.runtime.namespace-autoclean]
+version = "0.28"
+[Prereqs.perl.runtime.namespace-clean]
+version = "0.27"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

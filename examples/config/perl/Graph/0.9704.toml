@@ -1,0 +1,9 @@
+[Package]
+category = "perl"
+name = "Graph"
+version = "0.9704"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.test]

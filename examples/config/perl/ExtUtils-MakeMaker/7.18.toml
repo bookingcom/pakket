@@ -7,13 +7,13 @@ version = "7.18"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Data-Dumper]
-version = "2.154"
+version = "0"
 [Prereqs.perl.runtime.Encode]
-version = "2.84"
+version = "0"
 [Prereqs.perl.runtime.PathTools]
 version = "3.62"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.runtime.podlators]
-version = "4.07"
+version = "0"
 [Prereqs.perl.test]

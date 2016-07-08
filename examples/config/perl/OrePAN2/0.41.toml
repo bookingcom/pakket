@@ -1,0 +1,85 @@
+[Package]
+category = "perl"
+name = "OrePAN2"
+version = "0.41"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build-Tiny]
+version = "0.039"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Archive-Extract]
+version = "0.76"
+[Prereqs.perl.runtime.Archive-Tar]
+version = "0"
+[Prereqs.perl.runtime.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.runtime.Class-Accessor-Lite]
+version = "0.08"
+[Prereqs.perl.runtime.Digest-MD5]
+version = "0"
+[Prereqs.perl.runtime.File-Path]
+version = "0"
+[Prereqs.perl.runtime.File-Temp]
+version = "0"
+[Prereqs.perl.runtime.File-pushd]
+version = "0"
+[Prereqs.perl.runtime.Getopt-Long]
+version = "v2.49.1"
+[Prereqs.perl.runtime.HTTP-Tiny]
+version = "0"
+[Prereqs.perl.runtime.IO-Compress]
+version = "0"
+[Prereqs.perl.runtime.IO-File-AtomicChange]
+version = "0"
+[Prereqs.perl.runtime.IO-Socket-SSL]
+version = "2.030"
+[Prereqs.perl.runtime.IO-Zlib]
+version = "0"
+[Prereqs.perl.runtime.JSON-PP]
+version = "0"
+[Prereqs.perl.runtime.List-Compare]
+version = "0"
+[Prereqs.perl.runtime.MetaCPAN-Client]
+version = "1.019000"
+[Prereqs.perl.runtime.Moo]
+version = "2.002004"
+[Prereqs.perl.runtime.MooX-Options]
+version = "0"
+[Prereqs.perl.runtime.Parse-CPAN-Meta]
+version = "1.4422"
+[Prereqs.perl.runtime.Parse-CPAN-Packages]
+version = "2.40"
+[Prereqs.perl.runtime.Parse-LocalDistribution]
+version = "0.18"
+[Prereqs.perl.runtime.Parse-PMFile]
+version = "0.40"
+[Prereqs.perl.runtime.Path-Tiny]
+version = "0"
+[Prereqs.perl.runtime.Pod-Usage]
+version = "0"
+[Prereqs.perl.runtime.Try-Tiny]
+version = "0"
+[Prereqs.perl.runtime.Type-Tiny]
+version = "0"
+[Prereqs.perl.runtime.Types-URI]
+version = "0"
+[Prereqs.perl.runtime.autodie]
+version = "0"
+[Prereqs.perl.runtime.libwww-perl]
+version = "0"
+[Prereqs.perl.runtime.parent]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.runtime.version]
+version = "0.9917"
+[Prereqs.perl.test]
+[Prereqs.perl.test.File-Which]
+version = "0"
+[Prereqs.perl.test.PAUSE-Packages]
+version = "0"
+[Prereqs.perl.test.Test-RequiresInternet]
+version = "0.05"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

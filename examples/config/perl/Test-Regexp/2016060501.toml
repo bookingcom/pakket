@@ -1,0 +1,21 @@
+[Package]
+category = "perl"
+name = "Test-Regexp"
+version = "2016060501"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.configure.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.configure.perl]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Exporter]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]

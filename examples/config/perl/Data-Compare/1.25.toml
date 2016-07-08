@@ -1,0 +1,15 @@
+[Package]
+category = "perl"
+name = "Data-Compare"
+version = "1.25"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.File-Find-Rule]
+version = "0.34"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.test]

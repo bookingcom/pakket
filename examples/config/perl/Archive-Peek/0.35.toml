@@ -1,0 +1,21 @@
+[Package]
+category = "perl"
+name = "Archive-Peek"
+version = "0.35"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Archive-Tar]
+version = "0"
+[Prereqs.perl.runtime.Archive-Zip]
+version = "0"
+[Prereqs.perl.runtime.Moose]
+version = "0"
+[Prereqs.perl.runtime.MooseX-Types-Path-Class]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.test]

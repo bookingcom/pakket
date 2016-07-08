@@ -1,0 +1,73 @@
+[Package]
+category = "perl"
+name = "RDF-Trine"
+version = "1.014"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Algorithm-Combinatorics]
+version = "0"
+[Prereqs.perl.runtime.Cache-LRU]
+version = "0"
+[Prereqs.perl.runtime.DBD-SQLite]
+version = "1.50"
+[Prereqs.perl.runtime.DBI]
+version = "0"
+[Prereqs.perl.runtime.DBIx-Connector]
+version = "0"
+[Prereqs.perl.runtime.Data-UUID]
+version = "0"
+[Prereqs.perl.runtime.Digest-MD5]
+version = "0"
+[Prereqs.perl.runtime.Digest-SHA]
+version = "0"
+[Prereqs.perl.runtime.Error]
+version = "0"
+[Prereqs.perl.runtime.HTTP-Negotiate]
+version = "0"
+[Prereqs.perl.runtime.IRI]
+version = "0"
+[Prereqs.perl.runtime.JSON]
+version = "2.90"
+[Prereqs.perl.runtime.Log-Log4perl]
+version = "0"
+[Prereqs.perl.runtime.Math-BigInt]
+version = "0"
+[Prereqs.perl.runtime.Module-Load-Conditional]
+version = "0.64"
+[Prereqs.perl.runtime.Moose]
+version = "2.1804"
+[Prereqs.perl.runtime.MooseX-ArrayRef]
+version = "0"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "1.45"
+[Prereqs.perl.runtime.Set-Scalar]
+version = "0"
+[Prereqs.perl.runtime.Storable]
+version = "0"
+[Prereqs.perl.runtime.Term-ANSIColor]
+version = "0"
+[Prereqs.perl.runtime.Text-CSV]
+version = "0"
+[Prereqs.perl.runtime.Text-Table]
+version = "0"
+[Prereqs.perl.runtime.Time-HiRes]
+version = "0"
+[Prereqs.perl.runtime.URI]
+version = "1.71"
+[Prereqs.perl.runtime.XML-CommonNS]
+version = "0.06"
+[Prereqs.perl.runtime.XML-LibXML]
+version = "2.0126"
+[Prereqs.perl.runtime.XML-Namespace]
+version = "0"
+[Prereqs.perl.runtime.XML-SAX]
+version = "0.99"
+[Prereqs.perl.runtime.libwww-perl]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

@@ -1,0 +1,15 @@
+[Package]
+category = "perl"
+name = "Text-Table"
+version = "1.130"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Text-Aligner]
+version = "0.13"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

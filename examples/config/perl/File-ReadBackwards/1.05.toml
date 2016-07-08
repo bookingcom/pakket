@@ -1,0 +1,9 @@
+[Package]
+category = "perl"
+name = "File-ReadBackwards"
+version = "1.05"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.test]

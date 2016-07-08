@@ -1,0 +1,11 @@
+[Package]
+category = "perl"
+name = "Want"
+version = "0.29"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.test]

@@ -1,0 +1,25 @@
+[Package]
+category = "perl"
+name = "File-ConfigDir"
+version = "0.017"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.File-HomeDir]
+version = "1.00"
+[Prereqs.perl.runtime.File-Path]
+version = "2.12"
+[Prereqs.perl.runtime.List-MoreUtils]
+version = "0.416"
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

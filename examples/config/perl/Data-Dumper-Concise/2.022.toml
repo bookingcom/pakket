@@ -1,0 +1,13 @@
+[Package]
+category = "perl"
+name = "Data-Dumper-Concise"
+version = "2.022"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

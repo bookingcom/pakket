@@ -9,21 +9,21 @@ version = "1.001000"
 version = "0.4218"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Exception-Class]
-version = "1.40"
+version = "0"
 [Prereqs.perl.runtime.Exporter]
-version = "5.72"
+version = "0"
 [Prereqs.perl.runtime.PPI]
 version = "1.220"
 [Prereqs.perl.runtime.Readonly]
-version = "2.04"
+version = "0"
 [Prereqs.perl.runtime.Readonly-XS]
-version = "1.05"
+version = "0"
 [Prereqs.perl.runtime.Scalar-List-Utils]
-version = "1.45"
+version = "0"
 [Prereqs.perl.runtime.Task-Weaken]
-version = "1.04"
+version = "0"
 [Prereqs.perl.runtime.base]
-version = "2.23"
+version = "0"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]

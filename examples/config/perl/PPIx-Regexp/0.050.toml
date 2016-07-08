@@ -7,13 +7,13 @@ version = "0.050"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.List-MoreUtils]
-version = "0.415"
+version = "0"
 [Prereqs.perl.runtime.PPI]
 version = "1.220"
 [Prereqs.perl.runtime.Scalar-List-Utils]
-version = "1.45"
+version = "0"
 [Prereqs.perl.runtime.Task-Weaken]
-version = "1.04"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]

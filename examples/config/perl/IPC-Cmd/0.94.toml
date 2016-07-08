@@ -6,20 +6,20 @@ version = "0.94"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime.File-Temp]
-version = "0.2304"
+version = "0"
 [Prereqs.perl.runtime.Locale-Maketext-Simple]
-version = "0.21"
+version = "0"
 [Prereqs.perl.runtime.Module-Load-Conditional]
-version = "0.64"
+version = "0"
 [Prereqs.perl.runtime.Params-Check]
 version = "0.38"
 [Prereqs.perl.runtime.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.test]

@@ -9,9 +9,9 @@ version = "0.51"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.CGI]
-version = "4.28"
+version = "0"
 [Prereqs.perl.runtime.Socket]
 version = "2.021"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.test]

@@ -1,0 +1,87 @@
+[Package]
+category = "perl"
+name = "CPAN"
+version = "2.14"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Archive-Tar]
+version = "0"
+[Prereqs.perl.runtime.Archive-Zip]
+version = "0"
+[Prereqs.perl.runtime.CPAN-Checksums]
+version = "0"
+[Prereqs.perl.runtime.CPAN-Meta]
+version = "0"
+[Prereqs.perl.runtime.CPAN-Meta-Requirements]
+version = "2.140"
+[Prereqs.perl.runtime.CPAN-Meta-YAML]
+version = "0"
+[Prereqs.perl.runtime.Compress-Bzip2]
+version = "0"
+[Prereqs.perl.runtime.Data-Dumper]
+version = "0"
+[Prereqs.perl.runtime.Digest-MD5]
+version = "0"
+[Prereqs.perl.runtime.Digest-SHA]
+version = "0"
+[Prereqs.perl.runtime.Expect]
+version = "0"
+[Prereqs.perl.runtime.ExtUtils-CBuilder]
+version = "0"
+[Prereqs.perl.runtime.File-HomeDir]
+version = "0"
+[Prereqs.perl.runtime.File-Temp]
+version = "0"
+[Prereqs.perl.runtime.File-Which]
+version = "0"
+[Prereqs.perl.runtime.HTTP-Tiny]
+version = "0"
+[Prereqs.perl.runtime.IO-Compress]
+version = "0"
+[Prereqs.perl.runtime.IO-Zlib]
+version = "0"
+[Prereqs.perl.runtime.JSON-PP]
+version = "0"
+[Prereqs.perl.runtime.MIME-Base64]
+version = "0"
+[Prereqs.perl.runtime.Module-Build]
+version = "0"
+[Prereqs.perl.runtime.Module-Signature]
+version = "0"
+[Prereqs.perl.runtime.Net-Ping]
+version = "0"
+[Prereqs.perl.runtime.Parse-CPAN-Meta]
+version = "0"
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Socket]
+version = "0"
+[Prereqs.perl.runtime.Test-Harness]
+version = "3.36"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.Text-Glob]
+version = "0"
+[Prereqs.perl.runtime.Text-ParseWords]
+version = "0"
+[Prereqs.perl.runtime.Text-Tabs+Wrap]
+version = "0"
+[Prereqs.perl.runtime.YAML]
+version = "0"
+[Prereqs.perl.runtime.YAML-LibYAML]
+version = "0"
+[Prereqs.perl.runtime.YAML-Syck]
+version = "0"
+[Prereqs.perl.runtime.libnet]
+version = "0"
+[Prereqs.perl.runtime.libwww-perl]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]

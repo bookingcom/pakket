@@ -6,38 +6,38 @@ version = "0.50"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Attribute-Handlers]
 version = "0.99"
 [Prereqs.perl.runtime.Carp]
-version = "1.38"
+version = "0"
 [Prereqs.perl.runtime.MRO-Compat]
 version = "0.12"
 [Prereqs.perl.runtime.Module-Runtime]
-version = "0.014"
+version = "0"
 [Prereqs.perl.runtime.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.runtime.Storable]
 version = "2.51"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.runtime.Try-Tiny]
-version = "0.24"
+version = "0"
 [Prereqs.perl.runtime.constant]
-version = "1.33"
+version = "0"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.IO]
 version = "1.25"
 [Prereqs.perl.test.Test]
-version = "1.26"
+version = "0"
 [Prereqs.perl.test.Test-Exception]
 version = "0.43"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.base]
-version = "2.23"
+version = "0"
 [Prereqs.perl.test.perl]
-version = "5.024000"
+version = "0"

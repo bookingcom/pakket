@@ -9,25 +9,25 @@ version = "0.065"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Any-Moose]
-version = "0.26"
+version = "0"
 [Prereqs.perl.runtime.Carp-Clan-Share]
-version = "0.013"
+version = "0"
 [Prereqs.perl.runtime.Clone]
-version = "0.38"
+version = "0"
 [Prereqs.perl.runtime.Config-Any]
-version = "0.27"
+version = "0"
 [Prereqs.perl.runtime.Config-General]
-version = "2.61"
+version = "0"
 [Prereqs.perl.runtime.Data-Visitor]
 version = "0.30"
 [Prereqs.perl.runtime.Getopt-Usaginator]
-version = "0.0012"
+version = "0"
 [Prereqs.perl.runtime.Hash-Merge-Simple]
-version = "0.051"
+version = "0"
 [Prereqs.perl.runtime.List-MoreUtils]
-version = "0.415"
+version = "0"
 [Prereqs.perl.runtime.Path-Class]
-version = "0.36"
+version = "0"
 [Prereqs.perl.runtime.Sub-Install]
-version = "0.928"
+version = "0"
 [Prereqs.perl.test]

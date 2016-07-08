@@ -1,0 +1,61 @@
+[Package]
+category = "perl"
+name = "WWW-Mechanize-Cached"
+version = "1.50"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.CHI]
+version = "0"
+[Prereqs.perl.runtime.Cache-Cache]
+version = "0"
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Class-Load]
+version = "0"
+[Prereqs.perl.runtime.Data-Dump]
+version = "0"
+[Prereqs.perl.runtime.Moo]
+version = "2.002004"
+[Prereqs.perl.runtime.MooX-Types-MooseLike]
+version = "0"
+[Prereqs.perl.runtime.Storable]
+version = "2.51"
+[Prereqs.perl.runtime.WWW-Mechanize]
+version = "0"
+[Prereqs.perl.runtime.namespace-clean]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CHI]
+version = "0"
+[Prereqs.perl.test.Cache-Cache]
+version = "0"
+[Prereqs.perl.test.Find-Lib]
+version = "0"
+[Prereqs.perl.test.HTTP-Message]
+version = "0"
+[Prereqs.perl.test.LWP-ConsoleLogger]
+version = "0"
+[Prereqs.perl.test.Path-Class]
+version = "0"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Fatal]
+version = "0"
+[Prereqs.perl.test.Test-Requires]
+version = "0"
+[Prereqs.perl.test.Test-RequiresInternet]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "0"
+[Prereqs.perl.test.constant]
+version = "0"
+[Prereqs.perl.test.lib]
+version = "0"

@@ -9,11 +9,11 @@ version = "0.05"
 version = "0.4218"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Exporter]
-version = "5.72"
+version = "0"
 [Prereqs.perl.runtime.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.runtime.parent]
-version = "0.234"
+version = "0"
 [Prereqs.perl.runtime.perl_mlb]
-version = 0
+version = "0"
 [Prereqs.perl.test]

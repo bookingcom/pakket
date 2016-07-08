@@ -9,7 +9,7 @@ version = "1.00"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Carp]
-version = "1.38"
+version = "0"
 [Prereqs.perl.runtime.File-Path]
 version = "2.12"
 [Prereqs.perl.runtime.File-Temp]

@@ -1,0 +1,61 @@
+[Package]
+category = "perl"
+name = "Data-Serializer"
+version = "0.60"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.AutoLoader]
+version = "0"
+[Prereqs.perl.runtime.Bencode]
+version = "0"
+[Prereqs.perl.runtime.Compress-PPMd]
+version = "0"
+[Prereqs.perl.runtime.Config-General]
+version = "0"
+[Prereqs.perl.runtime.Convert-Bencode]
+version = "0"
+[Prereqs.perl.runtime.Convert-Bencode_XS]
+version = "0"
+[Prereqs.perl.runtime.Crypt-Blowfish]
+version = "0"
+[Prereqs.perl.runtime.Crypt-CBC]
+version = "0"
+[Prereqs.perl.runtime.Data-Denter]
+version = "0"
+[Prereqs.perl.runtime.Data-Dumper]
+version = "2.160"
+[Prereqs.perl.runtime.Data-Taxi]
+version = "0"
+[Prereqs.perl.runtime.Digest-SHA]
+version = "0"
+[Prereqs.perl.runtime.Exporter]
+version = "0"
+[Prereqs.perl.runtime.FreezeThaw]
+version = "0"
+[Prereqs.perl.runtime.IO]
+version = "0"
+[Prereqs.perl.runtime.IO-Compress]
+version = "0"
+[Prereqs.perl.runtime.JSON]
+version = "0"
+[Prereqs.perl.runtime.JSON-XS]
+version = "0"
+[Prereqs.perl.runtime.MIME-Base64]
+version = "0"
+[Prereqs.perl.runtime.PHP-Serialization]
+version = "0"
+[Prereqs.perl.runtime.Storable]
+version = "0"
+[Prereqs.perl.runtime.XML-Dumper]
+version = "0"
+[Prereqs.perl.runtime.XML-Simple]
+version = "0"
+[Prereqs.perl.runtime.YAML]
+version = "0"
+[Prereqs.perl.runtime.YAML-Syck]
+version = "0"
+[Prereqs.perl.test]

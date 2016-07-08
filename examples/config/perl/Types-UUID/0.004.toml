@@ -1,0 +1,23 @@
+[Package]
+category = "perl"
+name = "Types-UUID"
+version = "0.004"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Type-Tiny]
+version = "1.000005"
+[Prereqs.perl.runtime.UUID-Tiny]
+version = "1.04"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.Type-Tiny]
+version = "0"
+[Prereqs.perl.test.URI]
+version = "0"

@@ -13,27 +13,27 @@ version = "7.18"
 [Prereqs.perl.runtime.Devel-LexAlias]
 version = "0.05"
 [Prereqs.perl.runtime.Devel-StackTrace]
-version = "2.01"
+version = "0"
 [Prereqs.perl.runtime.Exporter-Tiny]
 version = "0.042"
 [Prereqs.perl.runtime.Moo]
-version = "2.001001"
+version = "2.002004"
 [Prereqs.perl.runtime.Moose]
-version = "2.1803"
+version = "2.1804"
 [Prereqs.perl.runtime.Mouse]
 version = "v2.4.5"
 [Prereqs.perl.runtime.Reply]
-version = "0.39"
+version = "0"
 [Prereqs.perl.runtime.Sub-Name]
-version = "0.15"
+version = "0"
 [Prereqs.perl.runtime.Type-Tie]
-version = "0.009"
+version = "0"
 [Prereqs.perl.runtime.Type-Tiny-XS]
 version = "0.012"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.Test-Warnings]
-version = "0.026"
+version = "0"

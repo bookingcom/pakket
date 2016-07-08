@@ -6,7 +6,7 @@ version = "0.15"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.configure.JSON-PP]
 version = "2.27400"
 [Prereqs.perl.configure.perl]
@@ -15,21 +15,21 @@ version = "5.024000"
 [Prereqs.perl.runtime.Exporter]
 version = "5.72"
 [Prereqs.perl.runtime.XSLoader]
-version = "0.20"
+version = "0"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.B-C]
 version = "1.54"
 [Prereqs.perl.test.CPAN-Meta]
 version = "2.150005"
 [Prereqs.perl.test.Devel-CheckBin]
-version = "0.04"
+version = "0"
 [Prereqs.perl.test.Module-Metadata]
-version = "1.000027"
+version = "0"
 [Prereqs.perl.test.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.perl]
-version = "5.024000"
+version = "0"

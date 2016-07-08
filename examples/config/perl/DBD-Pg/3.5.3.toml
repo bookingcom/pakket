@@ -1,0 +1,27 @@
+[Package]
+category = "perl"
+name = "DBD-Pg"
+version = "3.5.3"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.DBI]
+version = "1.636"
+[Prereqs.perl.configure.version]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.DBI]
+version = "1.636"
+[Prereqs.perl.runtime.Encode]
+version = "0"
+[Prereqs.perl.runtime.File-Temp]
+version = "0"
+[Prereqs.perl.runtime.Module-Signature]
+version = "0.80"
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.runtime.version]
+version = "0"
+[Prereqs.perl.test]

@@ -9,13 +9,13 @@ version = "0.06"
 version = "0.4218"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Exporter]
-version = "5.72"
+version = "0"
 [Prereqs.perl.runtime.ExtUtils-CBuilder]
-version = "0.280224"
+version = "0"
 [Prereqs.perl.runtime.File-Temp]
-version = "0.2304"
+version = "0"
 [Prereqs.perl.runtime.parent]
-version = "0.234"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]

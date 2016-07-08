@@ -1,0 +1,17 @@
+[Package]
+category = "perl"
+name = "Parse-CPAN-Packages-Fast"
+version = "0.09"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.CPAN]
+version = "0"
+[Prereqs.perl.runtime.CPAN-DistnameInfo]
+version = "0"
+[Prereqs.perl.runtime.IO-Compress]
+version = "0"
+[Prereqs.perl.test]

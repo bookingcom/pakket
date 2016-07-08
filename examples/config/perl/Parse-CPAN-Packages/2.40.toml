@@ -1,0 +1,33 @@
+[Package]
+category = "perl"
+name = "Parse-CPAN-Packages"
+version = "2.40"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Archive-Peek]
+version = "0"
+[Prereqs.perl.runtime.CPAN-DistnameInfo]
+version = "0"
+[Prereqs.perl.runtime.File-Slurp]
+version = "0"
+[Prereqs.perl.runtime.IO-Compress]
+version = "0"
+[Prereqs.perl.runtime.Moo]
+version = "0"
+[Prereqs.perl.runtime.PPI]
+version = "0"
+[Prereqs.perl.runtime.Path-Class]
+version = "0"
+[Prereqs.perl.runtime.Test-InDistDir]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.Type-Tiny]
+version = "0"
+[Prereqs.perl.runtime.version]
+version = "0"
+[Prereqs.perl.test]

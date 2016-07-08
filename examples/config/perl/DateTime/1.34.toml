@@ -1,0 +1,57 @@
+[Package]
+category = "perl"
+name = "DateTime"
+version = "1.34"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Dist-CheckConflicts]
+version = "0.11"
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.configure.JSON-PP]
+version = "2.27400"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.DateTime-Locale]
+version = "1.05"
+[Prereqs.perl.runtime.DateTime-TimeZone]
+version = "2.00"
+[Prereqs.perl.runtime.Dist-CheckConflicts]
+version = "0.11"
+[Prereqs.perl.runtime.Params-Validate]
+version = "1.24"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Try-Tiny]
+version = "0"
+[Prereqs.perl.runtime.XSLoader]
+version = "0"
+[Prereqs.perl.runtime.base]
+version = "0"
+[Prereqs.perl.runtime.constant]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.test.CPAN-Meta-Check]
+version = "0.012"
+[Prereqs.perl.test.CPAN-Meta-Requirements]
+version = "0"
+[Prereqs.perl.test.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Storable]
+version = "0"
+[Prereqs.perl.test.Test-Fatal]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.Test-Warnings]
+version = "0.026"
+[Prereqs.perl.test.perl]
+version = "0"
