@@ -10,7 +10,6 @@ use File::Basename            qw< basename dirname >;
 use Algorithm::Diff::Callback qw< diff_hashes >;
 use Types::Path::Tiny         qw< Path >;
 use TOML::Parser;
-use Data::Dumper;
 use Log::Any qw< $log >;
 
 use Pakket::Log;
@@ -118,7 +117,7 @@ sub DEMOLISH {
 sub _setup_build_dir {
     my $self = shift;
 
-    $log->debug( 'Creating build dir ' . $self->build_dir );
+    $log->debugf( 'Creating build dir %s', $self->build_dir );
     my $prefix_dir = path( $self->build_dir, 'main' );
 
     -d $prefix_dir or $prefix_dir->mkpath;
@@ -568,8 +567,7 @@ sub get_configure_flags {
     my @flags;
     for my $tuple (@{$config}) {
         if ( @{$tuple} > 2 ) {
-            local $Data::Dumper::Terse = 1;
-            $log->critical( 'Odd configuration flag: ' . Dumper($tuple) );
+            $log->criticalf( 'Odd configuration flag: %s', $tuple );
             exit 1;
         }
 
