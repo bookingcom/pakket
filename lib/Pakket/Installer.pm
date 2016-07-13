@@ -10,6 +10,7 @@ use System::Command;
 use Pakket::Log;
 use Pakket::Utils qw< is_writeable >;
 use Pakket::Repository;
+use Log::Any qw< $log >;
 use namespace::autoclean;
 
 # TODO:
@@ -75,20 +76,23 @@ sub install_file {
     my $bundle_file = path($filename);
 
     if ( !-r $bundle_file ) {
-        exit log_critical sub { $_[0] },
-        "Bundle file '$filename' does not exist or can't be read\n";
+        $log->critical(
+            "Bundle file '$filename' does not exist or can't be read");
+        exit 1;
     }
 
     my $install_dir = $self->install_dir;
 
     if ( !$install_dir->is_dir ) {
-        exit log_critical sub { $_[0] },
-        'Cannot find library directory, please run \'init\' first';
+        $log->critical(
+            "Cannot find library directory, please run 'init' first");
+        exit 1;
     }
 
     if ( !is_writeable($install_dir) ) {
-        exit log_critical sub { $_[0] },
-        "Can't write to your installation directory ($install_dir)";
+        $log->critical(
+            "Can't write to your installation directory ($install_dir)");
+        exit 1;
     }
 
     my $bundle_basename = $bundle_file->basename;

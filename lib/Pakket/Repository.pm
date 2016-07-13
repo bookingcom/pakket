@@ -7,6 +7,7 @@ use Path::Tiny qw< path >;
 use Types::Path::Tiny qw< Path >;
 use File::HomeDir;
 use Pakket::Log;
+use Log::Any qw< $log >;
 use namespace::autoclean;
 
 has _possible_paths => (
@@ -45,7 +46,8 @@ sub _build_repo_dir {
         $path->is_dir and return $path;
     }
 
-    exit log_critical sub { $_[0] }, 'Cannot find pakket repository';
+    $log->critical('Cannot find pakket repository');
+    exit 1;
 }
 
 __PACKAGE__->meta->make_immutable;

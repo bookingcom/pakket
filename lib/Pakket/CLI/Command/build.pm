@@ -7,7 +7,7 @@ use Pakket::CLI '-command';
 use Pakket::Builder;
 use Pakket::Log;
 use Path::Tiny      qw< path >;
-use Log::Contextual qw< set_logger >;
+use Log::Any::Adapter;
 
 use constant {
     INDEX_CATEGORY     => 0,
@@ -116,7 +116,7 @@ sub execute {
 
     my $verbose = $self->{'builder'}{'verbose'};
     my $logger  = Pakket::Log->build_logger($verbose);
-    set_logger $logger;
+    Log::Any::Adapter->set( 'Dispatch', dispatcher => $logger );
 
     foreach my $tuple ( @{ $self->{'to_build'} } ) {
         $builder->build(

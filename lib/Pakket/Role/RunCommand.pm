@@ -2,13 +2,13 @@ package Pakket::Role::RunCommand;
 # ABSTRACT: Role for running commands
 
 use Moose::Role;
-use Pakket::Log;
 use System::Command;
 use Path::Tiny qw< path >;
+use Log::Any qw< $log >;
 
 sub run_command {
     my ( $self, $dir, $sys_cmds, $extra_opts ) = @_;
-    log_info { join ' ', @{$sys_cmds} };
+    $log->info( join ' ', @{$sys_cmds} );
 
     my %opt = (
         cwd => path($dir)->stringify,
@@ -24,14 +24,14 @@ sub run_command {
         stdout => sub {
             my $msg = shift;
             chomp $msg;
-            log_debug { $msg };
+            $log->debug($msg);
             1;
         },
 
         stderr => sub {
             my $msg = shift;
             chomp $msg;
-            log_notice { $msg };
+            $log->notice($msg);
             1;
         },
     );

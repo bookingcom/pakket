@@ -3,7 +3,6 @@ package Pakket::Log;
 
 use strict;
 use warnings;
-use parent 'Log::Contextual';
 use Log::Dispatch;
 use Path::Tiny qw< path >;
 
@@ -72,12 +71,6 @@ sub _cli_logger {
         newline   => 1,
     ];
 }
-
-sub arg_levels {
-    [qw< debug info notice warning error critical alert emergency >];
-}
-
-sub default_import { ':log' }
 
 1;
 

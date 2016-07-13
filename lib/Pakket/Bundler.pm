@@ -7,6 +7,7 @@ use Path::Tiny qw< path >;
 use File::Spec;
 use Types::Path::Tiny qw< AbsPath >;
 use Pakket::Log;
+use Log::Any qw< $log >;
 
 use constant {
     PAKKET_EXTENSION => 'pkt',
@@ -47,7 +48,7 @@ sub bundle {
     chdir $bundle_path->child($pkg_name_ver)->stringify;
 
     foreach my $orig_file ( keys %{$files} ) {
-        log_debug { "Bundling $orig_file" };
+        $log->debug("Bundling $orig_file");
         my $new_fullname = $self->_rebase_build_to_output_dir(
             $build_dir, $orig_file,
         );
@@ -88,7 +89,7 @@ sub bundle {
         join '.', $pkg_name_ver, PAKKET_EXTENSION,
     );
 
-    log_info { "Creating bundle file $bundle_filename" };
+    $log->info("Creating bundle file $bundle_filename");
     system "tar -cJf $bundle_filename *";
     my $new_location = path(
         $self->bundle_dir, $package_category, $package_name,
