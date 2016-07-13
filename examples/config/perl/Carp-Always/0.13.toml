@@ -6,8 +6,8 @@ version = "0.13"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Carp]
-version = "1.38"
+version = "0"
 [Prereqs.perl.test]

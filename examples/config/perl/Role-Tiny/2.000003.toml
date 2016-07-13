@@ -14,4 +14,4 @@ version = "5.72"
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"

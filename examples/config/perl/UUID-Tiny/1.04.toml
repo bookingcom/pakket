@@ -1,0 +1,25 @@
+[Package]
+category = "perl"
+name = "UUID-Tiny"
+version = "1.04"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Digest-MD5]
+version = "0"
+[Prereqs.perl.runtime.IO]
+version = "0"
+[Prereqs.perl.runtime.MIME-Base64]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.Time-HiRes]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]

@@ -1,0 +1,17 @@
+[Package]
+category = "perl"
+name = "Text-CSV"
+version = "1.33"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.IO]
+version = "0"
+[Prereqs.perl.runtime.Test-Harness]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.test]

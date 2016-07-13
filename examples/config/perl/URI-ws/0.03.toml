@@ -9,11 +9,11 @@ version = "0.03"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.URI]
-version = "1.71"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.test.URI]
-version = "1.71"
+version = "0"

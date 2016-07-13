@@ -1,0 +1,67 @@
+[Package]
+category = "perl"
+name = "MooseX-Getopt"
+version = "0.71"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.JSON-PP]
+version = "2.27400"
+[Prereqs.perl.configure.Module-Build-Tiny]
+version = "0.039"
+[Prereqs.perl.configure.perl]
+version = "5.024000"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Getopt-Long]
+version = "v2.49.1"
+[Prereqs.perl.runtime.Getopt-Long-Descriptive]
+version = "0.099"
+[Prereqs.perl.runtime.Moose]
+version = "0"
+[Prereqs.perl.runtime.MooseX-Role-Parameterized]
+version = "1.08"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Try-Tiny]
+version = "0"
+[Prereqs.perl.runtime.namespace-autoclean]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.test.Module-Metadata]
+version = "0"
+[Prereqs.perl.test.Module-Runtime]
+version = "0"
+[Prereqs.perl.test.Moose]
+version = "0"
+[Prereqs.perl.test.MooseX-ConfigFromFile]
+version = "0"
+[Prereqs.perl.test.MooseX-SimpleConfig]
+version = "0"
+[Prereqs.perl.test.MooseX-StrictConstructor]
+version = "0"
+[Prereqs.perl.test.Path-Tiny]
+version = "0.096"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Deep]
+version = "0"
+[Prereqs.perl.test.Test-Fatal]
+version = "0.014"
+[Prereqs.perl.test.Test-Requires]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.Test-Trap]
+version = "0"
+[Prereqs.perl.test.Test-Warnings]
+version = "0.026"
+[Prereqs.perl.test.perl]
+version = "5.024000"
+[Prereqs.perl.test.perl_mlb]
+version = "0"

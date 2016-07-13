@@ -6,58 +6,58 @@ version = "0.60"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Carp-Assert]
 version = "0.21"
 [Prereqs.perl.runtime.Class-Load]
-version = "0.23"
+version = "0"
 [Prereqs.perl.runtime.Data-UUID]
-version = "1.221"
+version = "0"
 [Prereqs.perl.runtime.Digest-JHash]
-version = "0.09"
+version = "0"
 [Prereqs.perl.runtime.Digest-MD5]
-version = "2.55"
+version = "0"
 [Prereqs.perl.runtime.Hash-MoreUtils]
-version = "0.05"
+version = "0"
 [Prereqs.perl.runtime.JSON-MaybeXS]
 version = "1.003005"
 [Prereqs.perl.runtime.List-MoreUtils]
-version = "0.415"
+version = "0.416"
 [Prereqs.perl.runtime.Log-Any]
 version = "1.040"
 [Prereqs.perl.runtime.Moo]
-version = "2.001001"
+version = "2.002004"
 [Prereqs.perl.runtime.MooX-Types-MooseLike]
 version = "0.29"
 [Prereqs.perl.runtime.MooX-Types-MooseLike-Numeric]
-version = "1.02"
+version = "0"
 [Prereqs.perl.runtime.PathTools]
 version = "3.62"
 [Prereqs.perl.runtime.Storable]
-version = "2.51"
+version = "0"
 [Prereqs.perl.runtime.String-RewritePrefix]
-version = "0.007"
+version = "0"
 [Prereqs.perl.runtime.Task-Weaken]
-version = "1.04"
+version = "0"
 [Prereqs.perl.runtime.Time-Duration]
 version = "1.20"
 [Prereqs.perl.runtime.Time-Duration-Parse]
 version = "0.13"
 [Prereqs.perl.runtime.Time-HiRes]
-version = "1.9733"
+version = "1.9739"
 [Prereqs.perl.runtime.Try-Tiny]
 version = "0.24"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Class]
-version = "0.50"
+version = "0"
 [Prereqs.perl.test.Test-Deep]
-version = "1.120"
+version = "0"
 [Prereqs.perl.test.Test-Exception]
-version = "0.43"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.test.Test-Warn]
-version = "0.30"
+version = "0"
 [Prereqs.perl.test.TimeDate]
-version = "2.30"
+version = "0"

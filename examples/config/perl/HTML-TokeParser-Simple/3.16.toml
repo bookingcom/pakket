@@ -1,0 +1,19 @@
+[Package]
+category = "perl"
+name = "HTML-TokeParser-Simple"
+version = "3.16"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.HTML-Parser]
+version = "3.72"
+[Prereqs.perl.runtime.Sub-Override]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

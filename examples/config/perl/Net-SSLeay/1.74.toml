@@ -9,16 +9,9 @@ version = "1.74"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.MIME-Base64]
-version = "3.15"
+version = "0"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
-[Prereqs.system]
-[Prereqs.system.configure]
-[Prereqs.system.configure.openssl]
-version = "1.0.2h"
-[Prereqs.system.runtime]
-[Prereqs.system.runtime.openssl]
-version = "1.0.2h"

@@ -1,0 +1,13 @@
+[Package]
+category = "perl"
+name = "Algorithm-Diff-XS"
+version = "0.01"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Algorithm-Diff]
+version = "1.1903"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

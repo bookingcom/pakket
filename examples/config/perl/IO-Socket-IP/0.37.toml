@@ -7,7 +7,7 @@ version = "0.37"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.IO]
-version = "1.25"
+version = "0"
 [Prereqs.perl.runtime.Socket]
 version = "2.021"
 [Prereqs.perl.test]

@@ -1,0 +1,21 @@
+[Package]
+category = "perl"
+name = "DBD-SQLite"
+version = "1.50"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.DBI]
+version = "1.636"
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.configure.PathTools]
+version = "3.62"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.DBI]
+version = "1.636"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]

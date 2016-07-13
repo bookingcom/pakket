@@ -9,19 +9,19 @@ version = "0.12"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.HTML-Parser]
-version = "3.72"
+version = "0"
 [Prereqs.perl.runtime.Plack]
-version = "1.0039"
+version = "0"
 [Prereqs.perl.runtime.Scalar-List-Utils]
-version = "1.45"
+version = "0"
 [Prereqs.perl.runtime.parent]
-version = "0.234"
+version = "0"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.HTTP-Message]
-version = "6.11"
+version = "0"
 [Prereqs.perl.test.Plack]
-version = "1.0039"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "0"

@@ -9,7 +9,7 @@ version = "0.00903"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Moose]
-version = "2.1803"
+version = "2.1804"
 [Prereqs.perl.runtime.namespace-clean]
-version = "0.27"
+version = "0"
 [Prereqs.perl.test]

@@ -12,8 +12,8 @@ version = "7.18"
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.File-Temp]
-version = "0.2304"
+version = "0"
 [Prereqs.perl.test.Test-SharedFork]
-version = "0.35"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "0"

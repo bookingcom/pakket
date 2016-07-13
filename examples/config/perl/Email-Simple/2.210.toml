@@ -1,0 +1,25 @@
+[Package]
+category = "perl"
+name = "Email-Simple"
+version = "2.210"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Email-Date-Format]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.test.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

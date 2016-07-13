@@ -1,0 +1,9 @@
+[Package]
+category = "perl"
+name = "Expect"
+version = "1.33"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.test]

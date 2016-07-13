@@ -1,0 +1,41 @@
+[Package]
+category = "perl"
+name = "Test-Routine"
+version = "0.020"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Class-Load]
+version = "0"
+[Prereqs.perl.runtime.Moose]
+version = "0"
+[Prereqs.perl.runtime.Params-Util]
+version = "0"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Sub-Exporter]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.runtime.Try-Tiny]
+version = "0"
+[Prereqs.perl.runtime.namespace-autoclean]
+version = "0"
+[Prereqs.perl.runtime.namespace-clean]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Math-Complex]
+version = "0"
+[Prereqs.perl.test.Moose]
+version = "0"
+[Prereqs.perl.test.Test-Fatal]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

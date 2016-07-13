@@ -1,0 +1,15 @@
+[Package]
+category = "perl"
+name = "Term-Size-Perl"
+version = "0.029"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Exporter]
+version = "0"
+[Prereqs.perl.runtime.ExtUtils-CBuilder]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.test]

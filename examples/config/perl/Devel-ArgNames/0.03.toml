@@ -1,0 +1,13 @@
+[Package]
+category = "perl"
+name = "Devel-ArgNames"
+version = "0.03"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.PadWalker]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.test]

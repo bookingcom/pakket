@@ -1,0 +1,45 @@
+[Package]
+category = "perl"
+name = "MooseX-Types-DateTime"
+version = "0.13"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build-Tiny]
+version = "0.039"
+[Prereqs.perl.configure.perl]
+version = "5.024000"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.DateTime]
+version = "1.34"
+[Prereqs.perl.runtime.DateTime-Locale]
+version = "1.05"
+[Prereqs.perl.runtime.DateTime-TimeZone]
+version = "2.00"
+[Prereqs.perl.runtime.Moose]
+version = "2.1804"
+[Prereqs.perl.runtime.MooseX-Types]
+version = "0.46"
+[Prereqs.perl.runtime.namespace-clean]
+version = "0.27"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.runtime.perl_mlb]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.test.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.test.Locale-Maketext]
+version = "0"
+[Prereqs.perl.test.Moose]
+version = "0"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Fatal]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.perl]
+version = "5.024000"

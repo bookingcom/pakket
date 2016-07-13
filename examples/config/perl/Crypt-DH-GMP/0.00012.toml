@@ -1,0 +1,21 @@
+[Package]
+category = "perl"
+name = "Crypt-DH-GMP"
+version = "0.00012"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Devel-CheckLib]
+version = "1.07"
+[Prereqs.perl.configure.Devel-PPPort]
+version = "3.35"
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.configure.ExtUtils-ParseXS]
+version = "3.30"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.XSLoader]
+version = "0.22"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

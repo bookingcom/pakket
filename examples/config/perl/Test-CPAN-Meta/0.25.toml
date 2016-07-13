@@ -7,19 +7,19 @@ version = "0.25"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.IO]
-version = "1.25"
+version = "0"
 [Prereqs.perl.runtime.Parse-CPAN-Meta]
-version = "1.4417"
+version = "1.4422"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-CPAN-Meta-JSON]
-version = "0.16"
+version = "0"
 [Prereqs.perl.test.Test-Pod]
 version = "1.51"
 [Prereqs.perl.test.Test-Pod-Coverage]
 version = "1.10"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"

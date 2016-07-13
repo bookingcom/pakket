@@ -6,14 +6,14 @@ version = "3.72"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.HTML-Tagset]
 version = "3.20"
 [Prereqs.perl.runtime.HTTP-Message]
-version = "6.11"
+version = "0"
 [Prereqs.perl.runtime.XSLoader]
-version = "0.20"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]

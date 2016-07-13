@@ -6,16 +6,16 @@ version = "1.22"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Carp]
-version = "1.38"
+version = "0"
 [Prereqs.perl.runtime.Digest-MD5]
-version = "2.55"
+version = "0"
 [Prereqs.perl.runtime.File-Temp]
 version = "0.2304"
 [Prereqs.perl.runtime.HTTP-Message]
-version = "6.11"
+version = "0"
 [Prereqs.perl.runtime.IO]
 version = "1.25"
 [Prereqs.perl.test]

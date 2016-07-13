@@ -6,18 +6,18 @@ version = "0.07"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.ExtUtils-MakeMaker]
 version = "7.18"
 [Prereqs.perl.runtime.File-Path]
-version = "2.12"
+version = "0"
 [Prereqs.perl.runtime.Module-CPANfile]
-version = "1.1002"
+version = "0"
 [Prereqs.perl.runtime.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.runtime.version]
 version = "0.9917"
 [Prereqs.perl.test]

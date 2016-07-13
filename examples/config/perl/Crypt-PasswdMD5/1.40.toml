@@ -6,10 +6,10 @@ version = "1.40"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.Module-Build]
-version = "0.4218"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Digest-MD5]
 version = "2.55"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]

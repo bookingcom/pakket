@@ -1,0 +1,37 @@
+[Package]
+category = "perl"
+name = "MooX-ConfigFromFile"
+version = "0.007"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Config-Any]
+version = "0"
+[Prereqs.perl.runtime.File-Find-Rule]
+version = "0.34"
+[Prereqs.perl.runtime.Hash-Merge]
+version = "0"
+[Prereqs.perl.runtime.Moo]
+version = "2.002004"
+[Prereqs.perl.runtime.MooX-File-ConfigDir]
+version = "0.005"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Hash-Merge]
+version = "0"
+[Prereqs.perl.test.JSON]
+version = "0"
+[Prereqs.perl.test.MooX-Cmd]
+version = "0.015"
+[Prereqs.perl.test.MooX-Options]
+version = "4.022"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.perl]
+version = "0"

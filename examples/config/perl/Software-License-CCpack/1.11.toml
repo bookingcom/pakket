@@ -7,7 +7,7 @@ version = "1.11"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Software-License]
-version = "0.103012"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
@@ -16,6 +16,6 @@ version = "2.150005"
 [Prereqs.perl.test.Test-CheckDeps]
 version = "0.010"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.perl]
 version = "5.024000"

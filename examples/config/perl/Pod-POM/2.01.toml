@@ -1,0 +1,41 @@
+[Package]
+category = "perl"
+name = "Pod-POM"
+version = "2.01"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Encode]
+version = "0"
+[Prereqs.perl.runtime.Exporter]
+version = "0"
+[Prereqs.perl.runtime.Getopt-Long]
+version = "0"
+[Prereqs.perl.runtime.Text-Tabs+Wrap]
+version = "0"
+[Prereqs.perl.runtime.constant]
+version = "0"
+[Prereqs.perl.runtime.lib]
+version = "0"
+[Prereqs.perl.runtime.parent]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.File-Slurper]
+version = "0.008"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.test.Test-Differences]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "0"
+[Prereqs.perl.test.Text-Diff]
+version = "0"
+[Prereqs.perl.test.perl]
+version = "0"

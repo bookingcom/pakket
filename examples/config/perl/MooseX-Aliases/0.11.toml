@@ -1,0 +1,25 @@
+[Package]
+category = "perl"
+name = "MooseX-Aliases"
+version = "0.11"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Moose]
+version = "0"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.File-Temp]
+version = "0"
+[Prereqs.perl.test.Moose]
+version = "0"
+[Prereqs.perl.test.Test-Fatal]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.perl]
+version = "0"

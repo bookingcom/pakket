@@ -6,10 +6,10 @@ version = "2.90"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.JSON-XS]
 version = 3.02
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.test]

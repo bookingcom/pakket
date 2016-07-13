@@ -6,7 +6,7 @@ version = "5.2"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Exporter]
 version = "5.72"
@@ -17,19 +17,19 @@ version = "3.62"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.runtime.perl_mlb]
-version = 0
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Data-Dumper]
-version = "2.154"
+version = "0"
 [Prereqs.perl.test.File-Path]
-version = "2.12"
+version = "0"
 [Prereqs.perl.test.File-Temp]
-version = "0.2304"
+version = "0"
 [Prereqs.perl.test.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.test.base]
-version = "2.23"
+version = "0"
 [Prereqs.perl.test.perl]
-version = "5.024000"
+version = "0"

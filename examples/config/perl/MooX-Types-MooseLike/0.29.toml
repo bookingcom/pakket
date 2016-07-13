@@ -6,7 +6,7 @@ version = "0.29"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Module-Runtime]
 version = "0.014"
@@ -14,12 +14,12 @@ version = "0.014"
 version = "2.000003"
 [Prereqs.perl.test]
 [Prereqs.perl.test.CPAN-Meta]
-version = "2.150005"
+version = "0"
 [Prereqs.perl.test.CPAN-Meta-Requirements]
-version = "2.140"
+version = "0"
 [Prereqs.perl.test.Moo]
-version = "2.001001"
+version = "2.002004"
 [Prereqs.perl.test.Test-Fatal]
 version = "0.014"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"

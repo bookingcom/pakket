@@ -1,0 +1,9 @@
+[Package]
+category = "perl"
+name = "XML-Dumper"
+version = "0.81"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.test]

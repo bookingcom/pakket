@@ -11,24 +11,24 @@ version = "0.039"
 version = "5.024000"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Carp]
-version = "1.38"
+version = "0"
 [Prereqs.perl.runtime.MooseX-Types]
-version = "0.46"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.runtime.perl_mlb]
-version = 0
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.CPAN-Meta]
 version = "2.150005"
 [Prereqs.perl.test.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.test.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.test.Test-Deep]
-version = "1.120"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.Test-Warnings]
 version = "0.026"
 [Prereqs.perl.test.perl]

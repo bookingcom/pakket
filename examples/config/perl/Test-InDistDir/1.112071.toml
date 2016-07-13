@@ -1,0 +1,21 @@
+[Package]
+category = "perl"
+name = "Test-InDistDir"
+version = "1.112071"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]
+[Prereqs.perl.test.File-Temp]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "0"
+[Prereqs.perl.test.perl]
+version = "0"

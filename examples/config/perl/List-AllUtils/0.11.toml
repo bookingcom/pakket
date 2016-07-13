@@ -1,0 +1,31 @@
+[Package]
+category = "perl"
+name = "List-AllUtils"
+version = "0.11"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Exporter]
+version = "0"
+[Prereqs.perl.runtime.List-SomeUtils]
+version = "0.52"
+[Prereqs.perl.runtime.List-UtilsBy]
+version = "0.10"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "1.45"
+[Prereqs.perl.runtime.base]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.test.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

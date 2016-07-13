@@ -7,7 +7,7 @@ version = "1.09"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Digest-HMAC]
-version = "1.03"
+version = "0"
 [Prereqs.perl.runtime.MIME-Base64]
-version = "3.15"
+version = "0"
 [Prereqs.perl.test]

@@ -6,18 +6,18 @@ version = "1.908"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.CPAN-Meta]
 version = "2.150005"
 [Prereqs.perl.test.Encode]
-version = "2.84"
+version = "0"
 [Prereqs.perl.test.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.test.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"

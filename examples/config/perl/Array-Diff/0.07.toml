@@ -11,9 +11,9 @@ version = "7.18"
 [Prereqs.perl.runtime.Algorithm-Diff]
 version = "1.1903"
 [Prereqs.perl.runtime.Algorithm-Diff-XS]
-version = "0.01"
+version = "0"
 [Prereqs.perl.runtime.Class-Accessor]
-version = "0.34"
+version = "0"
 [Prereqs.perl.runtime.Filter]
-version = "1.55"
+version = "0"
 [Prereqs.perl.test]

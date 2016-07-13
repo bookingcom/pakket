@@ -27,7 +27,7 @@ while ( my $next = $iter->() ) {
 
     for my $prereqs ( values( %{ $module->{Prereqs}{perl} } ) ) {
         for my $dist ( keys(%$prereqs) ) {
-            if ( $dist eq "perl" ) {
+            if ( $dist eq "perl" or $dist eq "perl_mlb" ) {
                 next;
             }
             $seen{"$dist-$prereqs->{$dist}{version}"} = undef;
@@ -40,11 +40,20 @@ my $mcpan    = MetaCPAN::Client->new;
 
 open( my $pipe, "| wget --directory-prefix='$source_dir' --input-file=-" );
 
-for my $dist (@to_fetch) {
+for my $release_name (@to_fetch) {
+    my ( $dist, $version ) = split( /-([^-]+)$/ms, $release_name );
+    if ( $version eq "0" ) {
+
+        # just take the latest
+        my $release = $mcpan->release($dist);
+        print $pipe $release->download_url, "\n";
+        next;
+    }
+
     my $res = $mcpan->release(
         {
-            all => [ { name => $dist } ],
-        }
+            all => [ { name => $release_name } ],
+        },
     );
     if ( $res->total == 0 ) {
         warn "Couldn't find $dist on MetaCPAN";

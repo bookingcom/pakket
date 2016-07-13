@@ -1,0 +1,53 @@
+[Package]
+category = "perl"
+name = "PAUSE-Packages"
+version = "0.17"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.CPAN-DistnameInfo]
+version = "0"
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.File-HomeDir]
+version = "1.00"
+[Prereqs.perl.runtime.HTTP-Date]
+version = "0"
+[Prereqs.perl.runtime.HTTP-Tiny]
+version = "0"
+[Prereqs.perl.runtime.JSON-MaybeXS]
+version = "0"
+[Prereqs.perl.runtime.Moo]
+version = "2.002004"
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.Safe-Isa]
+version = "0"
+[Prereqs.perl.runtime.Type-Tiny]
+version = "0"
+[Prereqs.perl.runtime.Types-URI]
+version = "0"
+[Prereqs.perl.runtime.URI]
+version = "0"
+[Prereqs.perl.runtime.URL-Encode]
+version = "0"
+[Prereqs.perl.runtime.autodie]
+version = "2.29"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Path-Class]
+version = "0"
+[Prereqs.perl.test.Test-Fatal]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.URI-FromHash]
+version = "0"
+[Prereqs.perl.test.libwww-perl]
+version = "0"
+[Prereqs.perl.test.perl]
+version = "0"

@@ -1,0 +1,13 @@
+[Package]
+category = "perl"
+name = "Dumpvalue"
+version = "1.17"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]

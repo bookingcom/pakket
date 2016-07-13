@@ -6,10 +6,10 @@ version = "6.11"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Compress-Raw-Zlib]
-version = "2.069"
+version = "0"
 [Prereqs.perl.runtime.Encode]
 version = "2.84"
 [Prereqs.perl.runtime.Encode-Locale]
@@ -19,17 +19,17 @@ version = "5.72"
 [Prereqs.perl.runtime.HTTP-Date]
 version = "6.02"
 [Prereqs.perl.runtime.IO-Compress]
-version = "2.069"
+version = "0"
 [Prereqs.perl.runtime.IO-HTML]
-version = "1.001"
+version = "0"
 [Prereqs.perl.runtime.LWP-MediaTypes]
 version = "6.02"
 [Prereqs.perl.runtime.MIME-Base64]
-version = "3.15"
+version = "0"
 [Prereqs.perl.runtime.URI]
 version = "1.71"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "0"

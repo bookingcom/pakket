@@ -1,0 +1,39 @@
+[Package]
+category = "perl"
+name = "CPAN-Faker"
+version = "0.010"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.CPAN-Checksums]
+version = "0"
+[Prereqs.perl.runtime.Data-Section]
+version = "0"
+[Prereqs.perl.runtime.File-Next]
+version = "0"
+[Prereqs.perl.runtime.File-Path]
+version = "0"
+[Prereqs.perl.runtime.Getopt-Long-Descriptive]
+version = "0"
+[Prereqs.perl.runtime.IO-Compress]
+version = "0"
+[Prereqs.perl.runtime.Module-Faker]
+version = "0.017"
+[Prereqs.perl.runtime.Moose]
+version = "0"
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.Sort-Versions]
+version = "0"
+[Prereqs.perl.runtime.Text-Template]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.File-Temp]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

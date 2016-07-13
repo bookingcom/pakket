@@ -1,0 +1,25 @@
+[Package]
+category = "perl"
+name = "Class-Accessor-Grouped"
+version = "0.10012"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-CBuilder]
+version = "0.280224"
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Class-XSAccessor]
+version = "1.19"
+[Prereqs.perl.runtime.Module-Runtime]
+version = "0.014"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Sub-Name]
+version = "0.15"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

@@ -6,7 +6,7 @@ version = "7.12"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.Canary-Stability]
-version = "2011"
+version = "0"
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
 version = "7.18"
 [Prereqs.perl.runtime]
@@ -23,5 +23,5 @@ version = 3.02
 [Prereqs.perl.runtime.Net-SSLeay]
 version = "1.74"
 [Prereqs.perl.runtime.Task-Weaken]
-version = "1.04"
+version = "0"
 [Prereqs.perl.test]

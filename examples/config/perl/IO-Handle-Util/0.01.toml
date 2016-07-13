@@ -6,18 +6,18 @@ version = "0.01"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.IO-String]
-version = "1.08"
+version = "0"
 [Prereqs.perl.runtime.Scalar-List-Utils]
-version = "1.45"
+version = "0"
 [Prereqs.perl.runtime.Sub-Exporter]
-version = "0.987"
+version = "0"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.runtime.asa]
-version = "1.03"
+version = "0"
 [Prereqs.perl.runtime.parent]
-version = "0.234"
+version = "0"
 [Prereqs.perl.test]

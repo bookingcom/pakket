@@ -6,18 +6,18 @@ version = "0.26"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.CPAN-Meta]
-version = "2.150005"
+version = "0"
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Time-HiRes]
-version = "1.9733"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Net-Ping]
 version = "2.41"
 [Prereqs.perl.test.Plack]
-version = "1.0039"
+version = "0"
 [Prereqs.perl.test.Test-Exception]
-version = "0.43"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "0"

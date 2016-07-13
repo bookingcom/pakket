@@ -1,0 +1,15 @@
+[Package]
+category = "perl"
+name = "Ref-Util"
+version = "0.020"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Exporter]
+version = "5.72"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.test]

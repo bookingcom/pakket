@@ -1,0 +1,29 @@
+[Package]
+category = "perl"
+name = "Dist-Data"
+version = "0.006"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Archive-Any]
+version = "0.0945"
+[Prereqs.perl.runtime.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.runtime.DateTime-Format-Epoch]
+version = "0.16"
+[Prereqs.perl.runtime.Dist-Metadata]
+version = "0.926"
+[Prereqs.perl.runtime.File-Find-Object]
+version = "v0.2.13"
+[Prereqs.perl.runtime.File-Temp]
+version = "0.2304"
+[Prereqs.perl.runtime.Module-Extract-Namespaces]
+version = "1.02"
+[Prereqs.perl.runtime.Moo]
+version = "2.002004"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

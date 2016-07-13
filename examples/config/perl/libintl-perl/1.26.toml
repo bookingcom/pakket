@@ -1,0 +1,17 @@
+[Package]
+category = "perl"
+name = "libintl-perl"
+version = "1.26"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.File-ShareDir]
+version = "0"
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.version]
+version = "0.9917"
+[Prereqs.perl.test]

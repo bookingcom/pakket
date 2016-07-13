@@ -1,0 +1,71 @@
+[Package]
+category = "perl"
+name = "Reply"
+version = "0.40"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.App-Nopaste]
+version = "0"
+[Prereqs.perl.runtime.B-Keywords]
+version = "0"
+[Prereqs.perl.runtime.Carp-Always]
+version = "0"
+[Prereqs.perl.runtime.Class-Refresh]
+version = "0.07"
+[Prereqs.perl.runtime.Config-INI-Reader-Ordered]
+version = "0"
+[Prereqs.perl.runtime.Data-Dump]
+version = "0"
+[Prereqs.perl.runtime.Data-Dumper]
+version = "0"
+[Prereqs.perl.runtime.Data-Printer]
+version = "0"
+[Prereqs.perl.runtime.Devel-LexAlias]
+version = "0"
+[Prereqs.perl.runtime.Eval-Closure]
+version = "0.14"
+[Prereqs.perl.runtime.Exporter]
+version = "0"
+[Prereqs.perl.runtime.File-HomeDir]
+version = "0"
+[Prereqs.perl.runtime.Getopt-Long]
+version = "v2.49.1"
+[Prereqs.perl.runtime.Module-Runtime]
+version = "0"
+[Prereqs.perl.runtime.Package-Stash]
+version = "0"
+[Prereqs.perl.runtime.PadWalker]
+version = "0"
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.Proc-InvokeEditor]
+version = "0"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Term-ANSIColor]
+version = "0"
+[Prereqs.perl.runtime.Term-ReadLine]
+version = "0"
+[Prereqs.perl.runtime.Term-ReadLine-Gnu]
+version = "0"
+[Prereqs.perl.runtime.Time-HiRes]
+version = "0"
+[Prereqs.perl.runtime.Try-Tiny]
+version = "0"
+[Prereqs.perl.runtime.base]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.IO]
+version = "0"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.perl]
+version = "5.024000"

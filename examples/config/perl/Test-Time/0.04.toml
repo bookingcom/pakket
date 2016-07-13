@@ -9,5 +9,5 @@ version = "0.04"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Filter]
-version = "1.55"
+version = "0"
 [Prereqs.perl.test]

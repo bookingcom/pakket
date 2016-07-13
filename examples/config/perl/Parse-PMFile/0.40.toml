@@ -1,0 +1,21 @@
+[Package]
+category = "perl"
+name = "Parse-PMFile"
+version = "0.40"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker-CPANfile]
+version = "0.07"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Dumpvalue]
+version = "0"
+[Prereqs.perl.runtime.JSON-PP]
+version = "2.27400"
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.Safe]
+version = "0"
+[Prereqs.perl.runtime.version]
+version = "0.9917"
+[Prereqs.perl.test]

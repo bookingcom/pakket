@@ -6,32 +6,32 @@ version = "v2.4.5"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.Devel-PPPort]
-version = "3.32"
+version = "3.35"
 [Prereqs.perl.configure.ExtUtils-ParseXS]
 version = "3.30"
 [Prereqs.perl.configure.Module-Build]
 version = "0.4218"
 [Prereqs.perl.configure.Module-Build-XSUtil]
-version = "0.16"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Scalar-List-Utils]
 version = "1.45"
 [Prereqs.perl.runtime.XSLoader]
-version = "0.20"
+version = "0.22"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Exception]
-version = "0.43"
+version = "0"
 [Prereqs.perl.test.Test-Fatal]
-version = "0.014"
+version = "0"
 [Prereqs.perl.test.Test-LeakTrace]
-version = "0.15"
+version = "0"
 [Prereqs.perl.test.Test-Output]
-version = "1.03"
+version = "0"
 [Prereqs.perl.test.Test-Requires]
-version = "0.10"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.Try-Tiny]
-version = "0.24"
+version = "0"

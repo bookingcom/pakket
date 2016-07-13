@@ -9,15 +9,15 @@ version = "0.19"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Moose]
-version = "2.1803"
+version = "0"
 [Prereqs.perl.runtime.namespace-autoclean]
-version = "0.28"
+version = "0"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Moose]
-version = "2.1803"
+version = "0"
 [Prereqs.perl.test.Test-Fatal]
-version = "0.014"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"

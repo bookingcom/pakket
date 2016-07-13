@@ -9,13 +9,13 @@ version = "0.0020"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Class-Load]
-version = "0.23"
+version = "0"
 [Prereqs.perl.runtime.Clone]
-version = "0.38"
+version = "0"
 [Prereqs.perl.runtime.Mouse]
-version = "v2.4.5"
+version = "0"
 [Prereqs.perl.runtime.Sub-Install]
-version = "0.928"
+version = "0"
 [Prereqs.perl.runtime.Try-Tiny]
-version = "0.24"
+version = "0"
 [Prereqs.perl.test]

@@ -1,0 +1,27 @@
+[Package]
+category = "perl"
+name = "Net-OAuth"
+version = "0.28"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Class-Accessor]
+version = "0.34"
+[Prereqs.perl.runtime.Class-Data-Inheritable]
+version = "0.08"
+[Prereqs.perl.runtime.Digest-HMAC]
+version = "1.03"
+[Prereqs.perl.runtime.Digest-SHA]
+version = "5.95"
+[Prereqs.perl.runtime.Digest-SHA1]
+version = "2.13"
+[Prereqs.perl.runtime.Encode]
+version = "2.84"
+[Prereqs.perl.runtime.URI]
+version = "1.71"
+[Prereqs.perl.runtime.libwww-perl]
+version = "6.15"
+[Prereqs.perl.test]

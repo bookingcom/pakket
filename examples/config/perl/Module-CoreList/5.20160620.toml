@@ -1,0 +1,17 @@
+[Package]
+category = "perl"
+name = "Module-CoreList"
+version = "5.20160620"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.version]
+version = "0.9917"
+[Prereqs.perl.test]

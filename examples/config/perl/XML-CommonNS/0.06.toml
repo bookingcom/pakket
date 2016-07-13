@@ -1,0 +1,15 @@
+[Package]
+category = "perl"
+name = "XML-CommonNS"
+version = "0.06"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.XML-NamespaceFactory]
+version = "0"
+[Prereqs.perl.runtime.version]
+version = "0"
+[Prereqs.perl.test]

@@ -1,0 +1,23 @@
+[Package]
+category = "perl"
+name = "IO-Prompt"
+version = "0.997003"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.IO]
+version = "0"
+[Prereqs.perl.runtime.TermReadKey]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.Want]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.runtime.version]
+version = "0"
+[Prereqs.perl.test]

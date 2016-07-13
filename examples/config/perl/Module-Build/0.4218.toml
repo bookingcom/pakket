@@ -10,44 +10,42 @@ version = "2.150005"
 [Prereqs.perl.configure.Module-Metadata]
 version = "1.000027"
 [Prereqs.perl.configure.Perl-OSType]
-version = "1.009"
+version = "1.010"
 [Prereqs.perl.configure.version]
 version = "0.9917"
-[Prereqs.perl.configure.inc-latest]
-version = "0.500"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.CPAN-Meta]
 version = "2.150005"
 [Prereqs.perl.runtime.Data-Dumper]
-version = "2.154"
+version = "0"
 [Prereqs.perl.runtime.ExtUtils-CBuilder]
 version = "0.280224"
 [Prereqs.perl.runtime.ExtUtils-Install]
 version = "2.04"
 [Prereqs.perl.runtime.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime.ExtUtils-Manifest]
 version = "1.70"
 [Prereqs.perl.runtime.ExtUtils-ParseXS]
 version = "3.30"
 [Prereqs.perl.runtime.File-Path]
-version = "2.12"
+version = "0"
 [Prereqs.perl.runtime.Getopt-Long]
-version = "2.48"
+version = "0"
 [Prereqs.perl.runtime.Module-Metadata]
 version = "1.000027"
 [Prereqs.perl.runtime.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.runtime.Perl-OSType]
-version = "1.009"
+version = "1.010"
 [Prereqs.perl.runtime.Test-Harness]
 version = "3.36"
 [Prereqs.perl.runtime.Text-Abbrev]
-version = "1.02"
+version = "0"
 [Prereqs.perl.runtime.Text-ParseWords]
-version = "3.30"
+version = "0"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.runtime.podlators]
 version = "4.07"
 [Prereqs.perl.runtime.version]

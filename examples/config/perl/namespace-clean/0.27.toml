@@ -6,7 +6,7 @@ version = "0.27"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.B-Hooks-EndOfScope]
 version = "0.21"
@@ -16,4 +16,4 @@ version = "0.37"
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"

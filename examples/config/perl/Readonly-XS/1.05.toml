@@ -7,5 +7,5 @@ version = "1.05"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Readonly]
-version = "2.04"
+version = "2.05"
 [Prereqs.perl.test]

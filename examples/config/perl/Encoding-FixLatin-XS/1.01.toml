@@ -1,0 +1,17 @@
+[Package]
+category = "perl"
+name = "Encoding-FixLatin-XS"
+version = "1.01"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Encoding-FixLatin]
+version = "1.04"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

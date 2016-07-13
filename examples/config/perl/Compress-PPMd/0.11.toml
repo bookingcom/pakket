@@ -1,0 +1,13 @@
+[Package]
+category = "perl"
+name = "Compress-PPMd"
+version = "0.11"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.test]

@@ -7,9 +7,9 @@ version = "0.03"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Scalar-List-Utils]
-version = "1.45"
+version = "0"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.runtime.Tie-RefHash]
-version = "1.39"
+version = "0"
 [Prereqs.perl.test]

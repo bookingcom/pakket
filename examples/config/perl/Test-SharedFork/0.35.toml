@@ -9,17 +9,17 @@ version = "0.35"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.File-Temp]
-version = "0.2304"
+version = "0"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Harness]
-version = "3.36"
+version = "0"
 [Prereqs.perl.test.Test-Requires]
-version = "0.10"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "0"
 [Prereqs.perl.test.Time-HiRes]
-version = "1.9733"
+version = "0"

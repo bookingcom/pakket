@@ -1,1828 +1,10 @@
 {
    "perl" : {
-      "Carp-Always" : {
-         "latest" : "0.13",
+      "Data-Serializer" : {
          "versions" : {
-            "0.13" : "Carp-Always-0.13"
-         }
-      },
-      "Test-Most" : {
-         "latest" : "0.34",
-         "versions" : {
-            "0.34" : "Test-Most-0.34"
-         }
-      },
-      "Params-Validate" : {
-         "latest" : "1.24",
-         "versions" : {
-            "1.24" : "Params-Validate-1.24"
-         }
-      },
-      "Unicode-UTF8" : {
-         "versions" : {
-            "0.60" : "Unicode-UTF8-0.60"
+            "0.60" : "Data-Serializer-0.60"
          },
          "latest" : "0.60"
-      },
-      "Class-Data-Inheritable" : {
-         "versions" : {
-            "0.08" : "Class-Data-Inheritable-0.08"
-         },
-         "latest" : "0.08"
-      },
-      "Devel-OverrideGlobalRequire" : {
-         "versions" : {
-            "0.001" : "Devel-OverrideGlobalRequire-0.001"
-         },
-         "latest" : "0.001"
-      },
-      "Test-CPAN-Meta-JSON" : {
-         "latest" : "0.16",
-         "versions" : {
-            "0.16" : "Test-CPAN-Meta-JSON-0.16"
-         }
-      },
-      "Text-Markdown" : {
-         "versions" : {
-            "1.000031" : "Text-Markdown-1.000031"
-         },
-         "latest" : "1.000031"
-      },
-      "Socket" : {
-         "versions" : {
-            "2.021" : "Socket-2.021"
-         },
-         "latest" : "2.021"
-      },
-      "Catalyst-Authentication-Store-Proxy" : {
-         "latest" : "0.0.1",
-         "versions" : {
-            "0.0.1" : "Catalyst-Authentication-Store-Proxy-0.0.1"
-         }
-      },
-      "ExtUtils-MakeMaker" : {
-         "latest" : "7.18",
-         "versions" : {
-            "7.18" : "ExtUtils-MakeMaker-7.18"
-         }
-      },
-      "Path-Class" : {
-         "versions" : {
-            "0.36" : "Path-Class-0.36"
-         },
-         "latest" : "0.36"
-      },
-      "Set-Scalar" : {
-         "latest" : "1.29",
-         "versions" : {
-            "1.29" : "Set-Scalar-1.29"
-         }
-      },
-      "Class-Load" : {
-         "versions" : {
-            "0.23" : "Class-Load-0.23"
-         },
-         "latest" : "0.23"
-      },
-      "Test-Warnings" : {
-         "versions" : {
-            "0.026" : "Test-Warnings-0.026"
-         },
-         "latest" : "0.026"
-      },
-      "MooseX-Role-Parameterized" : {
-         "versions" : {
-            "1.08" : "MooseX-Role-Parameterized-1.08"
-         },
-         "latest" : "1.08"
-      },
-      "Template-Plugin-JSON" : {
-         "latest" : "0.07",
-         "versions" : {
-            "0.07" : "Template-Plugin-JSON-0.07"
-         }
-      },
-      "Config-AutoConf" : {
-         "latest" : "0.313",
-         "versions" : {
-            "0.313" : "Config-AutoConf-0.313"
-         }
-      },
-      "Sub-Exporter-ForMethods" : {
-         "latest" : "0.100052",
-         "versions" : {
-            "0.100052" : "Sub-Exporter-ForMethods-0.100052"
-         }
-      },
-      "Template-Plugin-Page" : {
-         "versions" : {
-            "0.10" : "Template-Plugin-Page-0.10"
-         },
-         "latest" : "0.10"
-      },
-      "Module-Runtime-Conflicts" : {
-         "versions" : {
-            "0.002" : "Module-Runtime-Conflicts-0.002"
-         },
-         "latest" : "0.002"
-      },
-      "HTML-Form" : {
-         "versions" : {
-            "6.03" : "HTML-Form-6.03"
-         },
-         "latest" : "6.03"
-      },
-      "Getopt-Usaginator" : {
-         "versions" : {
-            "0.0012" : "Getopt-Usaginator-0.0012"
-         },
-         "latest" : "0.0012"
-      },
-      "Devel-OverloadInfo" : {
-         "versions" : {
-            "0.004" : "Devel-OverloadInfo-0.004"
-         },
-         "latest" : "0.004"
-      },
-      "bareword-filehandles" : {
-         "versions" : {
-            "0.004" : "bareword-filehandles-0.004"
-         },
-         "latest" : "0.004"
-      },
-      "DateTime-Locale" : {
-         "latest" : "1.03",
-         "versions" : {
-            "1.03" : "DateTime-Locale-1.03"
-         }
-      },
-      "Object-Signature" : {
-         "latest" : "1.07",
-         "versions" : {
-            "1.07" : "Object-Signature-1.07"
-         }
-      },
-      "Type-Tiny" : {
-         "versions" : {
-            "1.000005" : "Type-Tiny-1.000005"
-         },
-         "latest" : "1.000005"
-      },
-      "PPI" : {
-         "latest" : "1.220",
-         "versions" : {
-            "1.220" : "PPI-1.220"
-         }
-      },
-      "HTTP-Negotiate" : {
-         "latest" : "6.01",
-         "versions" : {
-            "6.01" : "HTTP-Negotiate-6.01"
-         }
-      },
-      "Class-Tiny" : {
-         "versions" : {
-            "1.004" : "Class-Tiny-1.004"
-         },
-         "latest" : "1.004"
-      },
-      "Module-Build" : {
-         "versions" : {
-            "0.4218" : "Module-Build-0.4218"
-         },
-         "latest" : "0.4218"
-      },
-      "Catalyst-Action-REST" : {
-         "latest" : "1.20",
-         "versions" : {
-            "1.20" : "Catalyst-Action-REST-1.20"
-         }
-      },
-      "PPIx-Utilities" : {
-         "latest" : "1.001000",
-         "versions" : {
-            "1.001000" : "PPIx-Utilities-1.001000"
-         }
-      },
-      "XML-Simple" : {
-         "latest" : "2.22",
-         "versions" : {
-            "2.22" : "XML-Simple-2.22"
-         }
-      },
-      "HTML-Restrict" : {
-         "latest" : "2.2.2",
-         "versions" : {
-            "2.2.2" : "HTML-Restrict-2.2.2"
-         }
-      },
-      "B-Hooks-OP-Check" : {
-         "latest" : "0.19",
-         "versions" : {
-            "0.19" : "B-Hooks-OP-Check-0.19"
-         }
-      },
-      "Template-Plugin-MultiMarkdown" : {
-         "latest" : "0.12",
-         "versions" : {
-            "0.12" : "Template-Plugin-MultiMarkdown-0.12"
-         }
-      },
-      "XML-SAX-Expat" : {
-         "versions" : {
-            "0.51" : "XML-SAX-Expat-0.51"
-         },
-         "latest" : "0.51"
-      },
-      "XML-NamespaceSupport" : {
-         "latest" : "1.11",
-         "versions" : {
-            "1.11" : "XML-NamespaceSupport-1.11"
-         }
-      },
-      "Task-Weaken" : {
-         "latest" : "1.04",
-         "versions" : {
-            "1.04" : "Task-Weaken-1.04"
-         }
-      },
-      "Term-ReadLine-Gnu" : {
-         "versions" : {
-            "1.31" : "Term-ReadLine-Gnu-1.31"
-         },
-         "latest" : "1.31"
-      },
-      "Test-SharedFork" : {
-         "latest" : "0.35",
-         "versions" : {
-            "0.35" : "Test-SharedFork-0.35"
-         }
-      },
-      "Module-CPANTS-Analyse" : {
-         "versions" : {
-            "0.96" : "Module-CPANTS-Analyse-0.96"
-         },
-         "latest" : "0.96"
-      },
-      "HTTP-Daemon" : {
-         "versions" : {
-            "6.01" : "HTTP-Daemon-6.01"
-         },
-         "latest" : "6.01"
-      },
-      "Class-Factory-Util" : {
-         "versions" : {
-            "1.7" : "Class-Factory-Util-1.7"
-         },
-         "latest" : "1.7"
-      },
-      "WWW-Mechanize" : {
-         "versions" : {
-            "1.75" : "WWW-Mechanize-1.75"
-         },
-         "latest" : "1.75"
-      },
-      "Tie-RefHash" : {
-         "versions" : {
-            "1.39" : "Tie-RefHash-1.39"
-         },
-         "latest" : "1.39"
-      },
-      "ExtUtils-Manifest" : {
-         "latest" : "1.70",
-         "versions" : {
-            "1.70" : "ExtUtils-Manifest-1.70"
-         }
-      },
-      "Test-Pod" : {
-         "versions" : {
-            "1.51" : "Test-Pod-1.51"
-         },
-         "latest" : "1.51"
-      },
-      "Pod-Escapes" : {
-         "versions" : {
-            "1.07" : "Pod-Escapes-1.07"
-         },
-         "latest" : "1.07"
-      },
-      "Getopt-Long" : {
-         "latest" : "2.48",
-         "versions" : {
-            "2.48" : "Getopt-Long-2.48"
-         }
-      },
-      "Devel-CheckCompiler" : {
-         "versions" : {
-            "0.06" : "Devel-CheckCompiler-0.06"
-         },
-         "latest" : "0.06"
-      },
-      "Module-Metadata" : {
-         "versions" : {
-            "1.000027" : "Module-Metadata-1.000027"
-         },
-         "latest" : "1.000027"
-      },
-      "B-Keywords" : {
-         "versions" : {
-            "1.15" : "B-Keywords-1.15"
-         },
-         "latest" : "1.15"
-      },
-      "Filter-Simple-Compile" : {
-         "versions" : {
-            "0.02" : "Filter-Simple-Compile-0.02"
-         },
-         "latest" : "0.02"
-      },
-      "strictures" : {
-         "latest" : "2.000003",
-         "versions" : {
-            "2.000003" : "strictures-2.000003"
-         }
-      },
-      "Hash-AsObject" : {
-         "latest" : "0.13",
-         "versions" : {
-            "0.13" : "Hash-AsObject-0.13"
-         }
-      },
-      "Test-YAML" : {
-         "latest" : "1.06",
-         "versions" : {
-            "1.06" : "Test-YAML-1.06"
-         }
-      },
-      "File-pushd" : {
-         "versions" : {
-            "1.009" : "File-pushd-1.009"
-         },
-         "latest" : "1.009"
-      },
-      "Test-FailWarnings" : {
-         "latest" : "0.008",
-         "versions" : {
-            "0.008" : "Test-FailWarnings-0.008"
-         }
-      },
-      "Browser-Open" : {
-         "versions" : {
-            "0.04" : "Browser-Open-0.04"
-         },
-         "latest" : "0.04"
-      },
-      "lib" : {
-         "versions" : {
-            "0.63" : "lib-0.63"
-         },
-         "latest" : "0.63"
-      },
-      "Pod-Usage" : {
-         "latest" : "1.69",
-         "versions" : {
-            "1.69" : "Pod-Usage-1.69"
-         }
-      },
-      "String-Format" : {
-         "versions" : {
-            "1.17" : "String-Format-1.17"
-         },
-         "latest" : "1.17"
-      },
-      "Clone-PP" : {
-         "versions" : {
-            "1.06" : "Clone-PP-1.06"
-         },
-         "latest" : "1.06"
-      },
-      "AppConfig" : {
-         "latest" : "1.71",
-         "versions" : {
-            "1.71" : "AppConfig-1.71"
-         }
-      },
-      "Software-License" : {
-         "latest" : "0.103012",
-         "versions" : {
-            "0.103012" : "Software-License-0.103012"
-         }
-      },
-      "DateTime-Format-Strptime" : {
-         "latest" : "1.68",
-         "versions" : {
-            "1.68" : "DateTime-Format-Strptime-1.68"
-         }
-      },
-      "UNIVERSAL-isa" : {
-         "latest" : "1.20150614",
-         "versions" : {
-            "1.20150614" : "UNIVERSAL-isa-1.20150614"
-         }
-      },
-      "MooseX-Getopt" : {
-         "latest" : "0.70",
-         "versions" : {
-            "0.70" : "MooseX-Getopt-0.70"
-         }
-      },
-      "FCGI" : {
-         "versions" : {
-            "0.78" : "FCGI-0.78"
-         },
-         "latest" : "0.78"
-      },
-      "Catalyst-Plugin-Authentication" : {
-         "latest" : "0.10023",
-         "versions" : {
-            "0.10023" : "Catalyst-Plugin-Authentication-0.10023"
-         }
-      },
-      "Test-NoWarnings" : {
-         "versions" : {
-            "1.04" : "Test-NoWarnings-1.04"
-         },
-         "latest" : "1.04"
-      },
-      "Class-Accessor" : {
-         "versions" : {
-            "0.34" : "Class-Accessor-0.34"
-         },
-         "latest" : "0.34"
-      },
-      "DateTime-Format-Mail" : {
-         "versions" : {
-            "0.402" : "DateTime-Format-Mail-0.402"
-         },
-         "latest" : "0.402"
-      },
-      "Exporter" : {
-         "latest" : "5.72",
-         "versions" : {
-            "5.72" : "Exporter-5.72"
-         }
-      },
-      "Module-Build-XSUtil" : {
-         "latest" : "0.16",
-         "versions" : {
-            "0.16" : "Module-Build-XSUtil-0.16"
-         }
-      },
-      "Digest-SHA" : {
-         "versions" : {
-            "5.95" : "Digest-SHA-5.95"
-         },
-         "latest" : "5.95"
-      },
-      "Module-Load" : {
-         "versions" : {
-            "0.32" : "Module-Load-0.32"
-         },
-         "latest" : "0.32"
-      },
-      "Test-LeakTrace" : {
-         "versions" : {
-            "0.15" : "Test-LeakTrace-0.15"
-         },
-         "latest" : "0.15"
-      },
-      "WWW-Curl" : {
-         "latest" : "4.17",
-         "versions" : {
-            "4.17" : "WWW-Curl-4.17"
-         }
-      },
-      "Class-XSAccessor" : {
-         "versions" : {
-            "1.19" : "Class-XSAccessor-1.19"
-         },
-         "latest" : "1.19"
-      },
-      "URI" : {
-         "latest" : "1.71",
-         "versions" : {
-            "1.71" : "URI-1.71"
-         }
-      },
-      "Clipboard" : {
-         "latest" : "0.13",
-         "versions" : {
-            "0.13" : "Clipboard-0.13"
-         }
-      },
-      "Net-Fastly" : {
-         "versions" : {
-            "1.05" : "Net-Fastly-1.05"
-         },
-         "latest" : "1.05"
-      },
-      "Class-Inspector" : {
-         "versions" : {
-            "1.28" : "Class-Inspector-1.28"
-         },
-         "latest" : "1.28"
-      },
-      "Mozilla-CA" : {
-         "versions" : {
-            "20160104" : "Mozilla-CA-20160104"
-         },
-         "latest" : "20160104"
-      },
-      "Log-Any" : {
-         "versions" : {
-            "1.040" : "Log-Any-1.040"
-         },
-         "latest" : "1.040"
-      },
-      "AnyEvent" : {
-         "versions" : {
-            "7.12" : "AnyEvent-7.12"
-         },
-         "latest" : "7.12"
-      },
-      "CGI-Compile" : {
-         "versions" : {
-            "0.21" : "CGI-Compile-0.21"
-         },
-         "latest" : "0.21"
-      },
-      "Test-Deep" : {
-         "versions" : {
-            "1.120" : "Test-Deep-1.120"
-         },
-         "latest" : "1.120"
-      },
-      "Plack" : {
-         "latest" : "1.0039",
-         "versions" : {
-            "1.0039" : "Plack-1.0039"
-         }
-      },
-      "Package-Stash" : {
-         "versions" : {
-            "0.37" : "Package-Stash-0.37"
-         },
-         "latest" : "0.37"
-      },
-      "Cpanel-JSON-XS" : {
-         "versions" : {
-            "3.0213" : "Cpanel-JSON-XS-3.0213"
-         },
-         "latest" : "3.0213"
-      },
-      "TimeDate" : {
-         "versions" : {
-            "2.30" : "TimeDate-2.30"
-         },
-         "latest" : "2.30"
-      },
-      "Lexical-SealRequireHints" : {
-         "versions" : {
-            "0.010" : "Lexical-SealRequireHints-0.010"
-         },
-         "latest" : "0.010"
-      },
-      "XML-RSS" : {
-         "latest" : "1.59",
-         "versions" : {
-            "1.59" : "XML-RSS-1.59"
-         }
-      },
-      "Stream-Buffered" : {
-         "latest" : "0.03",
-         "versions" : {
-            "0.03" : "Stream-Buffered-0.03"
-         }
-      },
-      "String-RewritePrefix" : {
-         "versions" : {
-            "0.007" : "String-RewritePrefix-0.007"
-         },
-         "latest" : "0.007"
-      },
-      "Data-Dumper" : {
-         "latest" : "2.154",
-         "versions" : {
-            "2.154" : "Data-Dumper-2.154"
-         }
-      },
-      "Test-CPAN-Meta" : {
-         "versions" : {
-            "0.25" : "Test-CPAN-Meta-0.25"
-         },
-         "latest" : "0.25"
-      },
-      "Class-Unload" : {
-         "latest" : "0.09",
-         "versions" : {
-            "0.09" : "Class-Unload-0.09"
-         }
-      },
-      "HTML-Tiny" : {
-         "latest" : "1.05",
-         "versions" : {
-            "1.05" : "HTML-Tiny-1.05"
-         }
-      },
-      "MIME-Types" : {
-         "versions" : {
-            "2.13" : "MIME-Types-2.13"
-         },
-         "latest" : "2.13"
-      },
-      "Text-Tabs+Wrap" : {
-         "versions" : {
-            "2013.0523" : "Text-Tabs+Wrap-2013.0523"
-         },
-         "latest" : "2013.0523"
-      },
-      "Parse-CPAN-Meta" : {
-         "latest" : "1.4417",
-         "versions" : {
-            "1.4417" : "Parse-CPAN-Meta-1.4417"
-         }
-      },
-      "Env" : {
-         "latest" : "1.04",
-         "versions" : {
-            "1.04" : "Env-1.04"
-         }
-      },
-      "Devel-GlobalDestruction" : {
-         "latest" : "0.13",
-         "versions" : {
-            "0.13" : "Devel-GlobalDestruction-0.13"
-         }
-      },
-      "Hash-MoreUtils" : {
-         "latest" : "0.05",
-         "versions" : {
-            "0.05" : "Hash-MoreUtils-0.05"
-         }
-      },
-      "Module-Runtime" : {
-         "latest" : "0.014",
-         "versions" : {
-            "0.014" : "Module-Runtime-0.014"
-         }
-      },
-      "Devel-PPPort" : {
-         "versions" : {
-            "3.32" : "Devel-PPPort-3.32"
-         },
-         "latest" : "3.32"
-      },
-      "List-MoreUtils" : {
-         "latest" : "0.415",
-         "versions" : {
-            "0.415" : "List-MoreUtils-0.415"
-         }
-      },
-      "Text-Balanced" : {
-         "latest" : "2.03",
-         "versions" : {
-            "2.03" : "Text-Balanced-2.03"
-         }
-      },
-      "CPAN-DistnameInfo" : {
-         "versions" : {
-            "0.12" : "CPAN-DistnameInfo-0.12"
-         },
-         "latest" : "0.12"
-      },
-      "IO-Socket-IP" : {
-         "latest" : "0.37",
-         "versions" : {
-            "0.37" : "IO-Socket-IP-0.37"
-         }
-      },
-      "Text-ParseWords" : {
-         "versions" : {
-            "3.30" : "Text-ParseWords-3.30"
-         },
-         "latest" : "3.30"
-      },
-      "Path-Iterator-Rule" : {
-         "versions" : {
-            "1.012" : "Path-Iterator-Rule-1.012"
-         },
-         "latest" : "1.012"
-      },
-      "CPAN-Meta-Requirements" : {
-         "versions" : {
-            "2.140" : "CPAN-Meta-Requirements-2.140"
-         },
-         "latest" : "2.140"
-      },
-      "Path-Tiny" : {
-         "latest" : "0.094",
-         "versions" : {
-            "0.094" : "Path-Tiny-0.094"
-         }
-      },
-      "Net-DNS" : {
-         "versions" : {
-            "1.06" : "Net-DNS-1.06"
-         },
-         "latest" : "1.06"
-      },
-      "HTML-Tree" : {
-         "versions" : {
-            "5.03" : "HTML-Tree-5.03"
-         },
-         "latest" : "5.03"
-      },
-      "Test-Requires" : {
-         "versions" : {
-            "0.10" : "Test-Requires-0.10"
-         },
-         "latest" : "0.10"
-      },
-      "IPC-Run" : {
-         "latest" : "0.94",
-         "versions" : {
-            "0.94" : "IPC-Run-0.94"
-         }
-      },
-      "App-Nopaste" : {
-         "versions" : {
-            "1.006" : "App-Nopaste-1.006"
-         },
-         "latest" : "1.006"
-      },
-      "Perl-Critic" : {
-         "versions" : {
-            "1.126" : "Perl-Critic-1.126"
-         },
-         "latest" : "1.126"
-      },
-      "HTTP-Server-Simple-PSGI" : {
-         "latest" : "0.16",
-         "versions" : {
-            "0.16" : "HTTP-Server-Simple-PSGI-0.16"
-         }
-      },
-      "version" : {
-         "latest" : "0.9917",
-         "versions" : {
-            "0.9917" : "version-0.9917"
-         }
-      },
-      "Types-Serialiser" : {
-         "latest" : "1.0",
-         "versions" : {
-            "1.0" : "Types-Serialiser-1.0"
-         }
-      },
-      "Catalyst-Plugin-ConfigLoader" : {
-         "latest" : "0.34",
-         "versions" : {
-            "0.34" : "Catalyst-Plugin-ConfigLoader-0.34"
-         }
-      },
-      "Archive-Tar" : {
-         "versions" : {
-            "2.08" : "Archive-Tar-2.08"
-         },
-         "latest" : "2.08"
-      },
-      "JavaScript-Minifier-XS" : {
-         "versions" : {
-            "0.11" : "JavaScript-Minifier-XS-0.11"
-         },
-         "latest" : "0.11"
-      },
-      "CatalystX-RoleApplicator" : {
-         "latest" : "0.005",
-         "versions" : {
-            "0.005" : "CatalystX-RoleApplicator-0.005"
-         }
-      },
-      "List-SomeUtils" : {
-         "latest" : "0.52",
-         "versions" : {
-            "0.52" : "List-SomeUtils-0.52"
-         }
-      },
-      "namespace-autoclean" : {
-         "latest" : "0.28",
-         "versions" : {
-            "0.28" : "namespace-autoclean-0.28"
-         }
-      },
-      "IO-Compress" : {
-         "versions" : {
-            "2.069" : "IO-Compress-2.069"
-         },
-         "latest" : "2.069"
-      },
-      "NTLM" : {
-         "latest" : "1.09",
-         "versions" : {
-            "1.09" : "NTLM-1.09"
-         }
-      },
-      "Lingua-EN-Inflect" : {
-         "latest" : "1.899",
-         "versions" : {
-            "1.899" : "Lingua-EN-Inflect-1.899"
-         }
-      },
-      "HTML-Selector-XPath" : {
-         "versions" : {
-            "0.20" : "HTML-Selector-XPath-0.20"
-         },
-         "latest" : "0.20"
-      },
-      "aliased" : {
-         "versions" : {
-            "0.34" : "aliased-0.34"
-         },
-         "latest" : "0.34"
-      },
-      "Class-Accessor-Chained" : {
-         "latest" : "0.01",
-         "versions" : {
-            "0.01" : "Class-Accessor-Chained-0.01"
-         }
-      },
-      "Config-Any" : {
-         "versions" : {
-            "0.27" : "Config-Any-0.27"
-         },
-         "latest" : "0.27"
-      },
-      "CPAN-Meta-Check" : {
-         "versions" : {
-            "0.012" : "CPAN-Meta-Check-0.012"
-         },
-         "latest" : "0.012"
-      },
-      "XML-LibXML" : {
-         "latest" : "2.0125",
-         "versions" : {
-            "2.0125" : "XML-LibXML-2.0125"
-         }
-      },
-      "Digest-JHash" : {
-         "latest" : "0.09",
-         "versions" : {
-            "0.09" : "Digest-JHash-0.09"
-         }
-      },
-      "Test-MockObject" : {
-         "versions" : {
-            "1.20150527" : "Test-MockObject-1.20150527"
-         },
-         "latest" : "1.20150527"
-      },
-      "BSD-Resource" : {
-         "latest" : "1.2910",
-         "versions" : {
-            "1.2910" : "BSD-Resource-1.2910"
-         }
-      },
-      "Clone" : {
-         "latest" : "0.38",
-         "versions" : {
-            "0.38" : "Clone-0.38"
-         }
-      },
-      "parent" : {
-         "latest" : "0.234",
-         "versions" : {
-            "0.234" : "parent-0.234"
-         }
-      },
-      "Test-Exception" : {
-         "latest" : "0.43",
-         "versions" : {
-            "0.43" : "Test-Exception-0.43"
-         }
-      },
-      "Role-Tiny" : {
-         "versions" : {
-            "2.000003" : "Role-Tiny-2.000003"
-         },
-         "latest" : "2.000003"
-      },
-      "Text-SimpleTable" : {
-         "versions" : {
-            "2.03" : "Text-SimpleTable-2.03"
-         },
-         "latest" : "2.03"
-      },
-      "Sub-Exporter" : {
-         "versions" : {
-            "0.987" : "Sub-Exporter-0.987"
-         },
-         "latest" : "0.987"
-      },
-      "Data-OptList" : {
-         "latest" : "0.110",
-         "versions" : {
-            "0.110" : "Data-OptList-0.110"
-         }
-      },
-      "ExtUtils-MakeMaker-CPANfile" : {
-         "versions" : {
-            "0.07" : "ExtUtils-MakeMaker-CPANfile-0.07"
-         },
-         "latest" : "0.07"
-      },
-      "Module-Compile" : {
-         "versions" : {
-            "0.35" : "Module-Compile-0.35"
-         },
-         "latest" : "0.35"
-      },
-      "Devel-Caller" : {
-         "latest" : "2.06",
-         "versions" : {
-            "2.06" : "Devel-Caller-2.06"
-         }
-      },
-      "PHP-Serialization" : {
-         "latest" : "0.34",
-         "versions" : {
-            "0.34" : "PHP-Serialization-0.34"
-         }
-      },
-      "libnet" : {
-         "versions" : {
-            "3.08" : "libnet-3.08"
-         },
-         "latest" : "3.08"
-      },
-      "XML-XPath" : {
-         "latest" : "1.36",
-         "versions" : {
-            "1.36" : "XML-XPath-1.36"
-         }
-      },
-      "Data-Visitor" : {
-         "versions" : {
-            "0.30" : "Data-Visitor-0.30"
-         },
-         "latest" : "0.30"
-      },
-      "Data-Section" : {
-         "versions" : {
-            "0.200006" : "Data-Section-0.200006"
-         },
-         "latest" : "0.200006"
-      },
-      "Spiffy" : {
-         "latest" : "0.46",
-         "versions" : {
-            "0.46" : "Spiffy-0.46"
-         }
-      },
-      "Readonly" : {
-         "latest" : "2.04",
-         "versions" : {
-            "2.04" : "Readonly-2.04"
-         }
-      },
-      "Crypt-PasswdMD5" : {
-         "versions" : {
-            "1.40" : "Crypt-PasswdMD5-1.40"
-         },
-         "latest" : "1.40"
-      },
-      "Moo" : {
-         "versions" : {
-            "2.001001" : "Moo-2.001001"
-         },
-         "latest" : "2.001001"
-      },
-      "IO-HTML" : {
-         "latest" : "1.001",
-         "versions" : {
-            "1.001" : "IO-HTML-1.001"
-         }
-      },
-      "URI-Find" : {
-         "latest" : "20140709",
-         "versions" : {
-            "20140709" : "URI-Find-20140709"
-         }
-      },
-      "common-sense" : {
-         "versions" : {
-            "3.74" : "common-sense-3.74"
-         },
-         "latest" : "3.74"
-      },
-      "Text-MultiMarkdown" : {
-         "latest" : "1.000035",
-         "versions" : {
-            "1.000035" : "Text-MultiMarkdown-1.000035"
-         }
-      },
-      "Captcha-reCAPTCHA" : {
-         "versions" : {
-            "0.97" : "Captcha-reCAPTCHA-0.97"
-         },
-         "latest" : "0.97"
-      },
-      "Regexp-Common" : {
-         "versions" : {
-            "2016060101" : "Regexp-Common-2016060101"
-         },
-         "latest" : "2016060101"
-      },
-      "Test-Simple" : {
-         "versions" : {
-            "1.302022" : "Test-Simple-1.302022"
-         },
-         "latest" : "1.302022"
-      },
-      "IO-Zlib" : {
-         "versions" : {
-            "1.10" : "IO-Zlib-1.10"
-         },
-         "latest" : "1.10"
-      },
-      "Encode-Locale" : {
-         "versions" : {
-            "1.05" : "Encode-Locale-1.05"
-         },
-         "latest" : "1.05"
-      },
-      "Exporter-Tiny" : {
-         "versions" : {
-            "0.042" : "Exporter-Tiny-0.042"
-         },
-         "latest" : "0.042"
-      },
-      "HTTP-Server-Simple" : {
-         "latest" : "0.51",
-         "versions" : {
-            "0.51" : "HTTP-Server-Simple-0.51"
-         }
-      },
-      "Test" : {
-         "latest" : "1.26",
-         "versions" : {
-            "1.26" : "Test-1.26"
-         }
-      },
-      "Plack-Test-ExternalServer" : {
-         "versions" : {
-            "0.02" : "Plack-Test-ExternalServer-0.02"
-         },
-         "latest" : "0.02"
-      },
-      "URI-ws" : {
-         "versions" : {
-            "0.03" : "URI-ws-0.03"
-         },
-         "latest" : "0.03"
-      },
-      "MooseX-ConfigFromFile" : {
-         "latest" : "0.14",
-         "versions" : {
-            "0.14" : "MooseX-ConfigFromFile-0.14"
-         }
-      },
-      "DateTime-Format-HTTP" : {
-         "latest" : "0.42",
-         "versions" : {
-            "0.42" : "DateTime-Format-HTTP-0.42"
-         }
-      },
-      "Test-Warn" : {
-         "latest" : "0.30",
-         "versions" : {
-            "0.30" : "Test-Warn-0.30"
-         }
-      },
-      "Catalyst-Action-RenderView" : {
-         "latest" : "0.16",
-         "versions" : {
-            "0.16" : "Catalyst-Action-RenderView-0.16"
-         }
-      },
-      "Search-Elasticsearch" : {
-         "latest" : "2.03",
-         "versions" : {
-            "2.03" : "Search-Elasticsearch-2.03"
-         }
-      },
-      "Carp" : {
-         "versions" : {
-            "1.38" : "Carp-1.38"
-         },
-         "latest" : "1.38"
-      },
-      "File-Which" : {
-         "versions" : {
-            "1.21" : "File-Which-1.21"
-         },
-         "latest" : "1.21"
-      },
-      "Module-Refresh" : {
-         "latest" : "0.17",
-         "versions" : {
-            "0.17" : "Module-Refresh-0.17"
-         }
-      },
-      "autodie" : {
-         "latest" : "2.29",
-         "versions" : {
-            "2.29" : "autodie-2.29"
-         }
-      },
-      "HTTP-Parser-XS" : {
-         "versions" : {
-            "0.17" : "HTTP-Parser-XS-0.17"
-         },
-         "latest" : "0.17"
-      },
-      "Time-Piece" : {
-         "latest" : "1.31",
-         "versions" : {
-            "1.31" : "Time-Piece-1.31"
-         }
-      },
-      "Locale-Maketext-Simple" : {
-         "versions" : {
-            "0.21" : "Locale-Maketext-Simple-0.21"
-         },
-         "latest" : "0.21"
-      },
-      "CGI" : {
-         "latest" : "4.28",
-         "versions" : {
-            "4.28" : "CGI-4.28"
-         }
-      },
-      "CPAN-Meta" : {
-         "versions" : {
-            "2.150005" : "CPAN-Meta-2.150005"
-         },
-         "latest" : "2.150005"
-      },
-      "Class-C3-Adopt-NEXT" : {
-         "versions" : {
-            "0.14" : "Class-C3-Adopt-NEXT-0.14"
-         },
-         "latest" : "0.14"
-      },
-      "Mojolicious" : {
-         "latest" : "6.62",
-         "versions" : {
-            "6.62" : "Mojolicious-6.62"
-         }
-      },
-      "File-Find-Rule" : {
-         "latest" : "0.34",
-         "versions" : {
-            "0.34" : "File-Find-Rule-0.34"
-         }
-      },
-      "HTTP-Request-AsCGI" : {
-         "latest" : "1.2",
-         "versions" : {
-            "1.2" : "HTTP-Request-AsCGI-1.2"
-         }
-      },
-      "HTML-Formatter" : {
-         "latest" : "2.14",
-         "versions" : {
-            "2.14" : "HTML-Formatter-2.14"
-         }
-      },
-      "Test-Harness" : {
-         "versions" : {
-            "3.36" : "Test-Harness-3.36"
-         },
-         "latest" : "3.36"
-      },
-      "ExtUtils-ParseXS" : {
-         "latest" : "3.30",
-         "versions" : {
-            "3.30" : "ExtUtils-ParseXS-3.30"
-         }
-      },
-      "PadWalker" : {
-         "versions" : {
-            "2.2" : "PadWalker-2.2"
-         },
-         "latest" : "2.2"
-      },
-      "Plack-Middleware-Session" : {
-         "versions" : {
-            "0.30" : "Plack-Middleware-Session-0.30"
-         },
-         "latest" : "0.30"
-      },
-      "Term-ANSIColor" : {
-         "latest" : "4.05",
-         "versions" : {
-            "4.05" : "Term-ANSIColor-4.05"
-         }
-      },
-      "Attribute-Handlers" : {
-         "versions" : {
-            "0.99" : "Attribute-Handlers-0.99"
-         },
-         "latest" : "0.99"
-      },
-      "Digest" : {
-         "versions" : {
-            "1.17" : "Digest-1.17"
-         },
-         "latest" : "1.17"
-      },
-      "Try-Tiny" : {
-         "latest" : "0.24",
-         "versions" : {
-            "0.24" : "Try-Tiny-0.24"
-         }
-      },
-      "HTTP-Cookies" : {
-         "latest" : "6.01",
-         "versions" : {
-            "6.01" : "HTTP-Cookies-6.01"
-         }
-      },
-      "Config-INI-Reader-Ordered" : {
-         "versions" : {
-            "0.020" : "Config-INI-Reader-Ordered-0.020"
-         },
-         "latest" : "0.020"
-      },
-      "Cookie-Baker" : {
-         "latest" : "0.06",
-         "versions" : {
-            "0.06" : "Cookie-Baker-0.06"
-         }
-      },
-      "Pod-Coverage" : {
-         "latest" : "0.23",
-         "versions" : {
-            "0.23" : "Pod-Coverage-0.23"
-         }
-      },
-      "Config-JFDI" : {
-         "versions" : {
-            "0.065" : "Config-JFDI-0.065"
-         },
-         "latest" : "0.065"
-      },
-      "indirect" : {
-         "versions" : {
-            "0.36" : "indirect-0.36"
-         },
-         "latest" : "0.36"
-      },
-      "POSIX-strftime-Compiler" : {
-         "latest" : "0.41",
-         "versions" : {
-            "0.41" : "POSIX-strftime-Compiler-0.41"
-         }
-      },
-      "Algorithm-Diff-XS" : {
-         "latest" : "0.04",
-         "versions" : {
-            "0.04" : "Algorithm-Diff-XS-0.04"
-         }
-      },
-      "File-Listing" : {
-         "versions" : {
-            "6.04" : "File-Listing-6.04"
-         },
-         "latest" : "6.04"
-      },
-      "Mixin-Linewise" : {
-         "latest" : "0.108",
-         "versions" : {
-            "0.108" : "Mixin-Linewise-0.108"
-         }
-      },
-      "Locale-Codes" : {
-         "versions" : {
-            "3.39" : "Locale-Codes-3.39"
-         },
-         "latest" : "3.39"
-      },
-      "Tree-Simple" : {
-         "latest" : "1.29",
-         "versions" : {
-            "1.29" : "Tree-Simple-1.29"
-         }
-      },
-      "Archive-Zip" : {
-         "latest" : "1.57",
-         "versions" : {
-            "1.57" : "Archive-Zip-1.57"
-         }
-      },
-      "Data-Page" : {
-         "latest" : "2.02",
-         "versions" : {
-            "2.02" : "Data-Page-2.02"
-         }
-      },
-      "Plack-Middleware-FixMissingBodyInRedirect" : {
-         "latest" : "0.12",
-         "versions" : {
-            "0.12" : "Plack-Middleware-FixMissingBodyInRedirect-0.12"
-         }
-      },
-      "Compress-Raw-Bzip2" : {
-         "latest" : "2.069",
-         "versions" : {
-            "2.069" : "Compress-Raw-Bzip2-2.069"
-         }
-      },
-      "Template-Alloy" : {
-         "versions" : {
-            "1.020" : "Template-Alloy-1.020"
-         },
-         "latest" : "1.020"
-      },
-      "inc-latest" : {
-         "versions" : {
-            "0.500" : "inc-latest-0.500"
-         },
-         "latest" : "0.500"
-      },
-      "Package-DeprecationManager" : {
-         "latest" : "0.16",
-         "versions" : {
-            "0.16" : "Package-DeprecationManager-0.16"
-         }
-      },
-      "Filter" : {
-         "latest" : "1.55",
-         "versions" : {
-            "1.55" : "Filter-1.55"
-         }
-      },
-      "Module-Implementation" : {
-         "latest" : "0.09",
-         "versions" : {
-            "0.09" : "Module-Implementation-0.09"
-         }
-      },
-      "CPAN-Meta-YAML" : {
-         "latest" : "0.018",
-         "versions" : {
-            "0.018" : "CPAN-Meta-YAML-0.018"
-         }
-      },
-      "Term-ShellUI" : {
-         "versions" : {
-            "0.92" : "Term-ShellUI-0.92"
-         },
-         "latest" : "0.92"
-      },
-      "MooseX-Role-WithOverloading" : {
-         "latest" : "0.17",
-         "versions" : {
-            "0.17" : "MooseX-Role-WithOverloading-0.17"
-         }
-      },
-      "YAML-Syck" : {
-         "latest" : "1.29",
-         "versions" : {
-            "1.29" : "YAML-Syck-1.29"
-         }
-      },
-      "namespace-clean" : {
-         "latest" : "0.27",
-         "versions" : {
-            "0.27" : "namespace-clean-0.27"
-         }
-      },
-      "Sub-Install" : {
-         "latest" : "0.928",
-         "versions" : {
-            "0.928" : "Sub-Install-0.928"
-         }
-      },
-      "Net-Ping" : {
-         "versions" : {
-            "2.41" : "Net-Ping-2.41"
-         },
-         "latest" : "2.41"
-      },
-      "CGI-Struct" : {
-         "latest" : "1.21",
-         "versions" : {
-            "1.21" : "CGI-Struct-1.21"
-         }
-      },
-      "Net-HTTP" : {
-         "versions" : {
-            "6.09" : "Net-HTTP-6.09"
-         },
-         "latest" : "6.09"
-      },
-      "Plack-Middleware-MethodOverride" : {
-         "versions" : {
-            "0.15" : "Plack-Middleware-MethodOverride-0.15"
-         },
-         "latest" : "0.15"
-      },
-      "Any-URI-Escape" : {
-         "latest" : "0.01",
-         "versions" : {
-            "0.01" : "Any-URI-Escape-0.01"
-         }
-      },
-      "Filter-Simple" : {
-         "versions" : {
-            "0.91" : "Filter-Simple-0.91"
-         },
-         "latest" : "0.91"
-      },
-      "Software-License-CCpack" : {
-         "versions" : {
-            "1.11" : "Software-License-CCpack-1.11"
-         },
-         "latest" : "1.11"
-      },
-      "Parallel-Scoreboard" : {
-         "versions" : {
-            "0.07" : "Parallel-Scoreboard-0.07"
-         },
-         "latest" : "0.07"
-      },
-      "B-Flags" : {
-         "latest" : "0.16",
-         "versions" : {
-            "0.16" : "B-Flags-0.16"
-         }
-      },
-      "XML-Feed" : {
-         "latest" : "0.53",
-         "versions" : {
-            "0.53" : "XML-Feed-0.53"
-         }
-      },
-      "ExtUtils-Config" : {
-         "latest" : "0.008",
-         "versions" : {
-            "0.008" : "ExtUtils-Config-0.008"
-         }
-      },
-      "Sort-Naturally" : {
-         "versions" : {
-            "1.03" : "Sort-Naturally-1.03"
-         },
-         "latest" : "1.03"
-      },
-      "Capture-Tiny" : {
-         "latest" : "0.42",
-         "versions" : {
-            "0.42" : "Capture-Tiny-0.42"
-         }
-      },
-      "Test-Fatal" : {
-         "versions" : {
-            "0.014" : "Test-Fatal-0.014"
-         },
-         "latest" : "0.014"
-      },
-      "Module-CPANfile" : {
-         "versions" : {
-            "1.1002" : "Module-CPANfile-1.1002"
-         },
-         "latest" : "1.1002"
-      },
-      "WWW-Pastebin-PastebinCom-Create" : {
-         "versions" : {
-            "1.003" : "WWW-Pastebin-PastebinCom-Create-1.003"
-         },
-         "latest" : "1.003"
-      },
-      "URI-Escape-XS" : {
-         "versions" : {
-            "0.13" : "URI-Escape-XS-0.13"
-         },
-         "latest" : "0.13"
-      },
-      "File-Slurper" : {
-         "latest" : "0.008",
-         "versions" : {
-            "0.008" : "File-Slurper-0.008"
-         }
-      },
-      "DateTime" : {
-         "versions" : {
-            "1.28" : "DateTime-1.28"
-         },
-         "latest" : "1.28"
-      },
-      "Plack-Middleware-ServerStatus-Lite" : {
-         "latest" : "0.34",
-         "versions" : {
-            "0.34" : "Plack-Middleware-ServerStatus-Lite-0.34"
-         }
-      },
-      "MooseX-Types-Path-Tiny" : {
-         "latest" : "0.011",
-         "versions" : {
-            "0.011" : "MooseX-Types-Path-Tiny-0.011"
-         }
-      },
-      "DateTime-TimeZone" : {
-         "latest" : "1.98",
-         "versions" : {
-            "1.98" : "DateTime-TimeZone-1.98"
-         }
-      },
-      "IPC-Run3" : {
-         "latest" : "0.048",
-         "versions" : {
-            "0.048" : "IPC-Run3-0.048"
-         }
-      },
-      "Pod-Eventual" : {
-         "latest" : "0.094001",
-         "versions" : {
-            "0.094001" : "Pod-Eventual-0.094001"
-         }
-      },
-      "Cookie-Baker-XS" : {
-         "latest" : "0.06",
-         "versions" : {
-            "0.06" : "Cookie-Baker-XS-0.06"
-         }
-      },
-      "EV" : {
-         "latest" : "4.22",
-         "versions" : {
-            "4.22" : "EV-4.22"
-         }
-      },
-      "Catalyst-Plugin-Session" : {
-         "latest" : "0.40",
-         "versions" : {
-            "0.40" : "Catalyst-Plugin-Session-0.40"
-         }
-      },
-      "JSON-XS" : {
-         "latest" : "3.02",
-         "versions" : {
-            "3.02" : "JSON-XS-3.02"
-         }
-      },
-      "Encode" : {
-         "latest" : "2.84",
-         "versions" : {
-            "2.84" : "Encode-2.84"
-         }
-      },
-      "YAML" : {
-         "latest" : "1.15",
-         "versions" : {
-            "1.15" : "YAML-1.15"
-         }
-      },
-      "Class-Load-XS" : {
-         "latest" : "0.09",
-         "versions" : {
-            "0.09" : "Class-Load-XS-0.09"
-         }
-      },
-      "MooseX-SimpleConfig" : {
-         "latest" : "0.11",
-         "versions" : {
-            "0.11" : "MooseX-SimpleConfig-0.11"
-         }
-      },
-      "Catalyst-Plugin-Static-Simple" : {
-         "latest" : "0.33",
-         "versions" : {
-            "0.33" : "Catalyst-Plugin-Static-Simple-0.33"
-         }
-      },
-      "Text-Pluralize" : {
-         "versions" : {
-            "1.1" : "Text-Pluralize-1.1"
-         },
-         "latest" : "1.1"
-      },
-      "IPC-System-Simple" : {
-         "latest" : "1.25",
-         "versions" : {
-            "1.25" : "IPC-System-Simple-1.25"
-         }
-      },
-      "Hijk" : {
-         "latest" : "0.26",
-         "versions" : {
-            "0.26" : "Hijk-0.26"
-         }
-      },
-      "Devel-LexAlias" : {
-         "versions" : {
-            "0.05" : "Devel-LexAlias-0.05"
-         },
-         "latest" : "0.05"
-      },
-      "Log-Any-Adapter-Callback" : {
-         "latest" : "0.09",
-         "versions" : {
-            "0.09" : "Log-Any-Adapter-Callback-0.09"
-         }
-      },
-      "Number-Format" : {
-         "latest" : "1.75",
-         "versions" : {
-            "1.75" : "Number-Format-1.75"
-         }
-      },
-      "Time-Duration-Parse" : {
-         "latest" : "0.13",
-         "versions" : {
-            "0.13" : "Time-Duration-Parse-0.13"
-         }
-      },
-      "Proc-InvokeEditor" : {
-         "versions" : {
-            "1.07" : "Proc-InvokeEditor-1.07"
-         },
-         "latest" : "1.07"
-      },
-      "Server-Starter" : {
-         "versions" : {
-            "0.32" : "Server-Starter-0.32"
-         },
-         "latest" : "0.32"
-      },
-      "Test-CheckDeps" : {
-         "versions" : {
-            "0.010" : "Test-CheckDeps-0.010"
-         },
-         "latest" : "0.010"
-      },
-      "MooseX-MethodAttributes" : {
-         "versions" : {
-            "0.31" : "MooseX-MethodAttributes-0.31"
-         },
-         "latest" : "0.31"
-      },
-      "Moose" : {
-         "latest" : "2.1803",
-         "versions" : {
-            "2.1803" : "Moose-2.1803"
-         }
-      },
-      "Font-AFM" : {
-         "latest" : "1.20",
-         "versions" : {
-            "1.20" : "Font-AFM-1.20"
-         }
-      },
-      "base" : {
-         "versions" : {
-            "2.23" : "base-2.23"
-         },
-         "latest" : "2.23"
-      },
-      "MooseX-Types-Common" : {
-         "versions" : {
-            "0.001013" : "MooseX-Types-Common-0.001013"
-         },
-         "latest" : "0.001013"
-      },
-      "Hash-Merge" : {
-         "latest" : "0.200",
-         "versions" : {
-            "0.200" : "Hash-Merge-0.200"
-         }
-      },
-      "ExtUtils-InstallPaths" : {
-         "versions" : {
-            "0.011" : "ExtUtils-InstallPaths-0.011"
-         },
-         "latest" : "0.011"
-      },
-      "HTML-Parser" : {
-         "latest" : "3.72",
-         "versions" : {
-            "3.72" : "HTML-Parser-3.72"
-         }
-      },
-      "Pod-Parser" : {
-         "versions" : {
-            "1.63" : "Pod-Parser-1.63"
-         },
-         "latest" : "1.63"
-      },
-      "HTML-Tagset" : {
-         "latest" : "3.20",
-         "versions" : {
-            "3.20" : "HTML-Tagset-3.20"
-         }
-      },
-      "ExtUtils-Helpers" : {
-         "versions" : {
-            "0.022" : "ExtUtils-Helpers-0.022"
-         },
-         "latest" : "0.022"
-      },
-      "IO" : {
-         "versions" : {
-            "1.25" : "IO-1.25"
-         },
-         "latest" : "1.25"
-      },
-      "Plack-Middleware-ReverseProxy" : {
-         "latest" : "0.15",
-         "versions" : {
-            "0.15" : "Plack-Middleware-ReverseProxy-0.15"
-         }
-      },
-      "Regexp-Common-time" : {
-         "latest" : "0.07",
-         "versions" : {
-            "0.07" : "Regexp-Common-time-0.07"
-         }
-      },
-      "HTTP-Date" : {
-         "latest" : "6.02",
-         "versions" : {
-            "6.02" : "HTTP-Date-6.02"
-         }
-      },
-      "Test-Distribution" : {
-         "versions" : {
-            "2.00" : "Test-Distribution-2.00"
-         },
-         "latest" : "2.00"
-      },
-      "Devel-PartialDump" : {
-         "latest" : "0.18",
-         "versions" : {
-            "0.18" : "Devel-PartialDump-0.18"
-         }
-      },
-      "Template-Plugin-DateTime" : {
-         "versions" : {
-            "0.06002" : "Template-Plugin-DateTime-0.06002"
-         },
-         "latest" : "0.06002"
-      },
-      "Template-Toolkit" : {
-         "latest" : "2.26",
-         "versions" : {
-            "2.26" : "Template-Toolkit-2.26"
-         }
-      },
-      "PPIx-Regexp" : {
-         "latest" : "0.050",
-         "versions" : {
-            "0.050" : "PPIx-Regexp-0.050"
-         }
-      },
-      "Mozilla-PublicSuffix" : {
-         "latest" : "v0.1.19",
-         "versions" : {
-            "v0.1.19" : "Mozilla-PublicSuffix-v0.1.19"
-         }
-      },
-      "XSLoader" : {
-         "latest" : "0.20",
-         "versions" : {
-            "0.20" : "XSLoader-0.20"
-         }
-      },
-      "HTTP-GHTTP" : {
-         "latest" : "1.07",
-         "versions" : {
-            "1.07" : "HTTP-GHTTP-1.07"
-         }
-      },
-      "Net-CIDR-Lite" : {
-         "latest" : "0.21",
-         "versions" : {
-            "0.21" : "Net-CIDR-Lite-0.21"
-         }
-      },
-      "MooseX-Types-Path-Class" : {
-         "versions" : {
-            "0.08" : "MooseX-Types-Path-Class-0.08"
-         },
-         "latest" : "0.08"
-      },
-      "Digest-HMAC" : {
-         "latest" : "1.03",
-         "versions" : {
-            "1.03" : "Digest-HMAC-1.03"
-         }
-      },
-      "Time-TZOffset" : {
-         "versions" : {
-            "0.04" : "Time-TZOffset-0.04"
-         },
-         "latest" : "0.04"
       },
       "Filesys-Notify-Simple" : {
          "versions" : {
@@ -1830,1026 +12,34 @@
          },
          "latest" : "0.12"
       },
-      "FreezeThaw" : {
+      "Lexical-SealRequireHints" : {
          "versions" : {
-            "0.5001" : "FreezeThaw-0.5001"
+            "0.010" : "Lexical-SealRequireHints-0.010"
          },
-         "latest" : "0.5001"
+         "latest" : "0.010"
       },
-      "Test-Perl-Critic" : {
-         "versions" : {
-            "1.03" : "Test-Perl-Critic-1.03"
-         },
-         "latest" : "1.03"
-      },
-      "Template-Plugin-Number-Format" : {
+      "Clone-PP" : {
          "latest" : "1.06",
          "versions" : {
-            "1.06" : "Template-Plugin-Number-Format-1.06"
+            "1.06" : "Clone-PP-1.06"
          }
-      },
-      "JSON" : {
-         "latest" : "2.90",
-         "versions" : {
-            "2.90" : "JSON-2.90"
-         }
-      },
-      "LWP-Protocol-http10" : {
-         "latest" : "6.03",
-         "versions" : {
-            "6.03" : "LWP-Protocol-http10-6.03"
-         }
-      },
-      "CPAN-Changes" : {
-         "latest" : "0.400002",
-         "versions" : {
-            "0.400002" : "CPAN-Changes-0.400002"
-         }
-      },
-      "podlators" : {
-         "versions" : {
-            "4.07" : "podlators-4.07"
-         },
-         "latest" : "4.07"
-      },
-      "Hash-MultiValue" : {
-         "versions" : {
-            "0.16" : "Hash-MultiValue-0.16"
-         },
-         "latest" : "0.16"
-      },
-      "Carp-Clan-Share" : {
-         "versions" : {
-            "0.013" : "Carp-Clan-Share-0.013"
-         },
-         "latest" : "0.013"
-      },
-      "Plack-Middleware-RemoveRedundantBody" : {
-         "versions" : {
-            "0.05" : "Plack-Middleware-RemoveRedundantBody-0.05"
-         },
-         "latest" : "0.05"
-      },
-      "Net-SSLeay" : {
-         "latest" : "1.74",
-         "versions" : {
-            "1.74" : "Net-SSLeay-1.74"
-         }
-      },
-      "Data-Pageset" : {
-         "latest" : "1.06",
-         "versions" : {
-            "1.06" : "Data-Pageset-1.06"
-         }
-      },
-      "MRO-Compat" : {
-         "latest" : "0.12",
-         "versions" : {
-            "0.12" : "MRO-Compat-0.12"
-         }
-      },
-      "Any-Moose" : {
-         "latest" : "0.26",
-         "versions" : {
-            "0.26" : "Any-Moose-0.26"
-         }
-      },
-      "IO-CaptureOutput" : {
-         "versions" : {
-            "1.1104" : "IO-CaptureOutput-1.1104"
-         },
-         "latest" : "1.1104"
-      },
-      "ExtUtils-Install" : {
-         "latest" : "2.04",
-         "versions" : {
-            "2.04" : "ExtUtils-Install-2.04"
-         }
-      },
-      "IO-Tty" : {
-         "latest" : "1.12",
-         "versions" : {
-            "1.12" : "IO-Tty-1.12"
-         }
-      },
-      "libwww-perl" : {
-         "latest" : "6.15",
-         "versions" : {
-            "6.15" : "libwww-perl-6.15"
-         }
-      },
-      "Authen-Simple" : {
-         "versions" : {
-            "0.5" : "Authen-Simple-0.5"
-         },
-         "latest" : "0.5"
-      },
-      "Mouse" : {
-         "latest" : "v2.4.5",
-         "versions" : {
-            "v2.4.5" : "Mouse-v2.4.5"
-         }
-      },
-      "Text-Diff" : {
-         "latest" : "1.44",
-         "versions" : {
-            "1.44" : "Text-Diff-1.44"
-         }
-      },
-      "Exception-Class" : {
-         "latest" : "1.40",
-         "versions" : {
-            "1.40" : "Exception-Class-1.40"
-         }
-      },
-      "XML-Atom" : {
-         "versions" : {
-            "0.41" : "XML-Atom-0.41"
-         },
-         "latest" : "0.41"
-      },
-      "Type-Tiny-XS" : {
-         "latest" : "0.012",
-         "versions" : {
-            "0.012" : "Type-Tiny-XS-0.012"
-         }
-      },
-      "URI-FromHash" : {
-         "versions" : {
-            "0.05" : "URI-FromHash-0.05"
-         },
-         "latest" : "0.05"
-      },
-      "Config-Tiny" : {
-         "versions" : {
-            "2.23" : "Config-Tiny-2.23"
-         },
-         "latest" : "2.23"
-      },
-      "List-AllUtils" : {
-         "latest" : "0.10",
-         "versions" : {
-            "0.10" : "List-AllUtils-0.10"
-         }
-      },
-      "Class-Accessor-Lite" : {
-         "latest" : "0.08",
-         "versions" : {
-            "0.08" : "Class-Accessor-Lite-0.08"
-         }
-      },
-      "Class-Refresh" : {
-         "versions" : {
-            "0.07" : "Class-Refresh-0.07"
-         },
-         "latest" : "0.07"
-      },
-      "ExtUtils-Constant" : {
-         "versions" : {
-            "0.16" : "ExtUtils-Constant-0.16",
-            "0.23" : "ExtUtils-Constant-0.23"
-         },
-         "latest" : "0.23"
-      },
-      "Safe-Isa" : {
-         "latest" : "1.000005",
-         "versions" : {
-            "1.000005" : "Safe-Isa-1.000005"
-         }
-      },
-      "Test-Number-Delta" : {
-         "latest" : "1.06",
-         "versions" : {
-            "1.06" : "Test-Number-Delta-1.06"
-         }
-      },
-      "Module-Build-Pluggable" : {
-         "versions" : {
-            "0.10" : "Module-Build-Pluggable-0.10"
-         },
-         "latest" : "0.10"
-      },
-      "Opcodes" : {
-         "versions" : {
-            "0.14" : "Opcodes-0.14"
-         },
-         "latest" : "0.14"
-      },
-      "IO-Socket-SSL" : {
-         "versions" : {
-            "2.027" : "IO-Socket-SSL-2.027"
-         },
-         "latest" : "2.027"
-      },
-      "MooseX-Types-URI" : {
-         "latest" : "0.08",
-         "versions" : {
-            "0.08" : "MooseX-Types-URI-0.08"
-         }
-      },
-      "DateTime-Format-Builder" : {
-         "versions" : {
-            "0.81" : "DateTime-Format-Builder-0.81"
-         },
-         "latest" : "0.81"
-      },
-      "XML-Parser" : {
-         "versions" : {
-            "2.44" : "XML-Parser-2.44"
-         },
-         "latest" : "2.44"
-      },
-      "Test-MockRandom" : {
-         "latest" : "1.01",
-         "versions" : {
-            "1.01" : "Test-MockRandom-1.01"
-         }
-      },
-      "Class-Singleton" : {
-         "versions" : {
-            "1.5" : "Class-Singleton-1.5"
-         },
-         "latest" : "1.5"
-      },
-      "Class-Method-Modifiers" : {
-         "latest" : "2.12",
-         "versions" : {
-            "2.12" : "Class-Method-Modifiers-2.12"
-         }
-      },
-      "File-Temp" : {
-         "latest" : "0.2304",
-         "versions" : {
-            "0.2304" : "File-Temp-0.2304"
-         }
-      },
-      "HTML-Escape" : {
-         "versions" : {
-            "1.10" : "HTML-Escape-1.10"
-         },
-         "latest" : "1.10"
-      },
-      "Test-Filename" : {
-         "versions" : {
-            "0.03" : "Test-Filename-0.03"
-         },
-         "latest" : "0.03"
-      },
-      "Tie-ToObject" : {
-         "latest" : "0.03",
-         "versions" : {
-            "0.03" : "Tie-ToObject-0.03"
-         }
-      },
-      "DateTime-Format-W3CDTF" : {
-         "versions" : {
-            "0.06" : "DateTime-Format-W3CDTF-0.06"
-         },
-         "latest" : "0.06"
-      },
-      "Text-Glob" : {
-         "versions" : {
-            "0.09" : "Text-Glob-0.09"
-         },
-         "latest" : "0.09"
-      },
-      "Cwd-Guard" : {
-         "latest" : "0.05",
-         "versions" : {
-            "0.05" : "Cwd-Guard-0.05"
-         }
-      },
-      "Data-UUID" : {
-         "versions" : {
-            "1.221" : "Data-UUID-1.221"
-         },
-         "latest" : "1.221"
-      },
-      "Sub-Name" : {
-         "latest" : "0.15",
-         "versions" : {
-            "0.15" : "Sub-Name-0.15"
-         }
-      },
-      "File-ShareDir-Install" : {
-         "latest" : "0.10",
-         "versions" : {
-            "0.10" : "File-ShareDir-Install-0.10"
-         }
-      },
-      "Config-General" : {
-         "versions" : {
-            "2.61" : "Config-General-2.61"
-         },
-         "latest" : "2.61"
-      },
-      "Archive-Any-Lite" : {
-         "versions" : {
-            "0.11" : "Archive-Any-Lite-0.11"
-         },
-         "latest" : "0.11"
-      },
-      "Async-Interrupt" : {
-         "latest" : "1.21",
-         "versions" : {
-            "1.21" : "Async-Interrupt-1.21"
-         }
-      },
-      "Module-Load-Conditional" : {
-         "versions" : {
-            "0.64" : "Module-Load-Conditional-0.64"
-         },
-         "latest" : "0.64"
-      },
-      "MooseX-RelatedClassRoles" : {
-         "versions" : {
-            "0.004" : "MooseX-RelatedClassRoles-0.004"
-         },
-         "latest" : "0.004"
-      },
-      "Test-Class" : {
-         "versions" : {
-            "0.50" : "Test-Class-0.50"
-         },
-         "latest" : "0.50"
-      },
-      "Test-Time" : {
-         "latest" : "0.04",
-         "versions" : {
-            "0.04" : "Test-Time-0.04"
-         }
-      },
-      "Hash-Merge-Simple" : {
-         "latest" : "0.051",
-         "versions" : {
-            "0.051" : "Hash-Merge-Simple-0.051"
-         }
-      },
-      "Module-Pluggable" : {
-         "latest" : "5.2",
-         "versions" : {
-            "5.2" : "Module-Pluggable-5.2"
-         }
-      },
-      "Digest-SHA1" : {
-         "versions" : {
-            "2.13" : "Digest-SHA1-2.13"
-         },
-         "latest" : "2.13"
-      },
-      "ExtUtils-Depends" : {
-         "latest" : "0.405",
-         "versions" : {
-            "0.405" : "ExtUtils-Depends-0.405"
-         }
-      },
-      "File-ShareDir" : {
-         "versions" : {
-            "1.102" : "File-ShareDir-1.102"
-         },
-         "latest" : "1.102"
-      },
-      "Sub-Exporter-Progressive" : {
-         "versions" : {
-            "0.001011" : "Sub-Exporter-Progressive-0.001011"
-         },
-         "latest" : "0.001011"
-      },
-      "perl" : {
-         "versions" : {
-            "5.024000" : "perl-5.024000"
-         },
-         "latest" : "5.024000"
-      },
-      "Pod-Simple" : {
-         "latest" : "3.32",
-         "versions" : {
-            "3.32" : "Pod-Simple-3.32"
-         }
-      },
-      "Test-CleanNamespaces" : {
-         "latest" : "0.18",
-         "versions" : {
-            "0.18" : "Test-CleanNamespaces-0.18"
-         }
-      },
-      "Guard" : {
-         "latest" : "1.023",
-         "versions" : {
-            "1.023" : "Guard-1.023"
-         }
-      },
-      "IO-Handle-Util" : {
-         "latest" : "0.01",
-         "versions" : {
-            "0.01" : "IO-Handle-Util-0.01"
-         }
-      },
-      "constant" : {
-         "latest" : "1.33",
-         "versions" : {
-            "1.33" : "constant-1.33"
-         }
-      },
-      "File-Copy-Recursive" : {
-         "latest" : "0.38",
-         "versions" : {
-            "0.38" : "File-Copy-Recursive-0.38"
-         }
-      },
-      "Dist-CheckConflicts" : {
-         "versions" : {
-            "0.11" : "Dist-CheckConflicts-0.11"
-         },
-         "latest" : "0.11"
-      },
-      "Params-Check" : {
-         "versions" : {
-            "0.38" : "Params-Check-0.38"
-         },
-         "latest" : "0.38"
-      },
-      "ElasticSearch-SearchBuilder" : {
-         "latest" : "0.19",
-         "versions" : {
-            "0.19" : "ElasticSearch-SearchBuilder-0.19"
-         }
-      },
-      "MIME-Base64" : {
-         "versions" : {
-            "3.15" : "MIME-Base64-3.15"
-         },
-         "latest" : "3.15"
-      },
-      "Number-Compare" : {
-         "latest" : "0.03",
-         "versions" : {
-            "0.03" : "Number-Compare-0.03"
-         }
-      },
-      "Package-Stash-XS" : {
-         "latest" : "0.28",
-         "versions" : {
-            "0.28" : "Package-Stash-XS-0.28"
-         }
-      },
-      "Readonly-XS" : {
-         "latest" : "1.05",
-         "versions" : {
-            "1.05" : "Readonly-XS-1.05"
-         }
-      },
-      "Array-Diff" : {
-         "latest" : "0.07",
-         "versions" : {
-            "0.07" : "Array-Diff-0.07"
-         }
-      },
-      "Test-TCP" : {
-         "latest" : "2.16",
-         "versions" : {
-            "2.16" : "Test-TCP-2.16"
-         }
-      },
-      "Type-Tie" : {
-         "versions" : {
-            "0.009" : "Type-Tie-0.009"
-         },
-         "latest" : "0.009"
-      },
-      "Log-Log4perl" : {
-         "latest" : "1.47",
-         "versions" : {
-            "1.47" : "Log-Log4perl-1.47"
-         }
-      },
-      "MCE" : {
-         "versions" : {
-            "1.708" : "MCE-1.708"
-         },
-         "latest" : "1.708"
-      },
-      "Test-Base" : {
-         "latest" : "0.88",
-         "versions" : {
-            "0.88" : "Test-Base-0.88"
-         }
-      },
-      "MooX-Types-MooseLike" : {
-         "latest" : "0.29",
-         "versions" : {
-            "0.29" : "MooX-Types-MooseLike-0.29"
-         }
-      },
-      "Digest-MD5" : {
-         "versions" : {
-            "2.55" : "Digest-MD5-2.55"
-         },
-         "latest" : "2.55"
-      },
-      "Text-Abbrev" : {
-         "latest" : "1.02",
-         "versions" : {
-            "1.02" : "Text-Abbrev-1.02"
-         }
-      },
-      "Gravatar-URL" : {
-         "versions" : {
-            "1.06" : "Gravatar-URL-1.06"
-         },
-         "latest" : "1.06"
-      },
-      "Template-Plugin-Markdown" : {
-         "versions" : {
-            "0.02" : "Template-Plugin-Markdown-0.02"
-         },
-         "latest" : "0.02"
-      },
-      "Reply" : {
-         "versions" : {
-            "0.39" : "Reply-0.39"
-         },
-         "latest" : "0.39"
-      },
-      "PerlIO-utf8_strict" : {
-         "versions" : {
-            "0.006" : "PerlIO-utf8_strict-0.006"
-         },
-         "latest" : "0.006"
-      },
-      "Config-INI" : {
-         "latest" : "0.025",
-         "versions" : {
-            "0.025" : "Config-INI-0.025"
-         }
-      },
-      "CHI" : {
-         "latest" : "0.60",
-         "versions" : {
-            "0.60" : "CHI-0.60"
-         }
-      },
-      "IO-stringy" : {
-         "latest" : "2.111",
-         "versions" : {
-            "2.111" : "IO-stringy-2.111"
-         }
-      },
-      "Package-Pkg" : {
-         "latest" : "0.0020",
-         "versions" : {
-            "0.0020" : "Package-Pkg-0.0020"
-         }
-      },
-      "Params-Util" : {
-         "latest" : "1.07",
-         "versions" : {
-            "1.07" : "Params-Util-1.07"
-         }
-      },
-      "Devel-StackTrace-AsHTML" : {
-         "latest" : "0.15",
-         "versions" : {
-            "0.15" : "Devel-StackTrace-AsHTML-0.15"
-         }
-      },
-      "Devel-StackTrace" : {
-         "latest" : "2.01",
-         "versions" : {
-            "2.01" : "Devel-StackTrace-2.01"
-         }
-      },
-      "Test-MockTime" : {
-         "latest" : "0.15",
-         "versions" : {
-            "0.15" : "Test-MockTime-0.15"
-         }
-      },
-      "Test-Output" : {
-         "versions" : {
-            "1.03" : "Test-Output-1.03"
-         },
-         "latest" : "1.03"
-      },
-      "XML-SAX" : {
-         "latest" : "0.99",
-         "versions" : {
-            "0.99" : "XML-SAX-0.99"
-         }
-      },
-      "JSON-PP" : {
-         "latest" : "2.27400",
-         "versions" : {
-            "2.27400" : "JSON-PP-2.27400"
-         }
-      },
-      "Algorithm-Diff" : {
-         "versions" : {
-            "1.1903" : "Algorithm-Diff-1.1903"
-         },
-         "latest" : "1.1903"
-      },
-      "asa" : {
-         "latest" : "1.03",
-         "versions" : {
-            "1.03" : "asa-1.03"
-         }
-      },
-      "MooseX-Emulate-Class-Accessor-Fast" : {
-         "latest" : "0.00903",
-         "versions" : {
-            "0.00903" : "MooseX-Emulate-Class-Accessor-Fast-0.00903"
-         }
-      },
-      "File-Find-Object" : {
-         "versions" : {
-            "v0.2.13" : "File-Find-Object-v0.2.13"
-         },
-         "latest" : "v0.2.13"
-      },
-      "ExtUtils-CBuilder" : {
-         "latest" : "0.280224",
-         "versions" : {
-            "0.280224" : "ExtUtils-CBuilder-0.280224"
-         }
-      },
-      "Module-CoreList" : {
-         "latest" : "5.20160520",
-         "versions" : {
-            "5.20160520" : "Module-CoreList-5.20160520"
-         }
-      },
-      "Carp-Assert" : {
-         "latest" : "0.21",
-         "versions" : {
-            "0.21" : "Carp-Assert-0.21"
-         }
-      },
-      "Catalyst-Runtime" : {
-         "latest" : "5.90104",
-         "versions" : {
-            "5.90104" : "Catalyst-Runtime-5.90104"
-         }
-      },
-      "Time-HiRes" : {
-         "latest" : "1.9733",
-         "versions" : {
-            "1.9733" : "Time-HiRes-1.9733"
-         }
-      },
-      "Perl-OSType" : {
-         "versions" : {
-            "1.009" : "Perl-OSType-1.009"
-         },
-         "latest" : "1.009"
-      },
-      "Term-ReadLine" : {
-         "latest" : "1.14",
-         "versions" : {
-            "1.14" : "Term-ReadLine-1.14"
-         }
-      },
-      "B-Hooks-EndOfScope" : {
-         "versions" : {
-            "0.21" : "B-Hooks-EndOfScope-0.21"
-         },
-         "latest" : "0.21"
-      },
-      "Compress-Raw-Zlib" : {
-         "versions" : {
-            "2.069" : "Compress-Raw-Zlib-2.069"
-         },
-         "latest" : "2.069"
-      },
-      "Pod-Coverage-TrustPod" : {
-         "versions" : {
-            "0.100003" : "Pod-Coverage-TrustPod-0.100003"
-         },
-         "latest" : "0.100003"
       },
       "File-HomeDir" : {
+         "latest" : "1.00",
          "versions" : {
             "1.00" : "File-HomeDir-1.00"
-         },
-         "latest" : "1.00"
-      },
-      "Catalyst-View-TT-Alloy" : {
-         "latest" : "0.00007",
-         "versions" : {
-            "0.00007" : "Catalyst-View-TT-Alloy-0.00007"
          }
       },
-      "HTTP-Body" : {
-         "latest" : "1.22",
+      "WWW-Mechanize" : {
+         "latest" : "1.75",
          "versions" : {
-            "1.22" : "HTTP-Body-1.22"
+            "1.75" : "WWW-Mechanize-1.75"
          }
       },
-      "Code-TidyAll" : {
+      "Class-Tiny" : {
+         "latest" : "1.004",
          "versions" : {
-            "0.47" : "Code-TidyAll-0.47"
-         },
-         "latest" : "0.47"
-      },
-      "PathTools" : {
-         "versions" : {
-            "3.62" : "PathTools-3.62"
-         },
-         "latest" : "3.62"
-      },
-      "Tree-Simple-VisitorFactory" : {
-         "latest" : "0.15",
-         "versions" : {
-            "0.15" : "Tree-Simple-VisitorFactory-0.15"
-         }
-      },
-      "Template-Plugin-Comma" : {
-         "latest" : "0.04",
-         "versions" : {
-            "0.04" : "Template-Plugin-Comma-0.04"
-         }
-      },
-      "File-Slurp-Tiny" : {
-         "versions" : {
-            "0.004" : "File-Slurp-Tiny-0.004"
-         },
-         "latest" : "0.004"
-      },
-      "Scalar-List-Utils" : {
-         "versions" : {
-            "1.45" : "Scalar-List-Utils-1.45"
-         },
-         "latest" : "1.45"
-      },
-      "WWW-RobotRules" : {
-         "latest" : "6.02",
-         "versions" : {
-            "6.02" : "WWW-RobotRules-6.02"
-         }
-      },
-      "MooX-Types-MooseLike-Numeric" : {
-         "latest" : "1.02",
-         "versions" : {
-            "1.02" : "MooX-Types-MooseLike-Numeric-1.02"
-         }
-      },
-      "Time-Duration" : {
-         "versions" : {
-            "1.20" : "Time-Duration-1.20"
-         },
-         "latest" : "1.20"
-      },
-      "LWP-Protocol-https" : {
-         "latest" : "6.06",
-         "versions" : {
-            "6.06" : "LWP-Protocol-https-6.06"
-         }
-      },
-      "HTTP-Headers-Fast" : {
-         "latest" : "0.20",
-         "versions" : {
-            "0.20" : "HTTP-Headers-Fast-0.20"
-         }
-      },
-      "Data-Dump" : {
-         "versions" : {
-            "1.23" : "Data-Dump-1.23"
-         },
-         "latest" : "1.23"
-      },
-      "Module-Build-Tiny" : {
-         "latest" : "0.039",
-         "versions" : {
-            "0.039" : "Module-Build-Tiny-0.039"
-         }
-      },
-      "HTTP-Message" : {
-         "versions" : {
-            "6.11" : "HTTP-Message-6.11"
-         },
-         "latest" : "6.11"
-      },
-      "Eval-Closure" : {
-         "versions" : {
-            "0.14" : "Eval-Closure-0.14"
-         },
-         "latest" : "0.14"
-      },
-      "Data-Taxi" : {
-         "latest" : "0.96",
-         "versions" : {
-            "0.96" : "Data-Taxi-0.96"
-         }
-      },
-      "HTTP-CookieJar" : {
-         "versions" : {
-            "0.008" : "HTTP-CookieJar-0.008"
-         },
-         "latest" : "0.008"
-      },
-      "Test-Kwalitee" : {
-         "versions" : {
-            "1.22" : "Test-Kwalitee-1.22"
-         },
-         "latest" : "1.22"
-      },
-      "IPC-Cmd" : {
-         "versions" : {
-            "0.94" : "IPC-Cmd-0.94"
-         },
-         "latest" : "0.94"
-      },
-      "Pod-Strip" : {
-         "versions" : {
-            "1.02" : "Pod-Strip-1.02"
-         },
-         "latest" : "1.02"
-      },
-      "IO-Capture" : {
-         "latest" : "0.05",
-         "versions" : {
-            "0.04" : "IO-Capture-0.04",
-            "0.05" : "IO-Capture-0.05"
-         }
-      },
-      "Format-Human-Bytes" : {
-         "latest" : "0.06",
-         "versions" : {
-            "0.06" : "Format-Human-Bytes-0.06"
-         }
-      },
-      "DateTime-Format-ISO8601" : {
-         "latest" : "0.08",
-         "versions" : {
-            "0.08" : "DateTime-Format-ISO8601-0.08"
-         }
-      },
-      "File-Path" : {
-         "versions" : {
-            "2.12" : "File-Path-2.12"
-         },
-         "latest" : "2.12"
-      },
-      "Test-XPath" : {
-         "versions" : {
-            "0.16" : "Test-XPath-0.16"
-         },
-         "latest" : "0.16"
-      },
-      "Feed-Find" : {
-         "versions" : {
-            "0.07" : "Feed-Find-0.07"
-         },
-         "latest" : "0.07"
-      },
-      "Time-Local" : {
-         "versions" : {
-            "1.2300" : "Time-Local-1.2300"
-         },
-         "latest" : "1.2300"
-      },
-      "Data-Printer" : {
-         "latest" : "0.38",
-         "versions" : {
-            "0.38" : "Data-Printer-0.38"
-         }
-      },
-      "Object-Event" : {
-         "latest" : "1.23",
-         "versions" : {
-            "1.23" : "Object-Event-1.23"
-         }
-      },
-      "URI-Fetch" : {
-         "versions" : {
-            "0.11" : "URI-Fetch-0.11"
-         },
-         "latest" : "0.11"
-      },
-      "Test-Class-Most" : {
-         "versions" : {
-            "0.08" : "Test-Class-Most-0.08"
-         },
-         "latest" : "0.08"
-      },
-      "MooseX-StrictConstructor" : {
-         "latest" : "0.19",
-         "versions" : {
-            "0.19" : "MooseX-StrictConstructor-0.19"
-         }
-      },
-      "Perl-Tidy" : {
-         "versions" : {
-            "20160302" : "Perl-Tidy-20160302"
-         },
-         "latest" : "20160302"
-      },
-      "Email-Address" : {
-         "versions" : {
-            "1.908" : "Email-Address-1.908"
-         },
-         "latest" : "1.908"
-      },
-      "Class-ErrorHandler" : {
-         "latest" : "0.04",
-         "versions" : {
-            "0.04" : "Class-ErrorHandler-0.04"
-         }
-      },
-      "Test-Without-Module" : {
-         "latest" : "0.18",
-         "versions" : {
-            "0.18" : "Test-Without-Module-0.18"
-         }
-      },
-      "MooseX-Types" : {
-         "latest" : "0.46",
-         "versions" : {
-            "0.46" : "MooseX-Types-0.46"
-         }
-      },
-      "Sub-Uplevel" : {
-         "latest" : "0.25",
-         "versions" : {
-            "0.25" : "Sub-Uplevel-0.25"
-         }
-      },
-      "HTTP-Tiny" : {
-         "latest" : "0.058",
-         "versions" : {
-            "0.058" : "HTTP-Tiny-0.058"
-         }
-      },
-      "Apache-LogFormat-Compiler" : {
-         "latest" : "0.33",
-         "versions" : {
-            "0.33" : "Apache-LogFormat-Compiler-0.33"
-         }
-      },
-      "Module-Build-Pluggable-PPPort" : {
-         "versions" : {
-            "0.04" : "Module-Build-Pluggable-PPPort-0.04"
-         },
-         "latest" : "0.04"
-      },
-      "IO-String" : {
-         "versions" : {
-            "1.08" : "IO-String-1.08"
-         },
-         "latest" : "1.08"
-      },
-      "AnyEvent-Curl-Multi" : {
-         "versions" : {
-            "1.1" : "AnyEvent-Curl-Multi-1.1"
-         },
-         "latest" : "1.1"
-      },
-      "List-Compare" : {
-         "latest" : "0.53",
-         "versions" : {
-            "0.53" : "List-Compare-0.53"
-         }
-      },
-      "NEXT" : {
-         "latest" : "0.65",
-         "versions" : {
-            "0.65" : "NEXT-0.65"
-         }
-      },
-      "Carp-Clan" : {
-         "latest" : "6.06",
-         "versions" : {
-            "6.06" : "Carp-Clan-6.06"
-         }
-      },
-      "Getopt-Long-Descriptive" : {
-         "versions" : {
-            "0.099" : "Getopt-Long-Descriptive-0.099"
-         },
-         "latest" : "0.099"
-      },
-      "Test-Pod-Coverage" : {
-         "versions" : {
-            "1.10" : "Test-Pod-Coverage-1.10"
-         },
-         "latest" : "1.10"
-      },
-      "Import-Into" : {
-         "latest" : "1.002005",
-         "versions" : {
-            "1.002005" : "Import-Into-1.002005"
-         }
-      },
-      "Authen-Simple-Passwd" : {
-         "versions" : {
-            "0.6" : "Authen-Simple-Passwd-0.6"
-         },
-         "latest" : "0.6"
-      },
-      "FCGI-ProcManager" : {
-         "latest" : "0.25",
-         "versions" : {
-            "0.25" : "FCGI-ProcManager-0.25"
+            "1.004" : "Class-Tiny-1.004"
          }
       },
       "B-Debug" : {
@@ -2858,22 +48,478 @@
          },
          "latest" : "1.23"
       },
-      "Test-Trap" : {
+      "File-Slurp" : {
+         "latest" : "9999.19",
          "versions" : {
-            "v0.3.2" : "Test-Trap-v0.3.2"
-         },
-         "latest" : "v0.3.2"
-      },
-      "CGI-Emulate-PSGI" : {
-         "latest" : "0.21",
-         "versions" : {
-            "0.21" : "CGI-Emulate-PSGI-0.21"
+            "9999.19" : "File-Slurp-9999.19"
          }
       },
-      "B-C" : {
-         "latest" : "1.54",
+      "Getopt-Usaginator" : {
          "versions" : {
-            "1.54" : "B-C-1.54"
+            "0.0012" : "Getopt-Usaginator-0.0012"
+         },
+         "latest" : "0.0012"
+      },
+      "CGI-Compile" : {
+         "versions" : {
+            "0.21" : "CGI-Compile-0.21"
+         },
+         "latest" : "0.21"
+      },
+      "URI-Escape-XS" : {
+         "versions" : {
+            "0.14" : "URI-Escape-XS-0.14"
+         },
+         "latest" : "0.14"
+      },
+      "DBIx-Class" : {
+         "latest" : "0.082840",
+         "versions" : {
+            "0.082840" : "DBIx-Class-0.082840"
+         }
+      },
+      "Pod-POM" : {
+         "versions" : {
+            "2.01" : "Pod-POM-2.01"
+         },
+         "latest" : "2.01"
+      },
+      "IO-File-AtomicChange" : {
+         "latest" : "0.05",
+         "versions" : {
+            "0.05" : "IO-File-AtomicChange-0.05"
+         }
+      },
+      "XML-CommonNS" : {
+         "versions" : {
+            "0.06" : "XML-CommonNS-0.06"
+         },
+         "latest" : "0.06"
+      },
+      "Test-Time" : {
+         "versions" : {
+            "0.04" : "Test-Time-0.04"
+         },
+         "latest" : "0.04"
+      },
+      "Safe" : {
+         "latest" : "2.35",
+         "versions" : {
+            "2.35" : "Safe-2.35"
+         }
+      },
+      "Perl-OSType" : {
+         "latest" : "1.010",
+         "versions" : {
+            "1.010" : "Perl-OSType-1.010"
+         }
+      },
+      "Test-Command" : {
+         "versions" : {
+            "0.11" : "Test-Command-0.11"
+         },
+         "latest" : "0.11"
+      },
+      "Class-Accessor" : {
+         "latest" : "0.34",
+         "versions" : {
+            "0.34" : "Class-Accessor-0.34"
+         }
+      },
+      "Parse-PMFile" : {
+         "versions" : {
+            "0.40" : "Parse-PMFile-0.40"
+         },
+         "latest" : "0.40"
+      },
+      "YAML-LibYAML" : {
+         "latest" : "0.62",
+         "versions" : {
+            "0.62" : "YAML-LibYAML-0.62"
+         }
+      },
+      "Test-Kwalitee" : {
+         "latest" : "1.22",
+         "versions" : {
+            "1.22" : "Test-Kwalitee-1.22"
+         }
+      },
+      "List-UtilsBy" : {
+         "latest" : "0.10",
+         "versions" : {
+            "0.10" : "List-UtilsBy-0.10"
+         }
+      },
+      "Software-License" : {
+         "latest" : "0.103012",
+         "versions" : {
+            "0.103012" : "Software-License-0.103012"
+         }
+      },
+      "Test-MockRandom" : {
+         "versions" : {
+            "1.01" : "Test-MockRandom-1.01"
+         },
+         "latest" : "1.01"
+      },
+      "JSON-XS" : {
+         "versions" : {
+            "3.02" : "JSON-XS-3.02"
+         },
+         "latest" : "3.02"
+      },
+      "Test-RequiresInternet" : {
+         "latest" : "0.05",
+         "versions" : {
+            "0.05" : "Test-RequiresInternet-0.05"
+         }
+      },
+      "MooseX-Role-Parameterized" : {
+         "latest" : "1.08",
+         "versions" : {
+            "1.08" : "MooseX-Role-Parameterized-1.08"
+         }
+      },
+      "HTTP-Request-AsCGI" : {
+         "versions" : {
+            "1.2" : "HTTP-Request-AsCGI-1.2"
+         },
+         "latest" : "1.2"
+      },
+      "Algorithm-Diff-XS" : {
+         "latest" : "0.01",
+         "versions" : {
+            "0.01" : "Algorithm-Diff-XS-0.01"
+         }
+      },
+      "HTTP-Server-Simple" : {
+         "latest" : "0.51",
+         "versions" : {
+            "0.51" : "HTTP-Server-Simple-0.51"
+         }
+      },
+      "Parse-RecDescent" : {
+         "versions" : {
+            "1.967013" : "Parse-RecDescent-1.967013"
+         },
+         "latest" : "1.967013"
+      },
+      "System-Sub" : {
+         "versions" : {
+            "0.150960" : "System-Sub-0.150960"
+         },
+         "latest" : "0.150960"
+      },
+      "Facebook-Graph" : {
+         "versions" : {
+            "1.1101" : "Facebook-Graph-1.1101"
+         },
+         "latest" : "1.1101"
+      },
+      "Env" : {
+         "latest" : "1.04",
+         "versions" : {
+            "1.04" : "Env-1.04"
+         }
+      },
+      "Convert-Bencode" : {
+         "versions" : {
+            "1.03" : "Convert-Bencode-1.03"
+         },
+         "latest" : "1.03"
+      },
+      "ExtUtils-InstallPaths" : {
+         "versions" : {
+            "0.011" : "ExtUtils-InstallPaths-0.011"
+         },
+         "latest" : "0.011"
+      },
+      "HTTP-Tiny" : {
+         "versions" : {
+            "0.058" : "HTTP-Tiny-0.058"
+         },
+         "latest" : "0.058"
+      },
+      "Config-Tiny" : {
+         "versions" : {
+            "2.23" : "Config-Tiny-2.23"
+         },
+         "latest" : "2.23"
+      },
+      "Devel-OverloadInfo" : {
+         "versions" : {
+            "0.004" : "Devel-OverloadInfo-0.004"
+         },
+         "latest" : "0.004"
+      },
+      "MooseX-MethodAttributes" : {
+         "versions" : {
+            "0.31" : "MooseX-MethodAttributes-0.31"
+         },
+         "latest" : "0.31"
+      },
+      "Pithub" : {
+         "latest" : "0.01033",
+         "versions" : {
+            "0.01033" : "Pithub-0.01033"
+         }
+      },
+      "Test-Differences" : {
+         "latest" : "0.64",
+         "versions" : {
+            "0.64" : "Test-Differences-0.64"
+         }
+      },
+      "Devel-Hide" : {
+         "latest" : "0.0009",
+         "versions" : {
+            "0.0009" : "Devel-Hide-0.0009"
+         }
+      },
+      "Class-Accessor-Grouped" : {
+         "latest" : "0.10012",
+         "versions" : {
+            "0.10012" : "Class-Accessor-Grouped-0.10012"
+         }
+      },
+      "DateTime-Locale" : {
+         "versions" : {
+            "1.05" : "DateTime-Locale-1.05"
+         },
+         "latest" : "1.05"
+      },
+      "HTML-FormatExternal" : {
+         "latest" : "26",
+         "versions" : {
+            "26" : "HTML-FormatExternal-26"
+         }
+      },
+      "Cache-Cache" : {
+         "latest" : "1.08",
+         "versions" : {
+            "1.08" : "Cache-Cache-1.08"
+         }
+      },
+      "File-Slurp-Tiny" : {
+         "versions" : {
+            "0.004" : "File-Slurp-Tiny-0.004"
+         },
+         "latest" : "0.004"
+      },
+      "Catalyst-Action-RenderView" : {
+         "versions" : {
+            "0.16" : "Catalyst-Action-RenderView-0.16"
+         },
+         "latest" : "0.16"
+      },
+      "Text-CSV_XS" : {
+         "versions" : {
+            "1.23" : "Text-CSV_XS-1.23"
+         },
+         "latest" : "1.23"
+      },
+      "ExtUtils-Install" : {
+         "latest" : "2.04",
+         "versions" : {
+            "2.04" : "ExtUtils-Install-2.04"
+         }
+      },
+      "OrePAN2" : {
+         "versions" : {
+            "0.41" : "OrePAN2-0.41"
+         },
+         "latest" : "0.41"
+      },
+      "Socket" : {
+         "latest" : "2.021",
+         "versions" : {
+            "2.021" : "Socket-2.021"
+         }
+      },
+      "Text-Glob" : {
+         "versions" : {
+            "0.09" : "Text-Glob-0.09"
+         },
+         "latest" : "0.09"
+      },
+      "Devel-StackTrace" : {
+         "latest" : "2.01",
+         "versions" : {
+            "2.01" : "Devel-StackTrace-2.01"
+         }
+      },
+      "Parse-CSV" : {
+         "versions" : {
+            "2.04" : "Parse-CSV-2.04"
+         },
+         "latest" : "2.04"
+      },
+      "DBI" : {
+         "versions" : {
+            "1.636" : "DBI-1.636"
+         },
+         "latest" : "1.636"
+      },
+      "Pod-Coverage-TrustPod" : {
+         "versions" : {
+            "0.100003" : "Pod-Coverage-TrustPod-0.100003"
+         },
+         "latest" : "0.100003"
+      },
+      "Stream-Buffered" : {
+         "versions" : {
+            "0.03" : "Stream-Buffered-0.03"
+         },
+         "latest" : "0.03"
+      },
+      "Devel-CheckCompiler" : {
+         "latest" : "0.06",
+         "versions" : {
+            "0.06" : "Devel-CheckCompiler-0.06"
+         }
+      },
+      "bareword-filehandles" : {
+         "versions" : {
+            "0.004" : "bareword-filehandles-0.004"
+         },
+         "latest" : "0.004"
+      },
+      "Test-CheckDeps" : {
+         "latest" : "0.010",
+         "versions" : {
+            "0.010" : "Test-CheckDeps-0.010"
+         }
+      },
+      "Time-Duration" : {
+         "versions" : {
+            "1.20" : "Time-Duration-1.20"
+         },
+         "latest" : "1.20"
+      },
+      "Dist-Metadata" : {
+         "versions" : {
+            "0.926" : "Dist-Metadata-0.926"
+         },
+         "latest" : "0.926"
+      },
+      "Config-AutoConf" : {
+         "versions" : {
+            "0.313" : "Config-AutoConf-0.313"
+         },
+         "latest" : "0.313"
+      },
+      "Test-NoWarnings" : {
+         "latest" : "1.04",
+         "versions" : {
+            "1.04" : "Test-NoWarnings-1.04"
+         }
+      },
+      "Proc-InvokeEditor" : {
+         "versions" : {
+            "1.07" : "Proc-InvokeEditor-1.07"
+         },
+         "latest" : "1.07"
+      },
+      "MIME-Base64" : {
+         "versions" : {
+            "3.15" : "MIME-Base64-3.15"
+         },
+         "latest" : "3.15"
+      },
+      "Test-Harness" : {
+         "latest" : "3.36",
+         "versions" : {
+            "3.36" : "Test-Harness-3.36"
+         }
+      },
+      "LWPx-ParanoidHandler" : {
+         "versions" : {
+            "0.07" : "LWPx-ParanoidHandler-0.07"
+         },
+         "latest" : "0.07"
+      },
+      "PathTools" : {
+         "versions" : {
+            "3.62" : "PathTools-3.62"
+         },
+         "latest" : "3.62"
+      },
+      "List-SomeUtils" : {
+         "versions" : {
+            "0.52" : "List-SomeUtils-0.52"
+         },
+         "latest" : "0.52"
+      },
+      "Test-Pod" : {
+         "versions" : {
+            "1.51" : "Test-Pod-1.51"
+         },
+         "latest" : "1.51"
+      },
+      "Class-Load-XS" : {
+         "versions" : {
+            "0.09" : "Class-Load-XS-0.09"
+         },
+         "latest" : "0.09"
+      },
+      "asa" : {
+         "versions" : {
+            "1.03" : "asa-1.03"
+         },
+         "latest" : "1.03"
+      },
+      "podlators" : {
+         "versions" : {
+            "4.07" : "podlators-4.07"
+         },
+         "latest" : "4.07"
+      },
+      "Sub-Identify" : {
+         "latest" : "0.12",
+         "versions" : {
+            "0.12" : "Sub-Identify-0.12"
+         }
+      },
+      "Sub-Override" : {
+         "versions" : {
+            "0.09" : "Sub-Override-0.09"
+         },
+         "latest" : "0.09"
+      },
+      "Class-Refresh" : {
+         "versions" : {
+            "0.07" : "Class-Refresh-0.07"
+         },
+         "latest" : "0.07"
+      },
+      "MooX-StrictConstructor" : {
+         "versions" : {
+            "0.008" : "MooX-StrictConstructor-0.008"
+         },
+         "latest" : "0.008"
+      },
+      "Pod-Coverage-Moose" : {
+         "versions" : {
+            "0.07" : "Pod-Coverage-Moose-0.07"
+         },
+         "latest" : "0.07"
+      },
+      "Parse-LocalDistribution" : {
+         "versions" : {
+            "0.18" : "Parse-LocalDistribution-0.18"
+         },
+         "latest" : "0.18"
+      },
+      "HTTP-GHTTP" : {
+         "versions" : {
+            "1.07" : "HTTP-GHTTP-1.07"
+         },
+         "latest" : "1.07"
+      },
+      "Carp-Assert" : {
+         "latest" : "0.21",
+         "versions" : {
+            "0.21" : "Carp-Assert-0.21"
          }
       },
       "JSON-MaybeXS" : {
@@ -2882,70 +528,550 @@
          },
          "latest" : "1.003005"
       },
-      "MooseX-ClassAttribute" : {
+      "Params-Validate" : {
+         "latest" : "1.24",
          "versions" : {
-            "0.29" : "MooseX-ClassAttribute-0.29"
+            "1.24" : "Params-Validate-1.24"
+         }
+      },
+      "Devel-CheckLib" : {
+         "versions" : {
+            "1.07" : "Devel-CheckLib-1.07"
+         },
+         "latest" : "1.07"
+      },
+      "Email-Valid" : {
+         "latest" : "1.200",
+         "versions" : {
+            "1.200" : "Email-Valid-1.200"
+         }
+      },
+      "Crypt-PasswdMD5" : {
+         "versions" : {
+            "1.40" : "Crypt-PasswdMD5-1.40"
+         },
+         "latest" : "1.40"
+      },
+      "Filter-Simple" : {
+         "latest" : "0.91",
+         "versions" : {
+            "0.91" : "Filter-Simple-0.91"
+         }
+      },
+      "Minion-Backend-SQLite" : {
+         "latest" : "0.005",
+         "versions" : {
+            "0.005" : "Minion-Backend-SQLite-0.005"
+         }
+      },
+      "HTML-Restrict" : {
+         "latest" : "2.2.2",
+         "versions" : {
+            "2.2.2" : "HTML-Restrict-2.2.2"
+         }
+      },
+      "Try-Tiny" : {
+         "versions" : {
+            "0.24" : "Try-Tiny-0.24"
+         },
+         "latest" : "0.24"
+      },
+      "Net-HTTP" : {
+         "versions" : {
+            "6.09" : "Net-HTTP-6.09"
+         },
+         "latest" : "6.09"
+      },
+      "System-Command" : {
+         "latest" : "1.118",
+         "versions" : {
+            "1.118" : "System-Command-1.118"
+         }
+      },
+      "Canary-Stability" : {
+         "latest" : "2011",
+         "versions" : {
+            "2011" : "Canary-Stability-2011"
+         }
+      },
+      "CPAN-Faker" : {
+         "latest" : "0.010",
+         "versions" : {
+            "0.010" : "CPAN-Faker-0.010"
+         }
+      },
+      "Plack-Middleware-FixMissingBodyInRedirect" : {
+         "latest" : "0.12",
+         "versions" : {
+            "0.12" : "Plack-Middleware-FixMissingBodyInRedirect-0.12"
+         }
+      },
+      "CSS-Tiny" : {
+         "latest" : "1.20",
+         "versions" : {
+            "1.20" : "CSS-Tiny-1.20"
+         }
+      },
+      "Mojo-JSON-MaybeXS" : {
+         "latest" : "0.012",
+         "versions" : {
+            "0.012" : "Mojo-JSON-MaybeXS-0.012"
+         }
+      },
+      "Eval-Closure" : {
+         "versions" : {
+            "0.14" : "Eval-Closure-0.14"
+         },
+         "latest" : "0.14"
+      },
+      "Hash-Merge" : {
+         "latest" : "0.200",
+         "versions" : {
+            "0.200" : "Hash-Merge-0.200"
+         }
+      },
+      "Iterator-Util" : {
+         "latest" : "0.02",
+         "versions" : {
+            "0.02" : "Iterator-Util-0.02"
+         }
+      },
+      "CPAN" : {
+         "versions" : {
+            "2.14" : "CPAN-2.14"
+         },
+         "latest" : "2.14"
+      },
+      "LWP-UserAgent-Paranoid" : {
+         "versions" : {
+            "0.97" : "LWP-UserAgent-Paranoid-0.97"
+         },
+         "latest" : "0.97"
+      },
+      "Module-Metadata" : {
+         "latest" : "1.000027",
+         "versions" : {
+            "1.000027" : "Module-Metadata-1.000027"
+         }
+      },
+      "ExtUtils-HasCompiler" : {
+         "latest" : "0.016",
+         "versions" : {
+            "0.016" : "ExtUtils-HasCompiler-0.016"
+         }
+      },
+      "Captcha-reCAPTCHA" : {
+         "versions" : {
+            "0.97" : "Captcha-reCAPTCHA-0.97"
+         },
+         "latest" : "0.97"
+      },
+      "Types-UUID" : {
+         "versions" : {
+            "0.004" : "Types-UUID-0.004"
+         },
+         "latest" : "0.004"
+      },
+      "Bencode" : {
+         "versions" : {
+            "1.402" : "Bencode-1.402"
+         },
+         "latest" : "1.402"
+      },
+      "Carp-Clan-Share" : {
+         "versions" : {
+            "0.013" : "Carp-Clan-Share-0.013"
+         },
+         "latest" : "0.013"
+      },
+      "Plack-Test-ExternalServer" : {
+         "latest" : "0.02",
+         "versions" : {
+            "0.02" : "Plack-Test-ExternalServer-0.02"
+         }
+      },
+      "File-Find-Rule" : {
+         "latest" : "0.34",
+         "versions" : {
+            "0.34" : "File-Find-Rule-0.34"
+         }
+      },
+      "MooseX-Types" : {
+         "versions" : {
+            "0.46" : "MooseX-Types-0.46"
+         },
+         "latest" : "0.46"
+      },
+      "XML-Parser" : {
+         "versions" : {
+            "2.44" : "XML-Parser-2.44"
+         },
+         "latest" : "2.44"
+      },
+      "Test-LongString" : {
+         "versions" : {
+            "0.17" : "Test-LongString-0.17"
+         },
+         "latest" : "0.17"
+      },
+      "Test-Perl-Critic" : {
+         "latest" : "1.03",
+         "versions" : {
+            "1.03" : "Test-Perl-Critic-1.03"
+         }
+      },
+      "NTLM" : {
+         "versions" : {
+            "1.09" : "NTLM-1.09"
+         },
+         "latest" : "1.09"
+      },
+      "Class-Factory-Util" : {
+         "versions" : {
+            "1.7" : "Class-Factory-Util-1.7"
+         },
+         "latest" : "1.7"
+      },
+      "Scalar-List-Utils" : {
+         "versions" : {
+            "1.45" : "Scalar-List-Utils-1.45"
+         },
+         "latest" : "1.45"
+      },
+      "Log-Log4perl" : {
+         "versions" : {
+            "1.47" : "Log-Log4perl-1.47"
+         },
+         "latest" : "1.47"
+      },
+      "MetaCPAN-Client" : {
+         "versions" : {
+            "1.019000" : "MetaCPAN-Client-1.019000"
+         },
+         "latest" : "1.019000"
+      },
+      "MooX-Types-MooseLike" : {
+         "versions" : {
+            "0.29" : "MooX-Types-MooseLike-0.29"
          },
          "latest" : "0.29"
       },
-      "UNIVERSAL-can" : {
-         "latest" : "1.20140328",
+      "libwww-perl" : {
          "versions" : {
-            "1.20140328" : "UNIVERSAL-can-1.20140328"
+            "6.15" : "libwww-perl-6.15"
+         },
+         "latest" : "6.15"
+      },
+      "Data-Dumper-Concise" : {
+         "versions" : {
+            "2.022" : "Data-Dumper-Concise-2.022"
+         },
+         "latest" : "2.022"
+      },
+      "Plack" : {
+         "versions" : {
+            "1.0039" : "Plack-1.0039"
+         },
+         "latest" : "1.0039"
+      },
+      "Unicode-UTF8" : {
+         "versions" : {
+            "0.60" : "Unicode-UTF8-0.60"
+         },
+         "latest" : "0.60"
+      },
+      "Digest" : {
+         "versions" : {
+            "1.17" : "Digest-1.17"
+         },
+         "latest" : "1.17"
+      },
+      "Authen-Simple-Passwd" : {
+         "latest" : "0.6",
+         "versions" : {
+            "0.6" : "Authen-Simple-Passwd-0.6"
          }
       },
-      "Pod-Spell" : {
-         "latest" : "1.20",
+      "HTTP-Negotiate" : {
+         "latest" : "6.01",
          "versions" : {
-            "1.20" : "Pod-Spell-1.20"
+            "6.01" : "HTTP-Negotiate-6.01"
          }
       },
-      "File-Find-Rule-Perl" : {
+      "Hash-MultiValue" : {
+         "latest" : "0.16",
          "versions" : {
-            "1.15" : "File-Find-Rule-Perl-1.15"
-         },
-         "latest" : "1.15"
-      },
-      "PerlIO-gzip" : {
-         "latest" : "0.19",
-         "versions" : {
-            "0.19" : "PerlIO-gzip-0.19"
+            "0.16" : "Hash-MultiValue-0.16"
          }
       },
-      "Net-Server" : {
+      "XML-LibXML" : {
          "versions" : {
-            "2.008" : "Net-Server-2.008"
+            "2.0126" : "XML-LibXML-2.0126"
          },
-         "latest" : "2.008"
+         "latest" : "2.0126"
       },
-      "Catalyst-View-JSON" : {
-         "latest" : "0.36",
+      "HTTP-Date" : {
+         "latest" : "6.02",
          "versions" : {
-            "0.36" : "Catalyst-View-JSON-0.36"
+            "6.02" : "HTTP-Date-6.02"
          }
       },
-      "Test-Differences" : {
+      "B-Hooks-EndOfScope" : {
          "versions" : {
-            "0.64" : "Test-Differences-0.64"
+            "0.21" : "B-Hooks-EndOfScope-0.21"
          },
-         "latest" : "0.64"
+         "latest" : "0.21"
       },
-      "LWP-MediaTypes" : {
+      "Exporter-Tiny" : {
          "versions" : {
-            "6.02" : "LWP-MediaTypes-6.02"
+            "0.042" : "Exporter-Tiny-0.042"
          },
-         "latest" : "6.02"
+         "latest" : "0.042"
       },
-      "Text-Template" : {
+      "Exception-Class" : {
+         "latest" : "1.40",
          "versions" : {
-            "1.46" : "Text-Template-1.46"
-         },
-         "latest" : "1.46"
+            "1.40" : "Exception-Class-1.40"
+         }
       },
-      "File-Zglob" : {
+      "CGI-Struct" : {
+         "latest" : "1.21",
+         "versions" : {
+            "1.21" : "CGI-Struct-1.21"
+         }
+      },
+      "Array-Diff" : {
+         "versions" : {
+            "0.07" : "Array-Diff-0.07"
+         },
+         "latest" : "0.07"
+      },
+      "MooX-HandlesVia" : {
+         "latest" : "0.001008",
+         "versions" : {
+            "0.001008" : "MooX-HandlesVia-0.001008"
+         }
+      },
+      "Digest-JHash" : {
+         "versions" : {
+            "0.09" : "Digest-JHash-0.09"
+         },
+         "latest" : "0.09"
+      },
+      "Class-C3" : {
+         "latest" : "0.31",
+         "versions" : {
+            "0.31" : "Class-C3-0.31"
+         }
+      },
+      "Sys-Syslog" : {
+         "versions" : {
+            "0.34" : "Sys-Syslog-0.34"
+         },
+         "latest" : "0.34"
+      },
+      "Digest-SHA" : {
+         "versions" : {
+            "5.95" : "Digest-SHA-5.95"
+         },
+         "latest" : "5.95"
+      },
+      "Test-Class-Most" : {
+         "latest" : "0.08",
+         "versions" : {
+            "0.08" : "Test-Class-Most-0.08"
+         }
+      },
+      "Dumpvalue" : {
+         "latest" : "1.17",
+         "versions" : {
+            "1.17" : "Dumpvalue-1.17"
+         }
+      },
+      "Mozilla-PublicSuffix" : {
+         "latest" : "v0.1.19",
+         "versions" : {
+            "v0.1.19" : "Mozilla-PublicSuffix-v0.1.19"
+         }
+      },
+      "Type-Tiny-XS" : {
+         "versions" : {
+            "0.012" : "Type-Tiny-XS-0.012"
+         },
+         "latest" : "0.012"
+      },
+      "Getopt-Long" : {
+         "versions" : {
+            "2.49.1" : "Getopt-Long-2.49.1"
+         },
+         "latest" : "2.49.1"
+      },
+      "Data-Dumper" : {
+         "versions" : {
+            "2.160" : "Data-Dumper-2.160"
+         },
+         "latest" : "2.160"
+      },
+      "Any-Moose" : {
+         "versions" : {
+            "0.26" : "Any-Moose-0.26"
+         },
+         "latest" : "0.26"
+      },
+      "MRO-Compat" : {
+         "versions" : {
+            "0.12" : "MRO-Compat-0.12"
+         },
+         "latest" : "0.12"
+      },
+      "Perl-Critic" : {
+         "latest" : "1.126",
+         "versions" : {
+            "1.126" : "Perl-Critic-1.126"
+         }
+      },
+      "Module-Runtime-Conflicts" : {
+         "latest" : "0.003",
+         "versions" : {
+            "0.003" : "Module-Runtime-Conflicts-0.003"
+         }
+      },
+      "IO-Socket-IP" : {
+         "versions" : {
+            "0.37" : "IO-Socket-IP-0.37"
+         },
+         "latest" : "0.37"
+      },
+      "Sort-Naturally" : {
+         "versions" : {
+            "1.03" : "Sort-Naturally-1.03"
+         },
+         "latest" : "1.03"
+      },
+      "Test-MockTime" : {
+         "latest" : "0.15",
+         "versions" : {
+            "0.15" : "Test-MockTime-0.15"
+         }
+      },
+      "Time-Duration-Parse" : {
+         "latest" : "0.13",
+         "versions" : {
+            "0.13" : "Time-Duration-Parse-0.13"
+         }
+      },
+      "Test-OpenID-Consumer" : {
+         "latest" : "0.01",
+         "versions" : {
+            "0.01" : "Test-OpenID-Consumer-0.01"
+         }
+      },
+      "ExtUtils-MakeMaker" : {
+         "versions" : {
+            "7.18" : "ExtUtils-MakeMaker-7.18"
+         },
+         "latest" : "7.18"
+      },
+      "File-ShareDir" : {
+         "latest" : "1.102",
+         "versions" : {
+            "1.102" : "File-ShareDir-1.102"
+         }
+      },
+      "Test-Vars" : {
+         "latest" : "0.010",
+         "versions" : {
+            "0.010" : "Test-Vars-0.010"
+         }
+      },
+      "Test-FailWarnings" : {
+         "latest" : "0.008",
+         "versions" : {
+            "0.008" : "Test-FailWarnings-0.008"
+         }
+      },
+      "NEXT" : {
+         "versions" : {
+            "0.65" : "NEXT-0.65"
+         },
+         "latest" : "0.65"
+      },
+      "Pod-Usage" : {
+         "latest" : "1.69",
+         "versions" : {
+            "1.69" : "Pod-Usage-1.69"
+         }
+      },
+      "String-Format" : {
+         "latest" : "1.17",
+         "versions" : {
+            "1.17" : "String-Format-1.17"
+         }
+      },
+      "Text-CSV" : {
+         "latest" : "1.33",
+         "versions" : {
+            "1.33" : "Text-CSV-1.33"
+         }
+      },
+      "HTML-Parser" : {
+         "latest" : "3.72",
+         "versions" : {
+            "3.72" : "HTML-Parser-3.72"
+         }
+      },
+      "Data-Record" : {
+         "latest" : "0.02",
+         "versions" : {
+            "0.02" : "Data-Record-0.02"
+         }
+      },
+      "Algorithm-C3" : {
+         "versions" : {
+            "0.10" : "Algorithm-C3-0.10"
+         },
+         "latest" : "0.10"
+      },
+      "namespace-autoclean" : {
+         "versions" : {
+            "0.28" : "namespace-autoclean-0.28"
+         },
+         "latest" : "0.28"
+      },
+      "MooseX-ConfigFromFile" : {
+         "versions" : {
+            "0.14" : "MooseX-ConfigFromFile-0.14"
+         },
+         "latest" : "0.14"
+      },
+      "Compress-PPMd" : {
          "latest" : "0.11",
          "versions" : {
-            "0.11" : "File-Zglob-0.11"
+            "0.11" : "Compress-PPMd-0.11"
+         }
+      },
+      "Readonly" : {
+         "latest" : "2.05",
+         "versions" : {
+            "2.05" : "Readonly-2.05"
+         }
+      },
+      "Test-Fatal" : {
+         "latest" : "0.014",
+         "versions" : {
+            "0.014" : "Test-Fatal-0.014"
+         }
+      },
+      "LWP-Protocol-https" : {
+         "versions" : {
+            "6.06" : "LWP-Protocol-https-6.06"
+         },
+         "latest" : "6.06"
+      },
+      "SQL-Abstract" : {
+         "latest" : "1.81",
+         "versions" : {
+            "1.81" : "SQL-Abstract-1.81"
          }
       },
       "Hash-FieldHash" : {
@@ -2954,23 +1080,131 @@
          },
          "latest" : "0.14"
       },
-      "XML-SAX-Base" : {
-         "latest" : "1.08",
+      "PPIx-Regexp" : {
          "versions" : {
-            "1.08" : "XML-SAX-Base-1.08"
-         }
-      },
-      "MooseX-Types-Stringlike" : {
-         "latest" : "0.003",
-         "versions" : {
-            "0.003" : "MooseX-Types-Stringlike-0.003"
-         }
-      },
-      "multidimensional" : {
-         "versions" : {
-            "0.012" : "multidimensional-0.012"
+            "0.050" : "PPIx-Regexp-0.050"
          },
-         "latest" : "0.012"
+         "latest" : "0.050"
+      },
+      "Term-ANSIColor" : {
+         "latest" : "4.05",
+         "versions" : {
+            "4.05" : "Term-ANSIColor-4.05"
+         }
+      },
+      "AppConfig" : {
+         "versions" : {
+            "1.71" : "AppConfig-1.71"
+         },
+         "latest" : "1.71"
+      },
+      "Guard" : {
+         "versions" : {
+            "1.023" : "Guard-1.023"
+         },
+         "latest" : "1.023"
+      },
+      "XML-SAX" : {
+         "versions" : {
+            "0.99" : "XML-SAX-0.99"
+         },
+         "latest" : "0.99"
+      },
+      "Time-TZOffset" : {
+         "versions" : {
+            "0.04" : "Time-TZOffset-0.04"
+         },
+         "latest" : "0.04"
+      },
+      "Devel-Cover" : {
+         "latest" : "1.23",
+         "versions" : {
+            "1.23" : "Devel-Cover-1.23"
+         }
+      },
+      "PPIx-Utilities" : {
+         "latest" : "1.001000",
+         "versions" : {
+            "1.001000" : "PPIx-Utilities-1.001000"
+         }
+      },
+      "Email-Simple" : {
+         "versions" : {
+            "2.210" : "Email-Simple-2.210"
+         },
+         "latest" : "2.210"
+      },
+      "Expect" : {
+         "latest" : "1.33",
+         "versions" : {
+            "1.33" : "Expect-1.33"
+         }
+      },
+      "Encode" : {
+         "latest" : "2.84",
+         "versions" : {
+            "2.84" : "Encode-2.84"
+         }
+      },
+      "File-Copy-Recursive" : {
+         "latest" : "0.38",
+         "versions" : {
+            "0.38" : "File-Copy-Recursive-0.38"
+         }
+      },
+      "Test-MockObject" : {
+         "versions" : {
+            "1.20150527" : "Test-MockObject-1.20150527"
+         },
+         "latest" : "1.20150527"
+      },
+      "Exporter-Declare" : {
+         "versions" : {
+            "0.114" : "Exporter-Declare-0.114"
+         },
+         "latest" : "0.114"
+      },
+      "ExtUtils-Manifest" : {
+         "versions" : {
+            "1.70" : "ExtUtils-Manifest-1.70"
+         },
+         "latest" : "1.70"
+      },
+      "JSON" : {
+         "versions" : {
+            "2.90" : "JSON-2.90"
+         },
+         "latest" : "2.90"
+      },
+      "Tree-Simple" : {
+         "latest" : "1.29",
+         "versions" : {
+            "1.29" : "Tree-Simple-1.29"
+         }
+      },
+      "Moo" : {
+         "versions" : {
+            "2.002004" : "Moo-2.002004"
+         },
+         "latest" : "2.002004"
+      },
+      "MooseX-Types-Path-Class" : {
+         "latest" : "0.09",
+         "versions" : {
+            "0.09" : "MooseX-Types-Path-Class-0.09"
+         }
+      },
+      "Net-Domain-TLD" : {
+         "versions" : {
+            "1.74" : "Net-Domain-TLD-1.74"
+         },
+         "latest" : "1.74"
+      },
+      "Plack-Middleware-Header" : {
+         "versions" : {
+            "0.04" : "Plack-Middleware-Header-0.04"
+         },
+         "latest" : "0.04"
       },
       "Devel-Symdump" : {
          "versions" : {
@@ -2978,52 +1212,856 @@
          },
          "latest" : "2.17"
       },
-      "Exporter-Lite" : {
+      "Net-DNS-Paranoid" : {
          "latest" : "0.08",
          "versions" : {
-            "0.08" : "Exporter-Lite-0.08"
+            "0.08" : "Net-DNS-Paranoid-0.08"
          }
       },
-      "Storable" : {
-         "latest" : "2.51",
+      "Term-ReadLine-Gnu" : {
          "versions" : {
-            "2.51" : "Storable-2.51"
+            "1.34" : "Term-ReadLine-Gnu-1.34"
+         },
+         "latest" : "1.34"
+      },
+      "Parse-CPAN-Packages-Fast" : {
+         "latest" : "0.09",
+         "versions" : {
+            "0.09" : "Parse-CPAN-Packages-Fast-0.09"
          }
       },
-      "Devel-CheckBin" : {
+      "FreezeThaw" : {
+         "latest" : "0.5001",
          "versions" : {
-            "0.04" : "Devel-CheckBin-0.04"
-         },
-         "latest" : "0.04"
-      },
-      "Module-ExtractUse" : {
-         "versions" : {
-            "0.341" : "Module-ExtractUse-0.341"
-         },
-         "latest" : "0.341"
-      },
-      "Parse-RecDescent" : {
-         "latest" : "1.967013",
-         "versions" : {
-            "1.967013" : "Parse-RecDescent-1.967013"
+            "0.5001" : "FreezeThaw-0.5001"
          }
       },
-      "Starman" : {
+      "Devel-Confess" : {
+         "latest" : "0.008000",
          "versions" : {
-            "0.4014" : "Starman-0.4014"
-         },
-         "latest" : "0.4014"
+            "0.008000" : "Devel-Confess-0.008000"
+         }
       },
-      "Sub-Identify" : {
+      "MooseX-Getopt" : {
          "versions" : {
-            "0.12" : "Sub-Identify-0.12"
+            "0.71" : "MooseX-Getopt-0.71"
          },
-         "latest" : "0.12"
+         "latest" : "0.71"
       },
-      "Canary-Stability" : {
-         "latest" : "2011",
+      "URI-Query" : {
          "versions" : {
-            "2011" : "Canary-Stability-2011"
+            "0.15" : "URI-Query-0.15"
+         },
+         "latest" : "0.15"
+      },
+      "XSLoader" : {
+         "latest" : "0.22",
+         "versions" : {
+            "0.22" : "XSLoader-0.22"
+         }
+      },
+      "Archive-Zip" : {
+         "latest" : "1.57",
+         "versions" : {
+            "1.57" : "Archive-Zip-1.57"
+         }
+      },
+      "URI-FromHash" : {
+         "latest" : "0.05",
+         "versions" : {
+            "0.05" : "URI-FromHash-0.05"
+         }
+      },
+      "indirect" : {
+         "versions" : {
+            "0.36" : "indirect-0.36"
+         },
+         "latest" : "0.36"
+      },
+      "Email-Abstract" : {
+         "versions" : {
+            "3.008" : "Email-Abstract-3.008"
+         },
+         "latest" : "3.008"
+      },
+      "perl" : {
+         "latest" : "5.024000",
+         "versions" : {
+            "5.024000" : "perl-5.024000"
+         }
+      },
+      "XML-SAX-Base" : {
+         "versions" : {
+            "1.08" : "XML-SAX-Base-1.08"
+         },
+         "latest" : "1.08"
+      },
+      "Text-Template" : {
+         "versions" : {
+            "1.46" : "Text-Template-1.46"
+         },
+         "latest" : "1.46"
+      },
+      "Compress-Bzip2" : {
+         "versions" : {
+            "2.24" : "Compress-Bzip2-2.24"
+         },
+         "latest" : "2.24"
+      },
+      "Catalyst-Runtime" : {
+         "versions" : {
+            "5.90106" : "Catalyst-Runtime-5.90106"
+         },
+         "latest" : "5.90106"
+      },
+      "Class-C3-Componentised" : {
+         "latest" : "1.001000",
+         "versions" : {
+            "1.001000" : "Class-C3-Componentised-1.001000"
+         }
+      },
+      "Parallel-Scoreboard" : {
+         "latest" : "0.07",
+         "versions" : {
+            "0.07" : "Parallel-Scoreboard-0.07"
+         }
+      },
+      "Net-DNS" : {
+         "latest" : "1.06",
+         "versions" : {
+            "1.06" : "Net-DNS-1.06"
+         }
+      },
+      "Cpanel-JSON-XS" : {
+         "versions" : {
+            "3.0217" : "Cpanel-JSON-XS-3.0217"
+         },
+         "latest" : "3.0217"
+      },
+      "File-Sync" : {
+         "latest" : "0.11",
+         "versions" : {
+            "0.11" : "File-Sync-0.11"
+         }
+      },
+      "MooseX-Types-ElasticSearch" : {
+         "versions" : {
+            "0.0.4" : "MooseX-Types-ElasticSearch-0.0.4"
+         },
+         "latest" : "0.0.4"
+      },
+      "Test-Simple" : {
+         "versions" : {
+            "1.302037" : "Test-Simple-1.302037"
+         },
+         "latest" : "1.302037"
+      },
+      "String-RewritePrefix" : {
+         "latest" : "0.007",
+         "versions" : {
+            "0.007" : "String-RewritePrefix-0.007"
+         }
+      },
+      "IO-Capture" : {
+         "latest" : "0.04",
+         "versions" : {
+            "0.04" : "IO-Capture-0.04"
+         }
+      },
+      "Catalyst-Plugin-Static-Simple" : {
+         "versions" : {
+            "0.33" : "Catalyst-Plugin-Static-Simple-0.33"
+         },
+         "latest" : "0.33"
+      },
+      "MooseX-Role-WithOverloading" : {
+         "versions" : {
+            "0.17" : "MooseX-Role-WithOverloading-0.17"
+         },
+         "latest" : "0.17"
+      },
+      "CatalystX-RoleApplicator" : {
+         "latest" : "0.005",
+         "versions" : {
+            "0.005" : "CatalystX-RoleApplicator-0.005"
+         }
+      },
+      "MooseX-Types-Path-Class-MoreCoercions" : {
+         "versions" : {
+            "0.003" : "MooseX-Types-Path-Class-MoreCoercions-0.003"
+         },
+         "latest" : "0.003"
+      },
+      "Term-ReadLine" : {
+         "latest" : "1.14",
+         "versions" : {
+            "1.14" : "Term-ReadLine-1.14"
+         }
+      },
+      "IPC-Run3" : {
+         "latest" : "0.048",
+         "versions" : {
+            "0.048" : "IPC-Run3-0.048"
+         }
+      },
+      "Log-Any-Adapter-Callback" : {
+         "latest" : "0.09",
+         "versions" : {
+            "0.09" : "Log-Any-Adapter-Callback-0.09"
+         }
+      },
+      "ExtUtils-ParseXS" : {
+         "versions" : {
+            "3.30" : "ExtUtils-ParseXS-3.30"
+         },
+         "latest" : "3.30"
+      },
+      "Net-Fastly" : {
+         "latest" : "1.05",
+         "versions" : {
+            "1.05" : "Net-Fastly-1.05"
+         }
+      },
+      "Log-Dispatch-Array" : {
+         "latest" : "1.003",
+         "versions" : {
+            "1.003" : "Log-Dispatch-Array-1.003"
+         }
+      },
+      "Pod-Eventual" : {
+         "latest" : "0.094001",
+         "versions" : {
+            "0.094001" : "Pod-Eventual-0.094001"
+         }
+      },
+      "Data-Dump" : {
+         "latest" : "1.23",
+         "versions" : {
+            "1.23" : "Data-Dump-1.23"
+         }
+      },
+      "CPAN-Repository" : {
+         "versions" : {
+            "0.010" : "CPAN-Repository-0.010"
+         },
+         "latest" : "0.010"
+      },
+      "Sub-Install" : {
+         "latest" : "0.928",
+         "versions" : {
+            "0.928" : "Sub-Install-0.928"
+         }
+      },
+      "Test-Warnings" : {
+         "latest" : "0.026",
+         "versions" : {
+            "0.026" : "Test-Warnings-0.026"
+         }
+      },
+      "CGI-Emulate-PSGI" : {
+         "latest" : "0.21",
+         "versions" : {
+            "0.21" : "CGI-Emulate-PSGI-0.21"
+         }
+      },
+      "URI-Nested" : {
+         "versions" : {
+            "0.10" : "URI-Nested-0.10"
+         },
+         "latest" : "0.10"
+      },
+      "UNIVERSAL-can" : {
+         "versions" : {
+            "1.20140328" : "UNIVERSAL-can-1.20140328"
+         },
+         "latest" : "1.20140328"
+      },
+      "Clone" : {
+         "versions" : {
+            "0.38" : "Clone-0.38"
+         },
+         "latest" : "0.38"
+      },
+      "Meta-Builder" : {
+         "versions" : {
+            "0.003" : "Meta-Builder-0.003"
+         },
+         "latest" : "0.003"
+      },
+      "inc-latest" : {
+         "latest" : "0.500",
+         "versions" : {
+            "0.500" : "inc-latest-0.500"
+         }
+      },
+      "Authen-Simple" : {
+         "versions" : {
+            "0.5" : "Authen-Simple-0.5"
+         },
+         "latest" : "0.5"
+      },
+      "Test-InDistDir" : {
+         "versions" : {
+            "1.112071" : "Test-InDistDir-1.112071"
+         },
+         "latest" : "1.112071"
+      },
+      "Net-Server" : {
+         "versions" : {
+            "2.008" : "Net-Server-2.008"
+         },
+         "latest" : "2.008"
+      },
+      "Number-Compare" : {
+         "latest" : "0.03",
+         "versions" : {
+            "0.03" : "Number-Compare-0.03"
+         }
+      },
+      "Sub-Name" : {
+         "latest" : "0.15",
+         "versions" : {
+            "0.15" : "Sub-Name-0.15"
+         }
+      },
+      "WWW-Mechanize-Cached" : {
+         "latest" : "1.50",
+         "versions" : {
+            "1.50" : "WWW-Mechanize-Cached-1.50"
+         }
+      },
+      "Log-Contextual" : {
+         "latest" : "0.007000",
+         "versions" : {
+            "0.007000" : "Log-Contextual-0.007000"
+         }
+      },
+      "Net-OpenID-Consumer" : {
+         "versions" : {
+            "1.18" : "Net-OpenID-Consumer-1.18"
+         },
+         "latest" : "1.18"
+      },
+      "File-ReadBackwards" : {
+         "versions" : {
+            "1.05" : "File-ReadBackwards-1.05"
+         },
+         "latest" : "1.05"
+      },
+      "WWW-Pastebin-PastebinCom-Create" : {
+         "versions" : {
+            "1.003" : "WWW-Pastebin-PastebinCom-Create-1.003"
+         },
+         "latest" : "1.003"
+      },
+      "strictures" : {
+         "latest" : "2.000003",
+         "versions" : {
+            "2.000003" : "strictures-2.000003"
+         }
+      },
+      "Mojo-SQLite" : {
+         "versions" : {
+            "0.021" : "Mojo-SQLite-0.021"
+         },
+         "latest" : "0.021"
+      },
+      "Data-Visitor" : {
+         "versions" : {
+            "0.30" : "Data-Visitor-0.30"
+         },
+         "latest" : "0.30"
+      },
+      "Module-Refresh" : {
+         "versions" : {
+            "0.17" : "Module-Refresh-0.17"
+         },
+         "latest" : "0.17"
+      },
+      "Module-Load" : {
+         "latest" : "0.32",
+         "versions" : {
+            "0.32" : "Module-Load-0.32"
+         }
+      },
+      "Path-Tiny" : {
+         "versions" : {
+            "0.096" : "Path-Tiny-0.096"
+         },
+         "latest" : "0.096"
+      },
+      "LWP-ConsoleLogger" : {
+         "latest" : "0.000028",
+         "versions" : {
+            "0.000028" : "LWP-ConsoleLogger-0.000028"
+         }
+      },
+      "List-MoreUtils" : {
+         "versions" : {
+            "0.416" : "List-MoreUtils-0.416"
+         },
+         "latest" : "0.416"
+      },
+      "Devel-OverrideGlobalRequire" : {
+         "versions" : {
+            "0.001" : "Devel-OverrideGlobalRequire-0.001"
+         },
+         "latest" : "0.001"
+      },
+      "Text-ParseWords" : {
+         "latest" : "3.30",
+         "versions" : {
+            "3.30" : "Text-ParseWords-3.30"
+         }
+      },
+      "Task-Weaken" : {
+         "latest" : "1.04",
+         "versions" : {
+            "1.04" : "Task-Weaken-1.04"
+         }
+      },
+      "Getopt-Long-Descriptive" : {
+         "versions" : {
+            "0.099" : "Getopt-Long-Descriptive-0.099"
+         },
+         "latest" : "0.099"
+      },
+      "PHP-Serialization" : {
+         "versions" : {
+            "0.34" : "PHP-Serialization-0.34"
+         },
+         "latest" : "0.34"
+      },
+      "POSIX-strftime-Compiler" : {
+         "versions" : {
+            "0.41" : "POSIX-strftime-Compiler-0.41"
+         },
+         "latest" : "0.41"
+      },
+      "Sub-Exporter-ForMethods" : {
+         "versions" : {
+            "0.100052" : "Sub-Exporter-ForMethods-0.100052"
+         },
+         "latest" : "0.100052"
+      },
+      "URI" : {
+         "latest" : "1.71",
+         "versions" : {
+            "1.71" : "URI-1.71"
+         }
+      },
+      "Devel-Caller" : {
+         "versions" : {
+            "2.06" : "Devel-Caller-2.06"
+         },
+         "latest" : "2.06"
+      },
+      "IPC-ShareLite" : {
+         "versions" : {
+            "0.17" : "IPC-ShareLite-0.17"
+         },
+         "latest" : "0.17"
+      },
+      "Module-CPANTS-Analyse" : {
+         "latest" : "0.96",
+         "versions" : {
+            "0.96" : "Module-CPANTS-Analyse-0.96"
+         }
+      },
+      "Data-Taxi" : {
+         "versions" : {
+            "0.96" : "Data-Taxi-0.96"
+         },
+         "latest" : "0.96"
+      },
+      "File-Which" : {
+         "versions" : {
+            "1.21" : "File-Which-1.21"
+         },
+         "latest" : "1.21"
+      },
+      "Net-SSLeay" : {
+         "versions" : {
+            "1.74" : "Net-SSLeay-1.74"
+         },
+         "latest" : "1.74"
+      },
+      "HTTP-CookieJar" : {
+         "latest" : "0.008",
+         "versions" : {
+            "0.008" : "HTTP-CookieJar-0.008"
+         }
+      },
+      "MetaCPAN-Moose" : {
+         "latest" : "0.000002",
+         "versions" : {
+            "0.000002" : "MetaCPAN-Moose-0.000002"
+         }
+      },
+      "IO-stringy" : {
+         "latest" : "2.111",
+         "versions" : {
+            "2.111" : "IO-stringy-2.111"
+         }
+      },
+      "Readonly-XS" : {
+         "latest" : "1.05",
+         "versions" : {
+            "1.05" : "Readonly-XS-1.05"
+         }
+      },
+      "Catalyst-View-JSON" : {
+         "latest" : "0.36",
+         "versions" : {
+            "0.36" : "Catalyst-View-JSON-0.36"
+         }
+      },
+      "CatalystX-Component-Traits" : {
+         "latest" : "0.19",
+         "versions" : {
+            "0.19" : "CatalystX-Component-Traits-0.19"
+         }
+      },
+      "Net-OAuth" : {
+         "versions" : {
+            "0.28" : "Net-OAuth-0.28"
+         },
+         "latest" : "0.28"
+      },
+      "Spiffy" : {
+         "versions" : {
+            "0.46" : "Spiffy-0.46"
+         },
+         "latest" : "0.46"
+      },
+      "File-Temp" : {
+         "versions" : {
+            "0.2304" : "File-Temp-0.2304"
+         },
+         "latest" : "0.2304"
+      },
+      "Module-Find" : {
+         "versions" : {
+            "0.13" : "Module-Find-0.13"
+         },
+         "latest" : "0.13"
+      },
+      "YAML-Syck" : {
+         "versions" : {
+            "1.29" : "YAML-Syck-1.29"
+         },
+         "latest" : "1.29"
+      },
+      "Net-Ping" : {
+         "latest" : "2.41",
+         "versions" : {
+            "2.41" : "Net-Ping-2.41"
+         }
+      },
+      "Digest-MD5" : {
+         "latest" : "2.55",
+         "versions" : {
+            "2.55" : "Digest-MD5-2.55"
+         }
+      },
+      "Cookie-Baker" : {
+         "versions" : {
+            "0.06" : "Cookie-Baker-0.06"
+         },
+         "latest" : "0.06"
+      },
+      "MooseX-SimpleConfig" : {
+         "versions" : {
+            "0.11" : "MooseX-SimpleConfig-0.11"
+         },
+         "latest" : "0.11"
+      },
+      "XML-Dumper" : {
+         "versions" : {
+            "0.81" : "XML-Dumper-0.81"
+         },
+         "latest" : "0.81"
+      },
+      "XML-NamespaceSupport" : {
+         "latest" : "1.11",
+         "versions" : {
+            "1.11" : "XML-NamespaceSupport-1.11"
+         }
+      },
+      "Want" : {
+         "versions" : {
+            "0.29" : "Want-0.29"
+         },
+         "latest" : "0.29"
+      },
+      "MooseX-Aliases" : {
+         "versions" : {
+            "0.11" : "MooseX-Aliases-0.11"
+         },
+         "latest" : "0.11"
+      },
+      "LWPx-ParanoidAgent" : {
+         "versions" : {
+            "1.10" : "LWPx-ParanoidAgent-1.10"
+         },
+         "latest" : "1.10"
+      },
+      "Catalyst-Plugin-ConfigLoader" : {
+         "versions" : {
+            "0.34" : "Catalyst-Plugin-ConfigLoader-0.34"
+         },
+         "latest" : "0.34"
+      },
+      "Pod-Strip" : {
+         "versions" : {
+            "1.02" : "Pod-Strip-1.02"
+         },
+         "latest" : "1.02"
+      },
+      "MooseX-Types-DateTime" : {
+         "versions" : {
+            "0.13" : "MooseX-Types-DateTime-0.13"
+         },
+         "latest" : "0.13"
+      },
+      "Git-Sub" : {
+         "latest" : "0.161810",
+         "versions" : {
+            "0.161810" : "Git-Sub-0.161810"
+         }
+      },
+      "File-ConfigDir" : {
+         "latest" : "0.017",
+         "versions" : {
+            "0.017" : "File-ConfigDir-0.017"
+         }
+      },
+      "IO-All" : {
+         "versions" : {
+            "0.86" : "IO-All-0.86"
+         },
+         "latest" : "0.86"
+      },
+      "MCE" : {
+         "latest" : "1.802",
+         "versions" : {
+            "1.802" : "MCE-1.802"
+         }
+      },
+      "Encoding-FixLatin" : {
+         "versions" : {
+            "1.04" : "Encoding-FixLatin-1.04"
+         },
+         "latest" : "1.04"
+      },
+      "Module-Implementation" : {
+         "versions" : {
+            "0.09" : "Module-Implementation-0.09"
+         },
+         "latest" : "0.09"
+      },
+      "Config-INI" : {
+         "latest" : "0.025",
+         "versions" : {
+            "0.025" : "Config-INI-0.025"
+         }
+      },
+      "Minion" : {
+         "versions" : {
+            "5.08" : "Minion-5.08"
+         },
+         "latest" : "5.08"
+      },
+      "Devel-PPPort" : {
+         "versions" : {
+            "3.35" : "Devel-PPPort-3.35"
+         },
+         "latest" : "3.35"
+      },
+      "Mouse" : {
+         "latest" : "v2.4.5",
+         "versions" : {
+            "v2.4.5" : "Mouse-v2.4.5"
+         }
+      },
+      "Text-SimpleTable-AutoWidth" : {
+         "versions" : {
+            "0.09" : "Text-SimpleTable-AutoWidth-0.09"
+         },
+         "latest" : "0.09"
+      },
+      "Algorithm-Combinatorics" : {
+         "latest" : "0.27",
+         "versions" : {
+            "0.27" : "Algorithm-Combinatorics-0.27"
+         }
+      },
+      "IPC-Cmd" : {
+         "versions" : {
+            "0.94" : "IPC-Cmd-0.94"
+         },
+         "latest" : "0.94"
+      },
+      "FCGI" : {
+         "latest" : "0.78",
+         "versions" : {
+            "0.78" : "FCGI-0.78"
+         }
+      },
+      "Email-Date-Format" : {
+         "latest" : "1.005",
+         "versions" : {
+            "1.005" : "Email-Date-Format-1.005"
+         }
+      },
+      "Text-Diff" : {
+         "versions" : {
+            "1.44" : "Text-Diff-1.44"
+         },
+         "latest" : "1.44"
+      },
+      "lib" : {
+         "versions" : {
+            "0.63" : "lib-0.63"
+         },
+         "latest" : "0.63"
+      },
+      "Locale-Maketext-Simple" : {
+         "latest" : "0.21",
+         "versions" : {
+            "0.21" : "Locale-Maketext-Simple-0.21"
+         }
+      },
+      "Time-HiRes" : {
+         "latest" : "1.9739",
+         "versions" : {
+            "1.9739" : "Time-HiRes-1.9739"
+         }
+      },
+      "Graph-Centrality-Pagerank" : {
+         "latest" : "1.05",
+         "versions" : {
+            "1.05" : "Graph-Centrality-Pagerank-1.05"
+         }
+      },
+      "DateTime-Format-Epoch" : {
+         "latest" : "0.16",
+         "versions" : {
+            "0.16" : "DateTime-Format-Epoch-0.16"
+         }
+      },
+      "Test-Base" : {
+         "latest" : "0.88",
+         "versions" : {
+            "0.88" : "Test-Base-0.88"
+         }
+      },
+      "UNIVERSAL-isa" : {
+         "versions" : {
+            "1.20150614" : "UNIVERSAL-isa-1.20150614"
+         },
+         "latest" : "1.20150614"
+      },
+      "Archive-Peek" : {
+         "versions" : {
+            "0.35" : "Archive-Peek-0.35"
+         },
+         "latest" : "0.35"
+      },
+      "MooseX-Types-Stringlike" : {
+         "latest" : "0.003",
+         "versions" : {
+            "0.003" : "MooseX-Types-Stringlike-0.003"
+         }
+      },
+      "Archive-Any" : {
+         "versions" : {
+            "0.0945" : "Archive-Any-0.0945"
+         },
+         "latest" : "0.0945"
+      },
+      "Error" : {
+         "latest" : "0.17024",
+         "versions" : {
+            "0.17024" : "Error-0.17024"
+         }
+      },
+      "CPAN-Meta-YAML" : {
+         "versions" : {
+            "0.018" : "CPAN-Meta-YAML-0.018"
+         },
+         "latest" : "0.018"
+      },
+      "Iterator" : {
+         "latest" : "0.03",
+         "versions" : {
+            "0.03" : "Iterator-0.03"
+         }
+      },
+      "Catalyst-Plugin-Authentication" : {
+         "versions" : {
+            "0.10023" : "Catalyst-Plugin-Authentication-0.10023"
+         },
+         "latest" : "0.10023"
+      },
+      "Ref-Util" : {
+         "latest" : "0.020",
+         "versions" : {
+            "0.020" : "Ref-Util-0.020"
+         }
+      },
+      "File-Slurper" : {
+         "latest" : "0.008",
+         "versions" : {
+            "0.008" : "File-Slurper-0.008"
+         }
+      },
+      "URI-Find" : {
+         "latest" : "20140709",
+         "versions" : {
+            "20140709" : "URI-Find-20140709"
+         }
+      },
+      "Software-License-CCpack" : {
+         "latest" : "1.11",
+         "versions" : {
+            "1.11" : "Software-License-CCpack-1.11"
+         }
+      },
+      "Git-Repository" : {
+         "versions" : {
+            "1.320" : "Git-Repository-1.320"
+         },
+         "latest" : "1.320"
+      },
+      "Sub-Exporter" : {
+         "latest" : "0.987",
+         "versions" : {
+            "0.987" : "Sub-Exporter-0.987"
+         }
+      },
+      "PAUSE-Packages" : {
+         "versions" : {
+            "0.17" : "PAUSE-Packages-0.17"
+         },
+         "latest" : "0.17"
+      },
+      "Template-Toolkit" : {
+         "versions" : {
+            "2.26" : "Template-Toolkit-2.26"
+         },
+         "latest" : "2.26"
+      },
+      "Term-ShellUI" : {
+         "latest" : "0.92",
+         "versions" : {
+            "0.92" : "Term-ShellUI-0.92"
+         }
+      },
+      "MailTools" : {
+         "latest" : "2.18",
+         "versions" : {
+            "2.18" : "MailTools-2.18"
          }
       },
       "CGI-Simple" : {
@@ -3032,24 +2070,2106 @@
             "1.115" : "CGI-Simple-1.115"
          }
       },
+      "Safe-Isa" : {
+         "latest" : "1.000005",
+         "versions" : {
+            "1.000005" : "Safe-Isa-1.000005"
+         }
+      },
+      "MooseX-Types-Structured" : {
+         "latest" : "0.35",
+         "versions" : {
+            "0.35" : "MooseX-Types-Structured-0.35"
+         }
+      },
+      "Math-BigInt" : {
+         "versions" : {
+            "1.999724" : "Math-BigInt-1.999724"
+         },
+         "latest" : "1.999724"
+      },
+      "Class-Accessor-Chained" : {
+         "latest" : "0.01",
+         "versions" : {
+            "0.01" : "Class-Accessor-Chained-0.01"
+         }
+      },
+      "Starman" : {
+         "latest" : "0.4014",
+         "versions" : {
+            "0.4014" : "Starman-0.4014"
+         }
+      },
+      "MooX-File-ConfigDir" : {
+         "latest" : "0.005",
+         "versions" : {
+            "0.005" : "MooX-File-ConfigDir-0.005"
+         }
+      },
+      "URI-ws" : {
+         "versions" : {
+            "0.03" : "URI-ws-0.03"
+         },
+         "latest" : "0.03"
+      },
+      "Async-Interrupt" : {
+         "versions" : {
+            "1.21" : "Async-Interrupt-1.21"
+         },
+         "latest" : "1.21"
+      },
+      "aliased" : {
+         "latest" : "0.34",
+         "versions" : {
+            "0.34" : "aliased-0.34"
+         }
+      },
+      "Params-Util" : {
+         "latest" : "1.07",
+         "versions" : {
+            "1.07" : "Params-Util-1.07"
+         }
+      },
+      "Data-Denter" : {
+         "versions" : {
+            "0.15" : "Data-Denter-0.15"
+         },
+         "latest" : "0.15"
+      },
+      "Cookie-Baker-XS" : {
+         "versions" : {
+            "0.06" : "Cookie-Baker-XS-0.06"
+         },
+         "latest" : "0.06"
+      },
+      "CPAN-Meta" : {
+         "versions" : {
+            "2.150005" : "CPAN-Meta-2.150005"
+         },
+         "latest" : "2.150005"
+      },
+      "PadWalker" : {
+         "versions" : {
+            "2.2" : "PadWalker-2.2"
+         },
+         "latest" : "2.2"
+      },
+      "MooseX-Traits-Pluggable" : {
+         "latest" : "0.12",
+         "versions" : {
+            "0.12" : "MooseX-Traits-Pluggable-0.12"
+         }
+      },
+      "Test-Routine" : {
+         "versions" : {
+            "0.020" : "Test-Routine-0.020"
+         },
+         "latest" : "0.020"
+      },
+      "Data-Perl" : {
+         "latest" : "0.002009",
+         "versions" : {
+            "0.002009" : "Data-Perl-0.002009"
+         }
+      },
+      "Devel-PartialDump" : {
+         "versions" : {
+            "0.18" : "Devel-PartialDump-0.18"
+         },
+         "latest" : "0.18"
+      },
+      "Encoding-FixLatin-XS" : {
+         "versions" : {
+            "1.01" : "Encoding-FixLatin-XS-1.01"
+         },
+         "latest" : "1.01"
+      },
+      "Net-OpenID-Server" : {
+         "versions" : {
+            "1.09" : "Net-OpenID-Server-1.09"
+         },
+         "latest" : "1.09"
+      },
+      "IO-Compress" : {
+         "versions" : {
+            "2.069" : "IO-Compress-2.069"
+         },
+         "latest" : "2.069"
+      },
+      "DBD-Pg" : {
+         "latest" : "3.5.3",
+         "versions" : {
+            "3.5.3" : "DBD-Pg-3.5.3"
+         }
+      },
+      "MooseX-Attribute-Deflator" : {
+         "versions" : {
+            "2.2.2" : "MooseX-Attribute-Deflator-2.2.2"
+         },
+         "latest" : "2.2.2"
+      },
+      "Test-Exception" : {
+         "latest" : "0.43",
+         "versions" : {
+            "0.43" : "Test-Exception-0.43"
+         }
+      },
+      "AutoLoader" : {
+         "versions" : {
+            "5.74" : "AutoLoader-5.74"
+         },
+         "latest" : "5.74"
+      },
+      "Carp-Always" : {
+         "versions" : {
+            "0.13" : "Carp-Always-0.13"
+         },
+         "latest" : "0.13"
+      },
+      "Plack-Test-Agent" : {
+         "versions" : {
+            "1.4" : "Plack-Test-Agent-1.4"
+         },
+         "latest" : "1.4"
+      },
+      "Net-CIDR-Lite" : {
+         "versions" : {
+            "0.21" : "Net-CIDR-Lite-0.21"
+         },
+         "latest" : "0.21"
+      },
+      "Plack-Middleware-ReverseProxy" : {
+         "latest" : "0.15",
+         "versions" : {
+            "0.15" : "Plack-Middleware-ReverseProxy-0.15"
+         }
+      },
+      "Test-Aggregate" : {
+         "versions" : {
+            "0.373" : "Test-Aggregate-0.373"
+         },
+         "latest" : "0.373"
+      },
+      "Test-WWW-Mechanize" : {
+         "latest" : "1.44",
+         "versions" : {
+            "1.44" : "Test-WWW-Mechanize-1.44"
+         }
+      },
+      "Hash-Merge-Simple" : {
+         "latest" : "0.051",
+         "versions" : {
+            "0.051" : "Hash-Merge-Simple-0.051"
+         }
+      },
+      "Test-YAML" : {
+         "versions" : {
+            "1.06" : "Test-YAML-1.06"
+         },
+         "latest" : "1.06"
+      },
+      "HTTP-CookieMonster" : {
+         "latest" : "0.09",
+         "versions" : {
+            "0.09" : "HTTP-CookieMonster-0.09"
+         }
+      },
+      "Pod-Coverage" : {
+         "versions" : {
+            "0.23" : "Pod-Coverage-0.23"
+         },
+         "latest" : "0.23"
+      },
+      "Log-Dispatch" : {
+         "latest" : "2.56",
+         "versions" : {
+            "2.56" : "Log-Dispatch-2.56"
+         }
+      },
+      "PPI-HTML" : {
+         "latest" : "1.08",
+         "versions" : {
+            "1.08" : "PPI-HTML-1.08"
+         }
+      },
+      "Module-Build-XSUtil" : {
+         "versions" : {
+            "0.16" : "Module-Build-XSUtil-0.16"
+         },
+         "latest" : "0.16"
+      },
+      "ExtUtils-Constant" : {
+         "latest" : "0.16",
+         "versions" : {
+            "0.16" : "ExtUtils-Constant-0.16"
+         }
+      },
+      "LWP-MediaTypes" : {
+         "latest" : "6.02",
+         "versions" : {
+            "6.02" : "LWP-MediaTypes-6.02"
+         }
+      },
+      "Test-Without-Module" : {
+         "versions" : {
+            "0.18" : "Test-Without-Module-0.18"
+         },
+         "latest" : "0.18"
+      },
+      "Catalyst-Plugin-Session" : {
+         "versions" : {
+            "0.40" : "Catalyst-Plugin-Session-0.40"
+         },
+         "latest" : "0.40"
+      },
+      "Test-SharedFork" : {
+         "latest" : "0.35",
+         "versions" : {
+            "0.35" : "Test-SharedFork-0.35"
+         }
+      },
+      "Data-DPath" : {
+         "versions" : {
+            "0.55" : "Data-DPath-0.55"
+         },
+         "latest" : "0.55"
+      },
+      "Plack-Middleware-MethodOverride" : {
+         "versions" : {
+            "0.15" : "Plack-Middleware-MethodOverride-0.15"
+         },
+         "latest" : "0.15"
+      },
+      "Pod-Spell" : {
+         "latest" : "1.20",
+         "versions" : {
+            "1.20" : "Pod-Spell-1.20"
+         }
+      },
+      "IPC-Run" : {
+         "latest" : "0.94",
+         "versions" : {
+            "0.94" : "IPC-Run-0.94"
+         }
+      },
+      "Capture-Tiny" : {
+         "latest" : "0.42",
+         "versions" : {
+            "0.42" : "Capture-Tiny-0.42"
+         }
+      },
+      "CPAN-Meta-Check" : {
+         "latest" : "0.012",
+         "versions" : {
+            "0.012" : "CPAN-Meta-Check-0.012"
+         }
+      },
+      "Browser-Open" : {
+         "versions" : {
+            "0.04" : "Browser-Open-0.04"
+         },
+         "latest" : "0.04"
+      },
+      "Test-Filename" : {
+         "versions" : {
+            "0.03" : "Test-Filename-0.03"
+         },
+         "latest" : "0.03"
+      },
+      "Taint-Util" : {
+         "versions" : {
+            "0.08" : "Taint-Util-0.08"
+         },
+         "latest" : "0.08"
+      },
+      "Ouch" : {
+         "versions" : {
+            "0.0409" : "Ouch-0.0409"
+         },
+         "latest" : "0.0409"
+      },
+      "File-Spec-Native" : {
+         "latest" : "1.004",
+         "versions" : {
+            "1.004" : "File-Spec-Native-1.004"
+         }
+      },
+      "constant" : {
+         "latest" : "1.33",
+         "versions" : {
+            "1.33" : "constant-1.33"
+         }
+      },
+      "UNIVERSAL-require" : {
+         "latest" : "0.18",
+         "versions" : {
+            "0.18" : "UNIVERSAL-require-0.18"
+         }
+      },
+      "List-Compare" : {
+         "latest" : "0.53",
+         "versions" : {
+            "0.53" : "List-Compare-0.53"
+         }
+      },
+      "URL-Encode" : {
+         "versions" : {
+            "0.03" : "URL-Encode-0.03"
+         },
+         "latest" : "0.03"
+      },
+      "Module-Faker" : {
+         "latest" : "0.017",
+         "versions" : {
+            "0.017" : "Module-Faker-0.017"
+         }
+      },
+      "Package-Stash-XS" : {
+         "versions" : {
+            "0.28" : "Package-Stash-XS-0.28"
+         },
+         "latest" : "0.28"
+      },
+      "Net-Twitter" : {
+         "versions" : {
+            "4.01020" : "Net-Twitter-4.01020"
+         },
+         "latest" : "4.01020"
+      },
+      "DateTime-Format-Builder" : {
+         "versions" : {
+            "0.81" : "DateTime-Format-Builder-0.81"
+         },
+         "latest" : "0.81"
+      },
+      "Carp" : {
+         "latest" : "1.38",
+         "versions" : {
+            "1.38" : "Carp-1.38"
+         }
+      },
+      "Test-Memory-Cycle" : {
+         "versions" : {
+            "1.06" : "Test-Memory-Cycle-1.06"
+         },
+         "latest" : "1.06"
+      },
+      "DateTime-Format-ISO8601" : {
+         "versions" : {
+            "0.08" : "DateTime-Format-ISO8601-0.08"
+         },
+         "latest" : "0.08"
+      },
+      "DBIx-Connector" : {
+         "latest" : "0.56",
+         "versions" : {
+            "0.56" : "DBIx-Connector-0.56"
+         }
+      },
+      "File-Path" : {
+         "latest" : "2.12",
+         "versions" : {
+            "2.12" : "File-Path-2.12"
+         }
+      },
+      "Scope-Guard" : {
+         "latest" : "0.21",
+         "versions" : {
+            "0.21" : "Scope-Guard-0.21"
+         }
+      },
+      "HTTP-Body" : {
+         "versions" : {
+            "1.22" : "HTTP-Body-1.22"
+         },
+         "latest" : "1.22"
+      },
+      "Tie-ToObject" : {
+         "latest" : "0.03",
+         "versions" : {
+            "0.03" : "Tie-ToObject-0.03"
+         }
+      },
+      "Test-Most" : {
+         "versions" : {
+            "0.34" : "Test-Most-0.34"
+         },
+         "latest" : "0.34"
+      },
+      "MooseX-ArrayRef" : {
+         "latest" : "0.005",
+         "versions" : {
+            "0.005" : "MooseX-ArrayRef-0.005"
+         }
+      },
+      "Test-Trap" : {
+         "versions" : {
+            "v0.3.2" : "Test-Trap-v0.3.2"
+         },
+         "latest" : "v0.3.2"
+      },
+      "constant-defer" : {
+         "latest" : "6",
+         "versions" : {
+            "6" : "constant-defer-6"
+         }
+      },
+      "Parse-CPAN-Meta" : {
+         "versions" : {
+            "1.4422" : "Parse-CPAN-Meta-1.4422"
+         },
+         "latest" : "1.4422"
+      },
+      "Regexp-Common-time" : {
+         "versions" : {
+            "0.07" : "Regexp-Common-time-0.07"
+         },
+         "latest" : "0.07"
+      },
+      "Class-Unload" : {
+         "versions" : {
+            "0.09" : "Class-Unload-0.09"
+         },
+         "latest" : "0.09"
+      },
+      "Time-Local" : {
+         "latest" : "1.2300",
+         "versions" : {
+            "1.2300" : "Time-Local-1.2300"
+         }
+      },
+      "EV" : {
+         "versions" : {
+            "4.22" : "EV-4.22"
+         },
+         "latest" : "4.22"
+      },
+      "libintl-perl" : {
+         "latest" : "1.26",
+         "versions" : {
+            "1.26" : "libintl-perl-1.26"
+         }
+      },
+      "DBD-SQLite" : {
+         "latest" : "1.50",
+         "versions" : {
+            "1.50" : "DBD-SQLite-1.50"
+         }
+      },
+      "File-Listing" : {
+         "versions" : {
+            "6.04" : "File-Listing-6.04"
+         },
+         "latest" : "6.04"
+      },
+      "Apache-LogFormat-Compiler" : {
+         "versions" : {
+            "0.33" : "Apache-LogFormat-Compiler-0.33"
+         },
+         "latest" : "0.33"
+      },
+      "Text-Tabs+Wrap" : {
+         "latest" : "2013.0523",
+         "versions" : {
+            "2013.0523" : "Text-Tabs+Wrap-2013.0523"
+         }
+      },
+      "Sort-Versions" : {
+         "versions" : {
+            "1.62" : "Sort-Versions-1.62"
+         },
+         "latest" : "1.62"
+      },
+      "ExtUtils-Depends" : {
+         "versions" : {
+            "0.405" : "ExtUtils-Depends-0.405"
+         },
+         "latest" : "0.405"
+      },
+      "MooseX-RelatedClassRoles" : {
+         "versions" : {
+            "0.004" : "MooseX-RelatedClassRoles-0.004"
+         },
+         "latest" : "0.004"
+      },
+      "Mozilla-CA" : {
+         "versions" : {
+            "20160104" : "Mozilla-CA-20160104"
+         },
+         "latest" : "20160104"
+      },
+      "base" : {
+         "versions" : {
+            "2.23" : "base-2.23"
+         },
+         "latest" : "2.23"
+      },
+      "MooseX-Emulate-Class-Accessor-Fast" : {
+         "versions" : {
+            "0.00903" : "MooseX-Emulate-Class-Accessor-Fast-0.00903"
+         },
+         "latest" : "0.00903"
+      },
+      "Server-Starter" : {
+         "latest" : "0.32",
+         "versions" : {
+            "0.32" : "Server-Starter-0.32"
+         }
+      },
+      "Path-Iterator-Rule" : {
+         "versions" : {
+            "1.012" : "Path-Iterator-Rule-1.012"
+         },
+         "latest" : "1.012"
+      },
+      "UUID-Tiny" : {
+         "latest" : "1.04",
+         "versions" : {
+            "1.04" : "UUID-Tiny-1.04"
+         }
+      },
+      "Crypt-Blowfish" : {
+         "versions" : {
+            "2.14" : "Crypt-Blowfish-2.14"
+         },
+         "latest" : "2.14"
+      },
+      "Convert-Bencode_XS" : {
+         "latest" : "0.06",
+         "versions" : {
+            "0.06" : "Convert-Bencode_XS-0.06"
+         }
+      },
+      "IO-Tty" : {
+         "latest" : "1.12",
+         "versions" : {
+            "1.12" : "IO-Tty-1.12"
+         }
+      },
+      "Parse-MIME" : {
+         "latest" : "1.003",
+         "versions" : {
+            "1.003" : "Parse-MIME-1.003"
+         }
+      },
+      "MooX-Types-MooseLike-Numeric" : {
+         "versions" : {
+            "1.02" : "MooX-Types-MooseLike-Numeric-1.02"
+         },
+         "latest" : "1.02"
+      },
+      "LWP-Protocol-http10" : {
+         "latest" : "6.03",
+         "versions" : {
+            "6.03" : "LWP-Protocol-http10-6.03"
+         }
+      },
+      "Data-UUID" : {
+         "versions" : {
+            "1.221" : "Data-UUID-1.221"
+         },
+         "latest" : "1.221"
+      },
+      "Opcodes" : {
+         "latest" : "0.14",
+         "versions" : {
+            "0.14" : "Opcodes-0.14"
+         }
+      },
+      "AnyEvent" : {
+         "versions" : {
+            "7.12" : "AnyEvent-7.12"
+         },
+         "latest" : "7.12"
+      },
+      "File-ShareDir-Install" : {
+         "latest" : "0.10",
+         "versions" : {
+            "0.10" : "File-ShareDir-Install-0.10"
+         }
+      },
+      "HTML-Tree" : {
+         "latest" : "5.03",
+         "versions" : {
+            "5.03" : "HTML-Tree-5.03"
+         }
+      },
+      "PAUSE-Permissions" : {
+         "versions" : {
+            "0.16" : "PAUSE-Permissions-0.16"
+         },
+         "latest" : "0.16"
+      },
+      "namespace-clean" : {
+         "versions" : {
+            "0.27" : "namespace-clean-0.27"
+         },
+         "latest" : "0.27"
+      },
+      "Filter-Simple-Compile" : {
+         "versions" : {
+            "0.02" : "Filter-Simple-Compile-0.02"
+         },
+         "latest" : "0.02"
+      },
+      "IO-Handle-Util" : {
+         "latest" : "0.01",
+         "versions" : {
+            "0.01" : "IO-Handle-Util-0.01"
+         }
+      },
+      "Class-Inspector" : {
+         "versions" : {
+            "1.28" : "Class-Inspector-1.28"
+         },
+         "latest" : "1.28"
+      },
+      "Find-Lib" : {
+         "versions" : {
+            "1.04" : "Find-Lib-1.04"
+         },
+         "latest" : "1.04"
+      },
+      "IO" : {
+         "latest" : "1.25",
+         "versions" : {
+            "1.25" : "IO-1.25"
+         }
+      },
+      "HTTP-Parser-XS" : {
+         "latest" : "0.17",
+         "versions" : {
+            "0.17" : "HTTP-Parser-XS-0.17"
+         }
+      },
+      "Module-Extract-Namespaces" : {
+         "latest" : "1.02",
+         "versions" : {
+            "1.02" : "Module-Extract-Namespaces-1.02"
+         }
+      },
+      "parent" : {
+         "latest" : "0.234",
+         "versions" : {
+            "0.234" : "parent-0.234"
+         }
+      },
+      "IO-Socket-SSL" : {
+         "latest" : "2.030",
+         "versions" : {
+            "2.030" : "IO-Socket-SSL-2.030"
+         }
+      },
+      "common-sense" : {
+         "versions" : {
+            "3.74" : "common-sense-3.74"
+         },
+         "latest" : "3.74"
+      },
+      "ExtUtils-Helpers" : {
+         "latest" : "0.022",
+         "versions" : {
+            "0.022" : "ExtUtils-Helpers-0.022"
+         }
+      },
+      "MIME-Types" : {
+         "latest" : "2.13",
+         "versions" : {
+            "2.13" : "MIME-Types-2.13"
+         }
+      },
+      "Config-JFDI" : {
+         "latest" : "0.065",
+         "versions" : {
+            "0.065" : "Config-JFDI-0.065"
+         }
+      },
+      "List-AllUtils" : {
+         "versions" : {
+            "0.11" : "List-AllUtils-0.11"
+         },
+         "latest" : "0.11"
+      },
+      "Dist-CheckConflicts" : {
+         "versions" : {
+            "0.11" : "Dist-CheckConflicts-0.11"
+         },
+         "latest" : "0.11"
+      },
+      "DateTime-Format-RFC3339" : {
+         "versions" : {
+            "v1.2.0" : "DateTime-Format-RFC3339-v1.2.0"
+         },
+         "latest" : "v1.2.0"
+      },
+      "Test-Deep" : {
+         "versions" : {
+            "1.120" : "Test-Deep-1.120"
+         },
+         "latest" : "1.120"
+      },
+      "App-Cache" : {
+         "latest" : "0.37",
+         "versions" : {
+            "0.37" : "App-Cache-0.37"
+         }
+      },
+      "MIME-Charset" : {
+         "latest" : "1.012",
+         "versions" : {
+            "1.012" : "MIME-Charset-1.012"
+         }
+      },
+      "B-Utils" : {
+         "versions" : {
+            "0.27" : "B-Utils-0.27"
+         },
+         "latest" : "0.27"
+      },
+      "Test-TCP" : {
+         "versions" : {
+            "2.16" : "Test-TCP-2.16"
+         },
+         "latest" : "2.16"
+      },
+      "Sub-Uplevel" : {
+         "versions" : {
+            "0.25" : "Sub-Uplevel-0.25"
+         },
+         "latest" : "0.25"
+      },
+      "File-Find-Object" : {
+         "versions" : {
+            "v0.2.13" : "File-Find-Object-v0.2.13"
+         },
+         "latest" : "v0.2.13"
+      },
+      "XML-NamespaceFactory" : {
+         "versions" : {
+            "1.02" : "XML-NamespaceFactory-1.02"
+         },
+         "latest" : "1.02"
+      },
+      "Test-HTTP-Server-Simple" : {
+         "latest" : "0.11",
+         "versions" : {
+            "0.11" : "Test-HTTP-Server-Simple-0.11"
+         }
+      },
+      "PPI" : {
+         "latest" : "1.220",
+         "versions" : {
+            "1.220" : "PPI-1.220"
+         }
+      },
+      "Any-URI-Escape" : {
+         "latest" : "0.01",
+         "versions" : {
+            "0.01" : "Any-URI-Escape-0.01"
+         }
+      },
+      "Class-C3-Adopt-NEXT" : {
+         "latest" : "0.14",
+         "versions" : {
+            "0.14" : "Class-C3-Adopt-NEXT-0.14"
+         }
+      },
+      "CatalystX-InjectComponent" : {
+         "versions" : {
+            "0.025" : "CatalystX-InjectComponent-0.025"
+         },
+         "latest" : "0.025"
+      },
+      "IRI" : {
+         "latest" : "0.005",
+         "versions" : {
+            "0.005" : "IRI-0.005"
+         }
+      },
+      "Module-Load-Conditional" : {
+         "versions" : {
+            "0.64" : "Module-Load-Conditional-0.64"
+         },
+         "latest" : "0.64"
+      },
+      "File-Next" : {
+         "versions" : {
+            "1.16" : "File-Next-1.16"
+         },
+         "latest" : "1.16"
+      },
+      "HTML-Tiny" : {
+         "latest" : "1.05",
+         "versions" : {
+            "1.05" : "HTML-Tiny-1.05"
+         }
+      },
+      "Devel-LexAlias" : {
+         "latest" : "0.05",
+         "versions" : {
+            "0.05" : "Devel-LexAlias-0.05"
+         }
+      },
+      "XML-Namespace" : {
+         "latest" : "0.02",
+         "versions" : {
+            "0.02" : "XML-Namespace-0.02"
+         }
+      },
+      "MooseX-Types-Common" : {
+         "latest" : "0.001013",
+         "versions" : {
+            "0.001013" : "MooseX-Types-Common-0.001013"
+         }
+      },
+      "File-Zglob" : {
+         "latest" : "0.11",
+         "versions" : {
+            "0.11" : "File-Zglob-0.11"
+         }
+      },
+      "HTML-Tagset" : {
+         "latest" : "3.20",
+         "versions" : {
+            "3.20" : "HTML-Tagset-3.20"
+         }
+      },
+      "Text-Abbrev" : {
+         "versions" : {
+            "1.02" : "Text-Abbrev-1.02"
+         },
+         "latest" : "1.02"
+      },
+      "Test-Distribution" : {
+         "latest" : "2.00",
+         "versions" : {
+            "2.00" : "Test-Distribution-2.00"
+         }
+      },
+      "IO-CaptureOutput" : {
+         "versions" : {
+            "1.1104" : "IO-CaptureOutput-1.1104"
+         },
+         "latest" : "1.1104"
+      },
+      "CLASS" : {
+         "versions" : {
+            "1.00" : "CLASS-1.00"
+         },
+         "latest" : "1.00"
+      },
+      "Math-Complex" : {
+         "versions" : {
+            "1.59" : "Math-Complex-1.59"
+         },
+         "latest" : "1.59"
+      },
+      "Devel-ArgNames" : {
+         "latest" : "0.03",
+         "versions" : {
+            "0.03" : "Devel-ArgNames-0.03"
+         }
+      },
+      "Pod-Markdown" : {
+         "versions" : {
+            "3.005" : "Pod-Markdown-3.005"
+         },
+         "latest" : "3.005"
+      },
+      "Tie-RefHash" : {
+         "latest" : "1.39",
+         "versions" : {
+            "1.39" : "Tie-RefHash-1.39"
+         }
+      },
+      "HTTP-Headers-Fast" : {
+         "latest" : "0.20",
+         "versions" : {
+            "0.20" : "HTTP-Headers-Fast-0.20"
+         }
+      },
+      "Type-Tiny" : {
+         "versions" : {
+            "1.000005" : "Type-Tiny-1.000005"
+         },
+         "latest" : "1.000005"
+      },
+      "Catalyst-Plugin-Session-State-Cookie" : {
+         "latest" : "0.17",
+         "versions" : {
+            "0.17" : "Catalyst-Plugin-Session-State-Cookie-0.17"
+         }
+      },
+      "Path-Class" : {
+         "versions" : {
+            "0.36" : "Path-Class-0.36"
+         },
+         "latest" : "0.36"
+      },
+      "Mojolicious" : {
+         "versions" : {
+            "6.66" : "Mojolicious-6.66"
+         },
+         "latest" : "6.66"
+      },
+      "Parse-CPAN-Packages" : {
+         "latest" : "2.40",
+         "versions" : {
+            "2.40" : "Parse-CPAN-Packages-2.40"
+         }
+      },
+      "Graph" : {
+         "versions" : {
+            "0.9704" : "Graph-0.9704"
+         },
+         "latest" : "0.9704"
+      },
+      "Net-OpenID-Common" : {
+         "versions" : {
+            "1.20" : "Net-OpenID-Common-1.20"
+         },
+         "latest" : "1.20"
+      },
+      "CPAN-Meta-Requirements" : {
+         "latest" : "2.140",
+         "versions" : {
+            "2.140" : "CPAN-Meta-Requirements-2.140"
+         }
+      },
+      "DateTime" : {
+         "latest" : "1.34",
+         "versions" : {
+            "1.34" : "DateTime-1.34"
+         }
+      },
+      "Pod-Escapes" : {
+         "latest" : "1.07",
+         "versions" : {
+            "1.07" : "Pod-Escapes-1.07"
+         }
+      },
+      "ExtUtils-Config" : {
+         "versions" : {
+            "0.008" : "ExtUtils-Config-0.008"
+         },
+         "latest" : "0.008"
+      },
+      "Test-LeakTrace" : {
+         "latest" : "0.15",
+         "versions" : {
+            "0.15" : "Test-LeakTrace-0.15"
+         }
+      },
+      "Hash-MoreUtils" : {
+         "latest" : "0.05",
+         "versions" : {
+            "0.05" : "Hash-MoreUtils-0.05"
+         }
+      },
+      "Throwable" : {
+         "versions" : {
+            "0.200013" : "Throwable-0.200013"
+         },
+         "latest" : "0.200013"
+      },
+      "XML-Simple" : {
+         "latest" : "2.22",
+         "versions" : {
+            "2.22" : "XML-Simple-2.22"
+         }
+      },
+      "Text-SimpleTable" : {
+         "latest" : "2.03",
+         "versions" : {
+            "2.03" : "Text-SimpleTable-2.03"
+         }
+      },
+      "Twiggy" : {
+         "latest" : "0.1025",
+         "versions" : {
+            "0.1025" : "Twiggy-0.1025"
+         }
+      },
+      "Module-Build" : {
+         "versions" : {
+            "0.4218" : "Module-Build-0.4218"
+         },
+         "latest" : "0.4218"
+      },
+      "Test-Requires" : {
+         "latest" : "0.10",
+         "versions" : {
+            "0.10" : "Test-Requires-0.10"
+         }
+      },
+      "Modern-Perl" : {
+         "versions" : {
+            "1.20150127" : "Modern-Perl-1.20150127"
+         },
+         "latest" : "1.20150127"
+      },
+      "MooX-Options" : {
+         "versions" : {
+            "4.022" : "MooX-Options-4.022"
+         },
+         "latest" : "4.022"
+      },
+      "Test" : {
+         "versions" : {
+            "1.26" : "Test-1.26"
+         },
+         "latest" : "1.26"
+      },
+      "File-pushd" : {
+         "latest" : "1.009",
+         "versions" : {
+            "1.009" : "File-pushd-1.009"
+         }
+      },
+      "Crypt-DH-GMP" : {
+         "latest" : "0.00012",
+         "versions" : {
+            "0.00012" : "Crypt-DH-GMP-0.00012"
+         }
+      },
+      "Encode-Locale" : {
+         "versions" : {
+            "1.05" : "Encode-Locale-1.05"
+         },
+         "latest" : "1.05"
+      },
+      "Exporter" : {
+         "latest" : "5.72",
+         "versions" : {
+            "5.72" : "Exporter-5.72"
+         }
+      },
+      "Pod-Simple" : {
+         "latest" : "3.32",
+         "versions" : {
+            "3.32" : "Pod-Simple-3.32"
+         }
+      },
+      "CHI" : {
+         "latest" : "0.60",
+         "versions" : {
+            "0.60" : "CHI-0.60"
+         }
+      },
+      "MooX-ConfigFromFile" : {
+         "versions" : {
+            "0.007" : "MooX-ConfigFromFile-0.007"
+         },
+         "latest" : "0.007"
+      },
+      "Font-AFM" : {
+         "versions" : {
+            "1.20" : "Font-AFM-1.20"
+         },
+         "latest" : "1.20"
+      },
+      "HTML-Form" : {
+         "versions" : {
+            "6.03" : "HTML-Form-6.03"
+         },
+         "latest" : "6.03"
+      },
+      "B-Keywords" : {
+         "latest" : "1.15",
+         "versions" : {
+            "1.15" : "B-Keywords-1.15"
+         }
+      },
+      "Crypt-SSLeay" : {
+         "latest" : "0.72",
+         "versions" : {
+            "0.72" : "Crypt-SSLeay-0.72"
+         }
+      },
+      "File-Find-Rule-Perl" : {
+         "versions" : {
+            "1.15" : "File-Find-Rule-Perl-1.15"
+         },
+         "latest" : "1.15"
+      },
+      "URI-db" : {
+         "versions" : {
+            "0.17" : "URI-db-0.17"
+         },
+         "latest" : "0.17"
+      },
+      "Test-Needs" : {
+         "versions" : {
+            "0.002002" : "Test-Needs-0.002002"
+         },
+         "latest" : "0.002002"
+      },
+      "Data-Section" : {
+         "latest" : "0.200006",
+         "versions" : {
+            "0.200006" : "Data-Section-0.200006"
+         }
+      },
+      "Set-Scalar" : {
+         "latest" : "1.29",
+         "versions" : {
+            "1.29" : "Set-Scalar-1.29"
+         }
+      },
+      "Object-Signature" : {
+         "versions" : {
+            "1.07" : "Object-Signature-1.07"
+         },
+         "latest" : "1.07"
+      },
+      "IO-String" : {
+         "latest" : "1.08",
+         "versions" : {
+            "1.08" : "IO-String-1.08"
+         }
+      },
+      "BackPAN-Index" : {
+         "latest" : "0.42",
+         "versions" : {
+            "0.42" : "BackPAN-Index-0.42"
+         }
+      },
+      "DateTime-Format-Strptime" : {
+         "latest" : "1.68",
+         "versions" : {
+            "1.68" : "DateTime-Format-Strptime-1.68"
+         }
+      },
+      "Test-Class" : {
+         "versions" : {
+            "0.50" : "Test-Class-0.50"
+         },
+         "latest" : "0.50"
+      },
+      "Class-Method-Modifiers" : {
+         "latest" : "2.12",
+         "versions" : {
+            "2.12" : "Class-Method-Modifiers-2.12"
+         }
+      },
+      "Data-Printer" : {
+         "versions" : {
+            "0.38" : "Data-Printer-0.38"
+         },
+         "latest" : "0.38"
+      },
+      "Array-Iterator" : {
+         "latest" : "0.11",
+         "versions" : {
+            "0.11" : "Array-Iterator-0.11"
+         }
+      },
+      "Digest-SHA1" : {
+         "versions" : {
+            "2.13" : "Digest-SHA1-2.13"
+         },
+         "latest" : "2.13"
+      },
+      "Pod-Parser" : {
+         "versions" : {
+            "1.63" : "Pod-Parser-1.63"
+         },
+         "latest" : "1.63"
+      },
+      "Package-Stash" : {
+         "versions" : {
+            "0.37" : "Package-Stash-0.37"
+         },
+         "latest" : "0.37"
+      },
+      "Module-Signature" : {
+         "versions" : {
+            "0.80" : "Module-Signature-0.80"
+         },
+         "latest" : "0.80"
+      },
+      "Test-Warn" : {
+         "latest" : "0.30",
+         "versions" : {
+            "0.30" : "Test-Warn-0.30"
+         }
+      },
+      "HTML-FormatText-WithLinks" : {
+         "latest" : "0.15",
+         "versions" : {
+            "0.15" : "HTML-FormatText-WithLinks-0.15"
+         }
+      },
+      "ExtUtils-CBuilder" : {
+         "latest" : "0.280224",
+         "versions" : {
+            "0.280224" : "ExtUtils-CBuilder-0.280224"
+         }
+      },
+      "Mixin-Linewise" : {
+         "latest" : "0.108",
+         "versions" : {
+            "0.108" : "Mixin-Linewise-0.108"
+         }
+      },
+      "Data-Page" : {
+         "latest" : "2.02",
+         "versions" : {
+            "2.02" : "Data-Page-2.02"
+         }
+      },
+      "Test-Regexp" : {
+         "latest" : "2016060501",
+         "versions" : {
+            "2016060501" : "Test-Regexp-2016060501"
+         }
+      },
+      "Cwd-Guard" : {
+         "versions" : {
+            "0.05" : "Cwd-Guard-0.05"
+         },
+         "latest" : "0.05"
+      },
+      "IPC-System-Simple" : {
+         "latest" : "1.25",
+         "versions" : {
+            "1.25" : "IPC-System-Simple-1.25"
+         }
+      },
+      "Data-Compare" : {
+         "latest" : "1.25",
+         "versions" : {
+            "1.25" : "Data-Compare-1.25"
+         }
+      },
+      "version" : {
+         "latest" : "0.9917",
+         "versions" : {
+            "0.9917" : "version-0.9917"
+         }
+      },
+      "Locale-Maketext" : {
+         "versions" : {
+            "1.27" : "Locale-Maketext-1.27"
+         },
+         "latest" : "1.27"
+      },
+      "B-Hooks-OP-Check" : {
+         "latest" : "0.19",
+         "versions" : {
+            "0.19" : "B-Hooks-OP-Check-0.19"
+         }
+      },
+      "Archive-Any-Create" : {
+         "latest" : "0.03",
+         "versions" : {
+            "0.03" : "Archive-Any-Create-0.03"
+         }
+      },
+      "Archive-Extract" : {
+         "latest" : "0.76",
+         "versions" : {
+            "0.76" : "Archive-Extract-0.76"
+         }
+      },
+      "Catalyst-Action-REST" : {
+         "latest" : "1.20",
+         "versions" : {
+            "1.20" : "Catalyst-Action-REST-1.20"
+         }
+      },
+      "Context-Preserve" : {
+         "latest" : "0.01",
+         "versions" : {
+            "0.01" : "Context-Preserve-0.01"
+         }
+      },
+      "Plack-Middleware-Session" : {
+         "versions" : {
+            "0.30" : "Plack-Middleware-Session-0.30"
+         },
+         "latest" : "0.30"
+      },
+      "Text-Aligner" : {
+         "versions" : {
+            "0.13" : "Text-Aligner-0.13"
+         },
+         "latest" : "0.13"
+      },
+      "B-Flags" : {
+         "latest" : "0.16",
+         "versions" : {
+            "0.16" : "B-Flags-0.16"
+         }
+      },
+      "Test-CPAN-Meta-JSON" : {
+         "versions" : {
+            "0.16" : "Test-CPAN-Meta-JSON-0.16"
+         },
+         "latest" : "0.16"
+      },
+      "Perl-Tidy" : {
+         "latest" : "20160302",
+         "versions" : {
+            "20160302" : "Perl-Tidy-20160302"
+         }
+      },
+      "Cache-LRU" : {
+         "latest" : "0.04",
+         "versions" : {
+            "0.04" : "Cache-LRU-0.04"
+         }
+      },
+      "Term-Size-Any" : {
+         "latest" : "0.002",
+         "versions" : {
+            "0.002" : "Term-Size-Any-0.002"
+         }
+      },
+      "Import-Into" : {
+         "latest" : "1.002005",
+         "versions" : {
+            "1.002005" : "Import-Into-1.002005"
+         }
+      },
+      "Class-Data-Inheritable" : {
+         "versions" : {
+            "0.08" : "Class-Data-Inheritable-0.08"
+         },
+         "latest" : "0.08"
+      },
+      "Clipboard" : {
+         "versions" : {
+            "0.13" : "Clipboard-0.13"
+         },
+         "latest" : "0.13"
+      },
+      "Crypt-CBC" : {
+         "latest" : "2.33",
+         "versions" : {
+            "2.33" : "Crypt-CBC-2.33"
+         }
+      },
+      "Email-Address" : {
+         "versions" : {
+            "1.908" : "Email-Address-1.908"
+         },
+         "latest" : "1.908"
+      },
+      "multidimensional" : {
+         "versions" : {
+            "0.012" : "multidimensional-0.012"
+         },
+         "latest" : "0.012"
+      },
+      "PerlIO-gzip" : {
+         "latest" : "0.19",
+         "versions" : {
+            "0.19" : "PerlIO-gzip-0.19"
+         }
+      },
+      "Data-Dump-Streamer" : {
+         "versions" : {
+            "2.39" : "Data-Dump-Streamer-2.39"
+         },
+         "latest" : "2.39"
+      },
+      "Sub-Exporter-Progressive" : {
+         "versions" : {
+            "0.001011" : "Sub-Exporter-Progressive-0.001011"
+         },
+         "latest" : "0.001011"
+      },
+      "Unicode-LineBreak" : {
+         "latest" : "2016.003",
+         "versions" : {
+            "2016.003" : "Unicode-LineBreak-2016.003"
+         }
+      },
+      "RDF-Trine" : {
+         "latest" : "1.014",
+         "versions" : {
+            "1.014" : "RDF-Trine-1.014"
+         }
+      },
+      "HTTP-Daemon" : {
+         "latest" : "6.01",
+         "versions" : {
+            "6.01" : "HTTP-Daemon-6.01"
+         }
+      },
+      "Plack-Middleware-ServerStatus-Lite" : {
+         "versions" : {
+            "0.35" : "Plack-Middleware-ServerStatus-Lite-0.35"
+         },
+         "latest" : "0.35"
+      },
+      "Params-Check" : {
+         "latest" : "0.38",
+         "versions" : {
+            "0.38" : "Params-Check-0.38"
+         }
+      },
+      "WWW-RobotRules" : {
+         "latest" : "6.02",
+         "versions" : {
+            "6.02" : "WWW-RobotRules-6.02"
+         }
+      },
+      "FCGI-ProcManager" : {
+         "latest" : "0.25",
+         "versions" : {
+            "0.25" : "FCGI-ProcManager-0.25"
+         }
+      },
+      "Filter" : {
+         "versions" : {
+            "1.55" : "Filter-1.55"
+         },
+         "latest" : "1.55"
+      },
+      "IO-Interactive" : {
+         "latest" : "1.021",
+         "versions" : {
+            "1.021" : "IO-Interactive-1.021"
+         }
+      },
+      "HTML-TokeParser-Simple" : {
+         "versions" : {
+            "3.16" : "HTML-TokeParser-Simple-3.16"
+         },
+         "latest" : "3.16"
+      },
+      "Exporter-Tidy" : {
+         "versions" : {
+            "0.08" : "Exporter-Tidy-0.08"
+         },
+         "latest" : "0.08"
+      },
+      "Log-Any" : {
+         "versions" : {
+            "1.040" : "Log-Any-1.040"
+         },
+         "latest" : "1.040"
+      },
+      "Module-ExtractUse" : {
+         "latest" : "0.341",
+         "versions" : {
+            "0.341" : "Module-ExtractUse-0.341"
+         }
+      },
       "Tie-File" : {
          "versions" : {
             "1.00" : "Tie-File-1.00"
          },
          "latest" : "1.00"
+      },
+      "File-MMagic" : {
+         "latest" : "1.30",
+         "versions" : {
+            "1.30" : "File-MMagic-1.30"
+         }
+      },
+      "Storable" : {
+         "latest" : "2.51",
+         "versions" : {
+            "2.51" : "Storable-2.51"
+         }
+      },
+      "Git-Version-Compare" : {
+         "versions" : {
+            "1.004" : "Git-Version-Compare-1.004"
+         },
+         "latest" : "1.004"
+      },
+      "HTTP-Cookies" : {
+         "latest" : "6.01",
+         "versions" : {
+            "6.01" : "HTTP-Cookies-6.01"
+         }
+      },
+      "Carp-Assert-More" : {
+         "versions" : {
+            "1.14" : "Carp-Assert-More-1.14"
+         },
+         "latest" : "1.14"
+      },
+      "Exporter-Lite" : {
+         "versions" : {
+            "0.08" : "Exporter-Lite-0.08"
+         },
+         "latest" : "0.08"
+      },
+      "Test-OpenID-Server" : {
+         "versions" : {
+            "0.02" : "Test-OpenID-Server-0.02"
+         },
+         "latest" : "0.02"
+      },
+      "Config-INI-Reader-Ordered" : {
+         "latest" : "0.020",
+         "versions" : {
+            "0.020" : "Config-INI-Reader-Ordered-0.020"
+         }
+      },
+      "PerlIO-utf8_strict" : {
+         "versions" : {
+            "0.006" : "PerlIO-utf8_strict-0.006"
+         },
+         "latest" : "0.006"
+      },
+      "Class-Accessor-Lite" : {
+         "versions" : {
+            "0.08" : "Class-Accessor-Lite-0.08"
+         },
+         "latest" : "0.08"
+      },
+      "Module-Runtime" : {
+         "latest" : "0.014",
+         "versions" : {
+            "0.014" : "Module-Runtime-0.014"
+         }
+      },
+      "Carp-Clan" : {
+         "versions" : {
+            "6.06" : "Carp-Clan-6.06"
+         },
+         "latest" : "6.06"
+      },
+      "Dist-Data" : {
+         "versions" : {
+            "0.006" : "Dist-Data-0.006"
+         },
+         "latest" : "0.006"
+      },
+      "ExtUtils-MakeMaker-CPANfile" : {
+         "latest" : "0.07",
+         "versions" : {
+            "0.07" : "ExtUtils-MakeMaker-CPANfile-0.07"
+         }
+      },
+      "TimeDate" : {
+         "latest" : "2.30",
+         "versions" : {
+            "2.30" : "TimeDate-2.30"
+         }
+      },
+      "B-C" : {
+         "versions" : {
+            "1.54" : "B-C-1.54"
+         },
+         "latest" : "1.54"
+      },
+      "MooseX-Types-Path-Tiny" : {
+         "latest" : "0.011",
+         "versions" : {
+            "0.011" : "MooseX-Types-Path-Tiny-0.011"
+         }
+      },
+      "BSD-Resource" : {
+         "latest" : "1.2910",
+         "versions" : {
+            "1.2910" : "BSD-Resource-1.2910"
+         }
+      },
+      "Git-Helpers" : {
+         "versions" : {
+            "0.000004" : "Git-Helpers-0.000004"
+         },
+         "latest" : "0.000004"
+      },
+      "Moose" : {
+         "versions" : {
+            "2.1804" : "Moose-2.1804"
+         },
+         "latest" : "2.1804"
+      },
+      "Archive-Any-Lite" : {
+         "latest" : "0.11",
+         "versions" : {
+            "0.11" : "Archive-Any-Lite-0.11"
+         }
+      },
+      "HTTP-Message" : {
+         "versions" : {
+            "6.11" : "HTTP-Message-6.11"
+         },
+         "latest" : "6.11"
+      },
+      "Plack-Middleware-Rewrite" : {
+         "versions" : {
+            "2.000" : "Plack-Middleware-Rewrite-2.000"
+         },
+         "latest" : "2.000"
+      },
+      "CPAN-Checksums" : {
+         "latest" : "2.12",
+         "versions" : {
+            "2.12" : "CPAN-Checksums-2.12"
+         }
+      },
+      "Package-Pkg" : {
+         "versions" : {
+            "0.0020" : "Package-Pkg-0.0020"
+         },
+         "latest" : "0.0020"
+      },
+      "Time-Piece" : {
+         "latest" : "1.31",
+         "versions" : {
+            "1.31" : "Time-Piece-1.31"
+         }
+      },
+      "Class-Load" : {
+         "versions" : {
+            "0.23" : "Class-Load-0.23"
+         },
+         "latest" : "0.23"
+      },
+      "MooseX-StrictConstructor" : {
+         "versions" : {
+            "0.19" : "MooseX-StrictConstructor-0.19"
+         },
+         "latest" : "0.19"
+      },
+      "ElasticSearchX-Model" : {
+         "versions" : {
+            "1.0.2" : "ElasticSearchX-Model-1.0.2"
+         },
+         "latest" : "1.0.2"
+      },
+      "Test-CPAN-Meta" : {
+         "versions" : {
+            "0.25" : "Test-CPAN-Meta-0.25"
+         },
+         "latest" : "0.25"
+      },
+      "HTTP-Server-Simple-PSGI" : {
+         "latest" : "0.16",
+         "versions" : {
+            "0.16" : "HTTP-Server-Simple-PSGI-0.16"
+         }
+      },
+      "Types-Path-Tiny" : {
+         "versions" : {
+            "0.005" : "Types-Path-Tiny-0.005"
+         },
+         "latest" : "0.005"
+      },
+      "Term-Size-Perl" : {
+         "latest" : "0.029",
+         "versions" : {
+            "0.029" : "Term-Size-Perl-0.029"
+         }
+      },
+      "IO-Zlib" : {
+         "versions" : {
+            "1.10" : "IO-Zlib-1.10"
+         },
+         "latest" : "1.10"
+      },
+      "Test-Output" : {
+         "latest" : "1.03",
+         "versions" : {
+            "1.03" : "Test-Output-1.03"
+         }
+      },
+      "Compress-Raw-Zlib" : {
+         "versions" : {
+            "2.069" : "Compress-Raw-Zlib-2.069"
+         },
+         "latest" : "2.069"
+      },
+      "Text-Balanced" : {
+         "versions" : {
+            "2.03" : "Text-Balanced-2.03"
+         },
+         "latest" : "2.03"
+      },
+      "YAML" : {
+         "latest" : "1.17",
+         "versions" : {
+            "1.17" : "YAML-1.17"
+         }
+      },
+      "Attribute-Handlers" : {
+         "versions" : {
+            "0.99" : "Attribute-Handlers-0.99"
+         },
+         "latest" : "0.99"
+      },
+      "Reply" : {
+         "latest" : "0.40",
+         "versions" : {
+            "0.40" : "Reply-0.40"
+         }
+      },
+      "String-Trim" : {
+         "versions" : {
+            "0.005" : "String-Trim-0.005"
+         },
+         "latest" : "0.005"
+      },
+      "XML-SAX-Expat" : {
+         "versions" : {
+            "0.51" : "XML-SAX-Expat-0.51"
+         },
+         "latest" : "0.51"
+      },
+      "Types-URI" : {
+         "versions" : {
+            "0.006" : "Types-URI-0.006"
+         },
+         "latest" : "0.006"
+      },
+      "Archive-Tar" : {
+         "latest" : "2.08",
+         "versions" : {
+            "2.08" : "Archive-Tar-2.08"
+         }
+      },
+      "Module-Pluggable" : {
+         "versions" : {
+            "5.2" : "Module-Pluggable-5.2"
+         },
+         "latest" : "5.2"
+      },
+      "IO-Prompt" : {
+         "latest" : "0.997003",
+         "versions" : {
+            "0.997003" : "IO-Prompt-0.997003"
+         }
+      },
+      "CGI" : {
+         "versions" : {
+            "4.31" : "CGI-4.31"
+         },
+         "latest" : "4.31"
+      },
+      "DateTime-TimeZone" : {
+         "versions" : {
+            "2.00" : "DateTime-TimeZone-2.00"
+         },
+         "latest" : "2.00"
+      },
+      "autodie" : {
+         "latest" : "2.29",
+         "versions" : {
+            "2.29" : "autodie-2.29"
+         }
+      },
+      "Class-Singleton" : {
+         "versions" : {
+            "1.5" : "Class-Singleton-1.5"
+         },
+         "latest" : "1.5"
+      },
+      "Test-Requires-Git" : {
+         "versions" : {
+            "1.006" : "Test-Requires-Git-1.006"
+         },
+         "latest" : "1.006"
+      },
+      "Module-Compile" : {
+         "versions" : {
+            "0.35" : "Module-Compile-0.35"
+         },
+         "latest" : "0.35"
+      },
+      "Lingua-EN-Inflect" : {
+         "versions" : {
+            "1.899" : "Lingua-EN-Inflect-1.899"
+         },
+         "latest" : "1.899"
+      },
+      "Role-Tiny" : {
+         "latest" : "2.000003",
+         "versions" : {
+            "2.000003" : "Role-Tiny-2.000003"
+         }
+      },
+      "Algorithm-Diff" : {
+         "versions" : {
+            "1.1903" : "Algorithm-Diff-1.1903"
+         },
+         "latest" : "1.1903"
+      },
+      "Compress-Raw-Bzip2" : {
+         "versions" : {
+            "2.069" : "Compress-Raw-Bzip2-2.069"
+         },
+         "latest" : "2.069"
+      },
+      "Plack-Middleware-RemoveRedundantBody" : {
+         "latest" : "0.05",
+         "versions" : {
+            "0.05" : "Plack-Middleware-RemoveRedundantBody-0.05"
+         }
+      },
+      "Test-Number-Delta" : {
+         "latest" : "1.06",
+         "versions" : {
+            "1.06" : "Test-Number-Delta-1.06"
+         }
+      },
+      "Digest-HMAC" : {
+         "latest" : "1.03",
+         "versions" : {
+            "1.03" : "Digest-HMAC-1.03"
+         }
+      },
+      "CPAN-DistnameInfo" : {
+         "latest" : "0.12",
+         "versions" : {
+            "0.12" : "CPAN-DistnameInfo-0.12"
+         }
+      },
+      "HTML-Formatter" : {
+         "versions" : {
+            "2.14" : "HTML-Formatter-2.14"
+         },
+         "latest" : "2.14"
+      },
+      "Devel-Cycle" : {
+         "latest" : "1.12",
+         "versions" : {
+            "1.12" : "Devel-Cycle-1.12"
+         }
+      },
+      "App-Nopaste" : {
+         "versions" : {
+            "1.006" : "App-Nopaste-1.006"
+         },
+         "latest" : "1.006"
+      },
+      "Mojo-Pg" : {
+         "latest" : "2.28",
+         "versions" : {
+            "2.28" : "Mojo-Pg-2.28"
+         }
+      },
+      "Test-Pod-Coverage" : {
+         "latest" : "1.10",
+         "versions" : {
+            "1.10" : "Test-Pod-Coverage-1.10"
+         }
+      },
+      "HTTP-Tiny-Mech" : {
+         "latest" : "1.001001",
+         "versions" : {
+            "1.001001" : "HTTP-Tiny-Mech-1.001001"
+         }
+      },
+      "Parallel-Iterator" : {
+         "latest" : "1.00",
+         "versions" : {
+            "1.00" : "Parallel-Iterator-1.00"
+         }
+      },
+      "Test-CleanNamespaces" : {
+         "versions" : {
+            "0.19" : "Test-CleanNamespaces-0.19"
+         },
+         "latest" : "0.19"
+      },
+      "Module-CoreList" : {
+         "versions" : {
+            "5.20160620" : "Module-CoreList-5.20160620"
+         },
+         "latest" : "5.20160620"
+      },
+      "MooseX-ClassAttribute" : {
+         "versions" : {
+            "0.29" : "MooseX-ClassAttribute-0.29"
+         },
+         "latest" : "0.29"
+      },
+      "File-MimeInfo" : {
+         "versions" : {
+            "0.27" : "File-MimeInfo-0.27"
+         },
+         "latest" : "0.27"
+      },
+      "JSON-PP" : {
+         "latest" : "2.27400",
+         "versions" : {
+            "2.27400" : "JSON-PP-2.27400"
+         }
+      },
+      "Package-DeprecationManager" : {
+         "versions" : {
+            "0.17" : "Package-DeprecationManager-0.17"
+         },
+         "latest" : "0.17"
+      },
+      "Devel-CheckBin" : {
+         "latest" : "0.04",
+         "versions" : {
+            "0.04" : "Devel-CheckBin-0.04"
+         }
+      },
+      "Regexp-Common" : {
+         "latest" : "2016060801",
+         "versions" : {
+            "2016060801" : "Regexp-Common-2016060801"
+         }
+      },
+      "Email-Sender" : {
+         "latest" : "1.300028",
+         "versions" : {
+            "1.300028" : "Email-Sender-1.300028"
+         }
+      },
+      "Search-Elasticsearch" : {
+         "versions" : {
+            "2.03" : "Search-Elasticsearch-2.03"
+         },
+         "latest" : "2.03"
+      },
+      "Hijk" : {
+         "versions" : {
+            "0.26" : "Hijk-0.26"
+         },
+         "latest" : "0.26"
+      },
+      "Types-Serialiser" : {
+         "versions" : {
+            "1.0" : "Types-Serialiser-1.0"
+         },
+         "latest" : "1.0"
+      },
+      "Devel-GlobalDestruction" : {
+         "versions" : {
+            "0.13" : "Devel-GlobalDestruction-0.13"
+         },
+         "latest" : "0.13"
+      },
+      "Tree-Simple-VisitorFactory" : {
+         "versions" : {
+            "0.15" : "Tree-Simple-VisitorFactory-0.15"
+         },
+         "latest" : "0.15"
+      },
+      "Gravatar-URL" : {
+         "versions" : {
+            "1.06" : "Gravatar-URL-1.06"
+         },
+         "latest" : "1.06"
+      },
+      "MIME-Base64-URLSafe" : {
+         "latest" : "0.01",
+         "versions" : {
+            "0.01" : "MIME-Base64-URLSafe-0.01"
+         }
+      },
+      "libnet" : {
+         "latest" : "3.08",
+         "versions" : {
+            "3.08" : "libnet-3.08"
+         }
+      },
+      "Code-TidyAll" : {
+         "versions" : {
+            "0.48" : "Code-TidyAll-0.48"
+         },
+         "latest" : "0.48"
+      },
+      "Data-OptList" : {
+         "versions" : {
+            "0.110" : "Data-OptList-0.110"
+         },
+         "latest" : "0.110"
+      },
+      "MooX-Cmd" : {
+         "versions" : {
+            "0.015" : "MooX-Cmd-0.015"
+         },
+         "latest" : "0.015"
+      },
+      "Module-Build-Tiny" : {
+         "latest" : "0.039",
+         "versions" : {
+            "0.039" : "Module-Build-Tiny-0.039"
+         }
+      },
+      "Type-Tie" : {
+         "versions" : {
+            "0.009" : "Type-Tie-0.009"
+         },
+         "latest" : "0.009"
+      },
+      "Text-Table" : {
+         "latest" : "1.130",
+         "versions" : {
+            "1.130" : "Text-Table-1.130"
+         }
+      },
+      "Config-General" : {
+         "latest" : "2.62",
+         "versions" : {
+            "2.62" : "Config-General-2.62"
+         }
+      },
+      "IO-HTML" : {
+         "versions" : {
+            "1.001" : "IO-HTML-1.001"
+         },
+         "latest" : "1.001"
+      },
+      "MooseX-Attribute-Chained" : {
+         "latest" : "1.0.2",
+         "versions" : {
+            "1.0.2" : "MooseX-Attribute-Chained-1.0.2"
+         }
+      },
+      "Config-Any" : {
+         "latest" : "0.27",
+         "versions" : {
+            "0.27" : "Config-Any-0.27"
+         }
+      },
+      "TermReadKey" : {
+         "versions" : {
+            "2.33" : "TermReadKey-2.33"
+         },
+         "latest" : "2.33"
+      },
+      "Devel-StackTrace-AsHTML" : {
+         "latest" : "0.15",
+         "versions" : {
+            "0.15" : "Devel-StackTrace-AsHTML-0.15"
+         }
+      },
+      "Module-CPANfile" : {
+         "latest" : "1.1002",
+         "versions" : {
+            "1.1002" : "Module-CPANfile-1.1002"
+         }
+      },
+      "MooseX-Types-URI" : {
+         "versions" : {
+            "0.08" : "MooseX-Types-URI-0.08"
+         },
+         "latest" : "0.08"
+      },
+      "Class-XSAccessor" : {
+         "latest" : "1.19",
+         "versions" : {
+            "1.19" : "Class-XSAccessor-1.19"
+         }
       }
    },
    "system" : {
+      "nodejs" : {
+         "latest" : "6.2.1",
+         "versions" : {
+            "6.2.1" : "nodejs-6.2.1"
+         }
+      },
       "curl" : {
          "latest" : "7.49.1",
          "versions" : {
             "7.49.1" : "curl-7.49.1"
-         }
-      },
-      "nodejs" : {
-         "latest" : "6.2.1",
-         "versions" : {
-            "6.2.1" : "node-v6.2.1"
          }
       },
       "openssl" : {
@@ -3061,47 +4181,11 @@
       }
    },
    "nodejs" : {
-      "less" : {
-         "latest" : "2.7.1",
-         "versions" : {
-            "2.7.1" : "less-2.7.1"
-         }
-      },
-      "send" : {
-         "latest" : "0.14.1",
-         "versions" : {
-            "0.14.1" : "send-0.14.1"
-         }
-      },
-      "babel-core" : {
-         "latest" : "6.10.4",
-         "versions" : {
-            "6.10.4" : "babel-core-6.10.4"
-         }
-      },
-      "babel-loader" : {
-         "latest" : "6.2.4",
-         "versions" : {
-            "6.2.4" : "babel-loader-6.2.4"
-         }
-      },
-      "babel-preset-es2015" : {
-         "latest" : "6.9.0",
-         "versions" : {
-            "6.9.0" : "babel-preset-es2015-6.9.0"
-         }
-      },
-      "babel-preset-react" : {
-         "latest" : "6.11.1",
-         "versions" : {
-            "6.11.1" : "babel-preset-react-6.11.1"
-         }
-      },
       "clean-webpack-plugin" : {
-         "latest" : "0.1.9",
          "versions" : {
             "0.1.9" : "clean-webpack-plugin-0.1.9"
-         }
+         },
+         "latest" : "0.1.9"
       },
       "imports-loader" : {
          "latest" : "0.6.5",
@@ -3109,10 +4193,46 @@
             "0.6.5" : "imports-loader-0.6.5"
          }
       },
+      "send" : {
+         "versions" : {
+            "0.14.1" : "send-0.14.1"
+         },
+         "latest" : "0.14.1"
+      },
+      "babel-preset-react" : {
+         "versions" : {
+            "6.11.1" : "babel-preset-react-6.11.1"
+         },
+         "latest" : "6.11.1"
+      },
+      "less" : {
+         "versions" : {
+            "2.7.1" : "less-2.7.1"
+         },
+         "latest" : "2.7.1"
+      },
+      "babel-loader" : {
+         "versions" : {
+            "6.2.4" : "babel-loader-6.2.4"
+         },
+         "latest" : "6.2.4"
+      },
+      "babel-core" : {
+         "latest" : "6.10.4",
+         "versions" : {
+            "6.10.4" : "babel-core-6.10.4"
+         }
+      },
       "webpack" : {
-         "latest" : "1.13.1",
          "versions" : {
             "1.13.1" : "webpack-1.13.1"
+         },
+         "latest" : "1.13.1"
+      },
+      "babel-preset-es2015" : {
+         "latest" : "6.9.0",
+         "versions" : {
+            "6.9.0" : "babel-preset-es2015-6.9.0"
          }
       }
    }

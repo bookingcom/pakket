@@ -11,18 +11,18 @@ version = "0.4218"
 [Prereqs.perl.runtime.POSIX-strftime-Compiler]
 version = "0.41"
 [Prereqs.perl.runtime.Time-Local]
-version = "1.2300"
+version = "0"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.HTTP-Message]
-version = "6.11"
+version = "0"
 [Prereqs.perl.test.Test-MockTime]
-version = "0.15"
+version = "0"
 [Prereqs.perl.test.Test-Requires]
-version = "0.10"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.Try-Tiny]
 version = "0.24"
 [Prereqs.perl.test.URI]

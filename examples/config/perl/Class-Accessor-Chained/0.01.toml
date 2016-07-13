@@ -7,5 +7,5 @@ version = "0.01"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Class-Accessor]
-version = "0.34"
+version = "0"
 [Prereqs.perl.test]

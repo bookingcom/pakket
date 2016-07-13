@@ -1,0 +1,13 @@
+[Package]
+category = "perl"
+name = "Scope-Guard"
+version = "0.21"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

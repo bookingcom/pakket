@@ -9,17 +9,19 @@ version = "3.30"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Carp]
-version = "1.38"
+version = "0"
 [Prereqs.perl.runtime.Exporter]
 version = "5.72"
 [Prereqs.perl.runtime.ExtUtils-CBuilder]
-version = "0.280224"
+version = "0"
 [Prereqs.perl.runtime.ExtUtils-MakeMaker]
 version = "7.18"
 [Prereqs.perl.runtime.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.runtime.Test-Simple]
-version = "1.302022"
+version = "1.302037"
+[Prereqs.perl.runtime.XSLoader]
+version = "0"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]

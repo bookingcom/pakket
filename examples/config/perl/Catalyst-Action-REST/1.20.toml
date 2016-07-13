@@ -6,46 +6,46 @@ version = "1.20"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Catalyst-Runtime]
-version = "5.90104"
+version = "5.90106"
 [Prereqs.perl.runtime.Class-Inspector]
 version = "1.28"
 [Prereqs.perl.runtime.Config-General]
-version = "2.61"
+version = "0"
 [Prereqs.perl.runtime.Cpanel-JSON-XS]
-version = "3.0213"
+version = "0"
 [Prereqs.perl.runtime.Data-Taxi]
-version = "0.96"
+version = "0"
 [Prereqs.perl.runtime.FreezeThaw]
-version = "0.5001"
+version = "0"
 [Prereqs.perl.runtime.HTML-Parser]
-version = "3.72"
+version = "0"
 [Prereqs.perl.runtime.JSON-MaybeXS]
-version = "1.003005"
+version = "0"
 [Prereqs.perl.runtime.MRO-Compat]
 version = "0.12"
 [Prereqs.perl.runtime.Module-Pluggable]
-version = "5.2"
+version = "0"
 [Prereqs.perl.runtime.Moose]
-version = "2.1803"
+version = "2.1804"
 [Prereqs.perl.runtime.PHP-Serialization]
-version = "0.34"
+version = "0"
 [Prereqs.perl.runtime.Params-Validate]
 version = "1.24"
 [Prereqs.perl.runtime.URI-Find]
-version = "20140709"
+version = "0"
 [Prereqs.perl.runtime.XML-Simple]
-version = "2.22"
+version = "0"
 [Prereqs.perl.runtime.YAML-Syck]
-version = "1.29"
+version = "0"
 [Prereqs.perl.runtime.namespace-autoclean]
-version = "0.28"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Requires]
-version = "0.10"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.libwww-perl]
 version = "6.15"

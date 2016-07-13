@@ -1,0 +1,15 @@
+[Package]
+category = "perl"
+name = "File-Next"
+version = "1.16"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test]

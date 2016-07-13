@@ -6,12 +6,12 @@ version = "2.23"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.File-Temp]
 version = "0.2304"
 [Prereqs.perl.runtime.PathTools]
 version = "3.62"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]

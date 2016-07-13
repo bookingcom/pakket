@@ -1,0 +1,45 @@
+[Package]
+category = "perl"
+name = "Module-Faker"
+version = "0.017"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Archive-Any-Create]
+version = "0"
+[Prereqs.perl.runtime.CPAN-DistnameInfo]
+version = "0"
+[Prereqs.perl.runtime.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.runtime.CPAN-Meta-Requirements]
+version = "0"
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Encode]
+version = "0"
+[Prereqs.perl.runtime.File-Next]
+version = "0"
+[Prereqs.perl.runtime.File-Path]
+version = "0"
+[Prereqs.perl.runtime.File-Temp]
+version = "0"
+[Prereqs.perl.runtime.Moose]
+version = "0"
+[Prereqs.perl.runtime.Parse-CPAN-Meta]
+version = "1.4422"
+[Prereqs.perl.runtime.Path-Class]
+version = "0.36"
+[Prereqs.perl.runtime.Text-Template]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Path-Class]
+version = "0.36"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

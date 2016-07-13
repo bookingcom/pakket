@@ -9,7 +9,7 @@ version = "0.34"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Catalyst-Runtime]
-version = "5.90104"
+version = "5.90106"
 [Prereqs.perl.runtime.Config-Any]
 version = "0.27"
 [Prereqs.perl.runtime.Data-Visitor]

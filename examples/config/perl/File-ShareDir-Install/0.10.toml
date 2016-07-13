@@ -9,7 +9,7 @@ version = "0.10"
 [Prereqs.perl.runtime.ExtUtils-MakeMaker]
 version = "7.18"
 [Prereqs.perl.runtime.IO]
-version = "1.25"
+version = "0"
 [Prereqs.perl.runtime.PathTools]
-version = "3.62"
+version = "0"
 [Prereqs.perl.test]

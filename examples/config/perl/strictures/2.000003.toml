@@ -7,13 +7,13 @@ version = "2.000003"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.bareword-filehandles]
-version = "0.004"
+version = "0"
 [Prereqs.perl.runtime.indirect]
-version = "0.36"
+version = "0"
 [Prereqs.perl.runtime.multidimensional]
-version = "0.012"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "0"

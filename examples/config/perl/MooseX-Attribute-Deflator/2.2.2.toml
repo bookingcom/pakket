@@ -1,0 +1,33 @@
+[Package]
+category = "perl"
+name = "MooseX-Attribute-Deflator"
+version = "2.2.2"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.DateTime]
+version = "0"
+[Prereqs.perl.runtime.Devel-PartialDump]
+version = "0"
+[Prereqs.perl.runtime.File-Temp]
+version = "0"
+[Prereqs.perl.runtime.JSON]
+version = "0"
+[Prereqs.perl.runtime.Module-Build]
+version = "0.4218"
+[Prereqs.perl.runtime.Moose]
+version = "2.1804"
+[Prereqs.perl.runtime.MooseX-Types]
+version = "0"
+[Prereqs.perl.runtime.MooseX-Types-Structured]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.runtime.Try-Tiny]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]

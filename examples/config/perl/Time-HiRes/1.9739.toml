@@ -1,0 +1,23 @@
+[Package]
+category = "perl"
+name = "Time-HiRes"
+version = "1.9739"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Exporter]
+version = "0"
+[Prereqs.perl.runtime.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.XSLoader]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

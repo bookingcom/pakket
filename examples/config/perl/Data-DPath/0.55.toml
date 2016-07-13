@@ -1,0 +1,39 @@
+[Package]
+category = "perl"
+name = "Data-DPath"
+version = "0.55"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Class-XSAccessor]
+version = "0"
+[Prereqs.perl.runtime.Data-Dumper]
+version = "0"
+[Prereqs.perl.runtime.Iterator-Util]
+version = "0"
+[Prereqs.perl.runtime.List-MoreUtils]
+version = "0"
+[Prereqs.perl.runtime.Safe]
+version = "2.35"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Sub-Exporter]
+version = "0"
+[Prereqs.perl.runtime.Text-Balanced]
+version = "2.03"
+[Prereqs.perl.runtime.aliased]
+version = "0.34"
+[Prereqs.perl.runtime.constant]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Test-Deep]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.perl]
+version = "0"

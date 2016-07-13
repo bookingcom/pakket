@@ -1,0 +1,25 @@
+[Package]
+category = "perl"
+name = "SQL-Abstract"
+version = "1.81"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "7.18"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Exporter]
+version = "5.72"
+[Prereqs.perl.runtime.Hash-Merge]
+version = "0.200"
+[Prereqs.perl.runtime.MRO-Compat]
+version = "0.12"
+[Prereqs.perl.runtime.Moo]
+version = "2.002004"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Text-Balanced]
+version = "2.03"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

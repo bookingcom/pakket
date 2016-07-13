@@ -1,0 +1,65 @@
+[Package]
+category = "perl"
+name = "Log-Dispatch"
+version = "2.56"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Dist-CheckConflicts]
+version = "0.11"
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.configure.JSON-PP]
+version = "2.27400"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Carp]
+version = "0"
+[Prereqs.perl.runtime.Devel-GlobalDestruction]
+version = "0"
+[Prereqs.perl.runtime.Dist-CheckConflicts]
+version = "0.11"
+[Prereqs.perl.runtime.Encode]
+version = "0"
+[Prereqs.perl.runtime.Exporter]
+version = "0"
+[Prereqs.perl.runtime.IO]
+version = "0"
+[Prereqs.perl.runtime.Module-Runtime]
+version = "0"
+[Prereqs.perl.runtime.Params-Validate]
+version = "1.24"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Sys-Syslog]
+version = "0.34"
+[Prereqs.perl.runtime.base]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.test.Data-Dumper]
+version = "0"
+[Prereqs.perl.test.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.test.File-Temp]
+version = "0"
+[Prereqs.perl.test.Getopt-Long]
+version = "0"
+[Prereqs.perl.test.IO]
+version = "0"
+[Prereqs.perl.test.IPC-Run3]
+version = "0"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Fatal]
+version = "0"
+[Prereqs.perl.test.Test-Requires]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"
+[Prereqs.perl.test.lib]
+version = "0"
+[Prereqs.perl.test.perl]
+version = "0"

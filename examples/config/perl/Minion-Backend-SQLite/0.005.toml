@@ -1,0 +1,31 @@
+[Package]
+category = "perl"
+name = "Minion-Backend-SQLite"
+version = "0.005"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.Module-Build-Tiny]
+version = "0.039"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Minion]
+version = "5.08"
+[Prereqs.perl.runtime.Mojo-JSON-MaybeXS]
+version = "0"
+[Prereqs.perl.runtime.Mojo-SQLite]
+version = "0.021"
+[Prereqs.perl.runtime.Time-HiRes]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CPAN-Meta]
+version = "2.150005"
+[Prereqs.perl.test.Module-Metadata]
+version = "0"
+[Prereqs.perl.test.Mojolicious]
+version = "6.66"
+[Prereqs.perl.test.PathTools]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

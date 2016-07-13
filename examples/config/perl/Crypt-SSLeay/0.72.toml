@@ -1,0 +1,23 @@
+[Package]
+category = "perl"
+name = "Crypt-SSLeay"
+version = "0.72"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-CBuilder]
+version = "0.280224"
+[Prereqs.perl.configure.Getopt-Long]
+version = "0"
+[Prereqs.perl.configure.Path-Class]
+version = "0.36"
+[Prereqs.perl.configure.Try-Tiny]
+version = "0.24"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.LWP-Protocol-https]
+version = "6.06"
+[Prereqs.perl.runtime.MIME-Base64]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

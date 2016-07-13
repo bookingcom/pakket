@@ -1,0 +1,45 @@
+[Package]
+category = "perl"
+name = "Devel-Cover"
+version = "1.23"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Browser-Open]
+version = "0"
+[Prereqs.perl.runtime.Capture-Tiny]
+version = "0"
+[Prereqs.perl.runtime.Class-XSAccessor]
+version = "0"
+[Prereqs.perl.runtime.Digest-MD5]
+version = "0"
+[Prereqs.perl.runtime.JSON-PP]
+version = "0"
+[Prereqs.perl.runtime.Moo]
+version = "0"
+[Prereqs.perl.runtime.PPI-HTML]
+version = "1.08"
+[Prereqs.perl.runtime.Parallel-Iterator]
+version = "0"
+[Prereqs.perl.runtime.Perl-Tidy]
+version = "20160302"
+[Prereqs.perl.runtime.Pod-Coverage]
+version = "0.23"
+[Prereqs.perl.runtime.Storable]
+version = "0"
+[Prereqs.perl.runtime.Template-Toolkit]
+version = "2.26"
+[Prereqs.perl.runtime.Test-Differences]
+version = "0"
+[Prereqs.perl.runtime.namespace-clean]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]
+[Prereqs.perl.test.Test-Differences]
+version = "0"
+[Prereqs.perl.test.Test-Simple]
+version = "0"

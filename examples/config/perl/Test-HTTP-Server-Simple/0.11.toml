@@ -1,0 +1,17 @@
+[Package]
+category = "perl"
+name = "Test-HTTP-Server-Simple"
+version = "0.11"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.HTTP-Server-Simple]
+version = "0"
+[Prereqs.perl.runtime.NEXT]
+version = "0"
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.test]

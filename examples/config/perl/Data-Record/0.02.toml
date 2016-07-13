@@ -1,0 +1,11 @@
+[Package]
+category = "perl"
+name = "Data-Record"
+version = "0.02"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Sub-Uplevel]
+version = "0.25"
+[Prereqs.perl.test]

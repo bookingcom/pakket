@@ -6,12 +6,12 @@ version = "2.069"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Compress-Raw-Bzip2]
 version = "2.069"
 [Prereqs.perl.runtime.Compress-Raw-Zlib]
 version = "2.069"
 [Prereqs.perl.runtime.Scalar-List-Utils]
-version = "1.45"
+version = "0"
 [Prereqs.perl.test]

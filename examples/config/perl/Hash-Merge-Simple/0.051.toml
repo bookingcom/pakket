@@ -9,7 +9,7 @@ version = "0.051"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Clone]
-version = "0.38"
+version = "0"
 [Prereqs.perl.runtime.Storable]
-version = "2.51"
+version = "0"
 [Prereqs.perl.test]

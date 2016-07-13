@@ -9,11 +9,11 @@ version = "0.36"
 version = "7.18"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Catalyst-Runtime]
-version = "5.90104"
+version = "5.90106"
 [Prereqs.perl.runtime.JSON-MaybeXS]
 version = "1.003005"
 [Prereqs.perl.runtime.MRO-Compat]
-version = "0.12"
+version = "0"
 [Prereqs.perl.runtime.perl]
 version = "5.024000"
 [Prereqs.perl.test]

@@ -7,9 +7,9 @@ version = "0.005"
 [Prereqs.perl.configure]
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Catalyst-Runtime]
-version = "5.90104"
+version = "5.90106"
 [Prereqs.perl.runtime.Moose]
-version = "2.1803"
+version = "2.1804"
 [Prereqs.perl.runtime.MooseX-RelatedClassRoles]
 version = "0.004"
 [Prereqs.perl.test]

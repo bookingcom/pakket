@@ -1,0 +1,13 @@
+[Package]
+category = "perl"
+name = "Crypt-CBC"
+version = "2.33"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Digest-MD5]
+version = "2.55"
+[Prereqs.perl.test]

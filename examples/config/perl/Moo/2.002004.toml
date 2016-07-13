@@ -1,0 +1,39 @@
+[Package]
+category = "perl"
+name = "Moo"
+version = "2.002004"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Class-Method-Modifiers]
+version = "2.12"
+[Prereqs.perl.runtime.Class-XSAccessor]
+version = "1.19"
+[Prereqs.perl.runtime.Devel-GlobalDestruction]
+version = "0.13"
+[Prereqs.perl.runtime.Exporter]
+version = "5.72"
+[Prereqs.perl.runtime.Module-Runtime]
+version = "0.014"
+[Prereqs.perl.runtime.Role-Tiny]
+version = "2.000003"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "0"
+[Prereqs.perl.runtime.Sub-Name]
+version = "0.15"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.runtime.strictures]
+version = "2.000003"
+[Prereqs.perl.test]
+[Prereqs.perl.test.CPAN-Meta]
+version = "0"
+[Prereqs.perl.test.CPAN-Meta-Requirements]
+version = "0"
+[Prereqs.perl.test.Test-Fatal]
+version = "0.014"
+[Prereqs.perl.test.Test-Simple]
+version = "1.302037"

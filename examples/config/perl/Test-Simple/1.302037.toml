@@ -1,0 +1,21 @@
+[Package]
+category = "perl"
+name = "Test-Simple"
+version = "1.302037"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.File-Temp]
+version = "0"
+[Prereqs.perl.runtime.PathTools]
+version = "0"
+[Prereqs.perl.runtime.Scalar-List-Utils]
+version = "1.45"
+[Prereqs.perl.runtime.Storable]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "5.024000"
+[Prereqs.perl.test]

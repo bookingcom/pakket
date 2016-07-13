@@ -11,6 +11,8 @@ use Algorithm::Diff::Callback qw< diff_hashes >;
 use Types::Path::Tiny         qw< Path >;
 use TOML::Parser;
 use Data::Dumper;
+use Module::CoreList;
+use Perl::Version;
 
 use Pakket::Log;
 use Pakket::Bundler;
@@ -150,7 +152,7 @@ sub run_build {
 
     $package_args ||= {};
     my $package_version = $package_args->{'version'}
-        // $self->get_latest_version( $category, $package_name );
+        || $self->get_latest_version( $category, $package_name );
 
     $package_version
         or exit log_critical sub { $_[0] },
@@ -221,13 +223,27 @@ sub run_build {
 
     # recursively build prereqs
     # starting with system libraries
-    # FIXME: we're currently not using the third parameter
 
     foreach my $type ( qw< system perl nodejs > ) {
         if ( my $prereqs = $config->{'Prereqs'}{$type} ) {
             foreach my $category (qw<configure runtime>) {
                 foreach my $prereq ( keys %{ $prereqs->{$category} } ) {
-                    $self->run_build( $type, $prereq, $prereqs->{$category}{$prereq} );
+                    my $prereq_args = $prereqs->{$category}{$prereq};
+
+                    if (
+                        $type eq 'perl'
+                        and $self->can_skip_this_perl_dependency(
+                            $prereq, $prereq_args->{version}
+                        )
+                        )
+                    {
+                        log_notice {
+                            "Skipping $prereq as it's a core module"
+                        };
+                        next;
+                    }
+
+                    $self->run_build( $type, $prereq, $prereq_args );
                 }
             }
         }
@@ -589,6 +605,17 @@ sub _expand_flags_inplace {
             $flag =~ s/$placeholder/$env->{$key}/gsm;
         }
     }
+}
+
+# TODO kill myself
+my ($build_perl_version) = `perl -V:version` =~ /version='(.+?)';/ms;
+$build_perl_version = Perl::Version->new($build_perl_version)->numify;
+
+sub can_skip_this_perl_dependency {
+    my ( $self, $dep, $dep_version ) = @_;
+
+    return Module::CoreList::is_core( $dep, $dep_version,
+        $build_perl_version );
 }
 
 __PACKAGE__->meta->make_immutable;

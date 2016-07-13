@@ -6,10 +6,10 @@ version = "6.06"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.IO-Socket-SSL]
-version = "2.027"
+version = "2.030"
 [Prereqs.perl.runtime.Mozilla-CA]
 version = "20160104"
 [Prereqs.perl.runtime.Net-HTTP]

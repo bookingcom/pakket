@@ -1,0 +1,25 @@
+[Package]
+category = "perl"
+name = "XML-LibXML"
+version = "2.0126"
+[Prereqs]
+[Prereqs.perl]
+[Prereqs.perl.configure]
+[Prereqs.perl.configure.ExtUtils-MakeMaker]
+version = "0"
+[Prereqs.perl.runtime]
+[Prereqs.perl.runtime.Test-Simple]
+version = "0"
+[Prereqs.perl.runtime.XML-NamespaceSupport]
+version = "1.11"
+[Prereqs.perl.runtime.XML-SAX]
+version = "0.99"
+[Prereqs.perl.runtime.XML-SAX-Base]
+version = "0"
+[Prereqs.perl.runtime.base]
+version = "0"
+[Prereqs.perl.runtime.parent]
+version = "0"
+[Prereqs.perl.runtime.perl]
+version = "0"
+[Prereqs.perl.test]

@@ -6,80 +6,80 @@ version = "2.03"
 [Prereqs.perl]
 [Prereqs.perl.configure]
 [Prereqs.perl.configure.ExtUtils-MakeMaker]
-version = "7.18"
+version = "0"
 [Prereqs.perl.runtime]
 [Prereqs.perl.runtime.Any-URI-Escape]
-version = "0.01"
+version = "0"
 [Prereqs.perl.runtime.Data-Dumper]
-version = "2.154"
+version = "0"
 [Prereqs.perl.runtime.Devel-GlobalDestruction]
-version = "0.13"
+version = "0"
 [Prereqs.perl.runtime.Encode]
-version = "2.84"
+version = "0"
 [Prereqs.perl.runtime.File-Temp]
-version = "0.2304"
+version = "0"
 [Prereqs.perl.runtime.HTTP-Message]
-version = "6.11"
+version = "0"
 [Prereqs.perl.runtime.HTTP-Tiny]
 version = "0.058"
 [Prereqs.perl.runtime.Hijk]
 version = "0.26"
 [Prereqs.perl.runtime.IO]
-version = "1.25"
+version = "0"
 [Prereqs.perl.runtime.IO-Compress]
-version = "2.069"
+version = "0"
 [Prereqs.perl.runtime.IO-Socket-IP]
 version = "0.37"
 [Prereqs.perl.runtime.JSON-MaybeXS]
 version = "1.003005"
 [Prereqs.perl.runtime.JSON-PP]
-version = "2.27400"
+version = "0"
 [Prereqs.perl.runtime.Log-Any]
-version = "1.040"
+version = "0"
 [Prereqs.perl.runtime.MIME-Base64]
-version = "3.15"
+version = "0"
 [Prereqs.perl.runtime.Module-Runtime]
-version = "0.014"
+version = "0"
 [Prereqs.perl.runtime.Moo]
-version = "2.001001"
+version = "0"
 [Prereqs.perl.runtime.Package-Stash]
 version = "0.37"
 [Prereqs.perl.runtime.Scalar-List-Utils]
-version = "1.45"
+version = "0"
 [Prereqs.perl.runtime.Sub-Exporter]
-version = "0.987"
+version = "0"
 [Prereqs.perl.runtime.Time-HiRes]
-version = "1.9733"
+version = "0"
 [Prereqs.perl.runtime.Try-Tiny]
-version = "0.24"
+version = "0"
 [Prereqs.perl.runtime.URI]
-version = "1.71"
+version = "0"
 [Prereqs.perl.runtime.URI-Escape-XS]
-version = "0.13"
+version = "0"
 [Prereqs.perl.runtime.libwww-perl]
-version = "6.15"
+version = "0"
 [Prereqs.perl.runtime.namespace-clean]
-version = "0.27"
+version = "0"
 [Prereqs.perl.runtime.perl]
-version = "5.024000"
+version = "0"
 [Prereqs.perl.test]
 [Prereqs.perl.test.Cpanel-JSON-XS]
-version = "3.0213"
+version = "0"
 [Prereqs.perl.test.IO-Socket-SSL]
-version = "2.027"
+version = "0"
 [Prereqs.perl.test.JSON-XS]
-version = 3.02
+version = "0"
 [Prereqs.perl.test.Log-Any-Adapter-Callback]
 version = "0.09"
 [Prereqs.perl.test.Mojolicious]
-version = "6.62"
+version = "0"
 [Prereqs.perl.test.Test-Deep]
-version = "1.120"
+version = "0"
 [Prereqs.perl.test.Test-Exception]
-version = "0.43"
+version = "0"
 [Prereqs.perl.test.Test-SharedFork]
-version = "0.35"
+version = "0"
 [Prereqs.perl.test.Test-Simple]
-version = "1.302022"
+version = "1.302037"
 [Prereqs.perl.test.lib]
-version = "0.63"
+version = "0"
