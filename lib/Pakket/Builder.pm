@@ -13,6 +13,7 @@ use TOML::Parser;
 use Data::Dumper;
 use Module::CoreList;
 use Perl::Version;
+use Module::Runtime;
 
 use Pakket::Log;
 use Pakket::Bundler;
@@ -607,8 +608,17 @@ $build_perl_version = Perl::Version->new($build_perl_version)->numify;
 sub can_skip_this_perl_dependency {
     my ( $self, $dep, $dep_version ) = @_;
 
-    return Module::CoreList::is_core( $dep, $dep_version,
+
+    my $core = Module::CoreList::is_core( $dep, $dep_version,
         $build_perl_version );
+
+    my $available
+        = $core && Module::Runtime::use_module( $dep, $dep_version );
+
+    log_debug {"$dep $dep_version: is core: $_[0]; available: $_[1]"}
+    $core ? "YES" : "NO", $available ? "YES" : "NO";
+
+    return $available;
 }
 
 __PACKAGE__->meta->make_immutable;
