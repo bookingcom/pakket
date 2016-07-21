@@ -608,6 +608,7 @@ $build_perl_version = Perl::Version->new($build_perl_version)->numify;
 sub can_skip_this_perl_dependency {
     my ( $self, $dep, $dep_version ) = @_;
 
+    $dep =~ s/-/::/gsm;
 
     my $core = Module::CoreList::is_core( $dep, $dep_version,
         $build_perl_version );
