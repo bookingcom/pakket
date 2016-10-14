@@ -156,7 +156,7 @@ sub install {
 sub install_package {
     my ( $self, $package, $dir, $installed ) = @_;
 
-    $log->debug("About to install $package");
+    $log->debug("About to install $package (into $dir)");
 
     if ( $installed->{$package}++ ) {
         $log->debug("$package already installed");
@@ -223,8 +223,7 @@ sub install_package {
     $dir->child($parcel_basename)->remove;
 
     my $spec_file = $full_parcel_dir->child( PARCEL_METADATA_FILE() );
-
-    my $config = decode_json $spec_file->slurp_utf8;
+    my $config    = decode_json $spec_file->slurp_utf8;
 
     my $prereqs = $config->{'Prereqs'};
     foreach my $prereq_category ( keys %{$prereqs} ) {

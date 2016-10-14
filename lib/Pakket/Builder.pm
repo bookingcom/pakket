@@ -16,6 +16,7 @@ use Log::Any qw< $log >;
 
 use Pakket::Log;
 use Pakket::Bundler;
+use Pakket::Installer;
 use Pakket::ConfigReader;
 use Pakket::Version::Requirements;
 use Pakket::Builder::NodeJS;
@@ -78,7 +79,10 @@ has index => (
     is      => 'ro',
     isa     => 'HashRef',
     lazy    => 1,
-    default => sub { decode_json( path( $_[0]->index_file )->slurp_utf8 ) },
+    default => sub {
+        my $self = shift;
+        return decode_json $self->index_file->slurp_utf8;
+    },
 );
 
 has 'builders' => (
@@ -104,6 +108,28 @@ has bundler_args => (
     is      => 'ro',
     isa     => 'HashRef',
     default => sub { +{} },
+);
+
+has 'installer' => (
+    'is'      => 'ro',
+    'isa'     => 'Pakket::Installer',
+    'lazy'    => 1,
+    'default' => sub {
+        my $self = shift;
+
+        my $parcel_dir = $self->bundler_args->{'bundle_dir'};
+        if ( !$parcel_dir ) {
+            $log->critical("'bundler_args' do not contain 'bundle_dir'");
+            exit 1;
+        }
+
+        return Pakket::Installer->new(
+            'pakket_dir' => $self->build_dir,
+            'parcel_dir' => $parcel_dir,
+            'index'      => $self->index,
+            'index_file' => $self->index_file,
+        );
+    },
 );
 
 sub _build_bundler {
@@ -248,17 +274,18 @@ sub run_build {
             "$package_name-$package_version.pkt" );
 
     if ( $existing_parcel->exists ) {
+        # Use the installer to recursively install all packages
+        # that are already available
         $log->debug("$full_package_name already packaged, unpacking...");
 
-        system sprintf "tar --wildcards -C $main_build_dir" .
-                       " -xJf $existing_parcel %s/*",
-                       PARCEL_FILES_DIR();
+        my $installer       = $self->installer;
+        my $installer_cache = {};
 
-        system sprintf "cp -r $main_build_dir/%s/* $main_build_dir",
-            PARCEL_FILES_DIR();
-
-        path( $main_build_dir, PARCEL_FILES_DIR() )
-            ->remove_tree( { safe => 0 } );
+        $installer->install_package(
+            "$full_package_name/$package_version",
+            $main_build_dir,
+            $installer_cache,
+        );
 
         $self->scan_dir( $category, $package_name,
             $main_build_dir->absolute, 0 );
