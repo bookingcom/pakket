@@ -160,10 +160,10 @@ sub DEMOLISH {
 sub _setup_build_dir {
     my $self = shift;
 
-    $log->debugf( 'Creating build dir %s', $self->build_dir );
+    $log->debugf( 'Creating build dir %s', $self->build_dir->stringify );
     my $prefix_dir = path( $self->build_dir, 'main' );
 
-    -d $prefix_dir or $prefix_dir->mkpath;
+    $prefix_dir->is_dir or $prefix_dir->mkpath;
 }
 
 sub get_latest_satisfying_version {
