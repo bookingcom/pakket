@@ -60,7 +60,7 @@ sub generate_json_conf {
         }
     }
 
-    $output->spew_utf8( JSON::MaybeXS->new->pretty->encode($index) );
+    $output->spew_utf8( JSON::MaybeXS->new->pretty->canonical->encode($index) );
 }
 
 1;

@@ -87,7 +87,7 @@ sub bundle {
     }
 
     path( PARCEL_METADATA_FILE() )
-        ->spew_utf8( JSON::MaybeXS->new->pretty->encode($package_config) );
+        ->spew_utf8( JSON::MaybeXS->new->pretty->canonical->encode($package_config) );
 
     chdir '..';
 
