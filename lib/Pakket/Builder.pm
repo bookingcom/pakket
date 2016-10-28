@@ -245,11 +245,6 @@ sub run_build {
     my $package_version = $self->get_latest_satisfying_version($package);
     my $category        = $package->category;
 
-    $package_version or do {
-        $log->critical(
-            "Could not find a version number for $full_package_name");
-        exit 1;
-    };
 
     my $top_build_dir  = $self->build_dir;
     my $main_build_dir = $top_build_dir->child('main');
@@ -539,6 +534,12 @@ sub read_package_config {
         return;
     }
 
+    my $config_version = $config->{'Package'}{'version'};
+    if ( !defined $config_version ) {
+        $log->error("Package config must provide 'version'");
+        return;
+    }
+
     if ( $config_name ne $package_name ) {
         $log->error("Mismatch package names ($package_name / $config_name)");
         return;
@@ -548,6 +549,13 @@ sub read_package_config {
         $log->error(
             "Mismatch package categories ($category / $config_category)");
         return;
+    }
+
+    if ( $config_version ne $package_version ) {
+        $log->error(
+            "Mismatch package versions ($package_version / $config_version)");
+        return;
+
     }
 
     return $config;
