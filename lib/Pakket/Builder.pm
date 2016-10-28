@@ -509,9 +509,14 @@ sub read_package_config {
     my $config_file = path( $self->config_dir, $category, $package_name,
         "$package_version.toml" );
 
-    if ( !-r $config_file ) {
-        $log->error("Could not find package information ($config_file)");
-        return;
+    if ( !$config_file->exists ) {
+        $log->critical("Could not find package config file: $config_file");
+        exit 1;
+    }
+
+    if ( !$config_file->is_file ) {
+        $log->critical("odd config file: $config_file");
+        exit 1;
     }
 
     my $config_reader = Pakket::ConfigReader->new(
