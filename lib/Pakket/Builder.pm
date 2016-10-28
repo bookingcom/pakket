@@ -306,10 +306,7 @@ sub run_build {
         }
     }
 
-    my $package_src_dir = path(
-        $self->source_dir,
-        $self->index->{$category}{$package_name}{'versions'}{$package_version},
-    );
+    my $package_src_dir = $self->package_location($package);
 
     $log->info('Copying package files');
     $package_src_dir->is_dir or do {
@@ -372,6 +369,18 @@ sub run_build {
         },
         $package_files,
     );
+}
+
+sub package_location {
+    my ( $self, $package ) = @_;
+
+    my $index   = $self->index;
+    my $src_dir = $self->source_dir;
+
+    my $versions
+        = $index->{ $package->category }{ $package->name }{'versions'};
+
+    return $src_dir->child( $versions->{ $package->version } );
 }
 
 sub scan_dir {
