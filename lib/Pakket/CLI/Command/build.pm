@@ -1,5 +1,5 @@
 package Pakket::CLI::Command::build;
-# ABSTRACT: The pakket build command
+# ABSTRACT: Build a Pakket package
 
 use strict;
 use warnings;
@@ -9,6 +9,7 @@ use Pakket::Log;
 use Path::Tiny      qw< path >;
 use Log::Any::Adapter;
 use JSON::MaybeXS qw< decode_json >;
+use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
 
 # TODO:
 # - move all hardcoded values (confs) to constants
@@ -25,78 +26,82 @@ sub description { 'Build a package' }
 
 sub opt_spec {
     return (
-        [ 'index-file=s',   'path to pkg_index.json'                          ],
-        [ 'input-file=s',   'build stuff from this file'                      ],
-        [ 'input-json=s',   'build stuff from this json file'                 ],
-        [ 'build-dir=s',    'use an existing build directory'                 ],
-        [ 'keep-build-dir', 'do not delete the build directory'               ],
-        [ 'config-dir=s',   'directory holding the configurations'            ],
-        [ 'source-dir=s',   'directory holding the sources'                   ],
-        [ 'output-dir=s',   'output directory (default: .)'                   ],
-        [ 'verbose|v+',     'verbose output (can be provided multiple times)' ],
+        [ 'index-file=s', 'path to pkg_index.json', { 'required' => 1 } ],
+        [ 'from_index',     'build everything from the index' ],
+        [ 'input-file=s',   'build stuff from this file' ],
+        [ 'input-json=s',   'build stuff from this json file' ],
+        [ 'build-dir=s',    'use an existing build directory' ],
+        [ 'keep-build-dir', 'do not delete the build directory' ],
+        [
+            'config-dir=s',
+            'directory holding the configurations',
+            { 'required' => 1 }
+        ],
+        [
+            'source-dir=s',
+            'directory holding the sources',
+            { 'required' => 1 }
+        ],
+        [ 'output-dir=s', 'output directory (default: .)' ],
+        [ 'verbose|v+',   'verbose output (can be provided multiple times)' ],
     );
 }
 
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
+    my $index_file = path( $opt->{'index_file'} );
+    $index_file->exists && $index_file->is_file
+        or $self->usage_error("Incorrect index file specified: '$index_file'");
+
+    $self->{'builder'}{'index_file'} = $index_file;
+
     if ( defined ( my $output_dir = $opt->{'output_dir'} ) ) {
         $self->{'bundler'}{'bundle_dir'} = path($output_dir)->absolute;
     }
 
-    my @packages;
-    if ( my $file = $opt->{'input_file'} ) {
+    my @specs;
+    if ( defined ( my $file = $opt->{'input_file'} ) ) {
         my $path = path($file);
         $path->exists && $path->is_file
-            or $self->usage_error("Bad file: $path");
+            or $self->usage_error("Bad input file: $path");
 
-        push @packages, $path->lines_utf8( { chomp => 1 } );
-    } elsif ( my $json_file = $opt->{'input_json'} ) {
+        push @specs, $path->lines_utf8( { chomp => 1 } );
+    } elsif ( $opt->{'from_index'} ) {
+        my $index = $self->read_index( $opt->{'index_file'} );
+
+        push @specs, $self->all_packages_in_index(
+            $self->read_index( $opt->{'index_file'} )
+        );
+
+    } elsif ( defined ( my $json_file = $opt->{'input_json'} ) ) {
         my $path = path($json_file);
         $path->exists && $path->is_file
-            or $self->usage_error("Bad file: $path");
+            or $self->usage_error("Bad '--input-json' file: $path");
 
         my $json = decode_json( $path->slurp_utf8 );
-
-        for my $cat ( keys %{ $json } ) {
-            for my $package ( keys %{ $json->{$cat} } ) {
-                for my $ver ( keys %{ $json->{$cat}{$package}{versions} } ) {
-                    push @{ $self->{'to_build'} }, Pakket::Package->new(
-                        'category' => $cat,
-                        'name'     => $package,
-                        'version'  => $ver,
-                    );
-                }
-            }
-        }
-
+        push @specs, $self->all_packages_in_index( $self->read_index($path) );
     } elsif ( @{$args} ) {
-        @packages = @{$args};
+        @specs = @{$args};
     } else {
         $self->usage_error('Must specify at least one package or a file');
     }
 
-    if ( my $file = $opt->{'index_file'} ) {
-        my $path = path($file);
-        $path->exists && $path->is_file
-            or $self->usage_error("Incorrect index file specified: '$file'");
+    foreach my $spec_str (@specs) {
+        my ( $cat, $name, $version ) = $spec_str =~ PAKKET_PACKAGE_SPEC()
+            or $self->usage_error("Provide category/name, not '$spec_str'");
 
-        $self->{'builder'}{'index_file'} = $path;
-    }
-
-    if ( ! @{ $self->{'to_build'} || [] } ) {
-        foreach my $package_name (@packages) {
-            my ( $cat, $package, $version ) = split m{/}ms, $package_name;
-
-            $cat && $package
-                or $self->usage_error("Wrong category/package provided: '$package_name'.");
-
-            push @{ $self->{'to_build'} }, Pakket::Package->new(
-                'category' => $cat,
-                'name'     => $package,
-                'version'  => $version // 0,
-            );
+        # Latest version is default
+        if ( !defined $version ) {
+            my $index = $self->read_index( $index_file );
+            $version = $index->{$cat}{$name}{'latest'};
         }
+
+        push @{ $self->{'to_build'} }, +{
+            'category' => $cat,
+            'name'     => $name,
+            'version'  => $version,
+        };
     }
 
     if ( $opt->{'build_dir'} ) {
@@ -139,9 +144,29 @@ sub execute {
     my $logger  = Pakket::Log->build_logger($verbose);
     Log::Any::Adapter->set( 'Dispatch', dispatcher => $logger );
 
-    foreach my $package ( @{ $self->{'to_build'} } ) {
-        $builder->build($package);
+    foreach my $prereq_hashref ( @{ $self->{'to_build'} } ) {
+        $builder->build( %{$prereq_hashref} );
     }
+}
+
+sub read_index {
+    my ( $self, $index_file ) = @_;
+    return decode_json( $index_file->slurp_utf8 );
+}
+
+sub all_packages_in_index {
+    my ( $self, $index ) = @_;
+
+    my @packages;
+    for my $cat ( keys %{$index} ) {
+        for my $package ( keys %{ $index->{$cat} } ) {
+            for my $ver ( keys %{ $index->{$cat}{$package}{'versions'} } ) {
+                push @packages, "$cat/$package=$ver";
+            }
+        }
+    }
+
+    return @packages;
 }
 
 1;
