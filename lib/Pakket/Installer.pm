@@ -150,9 +150,8 @@ sub install {
     # We finished installing each one recursively to the work directory
     # Now we need to set the symlink
     $log->debug('Setting symlink to new work directory');
-    $active_link->remove;
 
-    if ( ! symlink $work_dir->basename, $active_link ) {
+    if ( !  $active_link->move( $work_dir->basename ) ) {
         $log->error('Could not activate new installation (symlink failed)');
         exit 1;
     }
