@@ -38,8 +38,16 @@ has 'versioning' => (
     'isa'       => 'Str',
     'lazy'      => 1,
     'builder'   => '_build_versioning',
+
+has [qw<build_opts bundle_opts>] => (
+    'is'      => 'ro',
+    'isa'     => 'HashRef',
+    'default' => sub { +{} },
 );
 
+);
+
+# FIXME: GH #73 will make this more reasonable
 has 'configure_prereqs' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
