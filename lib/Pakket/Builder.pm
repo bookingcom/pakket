@@ -19,6 +19,7 @@ use Pakket::Log;
 use Pakket::Package;
 use Pakket::Bundler;
 use Pakket::Installer;
+use Pakket::Requirement;
 use Pakket::ConfigReader;
 use Pakket::Builder::NodeJS;
 use Pakket::Builder::Perl;
@@ -147,10 +148,12 @@ sub _build_bundler {
 }
 
 sub build {
-    my ( $self, $package ) = @_;
+    my ( $self, %args ) = @_;
+
+    my $prereq = Pakket::Requirement->new(%args);
 
     $self->_setup_build_dir;
-    $self->run_build($package);
+    $self->run_build($prereq);
 }
 
 sub DEMOLISH {
@@ -180,71 +183,67 @@ sub _setup_build_dir {
     return;
 }
 
-sub get_latest_satisfying_version {
-    my ( $self, $package ) = @_;
+sub run_build {
+    my ( $self, $prereq ) = @_;
 
-    # This will be either a specific one for this package
-    # (from the configuration) or from the category
-    my $req = $package->versioning_requirements;
+    # FIXME: GH #29
+    if ( $prereq->category eq 'perl' ) {
+        # XXX: perl_mlb is a MetaCPAN bug
+        first { $prereq->name eq $_ } qw<perl perl_mlb>
+            and return;
+    }
 
-    my $package_name = $package->name;
-    my $category     = $package->category;
-
-    $log->debugf(
-        'Package %s uses the "%s" versioning schema',
-        $package_name,
-        $package->versioning,
-    );
-
-    my $version = $package->version // 0;
-    $log->debug("Required: $package_name $version");
-    $req->add_from_string($version);
-
-    my $chosen = $req->pick_maximum_satisfying_version(
-        [ keys %{ $self->index->{$category}{$package_name}{'versions'} } ] );
-
-    if ( !$chosen ) {
+    if (
+        !first { $prereq->version eq $_ }
+        @{ $self->versions_in_index($prereq) }
+        )
+    {
         $log->criticalf(
-            "Couldn't find maximum satisfying version for %s in index",
-            "$category/$package_name",
+            'Could not find version %s in index (%s/%s)',
+            $prereq->version, $prereq->category, $prereq->name,
         );
 
         exit 1;
     }
 
-    $log->debug("Chosen: $package_name $chosen");
+    my $full_name = sprintf '%s/%s', $prereq->category, $prereq->name;
+    if ( defined $self->is_built->{$full_name} ) {
+        my $built_version = $self->is_built->{$full_name};
 
-    return $chosen;
-}
+        if ( $built_version ne $prereq->version ) {
+            $log->criticalf(
+                'Asked to build %s=%s when %s=%s already built',
+                $full_name, $prereq->version, $full_name, $built_version,
+            );
 
-sub run_build {
-    my ( $self, $package ) = @_;
+            exit 1;
+        }
 
-    # FIXME: GH #29
-    if ( $package->category eq 'perl' ) {
-        # XXX: perl_mlb is a MetaCPAN bug
-        first { $package->name eq $_ } qw<perl perl_mlb>
-            and return;
-    }
-
-    my $full_package_name = $package->full_name;
-
-    # FIXME: This does not include the version number
-    #        Which means we don't know if we're asked to build different
-    #        versions of the same package
-    if ( $self->is_built->{$full_package_name}++ ) {
         $log->debug(
-            "We already built or building $full_package_name, skipping..."
+            "We already built or building $full_name, skipping...",
         );
 
         return;
+    } else {
+        $self->is_built->{$full_name} = $prereq->version;
     }
 
-    $log->notice("Working on $full_package_name");
+    $log->noticef( 'Working on %s=%s', $full_name, $prereq->version );
 
-    my $package_version = $self->get_latest_satisfying_version($package);
-    my $category        = $package->category;
+    # Create a Package instance from the configuration
+    # using the information we have on it
+    my $package = Pakket::Package->new(
+        $self->read_package_config(
+            $prereq->category,
+            $prereq->name,
+            $prereq->version,
+        ),
+    );
 
+    my $full_package_name = sprintf '%s/%s=%s',
+        $package->category, $package->name, $package->version;
+
+    my $category = $package->category;
 
     my $top_build_dir  = $self->build_dir;
     my $main_build_dir = $top_build_dir->child('main');
@@ -256,16 +255,20 @@ sub run_build {
     my $existing_parcel = $self->bundler->bundle_dir->child(
         $category,
         $package_name,
-        "$package_name-$package_version.pkt",
+        sprintf( '%s-%s.pkt', $package->name, $package->version ),
     );
 
-    if ( $existing_parcel->exists ) {
+    my $installer   = $self->installer;
+    my $parcel_file = $installer->parcel_file(
+        $category, $package_name, $package->version,
+    );
+
+    if ( $parcel_file->exists ) {
 
         # Use the installer to recursively install all packages
         # that are already available
         $log->debug("$full_package_name already packaged, unpacking...");
 
-        my $installer       = $self->installer;
         my $installer_cache = {};
 
         $installer->install_package(
@@ -277,31 +280,28 @@ sub run_build {
         $self->scan_dir( $category, $package_name,
             $main_build_dir->absolute, 0 );
 
-        $self->is_built->{$full_package_name} = 1;
-
         return;
     }
 
-    my $config = $self->read_package_config(
-        $category, $package_name, $package_version,
-    ) or return;
+    # GH #74
+    my @supported_phases = qw< configure runtime >;
 
     # recursively build prereqs
-    foreach my $type ( keys %{ $self->builders } ) {
-        if ( my $prereqs = $config->{'Prereqs'}{$type} ) {
-            foreach my $category (qw<configure runtime>) {
-                foreach my $prereq ( keys %{ $prereqs->{$category} } ) {
-                    # FIXME: for now we're treating a requirement like
-                    #        a package, but this is wrong
+    foreach my $supported_category ( keys %{ $self->builders } ) {
+        my $cat_prereqs = $package->category_prereqs($supported_category)
+            or next;
 
-                    $self->run_build(
-                        Pakket::Package->new(
-                            'category' => $type,
-                            'name'     => $prereq,
-                            %{ $prereqs->{$category}{$prereq} },
-                        )
-                    );
-                }
+        foreach my $phase (@supported_phases) {
+            my $prereqs = $cat_prereqs->{$phase};
+            foreach my $name ( keys %{$prereqs} ) {
+                my $version = $prereqs->{$name};
+                my $req     = Pakket::Requirement->new(
+                    'category' => $supported_category,
+                    'name'     => $name,
+                    'version'  => $version,
+                );
+
+                $self->run_build($req);
             }
         }
     }
@@ -326,7 +326,7 @@ sub run_build {
     # we should allow the builder to have access to a general
     # metadata chunk which *might* include configure flags
     my $configure_flags = $self->get_configure_flags(
-        $config->{'Package'}{'configure_flags'},
+        $package->build_opts->{'configure_flags'},
         { main_build_dir => $main_build_dir },
     );
 
@@ -352,8 +352,6 @@ sub run_build {
         exit 1;
     }
 
-    $self->is_built->{$full_package_name} = 1;
-
     my $package_files = $self->scan_dir(
         $category, $package_name, $main_build_dir,
     );
@@ -362,13 +360,29 @@ sub run_build {
     return $self->bundler->bundle(
         $main_build_dir->absolute,
         {
-            'category' => $category,
-            'name'     => $package_name,
-            'version'  => $config->{'Package'}{'version'},
-            'config'   => $config,
+            'category'    => $category,
+            'name'        => $package_name,
+            'version'     => $package->version,
+            'bundle_opts' => $package->bundle_opts,
+            'config'      => $package->config,
         },
         $package_files,
     );
+}
+
+sub versions_in_index {
+    my ( $self, $prereq ) = @_;
+
+    my $index    = $self->index;
+    my $category = $self->category;
+    my $name     = $self->name;
+
+    if ( !exists $index->{$category}{$name} ) {
+        $log->critical("We don't know $category/$name. Sorry.");
+        exit 1;
+    }
+
+    return [ keys %{ $index->{$category}{$name}{'versions'} } ];
 }
 
 sub package_location {
@@ -567,7 +581,7 @@ sub read_package_config {
 
     }
 
-    return $config;
+    return %{$config};
 }
 
 __PACKAGE__->meta->make_immutable;
