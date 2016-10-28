@@ -317,7 +317,7 @@ sub run_build {
     );
 
     $log->info('Copying package files');
-    -d $package_src_dir or do {
+    $package_src_dir->is_dir or do {
         $log->critical("Cannot find source dir: $package_src_dir");
         exit 1;
     };
