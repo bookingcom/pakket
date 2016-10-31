@@ -85,9 +85,9 @@ use one or more than one.
 
 =back
 
-=head2 Pakket components
+=head2 Pakket elements
 
-Pakket has several key components:
+Pakket has several key elements:
 
 =head3 Packages
 
