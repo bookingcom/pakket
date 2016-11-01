@@ -27,7 +27,7 @@ sub description { 'Build a package' }
 sub opt_spec {
     return (
         [ 'index-file=s', 'path to pkg_index.json', { 'required' => 1 } ],
-        [ 'from_index',     'build everything from the index' ],
+        [ 'from-index',     'build everything from the index' ],
         [ 'input-file=s',   'build stuff from this file' ],
         [ 'input-json=s',   'build stuff from this json file' ],
         [ 'build-dir=s',    'use an existing build directory' ],
