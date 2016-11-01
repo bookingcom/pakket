@@ -287,17 +287,18 @@ sub run_build {
     my @supported_phases = qw< configure runtime >;
 
     # recursively build prereqs
-    foreach my $supported_category ( keys %{ $self->builders } ) {
-        my $cat_prereqs = $package->category_prereqs($supported_category)
-            or next;
+    use Data::Dumper; print Dumper( $package->prereqs);
+    foreach my $category ( keys %{ $self->builders } ) {
+        foreach my $supported_phase (@supported_phases) {
+            my @prereqs = keys %{ $package->prereqs->{$category}{$supported_phase} };
 
-        foreach my $phase (@supported_phases) {
-            my $prereqs = $cat_prereqs->{$phase};
-            foreach my $name ( keys %{$prereqs} ) {
-                my $version = $prereqs->{$name};
+            foreach my $prereq_name (@prereqs) {
+                my $version = $package->prereqs->{$category}{$supported_phase}{$prereq_name}{'version'} //
+                    $self->index->{$category}{$supported_phase}{$prereq_name}{'latest'};
+
                 my $req     = Pakket::Requirement->new(
-                    'category' => $supported_category,
-                    'name'     => $name,
+                    'category' => $category,
+                    'name'     => $prereq_name,
                     'version'  => $version,
                 );
 
@@ -374,8 +375,8 @@ sub versions_in_index {
     my ( $self, $prereq ) = @_;
 
     my $index    = $self->index;
-    my $category = $self->category;
-    my $name     = $self->name;
+    my $category = $prereq->category;
+    my $name     = $prereq->name;
 
     if ( !exists $index->{$category}{$name} ) {
         $log->critical("We don't know $category/$name. Sorry.");
@@ -581,7 +582,12 @@ sub read_package_config {
 
     }
 
-    return %{$config};
+    my %package_details = (
+        %{ $config->{'Package'} },
+        'prereqs' => $config->{'Prereqs'},
+    );
+
+    return %package_details;
 }
 
 __PACKAGE__->meta->make_immutable;

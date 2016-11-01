@@ -58,27 +58,26 @@ has 'runtime_prereqs' => (
 
 sub _build_configure_prereqs {
     my $self    = shift;
-    return $self->category_prereqs('configure');
+    return $self->phase_prereqs('configure');
 }
 
 sub _build_test_prereqs {
     my $self    = shift;
-    return $self->category_prereqs('test');
+    return $self->phase_prereqs('test');
 }
 
 sub _build_runtime_prereqs {
     my $self    = shift;
-    return $self->category_prereqs('runtime');
+    return $self->phase_prereqs('runtime');
 }
 
-sub category_prereqs {
-    my ( $self, $category ) = @_;
+sub phase_prereqs {
+    my ( $self, $phase ) = @_;
     my $prereqs = $self->prereqs;
-
-    return [
-        map +( $prereqs->{$category}{$_} ),
-            keys %{ $prereqs->{$category} },
-    ];
+    return +{
+        map { $_ => $prereqs->{$_}{$phase} }
+            keys %{$prereqs}
+    };
 }
 
 sub cat_name {
@@ -88,15 +87,17 @@ sub cat_name {
 
 sub full_name {
     my $self = shift;
-    return sprintf '%s/%s=%s', $self->category, $self->name, $self->package;
+    return sprintf '%s/%s=%s', $self->category, $self->name, $self->version;
 }
 
 sub config {
     my $self = shift;
-    my @keys = qw<category name version prereqs build_opts bundle_opts>;
 
     return +{
-        map +( $_ => $self->$_ ), @keys
+        'Package' => {
+            map +( $_ => $self->$_ ), qw<category name version>
+        },
+        map +( $_ => $self->$_ ), qw<prereqs build_opts bundle_opts>
     };
 }
 
