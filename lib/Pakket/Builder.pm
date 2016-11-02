@@ -584,7 +584,7 @@ sub read_package_config {
 
     my %package_details = (
         %{ $config->{'Package'} },
-        'prereqs' => $config->{'Prereqs'},
+        'prereqs' => $config->{'Prereqs'} || {},
     );
 
     return %package_details;
