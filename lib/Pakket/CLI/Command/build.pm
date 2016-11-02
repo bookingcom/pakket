@@ -79,7 +79,6 @@ sub validate_args {
         $path->exists && $path->is_file
             or $self->usage_error("Bad '--input-json' file: $path");
 
-        my $json = decode_json( $path->slurp_utf8 );
         push @specs, $self->all_packages_in_index( $self->read_index($path) );
     } elsif ( @{$args} ) {
         @specs = @{$args};
@@ -151,7 +150,7 @@ sub execute {
 
 sub read_index {
     my ( $self, $index_file ) = @_;
-    return decode_json( $index_file->slurp_utf8 );
+    return decode_json( path($index_file)->slurp_utf8 );
 }
 
 sub all_packages_in_index {
