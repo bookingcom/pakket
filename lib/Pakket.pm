@@ -126,15 +126,31 @@ create them yourself or you can use the
 L<Pakket::CLI::Command::scaffold|scaffold> command to create them
 for you.
 
-NOTE: following paragraph is unclear.
-
-The basic formats in Pakket contain a package's C<category>,
+The basic configuration file in Pakket contain a package's C<category>,
 c<name>, and C<version>. It usually contains C<prereqs> as well,
-keys by the B<category> and the B<phase>. The phases can be
+keyed by the B<category> and the B<phase>. The phases can be
 B<configure> (for build-time), B<test> (for when testing the build),
 and B<runtime> (for using it).
 
 At the moment Pakket keeps its configuration in TOML files.
+
+An example of a configuration in Pakket:
+
+    # perl/HTML-Tidy/1.56.toml:
+    [Package]
+    category = "perl"
+    name = "HTML-Tidy"
+    version = "1.56"
+    [Prereqs.native.configure.tidyp]
+    version = "1.04"
+    [Prereqs.perl.configure.ExtUtils-MakeMaker]
+    version = "7.24"
+    [Prereqs.perl.runtime.Test-Simple]
+    version = "1.302031"
+
+The package details are in the C<Package> section. The prereqs are
+in the C<Prereqs> section, under the C<native> or C<perl> categories,
+under the C<configure> or C<runtime> phase.
 
 =head3 Index
 
