@@ -287,7 +287,6 @@ sub run_build {
     my @supported_phases = qw< configure runtime >;
 
     # recursively build prereqs
-    use Data::Dumper; print Dumper( $package->prereqs);
     foreach my $category ( keys %{ $self->builders } ) {
         foreach my $supported_phase (@supported_phases) {
             my @prereqs = keys %{ $package->prereqs->{$category}{$supported_phase} };
