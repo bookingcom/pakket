@@ -65,10 +65,30 @@ sub _cli_logger {
         $verbose == +DEBUG_INFO_LEVEL   ? 'info'   : # log 1
         $verbose == +DEBUG_NOTICE_LEVEL ? 'notice' : # log 0
                                           'warning';
+    # The default color map for Log::Dispatch::Screen::Color
+    # is (to my eyes) really hard to read, let's make it saner.
+    my $colors = {
+        info    => {
+            text        => 'red',
+        },
+        error   => {
+            background  => 'red',
+        },
+        alert   => {
+            text        => 'red',
+            background  => 'white',
+        },
+        warning => {
+            text        => 'red',
+            background  => 'white',
+            bold        => 1,
+        },
+    };
     return [
-        'Screen',
+        'Screen::Color',
         'min_level' => $screen_level,
         'newline'   => 1,
+        'color'     => $colors,
     ];
 }
 
