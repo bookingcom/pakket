@@ -68,8 +68,11 @@ sub _cli_logger {
     # The default color map for Log::Dispatch::Screen::Color
     # is (to my eyes) really hard to read, let's make it saner.
     my $colors = {
+        debug   => {
+            text        => 'green',
+        },
         info    => {
-            text        => 'red',
+            text        => 'yellow',
         },
         error   => {
             background  => 'red',
