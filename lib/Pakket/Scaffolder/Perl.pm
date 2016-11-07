@@ -24,6 +24,10 @@ with qw<
     Pakket::Scaffolder::Perl::Role::Borked
 >;
 
+use constant {
+    'ARCHIVE_DIR_TEMPLATE' => 'ARCHIVE-XXXXXX',
+};
+
 has 'metacpan_api' => (
     'is'      => 'ro',
     'isa'     => 'Str',
@@ -180,9 +184,7 @@ sub create_config_for {
                 $self->ua->mirror( $download_url, $source_file );
             }
             if ( $self->extract ) {
-                my $archive = Archive::Any->new( $source_file );
-                $archive->extract( $self->source_dir );
-                $source_file->remove;
+                $self->extract_archive( $dist_name, $rel_version, $source_file );
             }
         }
         else {
@@ -235,6 +237,38 @@ sub create_config_for {
     $self->set_depth( $self->depth - 1 );
 
     $conf_file->spew_utf8( to_toml($package) );
+}
+
+sub extract_archive {
+    my ( $self, $dist_name, $rel_version, $source_file ) = @_;
+
+    my $archive_path = Path::Tiny->tempdir(
+        'TEMPLATE' => ARCHIVE_DIR_TEMPLATE(),
+        'DIR'      => $self->source_dir,
+        'CLEANUP'  => 1,
+    );
+    my $archive = Archive::Any->new( $source_file );
+    $archive->extract( $archive_path );
+    my @children = $archive_path->children();
+    my $final_name = $dist_name . '-' . $rel_version;
+    if (@children == 0) {
+        $log->infof( 'Archive %s is empty, skipping', $source_file->stringify);
+    }
+    elsif (@children == 1 &&
+           $children[0]->is_dir()) {
+        my $child = $children[0];
+        my $dir_name = $child->basename;
+        $log->debugf( 'Archive %s contains single directory [%s], using as [%s]', $source_file->stringify, $dir_name, $final_name);
+        my $target = path( $self->source_dir, $final_name);
+        $child->move( $target );
+    }
+    else {
+        $log->debugf( 'Archive %s contains multiple entries, will put inside directory called [%s]', $source_file->stringify, $final_name);
+        my $target = path( $self->source_dir, $final_name);
+        $archive_path->move( $target );
+    }
+
+    $source_file->remove;
 }
 
 sub get_dist_name {
