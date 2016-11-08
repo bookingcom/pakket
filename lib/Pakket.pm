@@ -83,7 +83,7 @@ version (python27, python3, etc.).
 Pakket considers any installation as a single installation instance. You
 can have as many installations of a package as you want. There can be a
 global one, a per-user one, a local directory one, a project-specific
-want, etc.; your pick. You can use one or more than one.
+one, etc.; your pick. You can use one or more than one.
 
 =back
 
@@ -93,7 +93,7 @@ Pakket has several key elements:
 
 =head3 Packages
 
-Every thing you wish to build and install is a package. A package
+Everything you wish to build and install is a package. A package
 can be a program in your favorite language, a library of a language,
 or anything at all. It will go through a build process you pick and
 it will get bundled into a parcel.
@@ -117,7 +117,7 @@ decide which is a newer version and which is older.
 
 Pakket makes a difference between a package and a requirement. A package
 is an existing instance; a requirement is a description. The requirement
-can have a range, for example.
+can have a range of allowed versions for a package, for example.
 
 =head3 Configuration files
 
@@ -127,7 +127,7 @@ L<Pakket::CLI::Command::scaffold|scaffold> command to create them
 for you.
 
 The basic configuration file in Pakket contain a package's C<category>,
-c<name>, and C<version>. It usually contains C<prereqs> as well,
+C<name>, and C<version>. It usually contains C<prereqs> as well,
 keyed by the B<category> and the B<phase>. The phases can be
 B<configure> (for build-time), B<test> (for when testing the build),
 and B<runtime> (for using it).
