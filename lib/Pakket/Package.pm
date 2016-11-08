@@ -3,17 +3,6 @@ package Pakket::Package;
 
 use Moose;
 use MooseX::StrictConstructor;
-use Module::Runtime qw< use_module >;
-
-use constant {
-    'VERSIONING_CLASSES' => {
-        # Perl's versioning is likely to be a good default
-        ''       => 'Pakket::Versioning::Default',
-        'perl'   => 'Pakket::Versioning::Default',
-        'native' => 'Pakket::Versioning::Default',
-        'nodejs' => 'Pakket::Versioning::SemVer',
-    },
-};
 
 has 'name' => (
     'is'       => 'ro',
@@ -33,13 +22,19 @@ has 'version' => (
     'required' => 1,
 );
 
-has 'versioning' => (
-    'is'        => 'ro',
-    'isa'       => 'Str',
-    'lazy'      => 1,
-    'builder'   => '_build_versioning',
+has [qw<build_opts bundle_opts>] => (
+    'is'      => 'ro',
+    'isa'     => 'HashRef',
+    'default' => sub { +{} },
 );
 
+has 'prereqs' => (
+    'is'      => 'ro',
+    'isa'     => 'HashRef',
+    'default' => sub { return +{} },
+);
+
+# FIXME: GH #73 will make this more reasonable
 has 'configure_prereqs' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
@@ -61,57 +56,49 @@ has 'runtime_prereqs' => (
     'builder' => '_build_runtime_prereqs',
 );
 
-has 'prereqs' => (
-    'is'      => 'ro',
-    'isa'     => 'HashRef',
-    'default' => sub { return +{} },
-);
-
-sub _build_versioning {
-    my $self     = shift;
-    my $category = $self->category;
-
-    exists VERSIONING_CLASSES()->{$category}
-        and return VERSIONING_CLASSES()->{$category};
-
-    return VERSIONING_CLASSES()->{''};
-}
-
 sub _build_configure_prereqs {
     my $self    = shift;
-    return $self->_category_prereqs('configure');
+    return $self->phase_prereqs('configure');
 }
 
 sub _build_test_prereqs {
     my $self    = shift;
-    return $self->_category_prereqs('test');
+    return $self->phase_prereqs('test');
 }
 
 sub _build_runtime_prereqs {
     my $self    = shift;
-    return $self->_category_prereqs('runtime');
+    return $self->phase_prereqs('runtime');
 }
 
-sub _category_prereqs {
-    my ( $self, $category ) = @_;
+sub phase_prereqs {
+    my ( $self, $phase ) = @_;
     my $prereqs = $self->prereqs;
-
-    return [
-        map +( $prereqs->{$_}{$category} ),
-            keys %{$prereqs},
-    ];
+    return +{
+        map { $_ => $prereqs->{$_}{$phase} }
+            keys %{$prereqs}
+    };
 }
 
-sub full_name {
+sub cat_name {
     my $self = shift;
     return sprintf '%s/%s', $self->category, $self->name;
 }
 
-sub versioning_requirements {
-    my $self       = shift;
-    my $versioning = $self->versioning;
+sub full_name {
+    my $self = shift;
+    return sprintf '%s/%s=%s', $self->category, $self->name, $self->version;
+}
 
-    return use_module($versioning)->new();
+sub config {
+    my $self = shift;
+
+    return +{
+        'Package' => {
+            map +( $_ => $self->$_ ), qw<category name version>
+        },
+        map +( $_ => $self->$_ ), qw<prereqs build_opts bundle_opts>
+    };
 }
 
 __PACKAGE__->meta->make_immutable;

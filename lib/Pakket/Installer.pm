@@ -95,13 +95,21 @@ sub install {
     } else {
         my @clean_packages;
         foreach my $package_str (@packages) {
-            my ( $pkg_cat, $pkg_name, $pkg_ver ) =
-                split /\//xms, $package_str;
+            my ( $pkg_cat, $pkg_name, $pkg_version ) =
+                $package_str =~ PAKKET_PACKAGE_SPEC();
+
+            if ( !defined $pkg_version ) {
+                $log->critical(
+                    'Currently you must provide a version to install'
+                );
+
+                exit 1;
+            }
 
             push @clean_packages, Pakket::Package->new(
                 'category' => $pkg_cat,
                 'name'     => $pkg_name,
-                'version'  => $pkg_ver,
+                'version'  => $pkg_version,
             );
         }
 
@@ -187,29 +195,46 @@ sub install {
 sub install_package {
     my ( $self, $package, $dir, $installed ) = @_;
 
-    my $pkg_cat  = $package->category;
-    my $pkg_name = $package->name;
-    my $pkg_ver  = $package->version;
+    my $pkg_cat       = $package->category;
+    my $pkg_name      = $package->name;
+    my $pkg_version   = $package->version;
+    my $pkg_cat_name  = $package->cat_name;
+    my $pkg_full_name = $package->full_name;
 
-    $log->debug("About to install $pkg_name (into $dir)");
+    $log->debugf( "About to install %s (into $dir)", $pkg_full_name );
 
-    if ( $installed->{$pkg_name}++ ) {
-        $log->debug("$pkg_name already installed");
+    if ( $installed->{$pkg_cat}{$pkg_name} ) {
+        my $version = $installed->{$pkg_cat}{$pkg_name};
+
+        if ( $version ne $pkg_version ) {
+            $log->critical(
+                "$pkg_cat_name=$version already installed. "
+              . "Cannot install new version: $pkg_version"
+            );
+
+            exit 1;
+        }
+
+        $log->debug("$pkg_full_name already installed.");
+
         return;
+    } else {
+        $installed->{$pkg_cat}{$pkg_name} = $pkg_version;
     }
 
-    my $req   = $package->versioning_requirements;
+sub parcel_file {
+    my ( $self, $category, $name, $version ) = @_;
+
+    return $self->parcel_dir->child(
+        $category,
+        $name,
+        "$name-$version.pkt",
+    );
+}
+
     my $index = $self->index;
 
-    my $version = $req->pick_maximum_satisfying_version(
-        [ keys %{ $index->{$pkg_cat}{$pkg_name}{'versions'} } ],
-    );
-
-    my $parcel_file = $self->parcel_dir->child(
-        $pkg_cat,
-        $pkg_name,
-        "$pkg_name-$version.pkt",
-    );
+    my $parcel_file = $self->parcel_file( $pkg_cat, $pkg_name, $pkg_version );
 
     if ( !$parcel_file->exists ) {
         $log->critical(
