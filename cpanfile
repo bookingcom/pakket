@@ -12,6 +12,7 @@ requires 'JSON::MaybeXS';
 requires 'Log::Any', '>= 0.05';
 requires 'Log::Any::Adapter::Dispatch', '>= 0.06';
 requires 'Log::Dispatch';
+requires 'Log::Dispatch::Screen::Color';
 requires 'MetaCPAN::Client';
 requires 'Module::CPANfile';
 requires 'Module::Runtime';

@@ -541,6 +541,22 @@ DISTRIBUTIONS
     requirements:
       ExtUtils::MakeMaker 0
       Test::More 0
+  IO-stringy-2.111
+    pathname: D/DS/DSKOLL/IO-stringy-2.111.tar.gz
+    provides:
+      IO::AtomicFile 2.111
+      IO::Clever 1.01
+      IO::InnerFile 2.111
+      IO::Lines 2.111
+      IO::Scalar 2.111
+      IO::ScalarArray 2.111
+      IO::Stringy 2.111
+      IO::Wrap 2.111
+      IO::WrapTie 2.111
+      IO::WrapTie::Master 2.111
+      IO::WrapTie::Slave 2.111
+    requirements:
+      ExtUtils::MakeMaker 0
   IPC-Run-0.94
     pathname: T/TO/TODDR/IPC-Run-0.94.tar.gz
     provides:
@@ -660,6 +676,18 @@ DISTRIBUTIONS
       perl 5.006
       strict 0
       warnings 0
+  Log-Dispatch-Screen-Color-0.04
+    pathname: Y/YA/YAPPO/Log-Dispatch-Screen-Color-0.04.tar.gz
+    provides:
+      Log::Dispatch::Screen::Color 0.04
+    requirements:
+      ExtUtils::MakeMaker 6.42
+      Filter::Util::Call 0
+      IO::Scalar 0
+      Log::Dispatch 0
+      Params::Validate 0
+      Term::ANSIColor 0
+      Test::More 0
   MIME-Types-2.13
     pathname: M/MA/MARKOV/MIME-Types-2.13.tar.gz
     provides:
