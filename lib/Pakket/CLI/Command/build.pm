@@ -31,6 +31,7 @@ sub opt_spec {
         [ 'index-key=s',    'build only this key the index' ],
         [ 'input-file=s',   'build stuff from this file' ],
         [ 'input-json=s',   'build stuff from this json file' ],
+	[ 'skip=s',         'skip this index entry' ],
         [ 'build-dir=s',    'use an existing build directory' ],
         [ 'keep-build-dir', 'do not delete the build directory' ],
         [
@@ -69,7 +70,7 @@ sub validate_args {
 
         push @specs, $path->lines_utf8( { chomp => 1 } );
     } elsif ( $opt->{'from_index'} ) {
-        my $index = $self->read_index( $opt->{'index_file'}, $opt->{'index_key'} );
+        my $index = $self->read_index( @{$opt}{qw< index_file index_key skip >} );
 
         push @specs, $self->all_packages_in_index( $index );
 
@@ -79,7 +80,7 @@ sub validate_args {
             or $self->usage_error("Bad '--input-json' file: $path");
 
         push @specs, $self->all_packages_in_index(
-	    $self->read_index($path, $opt->{'index_key'})
+	    $self->read_index($path, @{$opt}{qw< index_key skip >})
 	);
     } elsif ( @{$args} ) {
         @specs = @{$args};
@@ -93,7 +94,7 @@ sub validate_args {
 
         # Latest version is default
         if ( !defined $version ) {
-            my $index = $self->read_index( $index_file, $opt->{'index_key'} );
+            my $index = $self->read_index( $index_file, @{$opt}{qw< index_key skip >} );
             $version = $index->{$cat}{$name}{'latest'};
         }
 
@@ -150,8 +151,13 @@ sub execute {
 }
 
 sub read_index {
-    my ( $self, $index_file, $index_key ) = @_;
+    my ( $self, $index_file, $index_key, $skip ) = @_;
     my $index = decode_json( path($index_file)->slurp_utf8 );
+    for ( split ',' => $skip ) {
+	my ( $category, $key ) = split '/';
+	$category && $key or next;
+	delete $index->{$category}{$key};
+    }
     $index_key and return +{ $index_key => $index->{$index_key} };
     return $index;
 }
