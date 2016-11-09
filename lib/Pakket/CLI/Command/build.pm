@@ -28,6 +28,7 @@ sub opt_spec {
     return (
         [ 'index-file=s', 'path to pkg_index.json', { 'required' => 1 } ],
         [ 'from-index',     'build everything from the index' ],
+        [ 'index-key=s',    'build only this key the index' ],
         [ 'input-file=s',   'build stuff from this file' ],
         [ 'input-json=s',   'build stuff from this json file' ],
         [ 'build-dir=s',    'use an existing build directory' ],
@@ -68,18 +69,18 @@ sub validate_args {
 
         push @specs, $path->lines_utf8( { chomp => 1 } );
     } elsif ( $opt->{'from_index'} ) {
-        my $index = $self->read_index( $opt->{'index_file'} );
+        my $index = $self->read_index( $opt->{'index_file'}, $opt->{'index_key'} );
 
-        push @specs, $self->all_packages_in_index(
-            $self->read_index( $opt->{'index_file'} )
-        );
+        push @specs, $self->all_packages_in_index( $index );
 
     } elsif ( defined ( my $json_file = $opt->{'input_json'} ) ) {
         my $path = path($json_file);
         $path->exists && $path->is_file
             or $self->usage_error("Bad '--input-json' file: $path");
 
-        push @specs, $self->all_packages_in_index( $self->read_index($path) );
+        push @specs, $self->all_packages_in_index(
+	    $self->read_index($path), $opt->{'index_key'}
+	);
     } elsif ( @{$args} ) {
         @specs = @{$args};
     } else {
@@ -92,7 +93,7 @@ sub validate_args {
 
         # Latest version is default
         if ( !defined $version ) {
-            my $index = $self->read_index( $index_file );
+            my $index = $self->read_index( $index_file, $opt->{'index_key'} );
             $version = $index->{$cat}{$name}{'latest'};
         }
 
@@ -149,8 +150,10 @@ sub execute {
 }
 
 sub read_index {
-    my ( $self, $index_file ) = @_;
-    return decode_json( path($index_file)->slurp_utf8 );
+    my ( $self, $index_file, $index_key ) = @_;
+    my $index = decode_json( path($index_file)->slurp_utf8 );
+    $index_key and return +{ $index_key => $index->{$index_key} };
+    return $index;
 }
 
 sub all_packages_in_index {
