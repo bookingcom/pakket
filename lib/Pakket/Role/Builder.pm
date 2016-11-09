@@ -3,21 +3,40 @@ package Pakket::Role::Builder;
 # ABSTRACT: A role for all builders
 
 use Moose::Role;
+use Path::Tiny qw< path >;
 
 with qw< Pakket::Role::RunCommand >;
 
 requires qw< build_package >;
 
 sub generate_env_vars {
-    my ( $self, $prefix ) = @_;
+    my ( $self, $build_dir, $prefix ) = @_;
     my $lib_path = $self->generate_lib_path($prefix);
     my $bin_path = $self->generate_bin_path($prefix);
+
+    my @perl5lib = (
+        '.',
+        $build_dir,
+        path( $prefix, qw<lib perl5> )->absolute->stringify,
+    );
+
+    my %perl_opts = (
+        'PERL5LIB'                  => join( ':', @perl5lib ),
+        'PERL_LOCAL_LIB_ROOT'       => '',
+        'PERL5_CPAN_IS_RUNNING'     => 1,
+        'PERL5_CPANM_IS_RUNNING'    => 1,
+        'PERL5_CPANPLUS_IS_RUNNING' => 1,
+        'PERL_MM_USE_DEFAULT'       => 1,
+        'PERL_MB_OPT'               => '',
+        'PERL_MM_OPT'               => '',
+    );
 
     return (
         'CPATH'           => $prefix->child('include')->stringify,
         'LD_LIBRARY_PATH' => $lib_path,
         'LIBRARY_PATH'    => $lib_path,
         'PATH'            => $bin_path,
+        %perl_opts,
     );
 }
 

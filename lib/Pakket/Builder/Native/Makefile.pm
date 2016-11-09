@@ -16,7 +16,7 @@ sub build_package {
 
     my $opts = {
         'env' => {
-            $self->generate_env_vars($prefix),
+            $self->generate_env_vars($build_dir, $prefix),
         },
     };
 
@@ -72,4 +72,3 @@ __PACKAGE__->meta->make_immutable;
 __END__
 
 =pod
-

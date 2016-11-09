@@ -5,7 +5,6 @@ use Moose;
 use MooseX::StrictConstructor;
 use English    qw< -no_match_vars >;
 use Log::Any   qw< $log >;
-use Path::Tiny qw< path >;
 use Pakket::Log;
 
 with qw<Pakket::Role::Builder>;
@@ -15,23 +14,9 @@ sub build_package {
 
     $log->info("Building Perl module: $package");
 
-    my @perl5lib = (
-        $build_dir,
-        path( $prefix, qw<lib perl5> )->absolute->stringify,
-    );
-
     my $opts = {
         'env' => {
-            'PERL5LIB'                  => join( ':', @perl5lib ),
-            'PERL_LOCAL_LIB_ROOT'       => '',
-            'PERL5_CPAN_IS_RUNNING'     => 1,
-            'PERL5_CPANM_IS_RUNNING'    => 1,
-            'PERL5_CPANPLUS_IS_RUNNING' => 1,
-            'PERL_MM_USE_DEFAULT'       => 1,
-            'PERL_MB_OPT'               => '',
-            'PERL_MM_OPT'               => '',
-
-            $self->generate_env_vars($prefix),
+            $self->generate_env_vars($build_dir, $prefix),
         },
     };
 
