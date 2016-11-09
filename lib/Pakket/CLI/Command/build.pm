@@ -3,13 +3,15 @@ package Pakket::CLI::Command::build;
 
 use strict;
 use warnings;
+
+use Path::Tiny      qw< path >;
+use Log::Any::Adapter;
+
+use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
 use Pakket::CLI '-command';
 use Pakket::Builder;
 use Pakket::Log;
-use Path::Tiny      qw< path >;
-use Log::Any::Adapter;
-use JSON::MaybeXS qw< decode_json >;
-use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
+use Pakket::Repo qw< all_packages_in_index_file >;
 
 # TODO:
 # - move all hardcoded values (confs) to constants
@@ -20,6 +22,9 @@ use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
 #   easily check the success/fail and protect against possible injects
 
 # FIXME: pass on the "output-dir" to the bundler
+
+# FIXME: turn this module into a proper class, don't use global variables
+my $repo;
 
 sub abstract    { 'Build a package' }
 sub description { 'Build a package' }
@@ -52,11 +57,18 @@ sub opt_spec {
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
+    my $config_dir = path( $opt->{'config_dir'} );
+    $config_dir->exists && $config_dir->is_dir
+        or $self->usage_error("Incorrect config directory specified: '$config_dir'");
+    $self->{'builder'}{'config_dir'} = $config_dir;
+
     my $index_file = path( $opt->{'index_file'} );
     $index_file->exists && $index_file->is_file
         or $self->usage_error("Incorrect index file specified: '$index_file'");
-
     $self->{'builder'}{'index_file'} = $index_file;
+
+    $repo = Pakket::Repo->new('config_dir' => $config_dir,
+                              'index_file' => $index_file);
 
     if ( defined ( my $output_dir = $opt->{'output_dir'} ) ) {
         $self->{'bundler'}{'bundle_dir'} = path($output_dir)->absolute;
@@ -70,18 +82,19 @@ sub validate_args {
 
         push @specs, $path->lines_utf8( { chomp => 1 } );
     } elsif ( $opt->{'from_index'} ) {
-        my $index = $self->read_index( @{$opt}{qw< index_file category skip >} );
-
-        push @specs, $self->all_packages_in_index( $index );
-
+        push @specs, _filter_packages(
+            @{$opt}{qw< category skip >},
+            @{ $repo->packages_in_index },
+        );
     } elsif ( defined ( my $json_file = $opt->{'input_json'} ) ) {
         my $path = path($json_file);
         $path->exists && $path->is_file
             or $self->usage_error("Bad '--input-json' file: $path");
 
-        push @specs, $self->all_packages_in_index(
-	    $self->read_index($path, @{$opt}{qw< category skip >})
-	);
+        push @specs, _filter_packages(
+            @{$opt}{qw< category skip >},
+            @{ $repo->packages_in_index },
+        );
     } elsif ( @{$args} ) {
         @specs = @{$args};
     } else {
@@ -93,9 +106,8 @@ sub validate_args {
             or $self->usage_error("Provide category/name, not '$spec_str'");
 
         # Latest version is default
-        if ( !defined $version ) {
-            my $index = $self->read_index( $index_file, @{$opt}{qw< category skip >} );
-            $version = $index->{$cat}{$name}{'latest'};
+        if ( !defined $version && defined $repo ) {
+            $version = $repo->latest_version_for($cat, $name);
         }
 
         push @{ $self->{'to_build'} }, +{
@@ -148,33 +160,33 @@ sub execute {
     }
 }
 
-sub read_index {
-    my ( $self, $index_file, $opt_category, $skip ) = @_;
-    my $index = decode_json( path($index_file)->slurp_utf8 );
-    if ( $skip ) {
-	for ( split m{,}xms => $skip ) {
-	    my ( $category, $key ) = split m{/}xms;
-	    $category && $key or next;
-	    delete $index->{$category}{$key};
-	}
-    }
-    $opt_category and return +{ $opt_category => $index->{$opt_category} };
-    return $index;
-}
+sub _filter_packages {
+    my ( $cat, $skip, @packages ) = @_;
 
-sub all_packages_in_index {
-    my ( $self, $index ) = @_;
+    $cat || $skip
+        or return @packages;
 
-    my @packages;
-    for my $cat ( keys %{$index} ) {
-        for my $package ( keys %{ $index->{$cat} } ) {
-            for my $ver ( keys %{ $index->{$cat}{$package}{'versions'} } ) {
-                push @packages, "$cat/$package=$ver";
-            }
+    my @filtered_pkgs;
+    my @skips = split /,/xms, $skip;
+
+    foreach my $pkg_str ( @{ $repo->packages_in_index } ) {
+        # if category, skip not in category
+        if ($cat) {
+            $pkg_str =~ m{^$cat/}xms
+                or next;
         }
+
+        # if skip pairs, skip them
+        foreach my $skip_pair (@skips) {
+            $pkg_str =~ /^\Q$skip_pair\E/xms
+                and next;
+        }
+
+        # add whatever is left
+        push @filtered_pkgs, $pkg_str;
     }
 
-    return @packages;
+    return @filtered_pkgs;
 }
 
 1;
