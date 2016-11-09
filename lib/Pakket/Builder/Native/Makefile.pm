@@ -21,10 +21,12 @@ sub build_package {
     };
 
     my $configurator;
-    if ( -x $build_dir->child('configure') ) {
+    if ( -f $build_dir->child('configure') ) {
         $configurator = './configure';
-    } elsif ( -x $build_dir->child('config') ) {
+    } elsif ( -f $build_dir->child('config') ) {
         $configurator = './config';
+    } elsif ( -f $build_dir->child('Configure') ) {
+        $configurator = './Configure';
     } else {
         $log->critical( "Don't know how to configure $package"
                 . " (Cannot find executale 'configure' or 'config')" );
