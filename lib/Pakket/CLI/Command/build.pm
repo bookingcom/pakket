@@ -79,7 +79,7 @@ sub validate_args {
             or $self->usage_error("Bad '--input-json' file: $path");
 
         push @specs, $self->all_packages_in_index(
-	    $self->read_index($path), $opt->{'index_key'}
+	    $self->read_index($path, $opt->{'index_key'})
 	);
     } elsif ( @{$args} ) {
         @specs = @{$args};
