@@ -6,17 +6,18 @@ use MooseX::StrictConstructor;
 use English    qw< -no_match_vars >;
 use Log::Any   qw< $log >;
 use Pakket::Log;
+use Pakket::Utils qw< generate_env_vars >;
 
 with qw<Pakket::Role::Builder>;
 
 sub build_package {
-    my ( $self, $package, $build_dir, $prefix ) = @_;
+    my ( $self, $package, $build_dir, $prefix, $flags ) = @_;
 
     $log->info("Building Perl module: $package");
 
     my $opts = {
         'env' => {
-            $self->generate_env_vars($build_dir, $prefix),
+            generate_env_vars($build_dir, $prefix),
         },
     };
 
@@ -35,7 +36,7 @@ sub build_package {
             # configure
             [
                 $build_dir,
-                [ 'perl', 'Build.PL', '--install_base', $install_base ],
+                [ 'perl', 'Build.PL', '--install_base', $install_base, @{$flags} ],
                 $opts,
             ],
 
@@ -51,7 +52,7 @@ sub build_package {
             # configure
             [
                 $build_dir,
-                [ 'perl', 'Makefile.PL', "INSTALL_BASE=$install_base" ],
+                [ 'perl', 'Makefile.PL', "INSTALL_BASE=$install_base", @{$flags} ],
                 $opts,
             ],
 

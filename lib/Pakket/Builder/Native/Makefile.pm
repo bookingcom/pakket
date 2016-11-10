@@ -6,6 +6,7 @@ use MooseX::StrictConstructor;
 use Log::Any   qw< $log >;
 use Path::Tiny qw< path >;
 use Pakket::Log;
+use Pakket::Utils qw< generate_env_vars >;
 
 with qw<Pakket::Role::Builder>;
 
@@ -16,7 +17,7 @@ sub build_package {
 
     my $opts = {
         'env' => {
-            $self->generate_env_vars($build_dir, $prefix),
+            generate_env_vars($build_dir, $prefix),
         },
     };
 

@@ -25,6 +25,7 @@ use Pakket::Builder::NodeJS;
 use Pakket::Builder::Perl;
 use Pakket::Builder::Native;
 use Pakket::Constants qw< PARCEL_FILES_DIR >;
+use Pakket::Utils qw< generate_env_vars >;
 
 use constant {
     'ALL_PACKAGES_KEY'   => '',
@@ -327,7 +328,10 @@ sub run_build {
     # metadata chunk which *might* include configure flags
     my $configure_flags = $self->get_configure_flags(
         $package->build_opts->{'configure_flags'},
-        { main_build_dir => $main_build_dir },
+        {
+	    %ENV,
+	    generate_env_vars($top_build_dir, $main_build_dir)
+	},
     );
 
     # FIXME: $package_dst_dir is dictated from the category
@@ -490,15 +494,7 @@ sub get_configure_flags {
 
     $config or return [];
 
-    my @flags;
-    for my $tuple ( @{$config} ) {
-        if ( @{$tuple} > 2 ) {
-            $log->criticalf( 'Odd configuration flag: %s', $tuple );
-            exit 1;
-        }
-
-        push @flags, join '=', @{$tuple};
-    }
+    my @flags = map +( join '=', $_, $config->{$_} ), keys %{$config};
 
     $self->_expand_flags_inplace( \@flags, $expand_env );
 
@@ -583,7 +579,8 @@ sub read_package_config {
 
     my %package_details = (
         %{ $config->{'Package'} },
-        'prereqs' => $config->{'Prereqs'} || {},
+        'prereqs'    => $config->{'Prereqs'}    || {},
+	'build_opts' => $config->{'build_opts'} || {},
     );
 
     return %package_details;
