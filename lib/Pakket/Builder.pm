@@ -294,7 +294,7 @@ sub run_build {
 
             foreach my $prereq_name (@prereqs) {
                 my $version = $package->prereqs->{$category}{$supported_phase}{$prereq_name}{'version'} //
-                    $self->index->{$category}{$supported_phase}{$prereq_name}{'latest'};
+                    $self->index->{$category}{$prereq_name}{'latest'};
 
                 my $req     = Pakket::Requirement->new(
                     'category' => $category,
