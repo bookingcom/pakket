@@ -69,7 +69,7 @@ sub generate_env_vars {
     my $bin_path = generate_bin_path($prefix);
 
     my @perl5lib = (
-        '.',
+        Path::Tiny->cwd->stringify,
         $build_dir,
         path( $prefix, qw<lib perl5> )->absolute->stringify,
     );
