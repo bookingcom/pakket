@@ -26,9 +26,9 @@ sub description { 'Build a package' }
 
 sub opt_spec {
     return (
-        [ 'index-file=s', 'path to pkg_index.json', { 'required' => 1 } ],
+        [ 'index-file=s',   'path to pkg_index.json', { 'required' => 1 } ],
         [ 'from-index',     'build everything from the index' ],
-        [ 'index-key=s',    'build only this key the index' ],
+        [ 'category=s',     'build only this key the index' ],
         [ 'input-file=s',   'build stuff from this file' ],
         [ 'input-json=s',   'build stuff from this json file' ],
 	[ 'skip=s',         'skip this index entry' ],
@@ -70,7 +70,7 @@ sub validate_args {
 
         push @specs, $path->lines_utf8( { chomp => 1 } );
     } elsif ( $opt->{'from_index'} ) {
-        my $index = $self->read_index( @{$opt}{qw< index_file index_key skip >} );
+        my $index = $self->read_index( @{$opt}{qw< index_file category skip >} );
 
         push @specs, $self->all_packages_in_index( $index );
 
@@ -80,7 +80,7 @@ sub validate_args {
             or $self->usage_error("Bad '--input-json' file: $path");
 
         push @specs, $self->all_packages_in_index(
-	    $self->read_index($path, @{$opt}{qw< index_key skip >})
+	    $self->read_index($path, @{$opt}{qw< category skip >})
 	);
     } elsif ( @{$args} ) {
         @specs = @{$args};
@@ -94,7 +94,7 @@ sub validate_args {
 
         # Latest version is default
         if ( !defined $version ) {
-            my $index = $self->read_index( $index_file, @{$opt}{qw< index_key skip >} );
+            my $index = $self->read_index( $index_file, @{$opt}{qw< category skip >} );
             $version = $index->{$cat}{$name}{'latest'};
         }
 
@@ -151,7 +151,7 @@ sub execute {
 }
 
 sub read_index {
-    my ( $self, $index_file, $index_key, $skip ) = @_;
+    my ( $self, $index_file, $opt_category, $skip ) = @_;
     my $index = decode_json( path($index_file)->slurp_utf8 );
     if ( $skip ) {
 	for ( split ',' => $skip ) {
@@ -160,7 +160,7 @@ sub read_index {
 	    delete $index->{$category}{$key};
 	}
     }
-    $index_key and return +{ $index_key => $index->{$index_key} };
+    $opt_category and return +{ $opt_category => $index->{$opt_category} };
     return $index;
 }
 
