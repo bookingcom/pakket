@@ -72,6 +72,7 @@ sub generate_env_vars {
         Path::Tiny->cwd->stringify,
         $build_dir,
         path( $prefix, qw<lib perl5> )->absolute->stringify,
+        '.',
     );
 
     my %perl_opts = (
