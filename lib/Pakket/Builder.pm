@@ -281,6 +281,7 @@ sub run_build {
         $self->scan_dir( $category, $package_name,
             $main_build_dir->absolute, 0 );
 
+        $log->noticef( 'Installed %s=%s', $full_name, $prereq->version );
         return;
     }
 
@@ -361,7 +362,7 @@ sub run_build {
     );
 
     $log->info("Bundling $full_package_name");
-    return $self->bundler->bundle(
+    $self->bundler->bundle(
         $main_build_dir->absolute,
         {
             'category'    => $category,
@@ -372,6 +373,10 @@ sub run_build {
         },
         $package_files,
     );
+
+    $log->noticef( 'Finished on %s=%s', $full_name, $prereq->version );
+
+    return;
 }
 
 sub versions_in_index {
