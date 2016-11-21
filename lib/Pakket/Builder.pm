@@ -329,10 +329,7 @@ sub run_build {
     # metadata chunk which *might* include configure flags
     my $configure_flags = $self->get_configure_flags(
         $package->build_opts->{'configure_flags'},
-        {
-	    %ENV,
-	    generate_env_vars($top_build_dir, $main_build_dir)
-	},
+        { %ENV, generate_env_vars( $top_build_dir, $main_build_dir ) },
     );
 
     # FIXME: $package_dst_dir is dictated from the category
@@ -585,7 +582,7 @@ sub read_package_config {
     my %package_details = (
         %{ $config->{'Package'} },
         'prereqs'    => $config->{'Prereqs'}    || {},
-	'build_opts' => $config->{'build_opts'} || {},
+        'build_opts' => $config->{'build_opts'} || {},
     );
 
     return %package_details;
