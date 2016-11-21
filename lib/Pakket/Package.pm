@@ -97,7 +97,10 @@ sub config {
         'Package' => {
             map +( $_ => $self->$_ ), qw<category name version>
         },
-        map +( $_ => $self->$_ ), qw<prereqs build_opts bundle_opts>
+
+        'Prereqs' => $self->prereqs,
+
+        map +( $_ => $self->$_ ), qw<build_opts bundle_opts>
     };
 }
 
