@@ -37,7 +37,7 @@ Getopt::Long::GetOptions(
     'perl=s'    => \( my $perl_version = DEFAULT_PERL_VERSION() ),
     'app-dir=s' => \$app_dir,
     'files=s@'  => \my @additional_files,
-    'help=s'    => \my $help,
+    'help'      => \my $help,
 );
 
 $help and print_help();
