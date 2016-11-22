@@ -15,6 +15,7 @@ use Pakket::Utils         qw< is_writeable >;
 use Pakket::Constants qw<
     PARCEL_METADATA_FILE
     PARCEL_FILES_DIR
+    PAKKET_PACKAGE_SPEC
 >;
 
 with 'Pakket::Role::RunCommand';
@@ -83,7 +84,7 @@ sub fetch_package;
 sub install {
     my ( $self, @packages ) = @_;
 
-    if ( $self->has_input_file ) {
+    if ( $self->_has_input_file ) {
         my $content = decode_json $self->input_file->slurp_utf8;
         foreach my $category ( keys %{$content} ) {
             push @packages, Pakket::Package->new(
@@ -159,10 +160,17 @@ sub install {
     # Now we need to set the symlink
     $log->debug('Setting symlink to new work directory');
 
-    if ( !  $active_link->move( $work_dir->basename ) ) {
-        $log->error('Could not activate new installation (symlink failed)');
-        exit 1;
-    }
+
+    if ( ! $active_link->exists ) {
+        if ( ! symlink $work_dir->basename, $active_link ) {
+            $log->error('Could not activate new installation (symlink create failed)');
+            exit 1;
+        }
+    } else {
+        if ( ! $active_link->move( $work_dir->basename ) ) {
+            $log->error('Could not activate new installation (symlink rename failed)');
+            exit 1;
+        }
 
     $log->info("Finished installing all packages into $pakket_dir");
 
@@ -221,16 +229,6 @@ sub install_package {
     } else {
         $installed->{$pkg_cat}{$pkg_name} = $pkg_version;
     }
-
-sub parcel_file {
-    my ( $self, $category, $name, $version ) = @_;
-
-    return $self->parcel_dir->child(
-        $category,
-        $name,
-        "$name-$version.pkt",
-    );
-}
 
     my $index = $self->index;
 
@@ -311,6 +309,16 @@ sub parcel_file {
     $log->info("Delivered parcel $pkg_cat/$pkg_name ($actual_version)");
 
     return;
+}
+
+sub parcel_file {
+    my ( $self, $category, $name, $version ) = @_;
+
+    return $self->parcel_dir->child(
+        $category,
+        $name,
+        "$name-$version.pkt",
+    );
 }
 
 __PACKAGE__->meta->make_immutable;

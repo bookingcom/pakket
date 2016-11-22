@@ -39,14 +39,18 @@ sub validate_args {
     $self->{'installer'}{'pakket_dir'} = $opt->{'to'};
     $self->{'installer'}{'parcel_dir'} = $opt->{'from'};
     $self->{'installer'}{'index_file'} = $opt->{'index_file'};
-    $self->{'installer'}{'input_file'} = $opt->{'input_file'};
 
-    @{$args} == 0
-        and $self->usage_error('Must provide parcels to install');
+    if ( defined $opt->{'input_file'} ) {
+        $self->{'installer'}{'input_file'} = $opt->{'input_file'};
+        $self->{'parcels'} = [];
+    } else {
+        @{$args} == 0
+            and $self->usage_error('Must provide parcels to install');
 
-    my @parcels = @{$args};
+        my @parcels = @{$args};
 
-    $self->{'parcels'} = \@parcels;
+        $self->{'parcels'} = \@parcels;
+    }
 }
 
 sub execute {
