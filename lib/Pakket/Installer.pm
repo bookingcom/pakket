@@ -171,6 +171,7 @@ sub install {
             $log->error('Could not activate new installation (symlink rename failed)');
             exit 1;
         }
+    }
 
     $log->info("Finished installing all packages into $pakket_dir");
 
