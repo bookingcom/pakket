@@ -130,7 +130,7 @@ sub install {
     my $work_dir = $pakket_dir->child( time() );
 
     if ( $work_dir->exists ) {
-        $log->error(
+        $log->critical(
             "Internal installation directory exists ($work_dir), exiting",
         );
 
