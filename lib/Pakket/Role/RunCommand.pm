@@ -8,7 +8,7 @@ use Log::Any   qw< $log >;
 
 sub run_command {
     my ( $self, $dir, $sys_cmds, $extra_opts ) = @_;
-    $log->info( join ' ', @{$sys_cmds} );
+    $log->debug( join ' ', @{$sys_cmds} );
     foreach my $opt ( sort keys %{ $extra_opts->{'env'} || {} } ) {
         $log->trace( 'export ' . join '=', $opt, $extra_opts->{'env'}{$opt} );
     }
