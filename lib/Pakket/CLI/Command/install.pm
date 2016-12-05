@@ -33,8 +33,8 @@ sub opt_spec {
 sub validate_args {
     my ( $self, $opt, $args ) = @_;
 
-    my $logger = Pakket::Log->cli_logger(2); # verbosity
-    Log::Any::Adapter->set( 'Dispatch', dispatcher => $logger );
+    Log::Any::Adapter->set( 'Dispatch',
+        'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
 
     $self->{'installer'}{'pakket_dir'} = $opt->{'to'};
     $self->{'installer'}{'parcel_dir'} = $opt->{'from'};

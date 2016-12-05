@@ -113,7 +113,9 @@ sub validate_args {
     }
 
     $self->{'builder'}{'keep_build_dir'} = $opt->{'keep_build_dir'};
-    $self->{'builder'}{'verbose'}        = $opt->{'verbose'};
+
+    Log::Any::Adapter->set( 'Dispatch',
+        'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
 
     foreach my $opt_name ( qw<config_dir source_dir> ) {
         $opt->{$opt_name}
@@ -140,10 +142,6 @@ sub execute {
             ), qw< bundle_dir > ),
         },
     );
-
-    my $verbose = $self->{'builder'}{'verbose'};
-    my $logger  = Pakket::Log->build_logger($verbose);
-    Log::Any::Adapter->set( 'Dispatch', dispatcher => $logger );
 
     foreach my $prereq_hashref ( @{ $self->{'to_build'} } ) {
         $builder->build( %{$prereq_hashref} );
