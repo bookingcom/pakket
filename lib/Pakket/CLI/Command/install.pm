@@ -26,7 +26,7 @@ sub opt_spec {
         ],
         [ 'index-file=s', 'Index file for the sources', { 'required' => 1 } ],
         [ 'input-file=s', 'Index-style file to install' ],
-        [ 'verbose|v+',   'verbose output (can be provided multiple times)' ],
+        [ 'verbose|v+',   'verbose output (can be provided multiple times)', { 'default' => 1 } ],
     );
 }
 
