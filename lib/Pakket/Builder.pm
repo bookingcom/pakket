@@ -290,22 +290,8 @@ sub run_build {
 
     # recursively build prereqs
     foreach my $category ( keys %{ $self->builders } ) {
-        foreach my $supported_phase (@supported_phases) {
-            my @prereqs = keys %{ $package->prereqs->{$category}{$supported_phase} };
-
-            foreach my $prereq_name (@prereqs) {
-                my $version = $package->prereqs->{$category}{$supported_phase}{$prereq_name}{'version'} //
-                    $self->index->{$category}{$prereq_name}{'latest'};
-
-                my $req     = Pakket::Requirement->new(
-                    'category' => $category,
-                    'name'     => $prereq_name,
-                    'version'  => $version,
-                );
-
-                $self->run_build($req);
-            }
-        }
+        $self->_recursive_build_phase( $package, $category, 'configure' );
+        $self->_recursive_build_phase( $package, $category, 'runtime' );
     }
 
     my $package_src_dir = $self->package_location($package);
@@ -374,6 +360,24 @@ sub run_build {
     $log->noticef( 'Finished on %s=%s', $full_name, $prereq->version );
 
     return;
+}
+
+sub _recursive_build_phase {
+    my ( $self, $package, $category, $phase ) = @_;
+    my @prereqs = keys %{ $package->prereqs->{$category}{$phase} };
+
+    foreach my $prereq_name (@prereqs) {
+        my $version = $package->prereqs->{$category}{$phase}{$prereq_name}{'version'} //
+            $self->index->{$category}{$prereq_name}{'latest'};
+
+        my $req     = Pakket::Requirement->new(
+            'category' => $category,
+            'name'     => $prereq_name,
+            'version'  => $version,
+        );
+
+        $self->run_build($req);
+    }
 }
 
 sub versions_in_index {
