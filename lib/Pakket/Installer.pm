@@ -172,7 +172,6 @@ sub install {
     # Now we need to set the symlink
     $log->debug('Setting symlink to new work directory');
 
-
     if ( ! $active_link->exists ) {
         if ( ! symlink $work_dir->basename, $active_link ) {
             $log->error('Could not activate new installation (symlink create failed)');
