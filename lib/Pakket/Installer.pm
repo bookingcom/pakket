@@ -173,7 +173,10 @@ sub install {
         }
     }
 
-    $log->info("Finished installing all packages into $pakket_dir");
+    $log->infof(
+        "Finished installing %d packages into $pakket_dir",
+        scalar keys %{$installed},
+    );
 
     # Clean up
     my $keep = $self->keep_copies;
