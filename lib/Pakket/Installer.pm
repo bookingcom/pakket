@@ -29,6 +29,13 @@ with 'Pakket::Role::RunCommand';
 #                  active ->
 #
 
+has 'pakket_libraries_dir' => (
+    'is'      => 'ro',
+    'isa'     => Path,
+    'coerce'  => 1,
+    'builder' => '_build_pakket_libraries_dir',
+);
+
 has 'pakket_dir' => (
     'is'       => 'ro',
     'isa'      => Path,
@@ -74,6 +81,11 @@ has 'input_file' => (
 sub _build_index {
     my $self = shift;
     return decode_json $self->index_file->slurp_utf8;
+}
+
+sub _build_pakket_libraries_dir {
+    my $self = shift;
+    return $self->pakket_dir->child('libraries');
 }
 
 # TODO:
@@ -122,12 +134,12 @@ sub install {
         return;
     }
 
-    my $pakket_dir = $self->pakket_dir;
+    my $pakket_libraries_dir = $self->pakket_libraries_dir;
 
-    $pakket_dir->is_dir
-        or $pakket_dir->mkpath();
+    $pakket_libraries_dir->is_dir
+        or $pakket_libraries_dir->mkpath();
 
-    my $work_dir = $pakket_dir->child( time() );
+    my $work_dir = $pakket_libraries_dir->child( time() );
 
     if ( $work_dir->exists ) {
         $log->critical(
@@ -139,7 +151,7 @@ sub install {
 
     $work_dir->mkpath();
 
-    my $active_link = $pakket_dir->child('active');
+    my $active_link = $pakket_libraries_dir->child('active');
 
     # we copy any previous installation
     if ( $active_link->exists ) {
@@ -148,7 +160,7 @@ sub install {
             exit 1;
         };
 
-        dircopy( $orig_work_dir, $work_dir );
+        dircopy( $pakket_libraries_dir->child($orig_work_dir), $work_dir );
     }
 
     my $installed = {};
@@ -174,7 +186,7 @@ sub install {
     }
 
     $log->infof(
-        "Finished installing %d packages into $pakket_dir",
+        "Finished installing %d packages into $pakket_libraries_dir",
         scalar keys %{$installed},
     );
 
@@ -192,7 +204,7 @@ sub install {
 
     my @dirs = sort { $a->stat->mtime <=> $b->stat->mtime }
                grep +( basename($_) ne 'active' && $_->is_dir ),
-               $pakket_dir->children;
+               $pakket_libraries_dir->children;
 
     my $num_dirs = @dirs;
     foreach my $dir (@dirs) {
