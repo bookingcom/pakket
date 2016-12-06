@@ -36,15 +36,15 @@ sub build_package {
             # configure
             [
                 $build_dir,
-                [ 'perl', 'Build.PL', '--install_base', $install_base, @{$flags} ],
+                [ 'perl', '-f', 'Build.PL', '--install_base', $install_base, @{$flags} ],
                 $opts,
             ],
 
             # build
-            [ $build_dir, ['./Build'], $opts ],
+            [ $build_dir, ['perl', '-f', './Build'], $opts ],
 
             # install
-            [ $build_dir, [ './Build', 'install' ], $opts ],
+            [ $build_dir, [ 'perl', '-f', './Build', 'install' ], $opts ],
         );
     } elsif ( $build_dir->child('Makefile.PL')->exists ) {
         @seq = (
@@ -52,7 +52,7 @@ sub build_package {
             # configure
             [
                 $build_dir,
-                [ 'perl', 'Makefile.PL', "INSTALL_BASE=$install_base", @{$flags} ],
+                [ 'perl', '-f', 'Makefile.PL', "INSTALL_BASE=$install_base", @{$flags} ],
                 $opts,
             ],
 
