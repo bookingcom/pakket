@@ -26,10 +26,12 @@ use Pakket::Builder::Perl;
 use Pakket::Builder::Native;
 use Pakket::Constants qw< PARCEL_FILES_DIR >;
 use Pakket::Utils qw< generate_env_vars >;
+use Pakket::Utils::Perl qw< list_core_modules >;
 
 use constant {
     'ALL_PACKAGES_KEY'   => '',
     'BUILD_DIR_TEMPLATE' => 'BUILD-XXXXXX',
+    'SKIP_PREREQS'       => 1,
 };
 
 with 'Pakket::Role::RunCommand';
@@ -143,6 +145,12 @@ has 'installer' => (
     },
 );
 
+has bootstrapped => (
+    is      => 'ro',
+    isa     => 'HashRef',
+    default => sub { +{} },
+);
+
 sub _build_bundler {
     my $self = shift;
     return Pakket::Bundler->new( $self->bundler_args );
@@ -154,6 +162,7 @@ sub build {
     my $prereq = Pakket::Requirement->new(%args);
 
     $self->_setup_build_dir;
+    $self->bootstrap_build($prereq->category);
     $self->run_build($prereq);
 }
 
@@ -184,13 +193,49 @@ sub _setup_build_dir {
     return;
 }
 
+sub bootstrap_build {
+    my ( $self, $category ) = @_;
+
+    if ( $category eq 'perl' ) {
+        # for now we'll use a static list of distributions.
+        # later we'll extract the dist/ver info for the
+        # full list of core/dual-life modules:
+        # my @core_modules = keys %{ list_core_modules() };
+
+        # this is an array to maintain build order
+        my @dists = (
+            [ 'ExtUtils-Manifest'     => '1.70' ],
+            [ 'Encode'                => '2.86' ],
+            [ 'Text-Abbrev'           => '1.02' ],
+            [ 'Module-Build'          => '0.4220' ],
+            [ 'IO'                    => '1.25' ],
+            [ 'Module-Build-WithXSpp' => '0.14' ],
+        );
+
+        for ( @dists ) {
+            my ( $name, $ver ) = @$_;
+            my $req = Pakket::Requirement->new(
+                'category' => $category,
+                'name'     => $name,
+                'version'  => $ver,
+            );
+            $self->run_build($req, SKIP_PREREQS); # skip_prereqs
+            $self->bootstrapped->{$name}{$ver} = 1;
+        }
+    }
+    # elsif ( $category eq ...
+}
+
 sub run_build {
-    my ( $self, $prereq ) = @_;
+    my ( $self, $prereq, $skip_prereqs ) = @_;
 
     # FIXME: GH #29
     if ( $prereq->category eq 'perl' ) {
         # XXX: perl_mlb is a MetaCPAN bug
         first { $prereq->name eq $_ } qw<perl perl_mlb>
+            and return;
+
+        $self->bootstrapped->{ $prereq->name }{ $prereq->version }
             and return;
     }
 
@@ -289,11 +334,12 @@ sub run_build {
     my @supported_phases = qw< configure runtime >;
 
     # recursively build prereqs
-    foreach my $category ( keys %{ $self->builders } ) {
-        $self->_recursive_build_phase( $package, $category, 'configure' );
-        $self->_recursive_build_phase( $package, $category, 'runtime' );
+    if ( ! $skip_prereqs ) {
+        foreach my $category ( keys %{ $self->builders } ) {
+            $self->_recursive_build_phase( $package, $category, 'configure' );
+            $self->_recursive_build_phase( $package, $category, 'runtime' );
+        }
     }
-
     my $package_src_dir = $self->package_location($package);
 
     $log->info('Copying package files');

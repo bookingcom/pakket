@@ -7,13 +7,13 @@ use version 0.77;
 use Archive::Any;
 use CPAN::Meta::Prereqs;
 use JSON::MaybeXS     qw< decode_json encode_json >;
-use Module::CoreList;
 use Ref::Util         qw< is_arrayref is_hashref >;
 use Path::Tiny        qw< path    >;
 use TOML              qw< to_toml >;
 use Log::Any          qw< $log    >;
 
-use Pakket::Utils     qw< generate_json_conf >;
+use Pakket::Utils       qw< generate_json_conf >;
+use Pakket::Utils::Perl qw< should_skip_module >;
 use Pakket::Scaffolder::Perl::Module;
 use Pakket::Scaffolder::Perl::CPANfile;
 
@@ -143,7 +143,7 @@ sub run {
 sub skip_name {
     my ( $self, $name ) = @_;
 
-    if ( Module::CoreList::is_core($name) and !${Module::CoreList::upstream}{$name} ) {
+    if ( should_skip_module($name) ) {
         $log->debugf( "%s* skipping %s (core module, not dual-life)", $self->spaces, $name );
         return 1;
     }
