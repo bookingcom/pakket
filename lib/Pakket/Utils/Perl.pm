@@ -11,6 +11,7 @@ use Module::CoreList;
 our @EXPORT_OK = qw< list_core_modules should_skip_module >;
 
 sub list_core_modules {
+    ## no critic qw(Variables::ProhibitPackageVars)
     return \%Module::CoreList::upstream;
 }
 
