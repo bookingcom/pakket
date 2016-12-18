@@ -279,30 +279,42 @@ sub get_dist_name {
 
     my $dist_name;
     eval {
-        my $response = $self->ua->get( $self->metacpan_api . "/module/$module_name" );
+        my $mod_url     = $self->metacpan_api . "/module/$module_name";
+        my $release_url = $self->metacpan_api . "/release/$module_name";
+        my $response    = $self->ua->get($mod_url);
+
         $response->{'status'} == 200
-            or $response = $self->ua->get( $self->metacpan_api . "/release/$module_name" );
-        die if $response->{'status'} != 200;
+            or $response = $self->ua->get($release_url);
+
+        $response->{'status'} != 200
+            and Carp::croak("Cannot fetch $mod_url or $release_url");
+
         my $content = decode_json $response->{'content'};
         $dist_name  = $content->{'distribution'};
         1;
+    } or do {
+        my $error = $@ || 'Zombie error';
+        $log->debug($error);
     };
 
     # another check (if not found yet): check if name matches a distribution name
     unless ( $dist_name ) {
         eval {
-            my $name = $module_name =~ s/::/-/gr;
-            my $res = $self->ua->post( $self->metacpan_api . "/release",
-                                       +{ content => $self->get_is_dist_name_query($name) });
-            die unless $res->{'status'} == 200;
+            my $name = $module_name =~ s/::/-/rgsmx;
+            my $res = $self->ua->post( $self->metacpan_api . '/release',
+                +{ 'content' => $self->get_is_dist_name_query($name) } );
+
+            $res->{'status'} == 200 or Carp::croak();
             my $res_body = decode_json $res->{'content'};
-            die unless $res_body->{'hits'}{'total'} > 0;
+            $res_body->{'hits'}{'total'} > 0 or Carp::croak();
             $dist_name = $name;
             1;
+        } or do {
+            my $error = $@ || 'Zombie error';
+            Carp::croak("-> Cannot find module by name: '$module_name'");
         };
     }
 
-    $dist_name or die "-> Cannot find module by name: '$module_name'\n";
     return $dist_name;
 }
 
