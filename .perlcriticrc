@@ -73,7 +73,7 @@ severity = 3
 
 # We might want to adjust this
 [ControlStructures::ProhibitCascadingIfElse]
-max_elsif = 2
+max_elsif = 5
 
 # Might require adjusting
 [ControlStructures::ProhibitDeepNests]
@@ -148,7 +148,7 @@ allow_in_main_unless_in_subroutine = 1
 [InputOutput::RequireBriefOpen]
 
 # When closing scope, an implicit "close()" is called
-# However, the error was not fixed it
+# However, the error was not fixed
 # RT #57512
 [-InputOutput::RequireCheckedClose]
 
@@ -175,9 +175,9 @@ exclude_functions = print close sleep say
 # Added: Readonly, base, File::Slurp, common::sense, Class::Load,
 #        Any::Moose, Error, Getopt::Std, HTML::Template,
 #        IO::Socket::INET6, JSON, JSON::Any, List::MoreUtils, Mouse,
-#        Net::IRC, XML::Simple
+#        Net::IRC, XML::Simple, Sub::Infix
 [Modules::ProhibitEvilModules]
-modules = Class::ISA {Found use of Class::ISA. This module is deprecated by the Perl 5 Porters.} Pod::Plainer {Found use of Pod::Plainer. This module is deprecated by the Perl 5 Porters.} Shell {Found use of Shell. This module is deprecated by the Perl 5 Porters.} Switch {Found use of Switch. This module is deprecated by the Perl 5 Porters.} Readonly {Found use of Readonly. Please use constant.pm or Const::Fast.} base {Found use of base. Please use parent instead.} File::Slurp {Found use of File::Slurp. Please use Path::Tiny instead.} common::sense {Found use of common::sense. Please use strict and warnings instead.} Class::Load {Found use of Class::Load. Please use Module::Runtime instead.} Any::Moose {Found use of Any::Moose. Please use Moo instead.} Error {Found use of Error.pm. Please use Throwable.pm instead.} Getopt::Std {Found use of Getopt::Std. Please use Getopt::Long instead.} HTML::Template {Found use of HTML::Template. Please use Template::Toolkit.} IO::Socket::INET6 {Found use of IO::Socket::INET6. Please use IO::Socket::IP.} JSON {Found use of JSON. Please use JSON::MaybeXS or Cpanel::JSON::XS.} JSON::Any {Found use of JSON::Any. Please use JSON::MaybeXS.} List::MoreUtils {Found use of List::MoreUtils. Please use List::Util or List::UtilsBy.} Mouse {Found use of Mouse. Please use Moo.} Net::IRC {Found use of Net::IRC. Please use POE::Component::IRC, Net::Async::IRC, or Mojo::IRC.} XML::Simple {Found use of XML::Simple. Please use XML::LibXML, XML::TreeBuilder, XML::Twig, or Mojo::DOM.}
+modules = Class::ISA {Found use of Class::ISA. This module is deprecated by the Perl 5 Porters.} Pod::Plainer {Found use of Pod::Plainer. This module is deprecated by the Perl 5 Porters.} Shell {Found use of Shell. This module is deprecated by the Perl 5 Porters.} Switch {Found use of Switch. This module is deprecated by the Perl 5 Porters.} Readonly {Found use of Readonly. Please use constant.pm or Const::Fast.} base {Found use of base. Please use parent instead.} File::Slurp {Found use of File::Slurp. Please use Path::Tiny instead.} common::sense {Found use of common::sense. Please use strict and warnings instead.} Class::Load {Found use of Class::Load. Please use Module::Runtime instead.} Any::Moose {Found use of Any::Moose. Please use Moo instead.} Error {Found use of Error.pm. Please use Throwable.pm instead.} Getopt::Std {Found use of Getopt::Std. Please use Getopt::Long instead.} HTML::Template {Found use of HTML::Template. Please use Template::Toolkit.} IO::Socket::INET6 {Found use of IO::Socket::INET6. Please use IO::Socket::IP.} JSON {Found use of JSON. Please use JSON::MaybeXS or Cpanel::JSON::XS.} JSON::Any {Found use of JSON::Any. Please use JSON::MaybeXS.} List::MoreUtils {Found use of List::MoreUtils. Please use List::Util or List::UtilsBy.} Mouse {Found use of Mouse. Please use Moo.} Net::IRC {Found use of Net::IRC. Please use POE::Component::IRC, Net::Async::IRC, or Mojo::IRC.} XML::Simple {Found use of XML::Simple. Please use XML::LibXML, XML::TreeBuilder, XML::Twig, or Mojo::DOM.} Sub::Infix {Found use of Sub::Infix. Please do not use it.}
 #modules_file =
 
 # Meh...
@@ -379,7 +379,7 @@ add_packages = Carp Test::Builder
 [Variables::ProhibitPunctuationVars]
 # Values that are always included: $1, $2, $3, $4, $5, $6, $7, $8, $9, $], $_, @_, _.
 # These are just too common to exclude
-allow = $@ $! $/
+allow = $@ $! $/ $0 $|
 
 [Variables::ProhibitReusedNames]
 [Variables::ProhibitUnusedVariables]
@@ -440,28 +440,31 @@ equivalent_modules = Moo Moo::Role
 # The opposite of this
 [Moose::RequireMakeImmutable]
 
-# ---------------------------
-# - Other external dists... -
-# ---------------------------
+# ----------------------
+# - Perl::Critic::More -
+# ----------------------
 
 # This is useful for projects that shouldn't die() or croak()
 # But shouldn't the exception possibly call die() or croak()?
 # I don't see wherethat's available in the code...
 #[ErrorHandling::RequireUseOfExceptions]
 
-# Not sure what this will pick up, but let's try...
-[ValuesAndExpressions::RequireNumericVersion]
-[ValuesAndExpressions::ConstantBeforeLt]
-[ValuesAndExpressions::ProhibitArrayAssignAref]
-[ValuesAndExpressions::ProhibitDuplicateHashKeys]
-[Documentation::RequireEndBeforeLastPod]
-[Modules::ProhibitPOSIXimport]
+# ---------------------------------------------
+# - Perl::Critic::Policy::TryTiny::RequireUse -
+# ---------------------------------------------
+
 [TryTiny::RequireUse]
-[CodeLayout::RequireTrailingCommaAtNewline]
-[CodeLayout::RequireFinalSemicolon]
-[ValuesAndExpressions::ProhibitNullStatements]
-[ValuesAndExpressions::ProhibitUnknownBackslash]
-[ValuesAndExpressions::UnexpandedSpecialLiteral]
+
+# ----------------------------------------------------------
+# - Perl::Critic::Policy::TryTiny::RequireBlockTermination -
+# ----------------------------------------------------------
+
+[TryTiny::RequireBlockTermination]
+
+# -------------------------------------------------------------------
+# - Perl::Critic::Policy::ValuesAndExpressions::PreventSQLInjection -
+# -------------------------------------------------------------------
+
 [ValuesAndExpressions::PreventSQLInjection]
 
 #-----------------------------------------------------
@@ -491,10 +494,9 @@ equivalent_modules = Moo Moo::Role
 # - Perl::Critic::Policy::Perlsecret -
 #-------------------------------------
 
-# I wish this had exception list configuration
-# babycart, bangbang, venus (numification), winking fat comma
-# enterprise - all of these are useful.
+# 0.0.9
 [Perlsecret]
+allow_secrets = Bang Bang, Venus, Winking Fat Comma, Enterprise
 
 #--------------------------------------
 # - Perl::Critic::Policy::HTTPCookies -
@@ -511,6 +513,7 @@ severity = 2
 
 # Can't find how to mark DSL keywords
 # (Moo{,se} provides has/with/extends/etc., Dancer{,2} provides more)
+# This is problematic
 [-Subroutines::ProhibitCallsToUndeclaredSubs]
 severity = 3
 
@@ -540,6 +543,8 @@ severity = 3
 [-Freenode::DiscouragedModules]
 
 [Freenode::DollarAB]
+extra_pair_functions = reduce
+
 [Freenode::Each]
 
 # Not sure about this one. "return undef" is also... icky.
@@ -563,8 +568,6 @@ severity = 3
 [Freenode::Wantarray]
 [Freenode::WarningsSwitch]
 
-# If this identified double diamond, that would be great.
-# https://github.com/Grinnz/Perl-Critic-Freenode/issues/24
 [Freenode::WhileDiamondDefaultAssignment]
 
 #--------------------------------
@@ -576,10 +579,43 @@ severity = 3
 # - Perl::Critic::Pulp -
 #-----------------------
 
+[ValuesAndExpressions::UnexpandedSpecialLiteral]
+[ValuesAndExpressions::RequireNumericVersion]
+[ValuesAndExpressions::ProhibitUnknownBackslash]
+[ValuesAndExpressions::ProhibitNullStatements]
+[ValuesAndExpressions::NotWithCompare]
+[ValuesAndExpressions::ProhibitDuplicateHashKeys]
+[ValuesAndExpressions::ProhibitArrayAssignAref]
+[ValuesAndExpressions::ConstantBeforeLt]
+[ValuesAndExpressions::ProhibitEmptyCommas]
+[CodeLayout::ProhibitFatCommaNewline]
+[CodeLayout::RequireTrailingCommaAtNewline]
+[CodeLayout::RequireFinalSemicolon]
+[Documentation::RequireEndBeforeLastPod]
 [Modules::ProhibitModuleShebang]
+[Modules::ProhibitUseQuotedVersion]
+[Modules::ProhibitPOSIXimport]
 
 #-------------------------------------------------------------------
 # - Perl::Critic::Policy::BuiltinFunctions::ProhibitDeleteOnArrays -
 #-------------------------------------------------------------------
 
 [BuiltinFunctions::ProhibitDeleteOnArrays]
+
+# -----------------------------------------------------------
+# - Perl::Critic::Policy::CodeLayout::ProhibitHashBarewords -
+# -----------------------------------------------------------
+
+[CodeLayout::ProhibitHashBarewords]
+
+# ------------------------------------------------------------
+# - Perl::Critic::Policy::BuiltinFunctions::ProhibitReturnOr -
+# ------------------------------------------------------------
+
+[BuiltinFunctions::ProhibitReturnOr]
+
+# ----------------------
+# - Perl::Critic::Tics -
+# ----------------------
+
+[Tics::ProhibitUseBase]
