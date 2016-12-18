@@ -152,8 +152,8 @@ sub read_index {
     my ( $self, $index_file, $opt_category, $skip ) = @_;
     my $index = decode_json( path($index_file)->slurp_utf8 );
     if ( $skip ) {
-	for ( split ',' => $skip ) {
-	    my ( $category, $key ) = split '/';
+	for ( split m{,}xms => $skip ) {
+	    my ( $category, $key ) = split m{/}xms;
 	    $category && $key or next;
 	    delete $index->{$category}{$key};
 	}
