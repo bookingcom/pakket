@@ -357,13 +357,12 @@ sub get_release_info {
         my $res_body = decode_json $res->{'content'};
 
         %all_dist_releases =
-            map {
+            map +(
                 $_->{'fields'}{'version'}[0] => {
                     'prereqs'      => $_->{'_source'}{'metadata'}{'prereqs'},
                     'download_url' => $_->{'_source'}{'download_url'},
-                }
-            }
-            @{ $res_body->{'hits'}{'hits'} };
+                },
+            ), @{ $res_body->{'hits'}{'hits'} };
     }
 
     # get the matching version according to the spec
