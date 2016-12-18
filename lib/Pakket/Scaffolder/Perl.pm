@@ -298,7 +298,7 @@ sub get_dist_name {
     };
 
     # another check (if not found yet): check if name matches a distribution name
-    unless ( $dist_name ) {
+    if ( !$dist_name ) {
         eval {
             my $name = $module_name =~ s/::/-/rgsmx;
             my $res = $self->ua->post( $self->metacpan_api . '/release',
