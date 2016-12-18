@@ -7,6 +7,7 @@ use English    qw< -no_match_vars >;
 use Log::Any   qw< $log >;
 use Pakket::Log;
 use Pakket::Utils qw< generate_env_vars >;
+use Carp ();
 
 with qw<Pakket::Role::Builder>;
 
@@ -63,7 +64,7 @@ sub build_package {
             [ $build_dir, [ 'make', 'install' ], $opts ],
         );
     } else {
-        die "Could not find an installer (Makefile.PL/Build.PL)\n";
+        Carp::croak('Could not find an installer (Makefile.PL/Build.PL)');
     }
 
     my $success = $self->run_command_sequence(@seq);

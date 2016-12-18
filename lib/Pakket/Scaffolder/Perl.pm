@@ -11,6 +11,7 @@ use Ref::Util         qw< is_arrayref is_hashref >;
 use Path::Tiny        qw< path    >;
 use TOML              qw< to_toml >;
 use Log::Any          qw< $log    >;
+use Carp ();
 
 use Pakket::Utils       qw< generate_json_conf >;
 use Pakket::Utils::Perl qw< should_skip_module >;
@@ -76,7 +77,7 @@ sub BUILDARGS {
 
     my $module   = delete $args{'module'};
     my $cpanfile = delete $args{'cpanfile'};
-    die "provide either 'module' or 'cpanfile'\n"
+    Carp::croak("Please provide either 'module' or 'cpanfile'")
         unless $module xor $cpanfile;
 
     if ( $module ) {
@@ -340,7 +341,7 @@ sub get_release_info {
     {
         my $res = $self->ua->post( $self->metacpan_api . "/release",
                                +{ content => $self->get_release_query($dist_name) });
-        die "can't find any release for $dist_name\n" if $res->{'status'} != 200;
+        Carp::croak("Can't find any release for $dist_name") if $res->{'status'} != 200;
         my $res_body = decode_json $res->{'content'};
 
         %all_dist_releases =
@@ -377,7 +378,7 @@ sub get_release_info {
             last;
         }
     }
-    $version or die "Cannot match release for $dist_name\n";
+    $version or Carp::croak("Cannot match release for $dist_name");
 
     $version = $self->known_incorrect_version_fixes->{ $dist_name }
         if exists $self->known_incorrect_version_fixes->{ $dist_name };
