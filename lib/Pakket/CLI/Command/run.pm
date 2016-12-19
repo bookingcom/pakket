@@ -25,6 +25,7 @@ sub validate_args {
         'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
 
     $self->{'runner'}{'active_path'} = $opt->{'from'};
+    $self->{'runner'}{'args'} = $args;
 }
 
 sub execute {
@@ -36,7 +37,7 @@ sub execute {
 
     $active_path or $self->usage_error("no active path defined.");
 
-    Pakket::Runner->run( active_path => $active_path );
+    Pakket::Runner->run( active_path => $active_path, args => $self->{'runner'}{'args'} );
 }
 
 1;
