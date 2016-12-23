@@ -10,6 +10,7 @@ use English    '-no_match_vars';
 use Path::Tiny qw<path tempdir>;
 use Getopt::Long qw<:config no_ignore_case>;
 use App::Seacan;
+use IPC::Open3 qw<open3>;
 
 sub print_help {
     my $error   = shift;
@@ -44,7 +45,13 @@ $help and print_help();
 
 -d $app_dir or print_help('--app-dir must point to a directory');
 
-chomp( my $cores = `nproc` || 1 );
+my $cores = 1;
+if ( $OSNAME =~ /linux/xms ) {
+    local $SIG{'CHLD'} = 'IGNORE';
+    my ( $writer, $reader, $err );
+    open3( $writer, $reader, $err, 'nproc' );
+    chomp( $cores = <$reader> );
+}
 
 if ( $cores > 1 ) {
     $cores -= 1;
