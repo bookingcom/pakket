@@ -14,7 +14,11 @@ sub description { 'Run commands using pakket' }
 
 sub opt_spec {
     return (
-        [ 'from=s', 'defines pakket active directory to use. (mandatory, unless set in PAKKET_ACTIVE_PATH)' ],
+        [
+            'from=s',
+            'defines pakket active directory to use. (mandatory, unless set in PAKKET_ACTIVE_PATH)',
+            { 'required' => 1 },
+        ],
     );
 }
 
@@ -24,20 +28,26 @@ sub validate_args {
     Log::Any::Adapter->set( 'Dispatch',
         'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
 
-    $self->{'runner'}{'active_path'} = $opt->{'from'};
-    $self->{'runner'}{'args'} = $args;
+    my $active_path
+        = exists $ENV{'PAKKET_ACTIVE_PATH'}
+        ? $ENV{'PAKKET_ACTIVE_PATH'}
+        : $self->{'runner'}{'active_path'};
+
+    $active_path
+        or $self->usage_error('No active path provided');
+
+    $self->{'runner'}{'args'}        = $args;
+    $self->{'runner'}{'active_path'} = $active_path;
 }
 
 sub execute {
     my $self = shift;
 
-    my $active_path = exists $ENV{'PAKKET_ACTIVE_PATH'}
-        ? $ENV{'PAKKET_ACTIVE_PATH'}
-        : $self->{'runner'}{'active_path'};
+    my $runner = Pakket::Runner->new(
+        'active_path' => $self->{'runner'}{'active_path'},
+    );
 
-    $active_path or $self->usage_error("no active path defined.");
-
-    Pakket::Runner->run( active_path => $active_path, args => $self->{'runner'}{'args'} );
+    exit $runner->run( @{ $self->{'runner'}{'args'} } );
 }
 
 1;
