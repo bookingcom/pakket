@@ -57,39 +57,61 @@ if ( $cores > 1 ) {
     $cores -= 1;
 }
 
-my @directories    = qw<bin lib>;
-my $dest_dir       = tempdir( 'CLEANUP' => 1 );
-my $source_dir_tmp = tempdir( 'CLEANUP' => 1 );
-my $source_dir     = $source_dir_tmp->child('pakket');
+my @directories  = qw<bin lib>;
+my $top_src_dir  = tempdir( 'CLEANUP' => 1 );
+my $top_dest_dir = tempdir( 'CLEANUP' => 1 );
+my $dest_dir     = $top_dest_dir->child('pakket');
+my $source_dir   = $top_src_dir->child('pakket');
 
+$dest_dir->mkpath();
 $source_dir->mkpath();
 
+foreach my $dir (@directories) {
+    path($dir)->visit(
+        sub {
+            my $next = shift;
+
+            $next->is_file
+                or return;
+
+            my $next_dir  = $next->parent;
+            my $next_path = $source_dir->child($next_dir);
+            $next_path->mkpath();
+
+            $next->copy($next_path);
+        },
+        { 'recurse' => 1 },
+    );
+}
+
 # cpanfile must be there so "cpanm" would work on the app
-for my $node ( @directories, @additional_files, 'cpanfile' ) {
-    system( 'cp', '-R', path( $app_dir, $node ), $source_dir );
+foreach my $node ( @additional_files, 'cpanfile' ) {
+    my $file = path($node);
+    $file->copy( $source_dir->child($file) );
 }
 
 my $seacan = App::Seacan->new(
-    config => {
+    'config' => {
 
-        seacan => {
-            app_name => 'pakket',
-            output   => $dest_dir,
-            app      => $source_dir,
+        'seacan' => {
+            'app_name' => 'pakket',
+            'output'   => $dest_dir,
+            'app'      => $source_dir,
         },
 
-        perl => {
-            version             => $perl_version,
-                installed_as    => 'seacan',
-                notest          => 1,
-                noman           => 1,
-                relocatable_INC => 1,
-                parallel        => $cores,
+        'perl' => {
+            'version'             => $perl_version,
+                'installed_as'    => 'seacan',
+                'notest'          => 1,
+                'noman'           => 1,
+                'relocatable_INC' => 1,
+                'parallel'        => $cores,
         },
     },
 );
 
 $seacan->run;
 
-system( 'tar', '--create', '--gzip', '--exclude-vcs', "--directory=$dest_dir",
+print "Finished!\n";
+system( 'tar', '--create', '--gzip', '--exclude-vcs', "--directory=$top_dest_dir",
     '--file=' . path('pakket.tar.gz')->absolute, '.', );
