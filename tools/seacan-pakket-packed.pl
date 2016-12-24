@@ -7,27 +7,29 @@ my %fatpacked;
 
 $fatpacked{"App/Seacan.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_SEACAN';
   package App::Seacan;
+  use strict;
+  use warnings;
+  use constant { 'EXEC_MODE' => '0755' };
   
   # Semantic Vesioning: http://semver.org/
   # Not sure if I want to use v-string, but I do want to follow
   # semvar as a convention.
   our $VERSION = "0.1.0";
   
+  use English qw<-no_match_vars>;
   use Mo qw<required coerce>;
-  use File::Path qw<make_path>;
   use TOML qw<from_toml>;
-  
-  sub join_path { join "/", @_ };
+  use Path::Tiny qw<path>;
   
   has config => (
       required => 1,
-      coerce => sub {
+      coerce   => sub {
           my $c = $_[0];
-          if (!ref($c) && -f $c) {
-              open(my $fh, "<:utf8", $c) or die $!;
-              local $/ = undef;
-              $c = from_toml( scalar <$fh> );
+  
+          if ( !ref($c) && -f $c ) {
+              $c = from_toml( path($c)->slurp_utf8 );
           }
+  
           $c->{perl}{installed_as} //= "seacan";
   
           return $c;
@@ -36,23 +38,40 @@ $fatpacked{"App/Seacan.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_
   
   sub seacan_perlbrew_root {
       my $self = shift;
-      return join_path($self->config->{seacan}{output}, "perlbrew");
+      return path($self->config->{seacan}{output}, "perlbrew");
   }
   
   sub seacan_perl {
       my $self = shift;
-      return join_path( $self->seacan_perlbrew_root, "perls", $self->config->{perl}{installed_as}, "bin", "perl" );
+      return $self->seacan_perlbrew_root->child(
+          'perls',
+          $self->config->{perl}{installed_as},
+          'bin',
+          'perl',
+     );
   }
   
   sub perl_is_installed {
       my $self = shift;
-      my $perlbrew_root_path = join_path($self->config->{seacan}{output}, "perlbrew");
-      return 0 unless -d $perlbrew_root_path;
-      my $perl_executable = join_path($perlbrew_root_path, "perls", $self->config->{perl}{installed_as}, "bin", "perl");
-      if (my $r = -f $perl_executable) {
-          say STDERR "perl is installed: $perl_executable";
+  
+      my $perlbrew_root_path
+          = path( $self->config->{seacan}{output}, 'perlbrew' );
+  
+      $perlbrew_root_path->is_dir
+          or return 0;
+  
+      my $perl_executable = $perlbrew_root_path->child(
+          'perls',
+          $self->config->{perl}{installed_as},
+          'bin',
+          'perl',
+      );
+  
+      if ( $perl_executable->is_file ) {
+          print STDERR "perl is installed: $perl_executable\n";
           return 1;
       }
+  
       return 0;
   }
   
@@ -60,7 +79,10 @@ $fatpacked{"App/Seacan.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_
       my $self = shift;
   
       my $perlbrew_root_path = $self->seacan_perlbrew_root;
-      make_path( $perlbrew_root_path ) unless -d $perlbrew_root_path;
+  
+      # FIXME: Shouldn't this use 'safe' => 0 ?
+      $perlbrew_root_path->is_dir
+          or $perlbrew_root_path->mkpath();
   
       for (keys %ENV) {
           delete $ENV{$_} if /\APERLBREW_/;
@@ -74,27 +96,60 @@ $fatpacked{"App/Seacan.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_
       $ENV{PERLBREW_ROOT} = $perlbrew_root_path;
   
       system("curl -L https://install.perlbrew.pl | bash") == 0 or die $!;
-      my $perlbrew_command = join_path($perlbrew_root_path, "bin", "perlbrew");
-      system($perlbrew_command, "install", $self->config->{perl}{version}, "--as", $self->config->{perl}{installed_as}) == 0 or die $!;
+      my $perlbrew_command = path($perlbrew_root_path, "bin", "perlbrew");
+  
+      my @perl_install_cmd = (
+          $perlbrew_command,
+          "install", $self->config->{perl}{version},
+          "--as",    $self->config->{perl}{installed_as},
+  
+          $self->config->{perl}{relocatable_INC}
+              ? ("-Duserelocatableinc")
+              : (),
+  
+          $self->config->{perl}{noman}
+              ? ("--noman")
+              : (),
+  
+          $self->config->{perl}{notest}
+              ? ("--notest")
+              : (),
+  
+          $self->config->{perl}{parallel}
+              ? ("-j", $self->config->{perl}{parallel})
+              : (),
+      );
+      system(@perl_install_cmd) == 0 or die $!;
+  
       system($perlbrew_command, "install-cpanm", "--force");
+  
+      system($perlbrew_command, "clean");
   }
   
   sub install_cpan {
       my $self = shift;
-      my $cpanm_command = join_path( $self->seacan_perlbrew_root, "bin", "cpanm");
+      my $cpanm_command = $self->seacan_perlbrew_root->child( "bin", "cpanm");
       my $perl_command = $self->seacan_perl;
   
-      $, = " ";
-      system($perl_command, $cpanm_command, "--notest", "-L", join_path($self->config->{seacan}{output}, "local"), "--installdeps", $self->config->{seacan}{app} ) == 0 or die $!;
+      local $OUTPUT_FIELD_SEPARATOR = q{ };
+      my $o = $self->config->{seacan}{output};
+      my $ap = $self->config->{seacan}{app};
+      print STDERR "===> $perl_command $cpanm_command --notest -L $o local --installdeps $ap";
+      system($perl_command, $cpanm_command, "--notest", "-L", path($self->config->{seacan}{output}, "local"), "--installdeps", $self->config->{seacan}{app} ) == 0 or die $!;
   }
   
   sub copy_app {
       my $self = shift;
-      my $target_directory = join_path($self->config->{seacan}{output}, "app");
+      my $target_directory = path($self->config->{seacan}{output}, "app", $self->config->{seacan}{app_name});
       my $source_directory = $self->config->{seacan}{app};
   
-      make_path($target_directory);
-      $source_directory =~ s{/+$}{};
+      $target_directory->mkpath();
+  
+      unless ( $source_directory =~ m{/$} ) {
+          # this is telling rsync to copy the contents of $source_directory
+          # instead of $source_directory itself
+          $source_directory .= "/";
+      }
   
       system("rsync", "-8vPa", $source_directory, $target_directory) == 0 or die;
   }
@@ -110,7 +165,7 @@ $fatpacked{"App/Seacan.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_
       my $output = $self->config->{seacan}{output};
   
       # The launcher script goes into bin of the target directory
-      my $target_directory = join_path($output, 'bin');
+      my $target_directory = path($output, 'bin');
   
       my $app_name = $self->config->{seacan}{app_name};
       if ( !$app_name ) {
@@ -124,18 +179,21 @@ $fatpacked{"App/Seacan.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_
       # Apps following the CPAN guidelines have a lib directory with the
       # modules. Adding this to the PERL5LIB allows to run this distributions
       # without installing them.
-      my $app_lib =  join_path($output, 'app', $app_name, 'lib');
-      my $launcher = join_path($target_directory, $app_name);
-      make_path($target_directory);
-      open(my $fh, ">:utf8", $launcher) or die $!;
-      print $fh "#!/bin/bash\n";
-      print $fh "PERL5LIB=$output/local/lib/perl5:$app_lib\n";
-      print $fh "export PERL5LIB\n";
-      # String "app" shouldn't be hardcoded and be part of the config
-      # app.pl will not be the likely name of the main script.
-      print $fh "$output/perlbrew/perls/seacan/bin/perl $output/app/$app_name/bin/$app_name \$@\n";
-      close $fh or die($!);
-      chmod(0755, $launcher) or die($!);
+      my $launcher_path = $target_directory->child($app_name);
+      $target_directory->mkpath();
+  
+      $launcher_path->spew_utf8(
+          "#!/bin/bash\n",
+          'CURRDIR=$(dirname $(readlink -f $0))' . "\n",
+          "PERL5LIB=\$CURRDIR/../local/lib/perl5:\$CURRDIR/../app/$app_name/lib\n",
+          "export PERL5LIB\n",
+  
+          # String "app" shouldn't be hardcoded and be part of the config
+          # app.pl will not be the likely name of the main script.
+          "\$CURRDIR/../perlbrew/perls/seacan/bin/perl \$CURRDIR/../app/$app_name/bin/$app_name \$@\n",
+      );
+  
+      $launcher_path->chmod( EXEC_MODE() );
   }
   
   sub run {
@@ -893,10 +951,12 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   use Pakket::Builder::Native;
   use Pakket::Constants qw< PARCEL_FILES_DIR >;
   use Pakket::Utils qw< generate_env_vars >;
+  use Pakket::Utils::Perl qw< list_core_modules >;
   
   use constant {
       'ALL_PACKAGES_KEY'   => '',
       'BUILD_DIR_TEMPLATE' => 'BUILD-XXXXXX',
+      'SKIP_PREREQS'       => 1,
   };
   
   with 'Pakket::Role::RunCommand';
@@ -1010,6 +1070,12 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
       },
   );
   
+  has bootstrapped => (
+      is      => 'ro',
+      isa     => 'HashRef',
+      default => sub { +{} },
+  );
+  
   sub _build_bundler {
       my $self = shift;
       return Pakket::Bundler->new( $self->bundler_args );
@@ -1021,6 +1087,7 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
       my $prereq = Pakket::Requirement->new(%args);
   
       $self->_setup_build_dir;
+      $self->bootstrap_build($prereq->category);
       $self->run_build($prereq);
   }
   
@@ -1051,13 +1118,49 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
       return;
   }
   
+  sub bootstrap_build {
+      my ( $self, $category ) = @_;
+  
+      if ( $category eq 'perl' ) {
+          # for now we'll use a static list of distributions.
+          # later we'll extract the dist/ver info for the
+          # full list of core/dual-life modules:
+          # my @core_modules = keys %{ list_core_modules() };
+  
+          # this is an array to maintain build order
+          my @dists = (
+              [ 'ExtUtils-Manifest'     => '1.70' ],
+              [ 'Encode'                => '2.86' ],
+              [ 'Text-Abbrev'           => '1.02' ],
+              [ 'Module-Build'          => '0.4220' ],
+              [ 'IO'                    => '1.25' ],
+              [ 'Module-Build-WithXSpp' => '0.14' ],
+          );
+  
+          for ( @dists ) {
+              my ( $name, $ver ) = @$_;
+              my $req = Pakket::Requirement->new(
+                  'category' => $category,
+                  'name'     => $name,
+                  'version'  => $ver,
+              );
+              $self->run_build($req, SKIP_PREREQS); # skip_prereqs
+              $self->bootstrapped->{$name}{$ver} = 1;
+          }
+      }
+      # elsif ( $category eq ...
+  }
+  
   sub run_build {
-      my ( $self, $prereq ) = @_;
+      my ( $self, $prereq, $skip_prereqs ) = @_;
   
       # FIXME: GH #29
       if ( $prereq->category eq 'perl' ) {
           # XXX: perl_mlb is a MetaCPAN bug
           first { $prereq->name eq $_ } qw<perl perl_mlb>
+              and return;
+  
+          $self->bootstrapped->{ $prereq->name }{ $prereq->version }
               and return;
       }
   
@@ -1156,11 +1259,12 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
       my @supported_phases = qw< configure runtime >;
   
       # recursively build prereqs
-      foreach my $category ( keys %{ $self->builders } ) {
-          $self->_recursive_build_phase( $package, $category, 'configure' );
-          $self->_recursive_build_phase( $package, $category, 'runtime' );
+      if ( ! $skip_prereqs ) {
+          foreach my $category ( keys %{ $self->builders } ) {
+              $self->_recursive_build_phase( $package, $category, 'configure' );
+              $self->_recursive_build_phase( $package, $category, 'runtime' );
+          }
       }
-  
       my $package_src_dir = $self->package_location($package);
   
       $log->info('Copying package files');
@@ -1654,6 +1758,7 @@ $fatpacked{"Pakket/Builder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   use Log::Any   qw< $log >;
   use Pakket::Log;
   use Pakket::Utils qw< generate_env_vars >;
+  use Carp ();
   
   with qw<Pakket::Role::Builder>;
   
@@ -1683,15 +1788,15 @@ $fatpacked{"Pakket/Builder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
               # configure
               [
                   $build_dir,
-                  [ 'perl', 'Build.PL', '--install_base', $install_base, @{$flags} ],
+                  [ 'perl', '-f', 'Build.PL', '--install_base', $install_base, @{$flags} ],
                   $opts,
               ],
   
               # build
-              [ $build_dir, ['./Build'], $opts ],
+              [ $build_dir, ['perl', '-f', './Build'], $opts ],
   
               # install
-              [ $build_dir, [ './Build', 'install' ], $opts ],
+              [ $build_dir, [ 'perl', '-f', './Build', 'install' ], $opts ],
           );
       } elsif ( $build_dir->child('Makefile.PL')->exists ) {
           @seq = (
@@ -1699,7 +1804,7 @@ $fatpacked{"Pakket/Builder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
               # configure
               [
                   $build_dir,
-                  [ 'perl', 'Makefile.PL', "INSTALL_BASE=$install_base", @{$flags} ],
+                  [ 'perl', '-f', 'Makefile.PL', "INSTALL_BASE=$install_base", @{$flags} ],
                   $opts,
               ],
   
@@ -1710,7 +1815,7 @@ $fatpacked{"Pakket/Builder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
               [ $build_dir, [ 'make', 'install' ], $opts ],
           );
       } else {
-          die "Could not find an installer (Makefile.PL/Build.PL)\n";
+          Carp::croak('Could not find an installer (Makefile.PL/Build.PL)');
       }
   
       my $success = $self->run_command_sequence(@seq);
@@ -2042,8 +2147,8 @@ $fatpacked{"Pakket/CLI/Command/build.pm"} = '#line '.(1+__LINE__).' "'.__FILE__.
       my ( $self, $index_file, $opt_category, $skip ) = @_;
       my $index = decode_json( path($index_file)->slurp_utf8 );
       if ( $skip ) {
-  	for ( split ',' => $skip ) {
-  	    my ( $category, $key ) = split '/';
+  	for ( split m{,}xms => $skip ) {
+  	    my ( $category, $key ) = split m{/}xms;
   	    $category && $key or next;
   	    delete $index->{$category}{$key};
   	}
@@ -2357,6 +2462,53 @@ $fatpacked{"Pakket/CLI/Command/install.pm"} = '#line '.(1+__LINE__).' "'.__FILE_
   
   __END__
 PAKKET_CLI_COMMAND_INSTALL
+
+$fatpacked{"Pakket/CLI/Command/run.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_RUN';
+  package Pakket::CLI::Command::run;
+  # ABSTRACT: The pakket run command
+  
+  use strict;
+  use warnings;
+  use Pakket::CLI '-command';
+  use Pakket::Runner;
+  use Pakket::Log;
+  use Log::Any::Adapter;
+  use Path::Tiny      qw< path >;
+  
+  sub abstract    { 'Run commands using pakket' }
+  sub description { 'Run commands using pakket' }
+  
+  sub opt_spec {
+      return (
+          [ 'from=s', 'defines pakket active directory to use. (mandatory, unless set in PAKKET_ACTIVE_PATH)' ],
+      );
+  }
+  
+  sub validate_args {
+      my ( $self, $opt, $args ) = @_;
+  
+      Log::Any::Adapter->set( 'Dispatch',
+          'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
+  
+      $self->{'runner'}{'active_path'} = $opt->{'from'};
+  }
+  
+  sub execute {
+      my $self = shift;
+  
+      my $active_path = exists $ENV{'PAKKET_ACTIVE_PATH'}
+          ? $ENV{'PAKKET_ACTIVE_PATH'}
+          : $self->{'runner'}{'active_path'};
+  
+      $active_path or $self->usage_error("no active path defined.");
+  
+      Pakket::Runner->run( active_path => $active_path );
+  }
+  
+  1;
+  
+  __END__
+PAKKET_CLI_COMMAND_RUN
 
 $fatpacked{"Pakket/ConfigReader.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CONFIGREADER';
   package Pakket::ConfigReader;
@@ -3241,6 +3393,27 @@ $fatpacked{"Pakket/Role/RunCommand.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   __END__
 PAKKET_ROLE_RUNCOMMAND
 
+$fatpacked{"Pakket/Runner.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_RUNNER';
+  package Pakket::Runner;
+  
+  use strict;
+  use warnings;
+  
+  sub run {
+      my ($self, %args) = @_;
+  
+      my $active_path = $args{'active_path'};
+  
+      local $ENV{'PATH'}            = "$active_path/bin:$ENV{PATH}";
+      local $ENV{'PERL5LIB'}        = "$active_path/lib/perl5";
+      local $ENV{'LD_LIBRARY_PATH'} = "$active_path/lib:$ENV{LD_LIBRARY_PATH}";
+  
+      system @args;
+  }
+  
+  1;
+PAKKET_RUNNER
+
 $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_SCAFFOLDER_PERL';
   package Pakket::Scaffolder::Perl;
   # ABSTRACT: Scffolding Perl distributions
@@ -3251,13 +3424,14 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   use Archive::Any;
   use CPAN::Meta::Prereqs;
   use JSON::MaybeXS     qw< decode_json encode_json >;
-  use Module::CoreList;
   use Ref::Util         qw< is_arrayref is_hashref >;
   use Path::Tiny        qw< path    >;
   use TOML              qw< to_toml >;
   use Log::Any          qw< $log    >;
+  use Carp ();
   
-  use Pakket::Utils     qw< generate_json_conf >;
+  use Pakket::Utils       qw< generate_json_conf >;
+  use Pakket::Utils::Perl qw< should_skip_module >;
   use Pakket::Scaffolder::Perl::Module;
   use Pakket::Scaffolder::Perl::CPANfile;
   
@@ -3320,7 +3494,7 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   
       my $module   = delete $args{'module'};
       my $cpanfile = delete $args{'cpanfile'};
-      die "provide either 'module' or 'cpanfile'\n"
+      Carp::croak("Please provide either 'module' or 'cpanfile'")
           unless $module xor $cpanfile;
   
       if ( $module ) {
@@ -3387,7 +3561,7 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   sub skip_name {
       my ( $self, $name ) = @_;
   
-      if ( Module::CoreList::is_core($name) and !${Module::CoreList::upstream}{$name} ) {
+      if ( should_skip_module($name) ) {
           $log->debugf( "%s* skipping %s (core module, not dual-life)", $self->spaces, $name );
           return 1;
       }
@@ -3522,30 +3696,42 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   
       my $dist_name;
       eval {
-          my $response = $self->ua->get( $self->metacpan_api . "/module/$module_name" );
+          my $mod_url     = $self->metacpan_api . "/module/$module_name";
+          my $release_url = $self->metacpan_api . "/release/$module_name";
+          my $response    = $self->ua->get($mod_url);
+  
           $response->{'status'} == 200
-              or $response = $self->ua->get( $self->metacpan_api . "/release/$module_name" );
-          die if $response->{'status'} != 200;
+              or $response = $self->ua->get($release_url);
+  
+          $response->{'status'} != 200
+              and Carp::croak("Cannot fetch $mod_url or $release_url");
+  
           my $content = decode_json $response->{'content'};
           $dist_name  = $content->{'distribution'};
           1;
+      } or do {
+          my $error = $@ || 'Zombie error';
+          $log->debug($error);
       };
   
       # another check (if not found yet): check if name matches a distribution name
-      unless ( $dist_name ) {
+      if ( !$dist_name ) {
           eval {
-              my $name = $module_name =~ s/::/-/gr;
-              my $res = $self->ua->post( $self->metacpan_api . "/release",
-                                         +{ content => $self->get_is_dist_name_query($name) });
-              die unless $res->{'status'} == 200;
+              my $name = $module_name =~ s/::/-/rgsmx;
+              my $res = $self->ua->post( $self->metacpan_api . '/release',
+                  +{ 'content' => $self->get_is_dist_name_query($name) } );
+  
+              $res->{'status'} == 200 or Carp::croak();
               my $res_body = decode_json $res->{'content'};
-              die unless $res_body->{'hits'}{'total'} > 0;
+              $res_body->{'hits'}{'total'} > 0 or Carp::croak();
               $dist_name = $name;
               1;
+          } or do {
+              my $error = $@ || 'Zombie error';
+              Carp::croak("-> Cannot find module by name: '$module_name'");
           };
       }
   
-      $dist_name or die "-> Cannot find module by name: '$module_name'\n";
       return $dist_name;
   }
   
@@ -3584,17 +3770,16 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
       {
           my $res = $self->ua->post( $self->metacpan_api . "/release",
                                  +{ content => $self->get_release_query($dist_name) });
-          die "can't find any release for $dist_name\n" if $res->{'status'} != 200;
+          Carp::croak("Can't find any release for $dist_name") if $res->{'status'} != 200;
           my $res_body = decode_json $res->{'content'};
   
           %all_dist_releases =
-              map {
+              map +(
                   $_->{'fields'}{'version'}[0] => {
                       'prereqs'      => $_->{'_source'}{'metadata'}{'prereqs'},
                       'download_url' => $_->{'_source'}{'download_url'},
-                  }
-              }
-              @{ $res_body->{'hits'}{'hits'} };
+                  },
+              ), @{ $res_body->{'hits'}{'hits'} };
       }
   
       # get the matching version according to the spec
@@ -3621,7 +3806,7 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
               last;
           }
       }
-      $version or die "Cannot match release for $dist_name\n";
+      $version or Carp::croak("Cannot match release for $dist_name");
   
       $version = $self->known_incorrect_version_fixes->{ $dist_name }
           if exists $self->known_incorrect_version_fixes->{ $dist_name };
@@ -4018,10 +4203,8 @@ $fatpacked{"Pakket/Utils.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PA
       my $bin_path = generate_bin_path($prefix);
   
       my @perl5lib = (
-          Path::Tiny->cwd->stringify,
           $build_dir,
           path( $prefix, qw<lib perl5> )->absolute->stringify,
-          '.',
       );
   
       my %perl_opts = (
@@ -4071,6 +4254,37 @@ $fatpacked{"Pakket/Utils.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PA
   
   __END__
 PAKKET_UTILS
+
+$fatpacked{"Pakket/Utils/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_UTILS_PERL';
+  package Pakket::Utils::Perl;
+  # ABSTRACT: Perl specific utilities for Pakket
+  
+  use strict;
+  use warnings;
+  use version 0.77;
+  use Exporter   qw< import >;
+  use Path::Tiny qw< path   >;
+  use Module::CoreList;
+  
+  our @EXPORT_OK = qw< list_core_modules should_skip_module >;
+  
+  sub list_core_modules {
+      ## no critic qw(Variables::ProhibitPackageVars)
+      return \%Module::CoreList::upstream;
+  }
+  
+  sub should_skip_module {
+      my $name = shift;
+  
+      if ( Module::CoreList::is_core($name) and !${Module::CoreList::upstream}{$name} ) {
+          return 1;
+      }
+  
+      return 0;
+  }
+  
+  1;
+PAKKET_UTILS_PERL
 
 $fatpacked{"Path/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PATH_TINY';
   use 5.008001;
@@ -8448,6 +8662,7 @@ use English    '-no_match_vars';
 use Path::Tiny qw<path tempdir>;
 use Getopt::Long qw<:config no_ignore_case>;
 use App::Seacan;
+use IPC::Open3 qw<open3>;
 
 sub print_help {
     my $error   = shift;
@@ -8482,45 +8697,73 @@ $help and print_help();
 
 -d $app_dir or print_help('--app-dir must point to a directory');
 
-chomp( my $cores = `nproc` || 1 );
+my $cores = 1;
+if ( $OSNAME =~ /linux/xms ) {
+    local $SIG{'CHLD'} = 'IGNORE';
+    my ( $writer, $reader, $err );
+    open3( $writer, $reader, $err, 'nproc' );
+    chomp( $cores = <$reader> );
+}
 
 if ( $cores > 1 ) {
     $cores -= 1;
 }
 
-my @directories    = qw<bin lib>;
-my $dest_dir       = tempdir( 'CLEANUP' => 1 );
-my $source_dir_tmp = tempdir( 'CLEANUP' => 1 );
-my $source_dir     = $source_dir_tmp->child('pakket');
+my @directories  = qw<bin lib>;
+my $top_src_dir  = tempdir( 'CLEANUP' => 1 );
+my $top_dest_dir = tempdir( 'CLEANUP' => 1 );
+my $dest_dir     = $top_dest_dir->child('pakket');
+my $source_dir   = $top_src_dir->child('pakket');
 
+$dest_dir->mkpath();
 $source_dir->mkpath();
 
+foreach my $dir (@directories) {
+    path($dir)->visit(
+        sub {
+            my $next = shift;
+
+            $next->is_file
+                or return;
+
+            my $next_dir  = $next->parent;
+            my $next_path = $source_dir->child($next_dir);
+            $next_path->mkpath();
+
+            $next->copy($next_path);
+        },
+        { 'recurse' => 1 },
+    );
+}
+
 # cpanfile must be there so "cpanm" would work on the app
-for my $node ( @directories, @additional_files, 'cpanfile' ) {
-    system( 'cp', '-R', path( $app_dir, $node ), $source_dir );
+foreach my $node ( @additional_files, 'cpanfile' ) {
+    my $file = path($node);
+    $file->copy( $source_dir->child($file) );
 }
 
 my $seacan = App::Seacan->new(
-    config => {
+    'config' => {
 
-        seacan => {
-            app_name => 'pakket',
-            output   => $dest_dir,
-            app      => $source_dir,
+        'seacan' => {
+            'app_name' => 'pakket',
+            'output'   => $dest_dir,
+            'app'      => $source_dir,
         },
 
-        perl => {
-            version             => $perl_version,
-                installed_as    => 'seacan',
-                notest          => 1,
-                noman           => 1,
-                relocatable_INC => 1,
-                parallel        => $cores,
+        'perl' => {
+            'version'             => $perl_version,
+                'installed_as'    => 'seacan',
+                'notest'          => 1,
+                'noman'           => 1,
+                'relocatable_INC' => 1,
+                'parallel'        => $cores,
         },
     },
 );
 
 $seacan->run;
 
-system( 'tar', '--create', '--gzip', '--exclude-vcs', "--directory=$dest_dir",
+print "Finished!\n";
+system( 'tar', '--create', '--gzip', '--exclude-vcs', "--directory=$top_dest_dir",
     '--file=' . path('pakket.tar.gz')->absolute, '.', );
