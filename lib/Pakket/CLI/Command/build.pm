@@ -11,7 +11,7 @@ use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
 use Pakket::CLI '-command';
 use Pakket::Builder;
 use Pakket::Log;
-use Pakket::Repository qw< all_packages_in_index_file >;
+use Pakket::Repository;
 
 # TODO:
 # - move all hardcoded values (confs) to constants
@@ -22,9 +22,6 @@ use Pakket::Repository qw< all_packages_in_index_file >;
 #   easily check the success/fail and protect against possible injects
 
 # FIXME: pass on the "output-dir" to the bundler
-
-# FIXME: turn this module into a proper class, don't use global variables
-my $repo;
 
 sub abstract    { 'Build a package' }
 sub description { 'Build a package' }
@@ -42,12 +39,12 @@ sub opt_spec {
         [
             'config-dir=s',
             'directory holding the configurations',
-            { 'required' => 1 }
+            { 'required' => 1 },
         ],
         [
             'source-dir=s',
             'directory holding the sources',
-            { 'required' => 1 }
+            { 'required' => 1 },
         ],
         [ 'output-dir=s', 'output directory (default: .)' ],
         [ 'verbose|v+',   'verbose output (can be provided multiple times)' ],
@@ -67,8 +64,9 @@ sub validate_args {
         or $self->usage_error("Incorrect index file specified: '$index_file'");
     $self->{'builder'}{'index_file'} = $index_file;
 
-    $repo = Pakket::Repository->new('config_dir' => $config_dir,
-                              'index_file' => $index_file);
+    my $repo = Pakket::Repository->new(
+        'backend' => [ 'File', 'filename' => $index_file ],
+    );
 
     if ( defined ( my $output_dir = $opt->{'output_dir'} ) ) {
         $self->{'bundler'}{'bundle_dir'} = path($output_dir)->absolute;
@@ -80,20 +78,19 @@ sub validate_args {
         $path->exists && $path->is_file
             or $self->usage_error("Bad input file: $path");
 
-        push @specs, $path->lines_utf8( { chomp => 1 } );
+        push @specs, $path->lines_utf8( { 'chomp' => 1 } );
     } elsif ( $opt->{'from_index'} ) {
         push @specs, _filter_packages(
             @{$opt}{qw< category skip >},
-            @{ $repo->packages_in_index },
+            @{ $repo->packages_list };
         );
     } elsif ( defined ( my $json_file = $opt->{'input_json'} ) ) {
-        my $path = path($json_file);
-        $path->exists && $path->is_file
-            or $self->usage_error("Bad '--input-json' file: $path");
+        my $mini_repo = Pakket::Repository->new(
+            'backend' => [ 'File', 'filename' => $json_file ] );
 
         push @specs, _filter_packages(
             @{$opt}{qw< category skip >},
-            @{ $repo->packages_in_index },
+            @{ $mini_repo->packages_list };
         );
     } elsif ( @{$args} ) {
         @specs = @{$args};
@@ -106,9 +103,8 @@ sub validate_args {
             or $self->usage_error("Provide category/name, not '$spec_str'");
 
         # Latest version is default
-        if ( !defined $version && defined $repo ) {
-            $version = $repo->latest_version_for($cat, $name);
-        }
+        defined $version
+            or $version = $repo->latest_version( $cat, $name );
 
         push @{ $self->{'to_build'} }, +{
             'category' => $cat,
@@ -154,6 +150,10 @@ sub execute {
             ), qw< bundle_dir > ),
         },
     );
+
+    my $verbose = $self->{'builder'}{'verbose'};
+    my $logger  = Pakket::Log->build_logger($verbose);
+    Log::Any::Adapter->set( 'Dispatch', 'dispatcher' => $logger );
 
     foreach my $prereq_hashref ( @{ $self->{'to_build'} } ) {
         $builder->build( %{$prereq_hashref} );

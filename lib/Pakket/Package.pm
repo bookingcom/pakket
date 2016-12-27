@@ -3,6 +3,7 @@ package Pakket::Package;
 
 use Moose;
 use MooseX::StrictConstructor;
+use Pakket::Utils qw< canonical_package_name >;
 
 has 'name' => (
     'is'       => 'ro',
@@ -76,18 +77,22 @@ sub phase_prereqs {
     my $prereqs = $self->prereqs;
     return +{
         map { $_ => $prereqs->{$_}{$phase} }
-            keys %{$prereqs}
+            keys %{$prereqs},
     };
 }
 
 sub cat_name {
     my $self = shift;
-    return sprintf '%s/%s', $self->category, $self->name;
+
+    return canonical_package_name( $self->category, $self->name );
 }
 
 sub full_name {
     my $self = shift;
-    return sprintf '%s/%s=%s', $self->category, $self->name, $self->version;
+
+    return canonical_package_name(
+        $self->category, $self->name, $self->version,
+    );
 }
 
 sub config {

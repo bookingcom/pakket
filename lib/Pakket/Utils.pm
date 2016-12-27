@@ -9,7 +9,12 @@ use Path::Tiny qw< path   >;
 use File::HomeDir;
 use JSON::MaybeXS;
 
-our @EXPORT_OK = qw< is_writeable generate_json_conf generate_env_vars >;
+our @EXPORT_OK = qw<
+    is_writeable
+    generate_json_conf
+    generate_env_vars
+    canonical_package_name
+>;
 
 sub is_writeable {
     my $path = shift; # Path::Tiny objects
@@ -115,6 +120,14 @@ sub generate_bin_path {
     return $bin_path;
 }
 
+sub canonical_package_name {
+    my ( $category, $package, $version ) = @_;
+
+    $version
+        and return sprintf( '%s/%s=%s', $category, $package, $version );
+
+    return sprintf( '%s/%s', $category, $package );
+}
 
 1;
 
