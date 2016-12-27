@@ -11,7 +11,7 @@ use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
 use Pakket::CLI '-command';
 use Pakket::Builder;
 use Pakket::Log;
-use Pakket::Repo qw< all_packages_in_index_file >;
+use Pakket::Repository qw< all_packages_in_index_file >;
 
 # TODO:
 # - move all hardcoded values (confs) to constants
@@ -67,7 +67,7 @@ sub validate_args {
         or $self->usage_error("Incorrect index file specified: '$index_file'");
     $self->{'builder'}{'index_file'} = $index_file;
 
-    $repo = Pakket::Repo->new('config_dir' => $config_dir,
+    $repo = Pakket::Repository->new('config_dir' => $config_dir,
                               'index_file' => $index_file);
 
     if ( defined ( my $output_dir = $opt->{'output_dir'} ) ) {

@@ -1,4 +1,4 @@
-package Pakket::Repo;
+package Pakket::Repository;
 # ABSTRACT: Build in-memory representation of repo
 
 use Exporter                  qw< import >;
