@@ -1,61 +1,73 @@
 package Pakket::Repository;
-
-# ABSTRACT: An object representing a Pakket repository
+# ABSTRACT: Build in-memory representation of repo
 
 use Moose;
 use MooseX::StrictConstructor;
-use Path::Tiny        qw< path >;
-use Types::Path::Tiny qw< Path >;
-use File::HomeDir;
-use Pakket::Log;
-use Log::Any          qw< $log >;
-use namespace::autoclean;
 
-has '_possible_paths' => (
+use Log::Any qw< $log >;
+use Pakket::Types qw< PakketRepositoryBackend >;
+use Pakket::Utils qw< canonical_package_name >;
+
+has 'backend' => (
+    'is'       => 'ro',
+    'does'     => 'PakketRepositoryBackend',
+    'coerce'   => 1,
+    'required' => 1,
+);
+
+has 'repo_index' => (
+    'is'      => 'ro',
+    'isa'     => 'HashRef',
+    'builder' => '_build_repo_index',
+);
+
+has 'packages_list' => (
     'is'      => 'ro',
     'isa'     => 'ArrayRef',
-    'default' => sub {
-        [
-            # global:
-            path( Path::Tiny->rootdir,    qw< usr local pakket > ),
-
-            # user:
-            path( File::HomeDir->my_home, '.pakket' ),
-
-            # local dir:
-            path('.pakket'),
-        ];
-    },
+    'lazy'    => 1,
+    'builder' => '_build_packages_list',
 );
 
-has 'repo_dir' => (
-    'is'      => 'ro',
-    'isa'     => Path,
-    'coerce'  => 1,
-    'builder' => '_build_repo_dir',
-    'coerce'  => 1,
-);
-
-sub _build_repo_dir {
+sub _build_repo_index {
     my $self = shift;
+    return $self->backend->create_index;
+}
 
-    # environment variable takes precedence
-    $ENV{'PAKKET_REPO'} && -d $ENV{'PAKKET_REPO'}
-        and return path( $ENV{'PAKKET_REPO'} );
+sub _build_packages_list {
+    my $self  = shift;
+    my $index = $self->repo_index;
+    my @packages;
 
-    foreach my $path ( @{ $self->_possible_paths } ) {
-        $path->is_dir and return $path;
+    for my $category ( keys %{$index} ) {
+        for my $package ( keys %{ $index->{$category} } ) {
+            for my $version (
+                keys %{ $index->{$category}{$package}{'versions'} } )
+            {
+                push @packages,
+                    canonical_package_name( $category, $package, $version, );
+            }
+        }
     }
 
-    $log->critical('Cannot find pakket repository');
-    exit 1;
+    return \@packages;
+}
+
+sub latest_version {
+    my ( $self, $category, $package ) = @_;
+
+    my $repo_index = $self->repo_index;
+
+    $repo_index->{$category}           or return;
+    $repo_index->{$category}{$package} or return;
+
+    return $repo_index->{$category}{$package}{'latest'};
 }
 
 __PACKAGE__->meta->make_immutable;
-
 no Moose;
 
 1;
 
 __END__
 
+=pod
