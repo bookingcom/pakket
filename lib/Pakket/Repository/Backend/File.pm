@@ -28,7 +28,7 @@ sub create_index {
         exit 1;
     }
 
-    return $file->slurp_utf8;
+    return decode_json( $file->slurp_utf8 );
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -18,7 +18,7 @@ has 'backend' => (
 has 'repo_index' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'builder' => '_build_index',
+    'builder' => '_build_repo_index',
 );
 
 has 'packages_list' => (
@@ -35,7 +35,7 @@ sub _build_repo_index {
 
 sub _build_packages_list {
     my $self  = shift;
-    my $index = $self->index;
+    my $index = $self->repo_index;
     my @packages;
 
     for my $category ( keys %{$index} ) {

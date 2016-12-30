@@ -81,16 +81,18 @@ sub validate_args {
         push @specs, $path->lines_utf8( { 'chomp' => 1 } );
     } elsif ( $opt->{'from_index'} ) {
         push @specs, _filter_packages(
+            $repo,
             @{$opt}{qw< category skip >},
-            @{ $repo->packages_list };
+            @{ $repo->packages_list },
         );
     } elsif ( defined ( my $json_file = $opt->{'input_json'} ) ) {
         my $mini_repo = Pakket::Repository->new(
             'backend' => [ 'File', 'filename' => $json_file ] );
 
         push @specs, _filter_packages(
+            $repo,
             @{$opt}{qw< category skip >},
-            @{ $mini_repo->packages_list };
+            @{ $mini_repo->packages_list },
         );
     } elsif ( @{$args} ) {
         @specs = @{$args};
@@ -161,7 +163,7 @@ sub execute {
 }
 
 sub _filter_packages {
-    my ( $cat, $skip, @packages ) = @_;
+    my ( $repo, $cat, $skip, @packages ) = @_;
 
     $cat || $skip
         or return @packages;
