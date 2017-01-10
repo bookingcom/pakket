@@ -1,0 +1,621 @@
+color    = 1
+only     = 1
+verbose  = [%p] %m at %f line %l, near '%r'\n
+severity = 2
+
+color-severity-highest = bold red
+color-severity-high    = yellow
+color-severity-medium  = bold blue
+color-severity-low     = blue
+color-severity-lowest  = magenta
+#pager = less
+
+# -----------------
+# - Core policies -
+# -----------------
+
+[BuiltinFunctions::ProhibitBooleanGrep]
+
+# This will need to be adjusted with time
+[BuiltinFunctions::ProhibitComplexMappings]
+max_statements = 1
+
+[BuiltinFunctions::ProhibitLvalueSubstr]
+
+# This is mentioned as optimized away, but -MO=Deparse disagrees
+[-BuiltinFunctions::ProhibitReverseSortBlock]
+
+[BuiltinFunctions::ProhibitSleepViaSelect]
+
+# It is unsafe to call: require "string"
+# It is wrong to call: eval "string"
+[BuiltinFunctions::ProhibitStringyEval]
+
+[BuiltinFunctions::ProhibitStringySplit]
+severity = 3
+
+# Also: use Safe::Isa
+[BuiltinFunctions::ProhibitUniversalCan]
+[BuiltinFunctions::ProhibitUniversalIsa]
+
+[BuiltinFunctions::ProhibitUselessTopic]
+[BuiltinFunctions::ProhibitVoidGrep]
+[BuiltinFunctions::ProhibitVoidMap]
+
+# expression-based "map"/"grep" are faster
+[-BuiltinFunctions::RequireBlockGrep]
+[-BuiltinFunctions::RequireBlockMap]
+
+[BuiltinFunctions::RequireGlobFunction]
+[BuiltinFunctions::RequireSimpleSortBlock]
+[ClassHierarchies::ProhibitAutoloading]
+
+# Also: use parent
+[ClassHierarchies::ProhibitExplicitISA]
+
+[ClassHierarchies::ProhibitOneArgBless]
+[CodeLayout::ProhibitHardTabs]
+
+# Does this really matter? Meh...
+[CodeLayout::ProhibitParensWithBuiltins]
+[CodeLayout::ProhibitQuotedWordLists]
+
+[CodeLayout::ProhibitTrailingWhitespace]
+[CodeLayout::RequireConsistentNewlines]
+
+# This should be checked separately per project
+# Not enforced automatically
+# (It also makes any editor plugin slower)
+[-CodeLayout::RequireTidyCode]
+
+[CodeLayout::RequireTrailingCommas]
+[ControlStructures::ProhibitCStyleForLoops]
+
+# We might want to adjust this
+[ControlStructures::ProhibitCascadingIfElse]
+max_elsif = 5
+
+# Might require adjusting
+[ControlStructures::ProhibitDeepNests]
+max_nests = 4
+
+[ControlStructures::ProhibitLabelsWithSpecialBlockNames]
+[ControlStructures::ProhibitMutatingListFunctions]
+# add_list_funcs =
+
+[ControlStructures::ProhibitNegativeExpressionsInUnlessAndUntilConditions]
+
+[ControlStructures::ProhibitPostfixControls]
+# Debugging statements go here (DEBUG), etc.
+# allow = if unless
+# allow = DEBUG
+allow = for
+# flowcontrol = carp cluck confess croak die exit goto warn
+
+[ControlStructures::ProhibitUnlessBlocks]
+[ControlStructures::ProhibitUnreachableCode]
+[ControlStructures::ProhibitUntilBlocks]
+
+# This can make stuff slow and should be checked elsewhere
+[-Documentation::PodSpelling]
+
+[Documentation::RequirePackageMatchesPodName]
+
+[-Documentation::RequirePodLinksIncludeText]
+
+# Personal preference
+[Documentation::RequirePodAtEnd]
+
+# Specific projects should override this
+[-Documentation::RequirePodSections]
+# The sections to require for modules (separated by qr/\s* [|] \s*/xms).
+# lib_sections =
+# The sections to require for programs (separated by qr/\s* [|] \s*/xms).
+# script_sections =
+# The origin of sections to use.
+# Valid values: book, book_first_edition, module_starter_pbp, module_starter_pbp_0_0_3.
+# source = book_first_edition
+# The spelling of sections to use.
+# Valid values: en_AU, en_US.
+# language =
+
+# It should be okay to call "die" in main,
+# because it provides a user error
+[ErrorHandling::RequireCarping]
+allow_in_main_unless_in_subroutine = 1
+
+[ErrorHandling::RequireCheckingReturnValueOfEval]
+[InputOutput::ProhibitBacktickOperators]
+[InputOutput::ProhibitBarewordFileHandles]
+
+# <> is automatic, while <ARGV> and <STDIN> are explicit
+[-InputOutput::ProhibitExplicitStdin]
+
+# IO::Interactive is better
+[InputOutput::ProhibitInteractiveTest]
+
+[InputOutput::ProhibitJoinedReadline]
+[InputOutput::ProhibitOneArgSelect]
+[InputOutput::ProhibitReadlineInForLoop]
+[InputOutput::ProhibitTwoArgOpen]
+
+# I like this, others probably don't
+# print {$fh} $foo
+# is optimized as:
+# print $fh $foo
+[InputOutput::RequireBracedFileHandleWithPrint]
+
+[InputOutput::RequireBriefOpen]
+
+# When closing scope, an implicit "close()" is called
+# However, the error was not fixed
+# RT #57512
+[-InputOutput::RequireCheckedClose]
+
+[InputOutput::RequireCheckedOpen]
+
+[InputOutput::RequireCheckedSyscalls]
+functions = :builtins
+exclude_functions = print close sleep say
+
+[InputOutput::RequireEncodingWithUTF8Layer]
+
+[Miscellanea::ProhibitFormats]
+[Miscellanea::ProhibitTies]
+
+# I wish this could be done progressively
+# It would be great if a module could say "I'm special, leave me alone",
+# but it might just be a beginner who found a way to ignore the guidelines
+[Miscellanea::ProhibitUnrestrictedNoCritic]
+
+[Miscellanea::ProhibitUselessNoCritic]
+[Modules::ProhibitAutomaticExportation]
+[Modules::ProhibitConditionalUseStatements]
+
+# Added: Readonly, base, File::Slurp, common::sense, Class::Load,
+#        Any::Moose, Error, Getopt::Std, HTML::Template,
+#        IO::Socket::INET6, JSON, JSON::Any, List::MoreUtils, Mouse,
+#        Net::IRC, XML::Simple, Sub::Infix
+[Modules::ProhibitEvilModules]
+modules = Class::ISA {Found use of Class::ISA. This module is deprecated by the Perl 5 Porters.} Pod::Plainer {Found use of Pod::Plainer. This module is deprecated by the Perl 5 Porters.} Shell {Found use of Shell. This module is deprecated by the Perl 5 Porters.} Switch {Found use of Switch. This module is deprecated by the Perl 5 Porters.} Readonly {Found use of Readonly. Please use constant.pm or Const::Fast.} base {Found use of base. Please use parent instead.} File::Slurp {Found use of File::Slurp. Please use Path::Tiny instead.} common::sense {Found use of common::sense. Please use strict and warnings instead.} Class::Load {Found use of Class::Load. Please use Module::Runtime instead.} Any::Moose {Found use of Any::Moose. Please use Moo instead.} Error {Found use of Error.pm. Please use Throwable.pm instead.} Getopt::Std {Found use of Getopt::Std. Please use Getopt::Long instead.} HTML::Template {Found use of HTML::Template. Please use Template::Toolkit.} IO::Socket::INET6 {Found use of IO::Socket::INET6. Please use IO::Socket::IP.} JSON {Found use of JSON. Please use JSON::MaybeXS or Cpanel::JSON::XS.} JSON::Any {Found use of JSON::Any. Please use JSON::MaybeXS.} List::MoreUtils {Found use of List::MoreUtils. Please use List::Util or List::UtilsBy.} Mouse {Found use of Mouse. Please use Moo.} Net::IRC {Found use of Net::IRC. Please use POE::Component::IRC, Net::Async::IRC, or Mojo::IRC.} XML::Simple {Found use of XML::Simple. Please use XML::LibXML, XML::TreeBuilder, XML::Twig, or Mojo::DOM.} Sub::Infix {Found use of Sub::Infix. Please do not use it.}
+#modules_file =
+
+# Meh...
+# This is helpful for scripts, not for everyone
+[-Modules::ProhibitExcessMainComplexity]
+
+[Modules::ProhibitMultiplePackages]
+[Modules::RequireBarewordIncludes]
+[Modules::RequireEndWithOne]
+
+[Modules::RequireExplicitPackage]
+# No point requiring "package main"
+exempt_scripts = 1
+
+# We should exempt tests of this
+# Dancer2 tests have { package App; use Dancer2 } App->to_app...
+[Modules::RequireFilenameMatchesPackage]
+
+[Modules::RequireNoMatchVarsWithUseEnglish]
+
+# It does not work for some Dist::Zilla modules
+[-Modules::RequireVersionVar]
+
+# Very interesting... Each project should pick this on its own
+[-NamingConventions::Capitalization]
+
+[-NamingConventions::ProhibitAmbiguousNames]
+# forbid = abstract bases close contract last left no record right second set
+
+[Objects::ProhibitIndirectSyntax]
+# Values that are always included: new.
+#forbid =
+
+# Some people feel very strongly about this
+# I prefer readability
+[References::ProhibitDoubleSigils]
+
+[RegularExpressions::ProhibitCaptureWithoutTest]
+# Names of ways to generate exceptions.
+# Values that are always included: confess, croak, die.
+# exception_source =
+
+[RegularExpressions::ProhibitComplexRegexes]
+# max_characters = 60
+
+# \p{IsAlphabetic} + \p{IsNumeric} really is more accurate than \w
+[RegularExpressions::ProhibitEnumeratedClasses]
+
+[RegularExpressions::ProhibitEscapedMetacharacters]
+[RegularExpressions::ProhibitFixedStringMatches]
+[RegularExpressions::ProhibitSingleCharAlternation]
+[RegularExpressions::ProhibitUnusedCapture]
+
+# Use only `//' or `{}' to delimit regexps.
+[RegularExpressions::ProhibitUnusualDelimiters]
+# In addition to allowing '{}', allow '()', '[]', and '{}'.
+# allow_all_brackets =
+
+[RegularExpressions::ProhibitUselessTopic]
+[RegularExpressions::RequireBracesForMultiline]
+[RegularExpressions::RequireDotMatchAnything]
+
+# Can we change this to exclude single sentence regexes?
+[RegularExpressions::RequireExtendedFormatting]
+minimum_regex_length_to_complain_about = 20
+# strict means: regexes that only contain whitespace and word characters
+strict = 0
+
+[RegularExpressions::RequireLineBoundaryMatching]
+[Subroutines::ProhibitAmpersandSigils]
+[Subroutines::ProhibitBuiltinHomonyms]
+
+[Subroutines::ProhibitExcessComplexity]
+[Subroutines::ProhibitExplicitReturnUndef]
+[Subroutines::ProhibitManyArgs]
+[Subroutines::ProhibitNestedSubs]
+[Subroutines::ProhibitReturnSort]
+
+# Currently misidentifies signatures
+# Different one available below
+[-Subroutines::ProhibitSubroutinePrototypes]
+
+# Allow Moose builders
+[Subroutines::ProhibitUnusedPrivateSubroutines]
+private_name_regex = _(?!build)\w+
+
+[Subroutines::ProtectPrivateSubs]
+
+# This does not like single line subroutines, and also:
+# http://stackoverflow.com/questions/2275317/why-does-perlcritic-dislike-using-shift-to-populate-subroutine-variables
+[Subroutines::RequireArgUnpacking]
+# The number of statements to allow without unpacking.
+short_subroutine_statements = 2
+
+# Should unpacking from array slices and elements be allowed?
+allow_subscripts = 0
+
+# Allow the usual delegation idiom to these namespaces/subroutines.
+# Values that are always included: NEXT::, SUPER::.
+# allow_delegation_to =
+
+# We should have an exception for short subroutines
+[-Subroutines::RequireFinalReturn]
+# Values that are always included: Carp::confess, Carp::croak, confess, croak, die, exec, exit, throw.
+# terminal_funcs =
+
+[TestingAndDebugging::ProhibitNoStrict]
+# This is a common patterns to (re)define glob CODE entries
+allow = refs
+
+[TestingAndDebugging::ProhibitNoWarnings]
+# These might be acceptable by some
+# "redefine" and "once" are very useful for tests
+#allow = redefine once prototypes
+
+[TestingAndDebugging::ProhibitProlongedStrictureOverride]
+[TestingAndDebugging::RequireTestLabels]
+
+[TestingAndDebugging::RequireUseStrict]
+severity           = 5
+equivalent_modules = Dancer Dancer2 Moo Moose Moo::Role Moose::Role strictures common::sense
+
+[TestingAndDebugging::RequireUseWarnings]
+severity           = 5
+equivalent_modules = Dancer Dancer2 Moo Moose Moo::Role Moose::Role strictures
+
+[ValuesAndExpressions::ProhibitCommaSeparatedStatements]
+# Allow map and grep blocks to return lists.
+allow_last_statement_to_be_comma_separated_in_map_and_grep = 0
+
+# This might need to be adjusted
+[ValuesAndExpressions::ProhibitComplexVersion]
+# Make "use version; our $VERSION = qv('1.2.3');" a violation of this policy.
+forbid_use_version = 1
+
+# constant.pm > Const::Fast > Readonly
+[-ValuesAndExpressions::ProhibitConstantPragma]
+
+# Meh...
+[-ValuesAndExpressions::ProhibitEmptyQuotes]
+
+[ValuesAndExpressions::ProhibitEscapedCharacters]
+[ValuesAndExpressions::ProhibitImplicitNewlines]
+
+[ValuesAndExpressions::ProhibitInterpolationOfLiterals]
+# If the string contains ' characters, allow "" to quote it.
+allow_if_string_contains_single_quote = 1
+
+[ValuesAndExpressions::ProhibitLeadingZeros]
+# builtins that deal with Unix permissions, e.g. chmod, don't get flagged.
+strict = 0
+
+[ValuesAndExpressions::ProhibitLongChainsOfMethodCalls]
+
+# What about constant subroutines? sub MYSUB() {0}
+[ValuesAndExpressions::ProhibitMagicNumbers]
+# allowed_values = 0 1 2
+# Kind of literals to allow.
+# Valid values: Binary, Exp, Float, Hex, Octal.
+# allowed_types = Float
+# Should anything to the right of a "=>" be allowed?.
+allow_to_the_right_of_a_fat_comma = 1
+# Names of subroutines that create constants.
+# Values that are always included: Readonly, Readonly::Array, Readonly::Hash, Readonly::Scalar, const.
+constant_creator_subroutines = constant
+
+[ValuesAndExpressions::ProhibitMismatchedOperators]
+
+# something && something or something || something
+# is useful
+[-ValuesAndExpressions::ProhibitMixedBooleanOperators]
+
+# This exlucdes stuff like '/', which is silly.
+[-ValuesAndExpressions::ProhibitNoisyQuotes]
+
+[ValuesAndExpressions::ProhibitQuotesAsQuotelikeOperatorDelimiters]
+[ValuesAndExpressions::ProhibitSpecialLiteralHeredocTerminator]
+
+# "use v5.14" is more readable than "use 5.014"
+[-ValuesAndExpressions::ProhibitVersionStrings]
+
+[ValuesAndExpressions::RequireConstantVersion]
+[ValuesAndExpressions::RequireInterpolationOfMetachars]
+[ValuesAndExpressions::RequireNumberSeparators]
+[ValuesAndExpressions::RequireQuotedHeredocTerminator]
+[ValuesAndExpressions::RequireUpperCaseHeredocTerminator]
+[Variables::ProhibitAugmentedAssignmentInDeclaration]
+[Variables::ProhibitConditionalDeclarations]
+[Variables::ProhibitLocalVars]
+[Variables::ProhibitMatchVars]
+
+[Variables::ProhibitPackageVars]
+# packages = Data::Dumper File::Find FindBin Log::Log4perl
+# Add the following list to the above list
+add_packages = Carp Test::Builder
+
+[Variables::ProhibitPerl4PackageNames]
+
+[Variables::ProhibitPunctuationVars]
+# Values that are always included: $1, $2, $3, $4, $5, $6, $7, $8, $9, $], $_, @_, _.
+# These are just too common to exclude
+allow = $@ $! $/ $0 $|
+
+[Variables::ProhibitReusedNames]
+[Variables::ProhibitUnusedVariables]
+[Variables::ProtectPrivateVars]
+
+# Not a fan, but might be good for beginners
+# Write `local $foo = $bar;' instead of just `local $foo;'.
+[Variables::RequireInitializationForLocalVars]
+
+# Write `for my $element (@list) {...}' instead of `for $element (@list) {...}'.
+# What about postfix "for"
+[Variables::RequireLexicalLoopIterators]
+
+[Variables::RequireLocalizedPunctuationVars]
+# Values that are always included: $ARG, $_, @_.
+# Maybe %ENV ?
+# allow =
+
+[Variables::RequireNegativeIndices]
+
+# ---------------------
+# - Perl::Critic::Lax -
+# ---------------------
+
+# These might not be installed, so let's make sure
+[Lax::ProhibitComplexMappings::LinesNotStatements]
+
+# Unnecessary, since there's "strict = 0" option in
+# Perl::Critic::Policy::ValuesAndExpressions::ProhibitLeadingZeros
+[-Lax::ProhibitLeadingZeros::ExceptChmod]
+[-Lax::ProhibitStringyEval::ExceptForRequire]
+
+# Not beginner-friendly
+[-Lax::RequireEndWithTrueConst]
+
+# Risky
+[-Lax::RequireExplicitPackage::ExceptForPragmata]
+
+# -----------------------
+# - Perl::Critic::Moose -
+# -----------------------
+
+[Moose::ProhibitDESTROYMethod]
+equivalent_modules = Moo Moo::Role
+
+[Moose::ProhibitMultipleWiths]
+equivalent_modules = Moo Moo::Role
+
+[Moose::ProhibitNewMethod]
+equivalent_modules = Moo Moo::Role
+
+[Moose::RequireCleanNamespace]
+
+[Moose::ProhibitLazyBuild]
+equivalent_modules = Moo Moo::Role
+
+# We *shouldn't have make_immutable() in Moo
+# The opposite of this
+[Moose::RequireMakeImmutable]
+
+# ----------------------
+# - Perl::Critic::More -
+# ----------------------
+
+# This is useful for projects that shouldn't die() or croak()
+# But shouldn't the exception possibly call die() or croak()?
+# I don't see wherethat's available in the code...
+#[ErrorHandling::RequireUseOfExceptions]
+
+# ---------------------------------------------
+# - Perl::Critic::Policy::TryTiny::RequireUse -
+# ---------------------------------------------
+
+[TryTiny::RequireUse]
+
+# ----------------------------------------------------------
+# - Perl::Critic::Policy::TryTiny::RequireBlockTermination -
+# ----------------------------------------------------------
+
+[TryTiny::RequireBlockTermination]
+
+# -------------------------------------------------------------------
+# - Perl::Critic::Policy::ValuesAndExpressions::PreventSQLInjection -
+# -------------------------------------------------------------------
+
+[ValuesAndExpressions::PreventSQLInjection]
+
+#-----------------------------------------------------
+# - Perl::Critic::Policy::Moo::ProhibitMakeImmutable -
+#-----------------------------------------------------
+
+[Moo::ProhibitMakeImmutable]
+
+#----------------------------------------------
+# - Perl::Critic::Policy::Dynamic::NoIndirect -
+#----------------------------------------------
+
+# Various code-bases probably can't use this
+# because it requires compiling the code
+
+# This currently fails to install :(
+# because of Perl::Critic::DynamicPolicy
+#[Dynamic::NoIndirect]
+
+#---------------------------------------
+# - Perl::Critic::PetPeeves::JTRAMMELL -
+#---------------------------------------
+
+[Variables::ProhibitUselessInitialization]
+
+#-------------------------------------
+# - Perl::Critic::Policy::Perlsecret -
+#-------------------------------------
+
+# 0.0.9
+[Perlsecret]
+allow_secrets = Bang Bang, Venus, Winking Fat Comma, Enterprise
+
+#--------------------------------------
+# - Perl::Critic::Policy::HTTPCookies -
+#--------------------------------------
+
+[HTTPCookies]
+
+#-------------------------------
+# - Perl::Critic::StricterSubs -
+#-------------------------------
+
+[Modules::RequireExplicitInclusion]
+severity = 2
+
+# Can't find how to mark DSL keywords
+# (Moo{,se} provides has/with/extends/etc., Dancer{,2} provides more)
+# This is problematic
+[-Subroutines::ProhibitCallsToUndeclaredSubs]
+severity = 3
+
+# Calls to full-path subroutines is a clean practice, IMHO
+[-Subroutines::ProhibitCallsToUnexportedSubs]
+
+[Subroutines::ProhibitExportingUndeclaredSubs]
+severity = 2
+
+[Subroutines::ProhibitQualifiedSubDeclarations]
+severity = 3
+
+#---------------------------
+# - Perl::Critic::Freenode -
+#---------------------------
+
+[Freenode::AmpersandSubCalls]
+[Freenode::ArrayAssignAref]
+[Freenode::BarewordFilehandles]
+[Freenode::ConditionalDeclarations]
+[Freenode::ConditionalImplicitReturn]
+[Freenode::DeprecatedFeatures]
+
+# I disagree with a few of these, and there is no overrides
+# I keep this here as a placeholder in case that changes
+# or to check this once in a while to see if there are new modules
+[-Freenode::DiscouragedModules]
+
+[Freenode::DollarAB]
+extra_pair_functions = reduce
+
+[Freenode::Each]
+
+# Not sure about this one. "return undef" is also... icky.
+[-Freenode::EmptyReturn]
+
+[Freenode::ModPerl]
+
+# This also checks for one-arg open(), unlike the core policy
+[Freenode::OpenArgs]
+
+# Already available in core policy
+[-Freenode::POSIXImports]
+
+# Does *not* get confused with signatures
+[Freenode::Prototypes]
+
+# No need.
+[-Freenode::StrictWarnings]
+
+[Freenode::Threads]
+[Freenode::Wantarray]
+[Freenode::WarningsSwitch]
+
+[Freenode::WhileDiamondDefaultAssignment]
+
+#--------------------------------
+# - Perl::Critic::Policy::Bangs -
+#--------------------------------
+[Bangs::ProhibitUselessRegexModifiers]
+
+#-----------------------
+# - Perl::Critic::Pulp -
+#-----------------------
+
+[ValuesAndExpressions::UnexpandedSpecialLiteral]
+[ValuesAndExpressions::RequireNumericVersion]
+[ValuesAndExpressions::ProhibitUnknownBackslash]
+[ValuesAndExpressions::ProhibitNullStatements]
+[ValuesAndExpressions::NotWithCompare]
+[ValuesAndExpressions::ProhibitDuplicateHashKeys]
+[ValuesAndExpressions::ProhibitArrayAssignAref]
+[ValuesAndExpressions::ConstantBeforeLt]
+[ValuesAndExpressions::ProhibitEmptyCommas]
+[CodeLayout::ProhibitFatCommaNewline]
+[CodeLayout::RequireTrailingCommaAtNewline]
+[CodeLayout::RequireFinalSemicolon]
+[Documentation::RequireEndBeforeLastPod]
+[Modules::ProhibitModuleShebang]
+[Modules::ProhibitUseQuotedVersion]
+[Modules::ProhibitPOSIXimport]
+
+#-------------------------------------------------------------------
+# - Perl::Critic::Policy::BuiltinFunctions::ProhibitDeleteOnArrays -
+#-------------------------------------------------------------------
+
+[BuiltinFunctions::ProhibitDeleteOnArrays]
+
+# -----------------------------------------------------------
+# - Perl::Critic::Policy::CodeLayout::ProhibitHashBarewords -
+# -----------------------------------------------------------
+
+[CodeLayout::ProhibitHashBarewords]
+
+# ------------------------------------------------------------
+# - Perl::Critic::Policy::BuiltinFunctions::ProhibitReturnOr -
+# ------------------------------------------------------------
+
+[BuiltinFunctions::ProhibitReturnOr]
+
+# ----------------------
+# - Perl::Critic::Tics -
+# ----------------------
+
+[Tics::ProhibitUseBase]
