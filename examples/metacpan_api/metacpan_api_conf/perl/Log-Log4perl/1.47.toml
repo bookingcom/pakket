@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Log-Log4perl"
-version = "1.47"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

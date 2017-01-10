@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "HTML-Tiny"
-version = "1.05"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

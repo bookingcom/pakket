@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Package-Stash-XS"
-version = "0.28"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Term-Size-Perl"
-version = "0.029"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

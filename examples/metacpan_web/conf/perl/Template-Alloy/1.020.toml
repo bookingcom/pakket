@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "Template-Alloy"
-version = "1.020"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]
-[Prereqs.perl.requires.Digest-MD5]
-version = "2.55"

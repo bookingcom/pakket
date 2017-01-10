@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "HTTP-GHTTP"
-version = "1.07"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]
-[Prereqs.perl.test]

@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "IO-Interactive"
-version = "1.022"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

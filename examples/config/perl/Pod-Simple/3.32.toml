@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "Pod-Simple"
-version = "3.32"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]
-[Prereqs.perl.test]

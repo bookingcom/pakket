@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "File-Next"
-version = "1.16"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

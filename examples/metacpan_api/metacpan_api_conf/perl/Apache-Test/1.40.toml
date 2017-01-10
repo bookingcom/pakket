@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Apache-Test"
-version = "1.40"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

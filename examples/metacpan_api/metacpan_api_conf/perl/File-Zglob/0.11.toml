@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "File-Zglob"
-version = "0.11"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

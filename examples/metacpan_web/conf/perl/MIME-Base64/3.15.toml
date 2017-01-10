@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "MIME-Base64"
-version = "3.15"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]
-[Prereqs.perl.requires.XSLoader]
-version = 0

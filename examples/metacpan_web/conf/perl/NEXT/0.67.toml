@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "NEXT"
-version = "0.67"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]
-[Prereqs.perl.requires.Carp]
-version = 0

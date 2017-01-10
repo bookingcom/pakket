@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "WWW-RobotRules"
-version = "6.02"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]
-[Prereqs.perl.requires.URI]
-version = "1.71"

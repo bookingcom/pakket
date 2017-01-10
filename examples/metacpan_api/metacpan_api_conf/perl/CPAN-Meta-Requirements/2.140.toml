@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "CPAN-Meta-Requirements"
-version = "2.140"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

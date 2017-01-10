@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Email-Date-Format"
-version = "1.005"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

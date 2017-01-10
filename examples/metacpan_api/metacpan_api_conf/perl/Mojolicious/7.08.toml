@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Mojolicious"
-version = "7.08"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

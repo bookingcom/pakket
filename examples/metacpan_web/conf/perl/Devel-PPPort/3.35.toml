@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "Devel-PPPort"
-version = "3.35"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]
-[Prereqs.perl.requires.ExtUtils-MakeMaker]
-version = 0

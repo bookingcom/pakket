@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Text-Template"
-version = "1.46"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

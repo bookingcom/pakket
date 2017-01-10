@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Sub-Exporter-Progressive"
-version = "0.001012"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

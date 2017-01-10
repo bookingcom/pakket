@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "MIME-Charset"
-version = "1.012"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]
