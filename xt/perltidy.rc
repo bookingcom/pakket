@@ -1,0 +1,27 @@
+# Good base-line
+# an alias for this:
+# -l=78 -i=4 -ci=4 -st -se -vt=2 -cti=0 -pt=1 -bt=1 -sbt=1 -bbt=1 -nsfs -nolq
+# -wbb="% + - * / x != == >= <= =~ !~ < > | & =
+#       **= += *= &= <<= &&= -= /= |= >>= ||= //= .= %= ^= x="
+
+# -pbp
+--perl-best-practices
+# -nst
+--nostandard-output
+
+# overriding some stuff there
+# -vt
+--vertical-tightness=0
+# -vtc
+--vertical-tightness-closing=0
+# --outdent-long-quotes # ??
+
+# more stuff
+--warning-output
+--check-syntax
+--perl-syntax-check-flags="-c"
+#--preserve-line-endings
+--cuddled-else
+--minimum-space-to-comment=1
+--nooutdent-long-comments
+# --ignore-old-breakpoints # ??
