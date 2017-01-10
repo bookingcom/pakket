@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "ExtUtils-MakeMaker"
-version = "7.24"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

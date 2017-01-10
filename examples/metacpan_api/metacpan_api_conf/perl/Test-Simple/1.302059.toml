@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Test-Simple"
-version = "1.302059"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

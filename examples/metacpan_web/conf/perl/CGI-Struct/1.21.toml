@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "CGI-Struct"
-version = "1.21"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]
-[Prereqs.perl.requires.Storable]
-version = 0

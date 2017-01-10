@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "PerlIO-gzip"
-version = "0.19"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

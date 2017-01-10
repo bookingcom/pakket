@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Sub-Install"
-version = "0.928"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

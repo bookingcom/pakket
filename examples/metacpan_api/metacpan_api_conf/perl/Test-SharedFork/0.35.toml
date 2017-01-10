@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Test-SharedFork"
-version = "0.35"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "IO-Zlib"
-version = "1.10"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

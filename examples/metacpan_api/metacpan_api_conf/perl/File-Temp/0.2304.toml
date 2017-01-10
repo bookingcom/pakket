@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "File-Temp"
-version = "0.2304"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

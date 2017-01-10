@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "FCGI"
-version = "0.78"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

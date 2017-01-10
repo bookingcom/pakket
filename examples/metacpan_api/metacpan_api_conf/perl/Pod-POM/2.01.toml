@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Pod-POM"
-version = "2.01"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

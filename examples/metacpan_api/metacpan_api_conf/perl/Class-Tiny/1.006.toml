@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Class-Tiny"
-version = "1.006"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

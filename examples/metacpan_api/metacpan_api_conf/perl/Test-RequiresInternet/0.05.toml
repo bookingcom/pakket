@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Test-RequiresInternet"
-version = "0.05"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

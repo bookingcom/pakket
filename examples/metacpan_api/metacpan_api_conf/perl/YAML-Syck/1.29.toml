@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "YAML-Syck"
-version = "1.29"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "B-Hooks-OP-Check"
-version = "0.19"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]
-[Prereqs.perl.requires.parent]
-version = 0

@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "File-Slurp-Tiny"
-version = "0.004"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

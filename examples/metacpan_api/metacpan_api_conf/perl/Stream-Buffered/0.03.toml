@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Stream-Buffered"
-version = "0.03"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]
