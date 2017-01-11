@@ -41,5 +41,7 @@ my $new_file = "$SEACAN_FILE-packed.pl";
 print "FatPacking: $SEACAN_FILE > $new_file\n";
 run_command( [ 'fatpack', 'pack', $SEACAN_FILE, '>', $new_file ] );
 print "Adding to the commit.\n";
-run_command( [ 'git', 'add', $new_file ] );
+assert_command( [ 'git', 'add', $new_file ] );
+print "Cleaning up.\n";
+assert_command( [ 'rm', '-rf', 'fatlib' ] );
 print "Have a good day!\n";
