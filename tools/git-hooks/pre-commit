@@ -1,0 +1,45 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use IPC::Run3 qw< run3 >;
+
+our $GIT_LOG_CMD = 'git diff --name-status --cached';
+our $SEACAN_FILE = 'tools/seacan-pakket';
+
+sub assert_command {
+    my $cmd = shift;
+    my ( $stdout, $stderr ) = run_command($cmd);
+
+    if ($stderr) {
+        my $cmd_str = ref $cmd eq 'ARRAY' ? join ' ', @{$cmd} : $cmd;
+        warn "Git pre-commit hook failed command $cmd_str:\n"
+            . "Error: $stderr\n"
+            . "Ignoring git hook.\n";
+
+        exit 0;
+    }
+
+    return $stdout;
+}
+
+sub run_command {
+    my $cmd = shift;
+    run3( $cmd, \my $stdin, \my $stdout, \my $stderr );
+    return ( $stdout, $stderr );
+}
+
+my $stdout = assert_command($GIT_LOG_CMD);
+
+my ($seacan) = grep m{^ M \s+ $SEACAN_FILE $}xms, split /\n/xms,
+    $stdout;
+
+# Not Seacan
+$seacan or exit 0;
+
+my $new_file = "$SEACAN_FILE-packed.pl";
+print "FatPacking: $SEACAN_FILE > $new_file\n";
+run_command( [ 'fatpack', 'pack', $SEACAN_FILE, '>', $new_file ] );
+print "Adding to the commit.\n";
+run_command( [ 'git', 'add', $new_file ] );
+print "Have a good day!\n";
