@@ -13,6 +13,7 @@ use Algorithm::Diff::Callback qw< diff_hashes >;
 use Types::Path::Tiny         qw< Path >;
 use TOML::Parser;
 use Log::Any                  qw< $log >;
+use MetaCPAN::Client;
 use version 0.77;
 
 use Pakket::Log;
@@ -196,30 +197,42 @@ sub bootstrap_build {
     my ( $self, $category ) = @_;
 
     if ( $category eq 'perl' ) {
-        # for now we'll use a static list of distributions.
-        # later we'll extract the dist/ver info for the
-        # full list of core/dual-life modules:
-        # my @core_modules = keys %{ list_core_modules() };
-
-        # this is an array to maintain build order
-        my @dists = (
-            [ 'ExtUtils-Manifest'     => '1.70' ],
-            [ 'Encode'                => '2.86' ],
-            [ 'Text-Abbrev'           => '1.02' ],
-            [ 'Module-Build'          => '0.4220' ],
-            [ 'IO'                    => '1.25' ],
-            [ 'Module-Build-WithXSpp' => '0.14' ],
+        my @core_modules = (
+            qw< Text::Abbrev Module::Build Module::Build::WithXSpp >,
+            keys %{ list_core_modules() }
         );
 
-        for ( @dists ) {
-            my ( $name, $ver ) = @$_;
+        my $mcpan = MetaCPAN::Client->new();
+        my $rs = $mcpan->all('files', {
+            'es_filter' => {
+                'and' => [
+                    { 'terms' => { 'module.name' => \@core_modules } },
+                    { 'term'  => { 'status' => 'latest' } },
+                    { 'not'   => { 'term'  => { 'distribution' => 'perl_mlb' } } },
+                ]
+            }
+        });
+
+        # add entry for the distribution (hash for unique values)
+        my %m2d;
+        while ( my $file = $rs->next ) {
+            for my $module ( @{ $file->module } ) {
+                $m2d{ $module->{'name'} } = $file->distribution;
+            }
+        }
+
+        for my $cm ( @core_modules ) {
+            my $dist = $m2d{$cm};
+            $dist or next;
+            my $ver  = $self->index->{'perl'}{$dist}{'latest'};
+            defined $ver or next;
             my $req = Pakket::Requirement->new(
                 'category' => $category,
-                'name'     => $name,
+                'name'     => $dist,
                 'version'  => $ver,
             );
             $self->run_build($req, { skip_prereqs => 1 });
-            $self->bootstrapped->{$name}{$ver} = 1;
+            $self->bootstrapped->{$dist}{$ver} = 1;
         }
     }
     # elsif ( $category eq ...
