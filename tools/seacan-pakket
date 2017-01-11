@@ -1,5 +1,12 @@
 #!/usr/bin/env perl
 
+# XXX
+# This script needs to be fatpacked when done.
+# In order to do this, please use the pre-commit hook
+# available in the tools/git-hooks directory, as such:
+# ( cd .git/hooks && ln -s ../../tools/git-hooks/pre-commit )
+# XXX
+
 use strict;
 use warnings;
 use constant {
