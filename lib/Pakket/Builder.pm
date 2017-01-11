@@ -31,7 +31,6 @@ use Pakket::Utils::Perl qw< list_core_modules >;
 use constant {
     'ALL_PACKAGES_KEY'   => '',
     'BUILD_DIR_TEMPLATE' => 'BUILD-XXXXXX',
-    'SKIP_PREREQS'       => 1,
 };
 
 with 'Pakket::Role::RunCommand';
@@ -219,7 +218,7 @@ sub bootstrap_build {
                 'name'     => $name,
                 'version'  => $ver,
             );
-            $self->run_build($req, SKIP_PREREQS); # skip_prereqs
+            $self->run_build($req, { skip_prereqs => 1 });
             $self->bootstrapped->{$name}{$ver} = 1;
         }
     }
@@ -227,7 +226,9 @@ sub bootstrap_build {
 }
 
 sub run_build {
-    my ( $self, $prereq, $skip_prereqs ) = @_;
+    my ( $self, $prereq, $params ) = @_;
+    my $level        = $params->{'level'}        || 0;
+    my $skip_prereqs = $params->{'skip_prereqs'} || 0;
 
     # FIXME: GH #29
     if ( $prereq->category eq 'perl' ) {
@@ -274,7 +275,7 @@ sub run_build {
         $self->is_built->{$full_name} = $prereq->version;
     }
 
-    $log->noticef( 'Working on %s=%s', $full_name, $prereq->version );
+    $log->noticef( '%sWorking on %s=%s', '|...'x$level, $full_name, $prereq->version );
 
     # Create a Package instance from the configuration
     # using the information we have on it
@@ -326,7 +327,7 @@ sub run_build {
         $self->scan_dir( $category, $package_name,
             $main_build_dir->absolute, 0 );
 
-        $log->noticef( 'Installed %s=%s', $full_name, $prereq->version );
+        $log->noticef( '%sInstalled %s=%s', '|...'x$level, $full_name, $prereq->version );
         return;
     }
 
@@ -336,8 +337,8 @@ sub run_build {
     # recursively build prereqs
     if ( ! $skip_prereqs ) {
         foreach my $category ( keys %{ $self->builders } ) {
-            $self->_recursive_build_phase( $package, $category, 'configure' );
-            $self->_recursive_build_phase( $package, $category, 'runtime' );
+            $self->_recursive_build_phase( $package, $category, 'configure', $level+1 );
+            $self->_recursive_build_phase( $package, $category, 'runtime', $level+1 );
         }
     }
     my $package_src_dir = $self->package_location($package);
@@ -403,13 +404,13 @@ sub run_build {
         $package_files,
     );
 
-    $log->noticef( 'Finished on %s=%s', $full_name, $prereq->version );
+    $log->noticef( '%sFinished on %s=%s', '|...'x$level, $full_name, $prereq->version );
 
     return;
 }
 
 sub _recursive_build_phase {
-    my ( $self, $package, $category, $phase ) = @_;
+    my ( $self, $package, $category, $phase, $level ) = @_;
     my @prereqs = keys %{ $package->prereqs->{$category}{$phase} };
 
     foreach my $prereq_name (@prereqs) {
@@ -422,7 +423,7 @@ sub _recursive_build_phase {
             'version'  => $version,
         );
 
-        $self->run_build($req);
+        $self->run_build($req, { level => $level });
     }
 }
 
