@@ -4,11 +4,11 @@ package Pakket::Repository::Backend::File;
 use Moose;
 use MooseX::StrictConstructor;
 
-use JSON::MaybeXS             qw< decode_json >;
-use Path::Tiny                qw< path >;
-use Log::Any                  qw< $log >;
-use Types::Path::Tiny         qw< Path >;
-use Pakket::Utils             qw< canonical_package_name >;
+use JSON::MaybeXS     qw< decode_json >;
+use Path::Tiny        qw< path >;
+use Log::Any          qw< $log >;
+use Types::Path::Tiny qw< Path >;
+use Pakket::Utils     qw< canonical_package_name >;
 
 with qw< Pakket::Role::Repository::Backend >;
 
