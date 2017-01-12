@@ -35,9 +35,9 @@ has '_cached_packages_list' => (
 sub _build_repo_index {
     my $self     = shift;
     my $filename = $self->filename;
+    my $file     = path($filename);
 
-    my $file = path($filename);
-    if ( !defined $file ) {
+    if ( !$file->is_file ) {
         $log->critical("File '$file' does not exist or cannot be read");
         exit 1;
     }
