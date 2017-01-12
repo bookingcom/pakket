@@ -25,7 +25,7 @@ has 'repo_index' => (
     'builder' => '_build_repo_index',
 );
 
-has 'packages_list' => (
+has '_cached_packages_list' => (
     'is'      => 'ro',
     'isa'     => 'ArrayRef',
     'lazy'    => 1,
@@ -45,7 +45,7 @@ sub _build_repo_index {
     return decode_json( $file->slurp_utf8 );
 }
 
-sub _build_packages_list {
+sub _build_cached_packages_list {
     my $self  = shift;
     my $index = $self->repo_index;
     my @packages;
@@ -63,6 +63,8 @@ sub _build_packages_list {
 
     return \@packages;
 }
+
+sub packages_list { $_[0]->_cached_packages_list }
 
 sub latest_version {
     my ( $self, $category, $package ) = @_;
