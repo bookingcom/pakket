@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "IPC-System-Simple"
-version = "1.25"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

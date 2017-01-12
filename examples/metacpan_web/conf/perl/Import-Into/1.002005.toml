@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "Import-Into"
-version = "1.002005"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]
-[Prereqs.perl.requires.Module-Runtime]
-version = 0

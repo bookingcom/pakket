@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "IO-Compress"
-version = "2.069"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

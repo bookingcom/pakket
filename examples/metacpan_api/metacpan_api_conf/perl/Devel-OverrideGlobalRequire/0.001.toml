@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Devel-OverrideGlobalRequire"
-version = "0.001"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

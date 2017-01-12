@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "File-pushd"
-version = "1.014"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "IO-String"
-version = "1.08"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Params-Util"
-version = "1.07"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

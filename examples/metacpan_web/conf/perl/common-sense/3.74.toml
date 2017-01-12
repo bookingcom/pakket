@@ -1,7 +1,0 @@
-[Package]
-category = "perl"
-name = "common-sense"
-version = "3.74"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]

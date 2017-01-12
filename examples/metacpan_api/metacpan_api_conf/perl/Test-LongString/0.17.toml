@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Test-LongString"
-version = "0.17"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

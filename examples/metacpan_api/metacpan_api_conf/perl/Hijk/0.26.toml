@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Hijk"
-version = "0.26"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

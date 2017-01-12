@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "Regexp-Common-time"
-version = "0.07"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]
-[Prereqs.perl.requires.Regexp-Common]
-version = 0

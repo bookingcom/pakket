@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "XML-NamespaceSupport"
-version = "1.11"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Digest-SHA1"
-version = "2.13"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

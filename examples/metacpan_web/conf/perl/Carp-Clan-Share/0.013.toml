@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "Carp-Clan-Share"
-version = "0.013"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]
-[Prereqs.perl.requires.Carp-Clan]
-version = 0

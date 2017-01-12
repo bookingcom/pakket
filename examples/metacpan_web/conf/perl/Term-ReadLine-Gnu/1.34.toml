@@ -1,7 +1,0 @@
-[Package]
-category = "perl"
-name = "Term-ReadLine-Gnu"
-version = "1.34"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]

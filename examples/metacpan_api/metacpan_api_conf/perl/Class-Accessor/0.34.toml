@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Class-Accessor"
-version = "0.34"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

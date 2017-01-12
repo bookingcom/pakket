@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "LWP-MediaTypes"
-version = "6.02"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

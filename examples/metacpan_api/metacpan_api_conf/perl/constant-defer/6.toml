@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "constant-defer"
-version = "6"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

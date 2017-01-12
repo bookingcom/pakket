@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "DateTime-Format-W3CDTF"
-version = "0.06"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]
-[Prereqs.perl.requires.DateTime]
-version = 0

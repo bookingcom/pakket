@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Find-Lib"
-version = "1.04"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]
