@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "CPAN-Meta-YAML"
-version = "0.018"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "HTML-Tagset"
-version = "3.20"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]
-[Prereqs.perl.test]

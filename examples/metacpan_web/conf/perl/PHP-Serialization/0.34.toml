@@ -1,7 +1,0 @@
-[Package]
-category = "perl"
-name = "PHP-Serialization"
-version = "0.34"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]

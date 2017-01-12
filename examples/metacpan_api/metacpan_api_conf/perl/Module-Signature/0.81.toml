@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Module-Signature"
-version = "0.81"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

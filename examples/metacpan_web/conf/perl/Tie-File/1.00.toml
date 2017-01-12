@@ -1,7 +1,0 @@
-[Package]
-category = "perl"
-name = "Tie-File"
-version = "1.00"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]

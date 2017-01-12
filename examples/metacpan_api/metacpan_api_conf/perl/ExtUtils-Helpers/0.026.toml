@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "ExtUtils-Helpers"
-version = "0.026"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

@@ -1,9 +1,0 @@
-[Package]
-category = "perl"
-name = "URI-ws"
-version = "0.03"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]
-[Prereqs.perl.requires.URI]
-version = 0

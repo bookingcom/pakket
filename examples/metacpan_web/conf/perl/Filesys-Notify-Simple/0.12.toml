@@ -1,7 +1,0 @@
-[Package]
-category = "perl"
-name = "Filesys-Notify-Simple"
-version = "0.12"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.requires]

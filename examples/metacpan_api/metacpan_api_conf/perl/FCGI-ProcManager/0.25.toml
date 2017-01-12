@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "FCGI-ProcManager"
-version = "0.25"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

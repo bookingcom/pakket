@@ -26,3 +26,7 @@ requires 'TOML';
 requires 'TOML::Parser';
 requires 'Types::Path::Tiny';
 requires 'version', '>= 0.77';
+
+on 'test' => sub {
+    requires 'Test::Perl::Critic::Progressive';
+};

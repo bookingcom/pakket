@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Safe-Isa"
-version = "1.000005"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

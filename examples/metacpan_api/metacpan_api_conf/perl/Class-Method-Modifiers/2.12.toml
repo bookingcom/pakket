@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Class-Method-Modifiers"
-version = "2.12"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

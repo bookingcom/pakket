@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Data-UUID"
-version = "1.221"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

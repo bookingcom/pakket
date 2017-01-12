@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Text-CSV_XS"
-version = "1.25"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]

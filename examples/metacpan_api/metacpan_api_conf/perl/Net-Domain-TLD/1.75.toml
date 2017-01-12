@@ -1,8 +1,0 @@
-[Package]
-category = "perl"
-name = "Net-Domain-TLD"
-version = "1.75"
-[Prereqs]
-[Prereqs.perl]
-[Prereqs.perl.configure]
-[Prereqs.perl.runtime]
