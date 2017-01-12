@@ -1,0 +1,27 @@
+{
+    "fake_category_1": {
+        "fake_package_name_1_1": {
+            "versions" : {
+                "1.1.0" : "Some-Location",
+                "1.1.1" : "Other-Location"
+            },
+            "latest": "1.1.1"
+        }
+    },
+    "fake_category_2": {
+        "fake_package_name_2_1": {
+            "versions" : {
+                "2.1.0" : "Some-Location",
+                "2.1.1" : "Other-Location"
+            },
+            "latest": "2.1.1"
+        },
+        "fake_package_name_2_2": {
+            "versions" : {
+                "2.2.0" : "Some-Location",
+                "2.2.1" : "Other-Location"
+            },
+            "latest": "2.2.1"
+        }
+    }
+}
