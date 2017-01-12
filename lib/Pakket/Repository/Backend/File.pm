@@ -29,7 +29,7 @@ has '_cached_packages_list' => (
     'is'      => 'ro',
     'isa'     => 'ArrayRef',
     'lazy'    => 1,
-    'builder' => '_build_packages_list',
+    'builder' => '_build_cached_packages_list',
 );
 
 sub _build_repo_index {
