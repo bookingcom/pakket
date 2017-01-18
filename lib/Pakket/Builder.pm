@@ -144,10 +144,10 @@ has 'installer' => (
     },
 );
 
-has 'bootstrapped' => (
+has 'bootstrapping' => (
     'is'      => 'ro',
-    'isa'     => 'HashRef',
-    'default' => sub { +{} },
+    'isa'     => 'Bool',
+    'default' => 1,
 );
 
 sub _build_bundler {
@@ -157,11 +157,11 @@ sub _build_bundler {
 
 sub build {
     my ( $self, %args ) = @_;
-
     my $prereq = Pakket::Requirement->new(%args);
 
     $self->_setup_build_dir;
-    $self->bootstrap_build($prereq->category);
+    $self->bootstrapping
+        and $self->bootstrap_build($prereq->category);
     $self->run_build($prereq);
 }
 
@@ -195,28 +195,89 @@ sub _setup_build_dir {
 sub bootstrap_build {
     my ( $self, $category ) = @_;
 
+    my $bootstrap_builder = ref($self)->new(
+        'index'         => $self->index,
+        'index_file'    => $self->index_file,
+        'config_dir'    => $self->config_dir,
+        'source_dir'    => $self->source_dir,
+        'bundler_args'  => $self->bundler_args,
+        'builders'      => $self->builders,
+        'installer'     => $self->installer,
+        'bootstrapping' => 0,
+    );
+
     if ( $category eq 'perl' ) {
         # hardcoded list of packages we have to build first
         # using core modules to break cyclic dependencies.
         # we have to maintain the order in order for packages to build
         my @dists = qw<
-            ExtUtils-Manifest
-            Encode
-            Text-Abbrev
+            ExtUtils-MakeMaker
             Module-Build
-            IO
             Module-Build-WithXSpp
+            Module-Install
         >;
+        my %dists = map { $_ => $self->index->{$category}{$_}{'latest'} } @dists;
 
-        for my $dist ( @dists ) {
-            my $ver  = $self->index->{'perl'}{$dist}{'latest'};
+        # check which parcels already exist, build array to maintain order
+        for my $name ( keys %dists ) {
+            my $ver = $dists{$name};
+            my $parcel_file = $self->installer->parcel_file($category, $name, $ver);
+            if ( $parcel_file->exists ) {
+                $log->noticef( 'Skipping: parcel %s=%s already exists', $name, $ver );
+                @dists = grep { $_ ne $name } @dists;
+            }
+        }
+
+        # Pass I: bootstrap toolchain - build w/o dependencies
+        for my $name ( @dists ) {
+            my $version = $dists{$name};
+
+            $log->noticef( 'Bootstrapping: phase I: %s=%s (%s)', $name, $version, 'no-deps' );
+
             my $req = Pakket::Requirement->new(
                 'category' => $category,
-                'name'     => $dist,
-                'version'  => $ver,
+                'name'     => $name,
+                'version'  => $version,
             );
-            $self->run_build($req, { 'skip_prereqs' => 1 });
-            $self->bootstrapped->{$dist}{$ver} = 1;
+
+            $self->run_build( $req, { bootstrapping_1_skip_prereqs => 1 } );
+        }
+
+        # Pass II: bootstrap toolchain - build dependencies only
+        for my $name ( @dists ) {
+            my $version = $dists{$name};
+
+            $log->noticef( 'Bootstrapping: phase II: %s=%s (%s)', $name, $version, 'deps-only' );
+
+            my $req = Pakket::Requirement->new(
+                'category' => $category,
+                'name'     => $name,
+                'version'  => $version,
+            );
+
+            $self->run_build( $req, { bootstrapping_2_deps_only => 1 } );
+        }
+
+        # Pass III: bootstrap toolchain - rebuild w/ dependencies
+        for my $name ( @dists ) {
+            my $version = $dists{$name};
+
+            # remove the temp (no-deps) parcel
+            $log->noticef( 'Removing %s=%s (no-deps parcel)', $name, $version );
+            my $parcel_file = $self->installer->parcel_file($category, $name, $version);
+            if ( ! $parcel_file->exists ) {
+                $log->criticalf('Could not find parcel file for %s ver %s', $name, $version);
+                exit 1;
+            }
+            $parcel_file->remove;
+
+            # build again with dependencies
+            delete $bootstrap_builder->is_built->{ "$category/$name" };
+            $bootstrap_builder->build(
+                category => $category,
+                name     => $name,
+                version  => $version,
+            );
         }
     }
     # elsif ( $category eq ...
@@ -224,17 +285,16 @@ sub bootstrap_build {
 
 sub run_build {
     my ( $self, $prereq, $params ) = @_;
-    my $level        = $params->{'level'}        || 0;
-    my $skip_prereqs = $params->{'skip_prereqs'} || 0;
-    my $short_name   = $prereq->short_name;
+    $params //= {};
+    my $level             = $params->{'level'}                        || 0;
+    my $skip_prereqs      = $params->{'bootstrapping_1_skip_prereqs'} || 0;
+    my $bootstrap_prereqs = $params->{'bootstrapping_2_deps_only'}    || 0;
+    my $short_name        = $prereq->short_name;
 
     # FIXME: GH #29
     if ( $prereq->category eq 'perl' ) {
         # XXX: perl_mlb is a MetaCPAN bug
         first { $prereq->name eq $_ } qw<perl perl_mlb>
-            and return;
-
-        $self->bootstrapped->{ $prereq->name }{ $prereq->version }
             and return;
     }
 
@@ -251,7 +311,7 @@ sub run_build {
         exit 1;
     }
 
-    if ( defined $self->is_built->{$short_name} ) {
+    if ( ! $bootstrap_prereqs and defined $self->is_built->{$short_name} ) {
         my $built_version = $self->is_built->{$short_name};
 
         if ( $built_version ne $prereq->version ) {
@@ -282,6 +342,10 @@ sub run_build {
             $prereq->name,
             $prereq->version,
         ),
+
+        # We are dealing with a version which should not be installed
+        # outside of a bootstrap phase, so we're "marking" this package
+        ( 'is_bootstrap' => 1 )x!! $skip_prereqs,
     );
 
     my $top_build_dir  = $self->build_dir;
@@ -301,7 +365,7 @@ sub run_build {
         $package->category, $package->name, $package->version,
     );
 
-    if ( $parcel_file->exists ) {
+    if ( ! $bootstrap_prereqs and $parcel_file->exists ) {
 
         # Use the installer to recursively install all packages
         # that are already available
@@ -310,12 +374,19 @@ sub run_build {
             $package->full_name,
         );
 
-        my $installer_cache = {};
+        my $installer_cache = $self->bootstrapping
+            ? {}
+            # Phase 3 needs to avoid trying to install
+            # the bare minimum toolchain (Phase 1)
+            : { $prereq->category => { $package->name => $package->version } };
 
         $installer->install_package(
             $package,
             $main_build_dir,
-            $installer_cache,
+            {
+                'cache'        => $installer_cache,
+                'skip_prereqs' => $skip_prereqs,
+            },
         );
 
         $self->scan_dir( $package->category, $package->name,
@@ -332,14 +403,14 @@ sub run_build {
     my @supported_phases = qw< configure runtime >;
 
     # recursively build prereqs
-    if ( ! $skip_prereqs ) {
+    if ( $bootstrap_prereqs or ! $skip_prereqs ) {
         foreach my $category ( keys %{ $self->builders } ) {
             $self->_recursive_build_phase( $package, $category, 'configure', $level+1 );
             $self->_recursive_build_phase( $package, $category, 'runtime', $level+1 );
         }
     }
+    $bootstrap_prereqs and return; # done building prereqs
     my $package_src_dir = $self->package_location($package);
-
     $log->info('Copying package files');
     $package_src_dir->is_dir or do {
         $log->critical("Cannot find source dir: $package_src_dir");

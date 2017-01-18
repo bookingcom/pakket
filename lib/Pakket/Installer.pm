@@ -79,6 +79,12 @@ has 'input_file' => (
     'predicate' => '_has_input_file',
 );
 
+has 'is_installed' => (
+    'is'      => 'ro',
+    'isa'     => 'HashRef',
+    'default' => sub { +{} },
+);
+
 sub _build_index {
     my $self = shift;
     return decode_json $self->index_file->slurp_utf8;
@@ -164,9 +170,9 @@ sub install {
         dircopy( $pakket_libraries_dir->child($orig_work_dir), $work_dir );
     }
 
-    my $installed = {};
+    my $installer_cache = {};
     foreach my $package (@packages) {
-        $self->install_package( $package, $work_dir, $installed );
+        $self->install_package( $package, $work_dir, { 'cache' => $installer_cache } );
     }
 
     # We finished installing each one recursively to the work directory
@@ -187,7 +193,7 @@ sub install {
 
     $log->infof(
         "Finished installing %d packages into $pakket_libraries_dir",
-        scalar keys %{$installed},
+        scalar keys %{$installer_cache},
     );
 
     # Clean up
@@ -217,7 +223,20 @@ sub install {
 }
 
 sub install_package {
-    my ( $self, $package, $dir, $installed ) = @_;
+    my ( $self, $package, $dir, $opts ) = @_;
+    my $installer_cache = $opts->{'cache'};
+
+    # Are we in a regular (non-bootstrap) mode?
+    # Are we using a bootstrap version of a package?
+    if ( ! $opts->{'skip_prereqs'} && $package->is_bootstrap ) {
+        $log->critical(
+            'You are trying to install a bootstrap version of %s.'
+          . ' Please rebuild this package from scratch.',
+            $package->full_name,
+        );
+
+        exit 1;
+    }
 
     my $pkg_cat        = $package->category;
     my $pkg_name       = $package->name;
@@ -226,8 +245,8 @@ sub install_package {
 
     $log->debugf( "About to install %s (into $dir)", $package->full_name );
 
-    if ( $installed->{$pkg_cat}{$pkg_name} ) {
-        my $version = $installed->{$pkg_cat}{$pkg_name};
+    if ( defined $installer_cache->{$pkg_cat}{$pkg_name} ) {
+        my $version = $installer_cache->{$pkg_cat}{$pkg_name};
 
         if ( $version ne $pkg_version ) {
             $log->critical(
@@ -242,10 +261,8 @@ sub install_package {
 
         return;
     } else {
-        $installed->{$pkg_cat}{$pkg_name} = $pkg_version;
+        $installer_cache->{$pkg_cat}{$pkg_name} = $pkg_version;
     }
-
-    my $index = $self->index;
 
     my $parcel_file = $self->parcel_file( $pkg_cat, $pkg_name, $pkg_version );
 
@@ -314,7 +331,7 @@ sub install_package {
                 'version'  => $prereq_version,
             );
 
-            $self->install_package( $next_pkg, $dir, $installed );
+            $self->install_package( $next_pkg, $dir, { 'cache' => $installer_cache } );
         }
     }
 

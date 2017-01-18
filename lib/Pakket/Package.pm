@@ -24,6 +24,12 @@ has 'version' => (
     'required' => 1,
 );
 
+has 'is_bootstrap' => (
+    'is'      => 'ro',
+    'isa'     => 'Bool',
+    'default' => sub {0},
+);
+
 has [qw<build_opts bundle_opts>] => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
@@ -87,6 +93,7 @@ sub config {
 
     return +{
         'Package' => {
+            ( 'is_bootstrap' => 1 )x!! $self->is_bootstrap,
             map +( $_ => $self->$_ ), qw<category name version>,
         },
 
