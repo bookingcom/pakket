@@ -9,7 +9,6 @@ use CPAN::Meta::Prereqs;
 use JSON::MaybeXS     qw< decode_json encode_json >;
 use Ref::Util         qw< is_arrayref is_hashref >;
 use Path::Tiny        qw< path    >;
-use TOML              qw< to_toml >;
 use Log::Any          qw< $log    >;
 use Carp ();
 
@@ -174,7 +173,7 @@ sub create_config_for {
     my $conf_path = path( ( $self->config_dir // '.' ), 'perl', $dist_name );
     $conf_path->mkpath;
 
-    my $conf_file = path( $conf_path, "$rel_version.toml" );
+    my $conf_file = path( $conf_path, "$rel_version.json" );
 
     # download source if dir provided and file doesn't already exist
     if ( $self->source_dir ) {
@@ -237,7 +236,7 @@ sub create_config_for {
 
     $self->set_depth( $self->depth - 1 );
 
-    $conf_file->spew_utf8( to_toml($package) );
+    $conf_file->spew_utf8( encode_json($package) );
 }
 
 sub extract_archive {
