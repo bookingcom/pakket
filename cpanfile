@@ -22,8 +22,6 @@ requires 'namespace::autoclean';
 requires 'Path::Tiny';
 requires 'Ref::Util';
 requires 'System::Command';
-requires 'TOML';
-requires 'TOML::Parser';
 requires 'Types::Path::Tiny';
 requires 'version', '>= 0.77';
 requires 'Archive::Tar::Wrapper';
