@@ -26,7 +26,7 @@ sub opt_spec {
         ],
         [
             'config-dir=s',
-            'directory to write the configuration to (TOML files)',
+            'directory to write the configuration to (JSON files)',
             { required => 1 },
         ],
         [

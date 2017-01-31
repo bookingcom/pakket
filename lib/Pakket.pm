@@ -132,11 +132,11 @@ keyed by the B<category> and the B<phase>. The phases can be
 B<configure> (for build-time), B<test> (for when testing the build),
 and B<runtime> (for using it).
 
-At the moment Pakket keeps its configuration in TOML files.
+At the moment Pakket keeps its configuration in JSON files.
 
 An example of a configuration in Pakket:
 
-    # perl/HTML-Tidy/1.56.toml:
+    # perl/HTML-Tidy/1.56.json:
     [Package]
     category = "perl"
     name = "HTML-Tidy"
