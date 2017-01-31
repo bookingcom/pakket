@@ -5,8 +5,7 @@ use Moose;
 use MooseX::StrictConstructor;
 use Types::Path::Tiny qw< Path >;
 use Carp              qw< croak >;
-use TOML              qw< to_toml >;
-use TOML::Parser;
+use JSON::MaybeXS     qw< encode_json decode_json >;
 
 extends qw< Pakket::Repository >;
 with    qw< Pakket::Role::HasDirectory >;
@@ -30,8 +29,7 @@ sub retrieve_package_config {
 
     my $config;
     eval {
-        $config = TOML::Parser->new( 'strict_mode' => 1 )
-                              ->parse($config_str);
+        decode_json($config_str);
         1;
     } or do {
         my $err = $@ || 'Unknown error';
@@ -46,7 +44,7 @@ sub store_package_config {
 
     return $self->store_content(
         $package->full_name,
-        to_toml( $package->config ),
+        encode_json( $package->config ),
     );
 }
 
