@@ -250,6 +250,51 @@ $fatpacked{"App/Seacan.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_
   =cut
 APP_SEACAN
 
+$fatpacked{"Dancer2/Plugin/Pakket/ParamTypes.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'DANCER2_PLUGIN_PAKKET_PARAMTYPES';
+  package Dancer2::Plugin::Pakket::ParamTypes;
+  
+  use strict;
+  use warnings;
+  use constant { 'HTTP_USER_ERROR' => 400 };
+  use Dancer2::Plugin;
+  
+  extends('Dancer2::Plugin::ParamTypes');
+  plugin_keywords('with_types');
+  
+  sub with_types {
+      my $self = shift;
+      return $self->SUPER::with_types(@_);
+  }
+  
+  sub BUILD {
+      my $self = shift;
+  
+      $self->register_type_check(
+  		'Str' => sub { defined $_[0] && length $_[0] },
+      );
+  
+      $self->register_type_action(
+          'MissingID' => sub {
+              send_error( 'Missing or incorrect ID', HTTP_USER_ERROR() );
+          },
+      );
+  
+      $self->register_type_action(
+          'MissingContent' => sub {
+              send_error( 'Missing or incorrect content', HTTP_USER_ERROR() );
+          },
+      );
+  
+      $self->register_type_action(
+          'MissingFilename' => sub {
+              send_error( 'Missing or incorrect filename', HTTP_USER_ERROR() );
+          },
+      );
+  }
+  
+  1;
+DANCER2_PLUGIN_PAKKET_PARAMTYPES
+
 $fatpacked{"Mo.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO';
   package Mo;
   $Mo::VERSION = '0.40';
@@ -746,6 +791,4518 @@ $fatpacked{"Mo/xs.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_XS';
   $VERSION='0.40';
   require Class::XSAccessor;*{$M.'xs::e'}=sub{my($P,$e,$o,$f)=@_;$P=~s/::$//;$e->{has}=sub{my($n,%a)=@_;Class::XSAccessor->import(class=>$P,accessors=>{$n=>$n})}if!grep!/^xs$/,@$f};
 MO_XS
+
+$fatpacked{"Pakket.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET';
+  package Pakket;
+  # ABSTRACT: An Unopinionated Meta-Packaging System
+  
+  use strict;
+  use warnings;
+  
+  1;
+  
+  __END__
+  
+  =pod
+  
+  =head1 DESCRIPTION
+  
+  Pakket is a meta-packaging system that allows you to manage your system
+  dependencies. It works by trying to avoid work.
+  
+  =head2 What can you do with Pakket?
+  
+  =over 4
+  
+  =item * You can represent packages closer to their true nature
+  
+  Unlike most packaging systems, Pakket works to I<avoid> reducing the
+  complexity of packages. Instead of trying to take away what makes each
+  package unique, Pakket tries to make it possible for packages to retain
+  the information relevant to them.
+  
+  One example of this is that different systems use different versioning
+  schemes, which can confuse packaging systems, not knowing which version
+  is older and which is newer.
+  
+  Packages in Pakket can keep their version number, the way they see it.
+  That's just one example, though.
+  
+  =item * You can connect different packages
+  
+  Package systems designed specifically for, say Node.js, cannot connect
+  their packages with C dependencies or with Perl dependencies. C programs
+  do not have a packaging system, so C "packages" cannot be connected with
+  anything.
+  
+  Because Pakket knows these packages, it can connect them together, even
+  if their own systems can't.
+  
+  If you have a Perl binding to a C++ library, you can represent that
+  relationship in Pakket. Pakket will then know how to build the C++
+  library and build your Perl module binding to that C++ library.
+  
+  =item * You can build packages for delivery
+  
+  Pakket builds simple package files that can then be delivered to a
+  different machine and used there. While you I<should> use the Pakket
+  installer to deal with these packages, you can also open them up
+  yourself; no magic here.
+  
+  =item * You can install packages
+  
+  The Pakket installer allows installing a package and its dependencies
+  recursively, from disk or mirrors, and to manage your installation tree.
+  
+  =item * Atomic installations, oh yeah
+  
+  Did we mention all installations in Pakket are atomic? This means that
+  if you're installing 20 or 20,000 packages and it fails, everything
+  still works. Pakket only activates the new installation once it finished
+  everything.
+  
+  =item * Reverts are also atomic, baby!
+  
+  The Pakket installer allows, by default, to retain multiple
+  installation directories. This means any revert is simply a single
+  atomic operation of pointing to an older installation.
+  
+  =item * Multiple instances
+  
+  Most packaging systems can only work with a single installation of a
+  package for the entire system. If you need another copy of a package
+  (same version or a different version), you either can't do it, or the
+  packaging system must create a new package with a name that contains the
+  version (python27, python3, etc.).
+  
+  Pakket considers any installation as a single installation instance. You
+  can have as many installations of a package as you want. There can be a
+  global one, a per-user one, a local directory one, a project-specific
+  one, etc.; your pick. You can use one or more than one.
+  
+  =back
+  
+  =head2 Pakket elements
+  
+  Pakket has several key elements:
+  
+  =head3 Packages
+  
+  Everything you wish to build and install is a package. A package
+  can be a program in your favorite language, a library of a language,
+  or anything at all. It will go through a build process you pick and
+  it will get bundled into a parcel.
+  
+  =head3 Categories
+  
+  All packages have a category. Unlike other systems, Pakket doesn't
+  have a flat structure of packages. They're split into categories.
+  
+  The category of a package tells Pakket what kind of build system it
+  needs, how to retrieve metadata from the sources, and what to do
+  with it.
+  
+  For example, packages in the B<perl> category tell Pakket that the
+  builder will need to use one of the available build systems for
+  a Perl module (such as C<ExtUtils::MakeMaker> or C<Module::Build>).
+  It will also use the versioning scheme that Perl has in order to
+  decide which is a newer version and which is older.
+  
+  =head3 Requirements
+  
+  Pakket makes a difference between a package and a requirement. A package
+  is an existing instance; a requirement is a description. The requirement
+  can have a range of allowed versions for a package, for example.
+  
+  =head3 Configuration files
+  
+  Similar to RPM spec files, Pakket has configuration files. You can
+  create them yourself or you can use the
+  L<Pakket::CLI::Command::scaffold|scaffold> command to create them
+  for you.
+  
+  The basic configuration file in Pakket contain a package's C<category>,
+  C<name>, and C<version>. It usually contains C<prereqs> as well,
+  keyed by the B<category> and the B<phase>. The phases can be
+  B<configure> (for build-time), B<test> (for when testing the build),
+  and B<runtime> (for using it).
+  
+  At the moment Pakket keeps its configuration in JSON files.
+  
+  An example of a configuration in Pakket:
+  
+      # perl/HTML-Tidy/1.56.json:
+      [Package]
+      category = "perl"
+      name = "HTML-Tidy"
+      version = "1.56"
+      [Prereqs.native.configure.tidyp]
+      version = "1.04"
+      [Prereqs.perl.configure.ExtUtils-MakeMaker]
+      version = "7.24"
+      [Prereqs.perl.runtime.Test-Simple]
+      version = "1.302031"
+  
+  The package details are in the C<Package> section. The prereqs are
+  in the C<Prereqs> section, under the C<native> or C<perl> categories,
+  under the C<configure> or C<runtime> phase.
+  
+  =head3 Index
+  
+  The B<index> is where Pakket maintains all known versions of every
+  package and their locations.
+  
+  One of the abilities Pakket gives you is maintaining multiple "trees"
+  of systems, each needing different versions of each package.
+  
+  =head3 Parcels
+  
+  Parcels are the result of building packages. Parcels are what gets
+  finally installed.
+  
+  While other packaging systems usually have I<development packages> (or
+  I<devel> or I<dev>), Pakket doesn't differentiate between those.
+  Instead, a Pakket package contains everything created at build time,
+  including the headers and the compiled results.
+  
+PAKKET
+
+$fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_BUILDER';
+  package Pakket::Builder;
+  # ABSTRACT: Build pakket packages
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  use List::Util                qw< first       >;
+  use Path::Tiny                qw< path        >;
+  use File::Copy::Recursive     qw< dircopy     >;
+  use Algorithm::Diff::Callback qw< diff_hashes >;
+  use Types::Path::Tiny         qw< Path >;
+  use Log::Any                  qw< $log >;
+  use version 0.77;
+  
+  use Pakket::Log;
+  use Pakket::Package;
+  use Pakket::Bundler;
+  use Pakket::Installer;
+  use Pakket::Requirement;
+  use Pakket::Builder::NodeJS;
+  use Pakket::Builder::Perl;
+  use Pakket::Builder::Native;
+  use Pakket::Repository::Config;
+  use Pakket::Repository::Parcel;
+  use Pakket::Repository::Source;
+  
+  use Pakket::Utils       qw< generate_env_vars >;
+  
+  use constant {
+      'BUILD_DIR_TEMPLATE' => 'BUILD-XXXXXX',
+  };
+  
+  with 'Pakket::Role::RunCommand';
+  
+  has 'parcel_dir' => (
+      'is'       => 'ro',
+      'isa'      => Path,
+      'coerce'   => 1,
+      'required' => 1,
+  );
+  
+  has 'parcel_repo' => (
+      'is'      => 'ro',
+      'isa'     => 'Pakket::Repository::Parcel',
+      'lazy'    => 1,
+      'builder' => '_build_parcel_repo',
+  );
+  
+  has 'source_repo' => (
+      'is'      => 'ro',
+      'isa'     => 'Pakket::Repository::Source',
+      'lazy'    => 1,
+      'builder' => '_build_source_repo',
+  );
+  
+  has 'config_repo' => (
+      'is'      => 'ro',
+      'isa'     => 'Pakket::Repository::Config',
+      'lazy'    => 1,
+      'builder' => '_build_config_repo',
+  );
+  
+  has 'config_dir' => (
+      'is'       => 'ro',
+      'isa'      => Path,
+      'coerce'   => 1,
+      'required' => 1,
+  );
+  
+  has 'source_dir' => (
+      'is'       => 'ro',
+      'isa'      => Path,
+      'coerce'   => 1,
+      'required' => 1,
+  );
+  
+  has 'build_dir' => (
+      'is'      => 'ro',
+      'isa'     => Path,
+      'coerce'  => 1,
+      'lazy'    => 1,
+      'default' => sub {
+          return Path::Tiny->tempdir(
+              BUILD_DIR_TEMPLATE(),
+              'CLEANUP' => 0,
+          );
+      },
+  );
+  
+  has 'keep_build_dir' => (
+      'is'      => 'ro',
+      'isa'     => 'Bool',
+      'default' => sub {0},
+  );
+  
+  has 'is_built' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub { +{} },
+  );
+  
+  has 'build_files_manifest' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub { +{} },
+  );
+  
+  has 'builders' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub {
+          return {
+              'nodejs' => Pakket::Builder::NodeJS->new(),
+              'perl'   => Pakket::Builder::Perl->new(),
+              'native' => Pakket::Builder::Native->new(),
+          };
+      },
+  );
+  
+  has 'bundler' => (
+      'is'      => 'ro',
+      'isa'     => 'Pakket::Bundler',
+      'lazy'    => 1,
+      'builder' => '_build_bundler',
+  );
+  
+  has 'bundler_args' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub { +{} },
+  );
+  
+  has 'installer' => (
+      'is'      => 'ro',
+      'isa'     => 'Pakket::Installer',
+      'lazy'    => 1,
+      'default' => sub {
+          my $self = shift;
+  
+          my $parcel_dir = $self->{'parcel_dir'};
+          if ( !$parcel_dir ) {
+              $log->critical("'bundler_args' do not contain 'bundle_dir'");
+              exit 1;
+          }
+  
+          return Pakket::Installer->new(
+              'pakket_dir'  => $self->build_dir,
+              'parcel_repo' => $self->parcel_repo,
+              'parcel_dir'  => $self->parcel_dir,
+          );
+      },
+  );
+  
+  has 'installer_cache' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub { +{} },
+  );
+  
+  has 'bootstrapping' => (
+      'is'      => 'ro',
+      'isa'     => 'Bool',
+      'default' => 1,
+  );
+  
+  # We're starting with a local repo
+  # # but in the future this will be dictated from a configuration
+  sub _build_parcel_repo {
+      my $self = shift;
+  
+      # Use default for now, but use the directory we want at least
+      return Pakket::Repository::Parcel->new(
+          'directory' => $self->parcel_dir,
+      );
+  }
+  
+  # We're starting with a local repo
+  # # but in the future this will be dictated from a configuration
+  sub _build_config_repo {
+      my $self = shift;
+  
+      # Use default for now, but use the directory we want at least
+      return Pakket::Repository::Config->new(
+          'directory' => $self->config_dir,
+      );
+  }
+  
+  # We're starting with a local repo
+  # # but in the future this will be dictated from a configuration
+  sub _build_source_repo {
+      my $self = shift;
+  
+      # Use default for now, but use the directory we want at least
+      return Pakket::Repository::Source->new(
+          'directory' => $self->source_dir,
+      );
+  }
+  
+  sub _build_bundler {
+      my $self = shift;
+  
+      return Pakket::Bundler->new(
+          %{ $self->bundler_args },
+          'parcel_repo' => $self->parcel_repo,
+      );
+  }
+  
+  sub build {
+      my ( $self, $requirement ) = @_;
+  
+      $self->_setup_build_dir;
+      $self->bootstrapping
+          and $self->bootstrap_build( $requirement->category );
+      $self->run_build($requirement);
+  }
+  
+  sub DEMOLISH {
+      my $self      = shift;
+      my $build_dir = $self->build_dir;
+  
+      if ( !$self->keep_build_dir ) {
+          $log->info("Removing build dir $build_dir");
+  
+          # "safe" is false because it might hit files which it does not have
+          # proper permissions to delete (example: ZMQ::Constants.3pm)
+          # which means it won't be able to remove the directory
+          $build_dir->remove_tree( { 'safe' => 0 } );
+      }
+  
+      return;
+  }
+  
+  sub _setup_build_dir {
+      my $self = shift;
+  
+      $log->debugf( 'Creating build dir %s', $self->build_dir->stringify );
+      my $prefix_dir = $self->build_dir->child('main');
+  
+      $prefix_dir->is_dir or $prefix_dir->mkpath;
+  
+      return;
+  }
+  
+  sub bootstrap_build {
+      my ( $self, $category ) = @_;
+      my @dists;
+  
+      # TODO: replace the below hard-coding of packages to bootstrap
+      #       with a relevant config reading.
+      if ( $category eq 'perl' ) {
+          # hardcoded list of packages we have to build first
+          # using core modules to break cyclic dependencies.
+          # we have to maintain the order in order for packages to build
+          @dists = qw<
+              ExtUtils-MakeMaker
+              Module-Build
+              Module-Build-WithXSpp
+              Module-Install
+          >;
+      }
+  
+      @dists or return;
+  
+      # XXX: Whoa!
+      my $bootstrap_builder = ref($self)->new(
+          'parcel_dir'     => $self->parcel_dir,
+          'config_dir'     => $self->config_dir,
+          'source_dir'     => $self->source_dir,
+          'keep_build_dir' => $self->keep_build_dir,
+          'bundler_args'   => $self->bundler_args,
+          'builders'       => $self->builders,
+          'installer'      => $self->installer,
+          'bootstrapping'  => 0,
+      );
+  
+      my %dists;
+      my @config_object_ids = @{ $self->config_repo->all_object_ids() };
+      my @parcel_object_ids = @{ $self->parcel_repo->all_object_ids() };
+  
+      for my $dist (@dists) {
+          # Right now everything is pinned so there is only
+          # One result. Once the version ranges feature is introduced,
+          # we will be able to get the latest version.
+          my ($pkg_str) = grep m{^ \Q$category\E / \Q$dist\E =}xms, @config_object_ids;
+  
+          # Create a requirement
+          my $req = Pakket::Requirement->new_from_string($pkg_str);
+          $dists{ $req->name } = $req->version;
+      }
+  
+      foreach my $dist_name ( keys %dists ) {
+          my $dist_version = $dists{$dist_name};
+          my ($has_parcel) = grep
+              m{^ \Q$category\E / \Q$dist_name\E = \Q$dist_version\E $}xms,
+              @parcel_object_ids;
+  
+          $has_parcel or next;
+  
+          $log->noticef( 'Skipping: parcel %s=%s already exists',
+                         $dist_name, $dist_version );
+          @dists = grep +( $_ ne $dist_name ), @dists;
+      }
+  
+      # Pass I: bootstrap toolchain - build w/o dependencies
+      for my $dist_name (@dists) {
+          my $dist_version = $dists{$dist_name};
+  
+          $log->noticef( 'Bootstrapping: phase I: %s=%s (%s)',
+                         $dist_name, $dist_version, 'no-deps' );
+  
+          # Create a requirement
+          my $req = Pakket::Requirement->new(
+              'category' => $category,
+              'name'     => $dist_name,
+              'version'  => $dist_version,
+          );
+  
+          $self->run_build( $req, { 'bootstrapping_1_skip_prereqs' => 1 } );
+      }
+  
+      # Pass II: bootstrap toolchain - build dependencies only
+      for my $dist_name (@dists) {
+          my $dist_version = $dists{$dist_name};
+  
+          my $req = Pakket::Requirement->new(
+              'category' => $category,
+              'name'     => $dist_name,
+              'version'  => $dist_version,
+          );
+  
+          $log->noticef( 'Bootstrapping: phase II: %s (%s)',
+                         $req->full_name, 'deps-only' );
+  
+          $self->run_build( $req, { 'bootstrapping_2_deps_only' => 1 } );
+      }
+  
+      # Pass III: bootstrap toolchain - rebuild w/ dependencies
+      for my $dist_name (@dists) {
+          my $dist_version = $dists{$dist_name};
+  
+          # remove the temp (no-deps) parcel
+          $log->noticef( 'Removing %s=%s (no-deps parcel)',
+                         $dist_name, $dist_version );
+  
+          my $req = Pakket::Requirement->new(
+              'category' => $category,
+              'name'     => $dist_name,
+              'version'  => $dist_version,
+          );
+  
+          $self->parcel_repo->remove_package_parcel($req);
+  
+          # build again with dependencies
+  
+          $log->noticef( 'Bootstrapping: phase III: %s=%s (%s)',
+                         $dist_name, $dist_version, 'full deps' );
+  
+          delete $bootstrap_builder->is_built->{ $req->short_name };
+          $bootstrap_builder->build($req);
+      }
+  
+      $log->notice('Finished Bootstrapping!');
+  }
+  
+  sub run_build {
+      my ( $self, $prereq, $params ) = @_;
+      $params //= {};
+      my $level             = $params->{'level'}                        || 0;
+      my $skip_prereqs      = $params->{'bootstrapping_1_skip_prereqs'} || 0;
+      my $bootstrap_prereqs = $params->{'bootstrapping_2_deps_only'}    || 0;
+      my $short_name        = $prereq->short_name;
+  
+      # FIXME: GH #29
+      if ( $prereq->category eq 'perl' ) {
+          # XXX: perl_mlb is a MetaCPAN bug
+          first { $prereq->name eq $_ } qw<perl perl_mlb>
+              and return;
+      }
+  
+      if ( ! $bootstrap_prereqs and defined $self->is_built->{$short_name} ) {
+          my $built_version = $self->is_built->{$short_name};
+  
+          if ( $built_version ne $prereq->version ) {
+              $log->criticalf(
+                  'Asked to build %s when %s=%s already built',
+                  $prereq->full_name, $short_name, $built_version,
+              );
+  
+              exit 1;
+          }
+  
+          $log->debug(
+              "We already built or building $short_name, skipping...",
+          );
+  
+          return;
+      } else {
+          $self->is_built->{$short_name} = $prereq->version;
+      }
+  
+      $log->noticef( '%sWorking on %s', '|...' x $level, $prereq->full_name );
+  
+      # Create a Package instance from the configuration
+      # using the information we have on it
+      my $package_config = $self->config_repo->retrieve_package_config($prereq);
+      my $package        = Pakket::Package->new_from_config({
+          %{$package_config},
+  
+          # We are dealing with a version which should not be installed
+          # outside of a bootstrap phase, so we're "marking" this package
+          'is_bootstrap' => !!$skip_prereqs,
+      });
+  
+      my $top_build_dir  = $self->build_dir;
+      my $main_build_dir = $top_build_dir->child('main');
+  
+      my $installer = $self->installer;
+  
+      if ( !$bootstrap_prereqs ) {
+  
+          # Use the installer to recursively install all packages
+          # that are already available
+          $log->debugf( '%s already packaged, unpacking...',
+              $package->full_name, );
+  
+  	my $installer_cache = $self->installer_cache;
+  	my $bootstrap_cache = {
+              %{ $self->installer_cache },
+  
+              # Phase 3 needs to avoid trying to install
+              # the bare minimum toolchain (Phase 1)
+              $prereq->category => { $package->name => $package->version },
+  	};
+  
+          my $successfully_installed = $installer->try_to_install_package(
+              $package,
+              $main_build_dir,
+              {
+                  'cache'        => ( $self->bootstrapping ? $installer_cache : $bootstrap_cache ),
+                  'skip_prereqs' => $skip_prereqs,
+              },
+          );
+  
+          if ($successfully_installed) {
+  
+              # snapshot_build_dir
+              $self->snapshot_build_dir( $package->category, $package->name,
+                  $main_build_dir->absolute, 0 );
+  
+              $log->noticef(
+                  '%sInstalled %s',
+                  '|...' x $level,
+                  $prereq->full_name,
+              );
+  
+              # sync build cache with our install cache
+              # so we do not accidentally build things
+              # that were installed in some recursive iteration
+              foreach my $category ( sort keys %{$installer_cache} ) {
+                  foreach my $package_name (
+                      keys %{ $installer_cache->{$category} } )
+                  {
+                      $self->is_built->{"$category/$package_name"}
+                          = $installer_cache->{$category}{$package_name};
+                  }
+              }
+  
+              return;
+          }
+      }
+  
+      # GH #74
+      my @supported_phases = qw< configure runtime >;
+  
+      # recursively build prereqs
+      if ( $bootstrap_prereqs or ! $skip_prereqs ) {
+          foreach my $category ( keys %{ $self->builders } ) {
+              $self->_recursive_build_phase( $package, $category, 'configure', $level+1 );
+              $self->_recursive_build_phase( $package, $category, 'runtime', $level+1 );
+          }
+      }
+  
+      $bootstrap_prereqs and return; # done building prereqs
+      my $package_src_dir
+          = $self->source_repo->retrieve_package_source($package);
+  
+      $log->info('Copying package files');
+  
+      # FIXME: we shouldn't be generating PKG_CONFIG_PATH every time
+      #        Instead, set this as default opt and send it to the build
+      #        subroutines as "default opts" to add their own stuff to
+      #        and add LD_LIBRARY_PATH and PATH to this as well
+      my $pkgconfig_path = path( $top_build_dir, qw<main lib pkgconfig> );
+      $log->info("Setting PKG_CONFIG_PATH=$pkgconfig_path");
+      local $ENV{'PKG_CONFIG_PATH'} = $pkgconfig_path;
+  
+      # FIXME: This shouldn't just be configure flags
+      # we should allow the builder to have access to a general
+      # metadata chunk which *might* include configure flags
+      my $configure_flags = $self->get_configure_flags(
+          $package->build_opts->{'configure_flags'},
+          { %ENV, generate_env_vars( $top_build_dir, $main_build_dir ) },
+      );
+  
+      # FIXME: $package_dst_dir is dictated from the category
+      if ( my $builder = $self->builders->{ $package->category } ) {
+          my $package_dst_dir = path(
+              $top_build_dir,
+              'src',
+              $package->category,
+              $package_src_dir->basename
+          );
+  
+          dircopy( $package_src_dir, $package_dst_dir );
+  
+          $builder->build_package(
+              $package->name,
+              $package_dst_dir,
+              $main_build_dir,
+              $configure_flags,
+          );
+      } else {
+          $log->criticalf(
+              'I do not have a builder for category %s.',
+              $package->category,
+          );
+          exit 1;
+      }
+  
+      my $package_files = $self->snapshot_build_dir(
+          $package->category, $package->name, $main_build_dir,
+      );
+  
+      $log->infof( 'Bundling %s', $package->full_name );
+      $self->bundler->bundle(
+          $main_build_dir->absolute,
+          {
+              'category'    => $package->category,
+              'name'        => $package->name,
+              'version'     => $package->version,
+              'bundle_opts' => $package->bundle_opts,
+              'config'      => $package->config,
+          },
+          $package_files,
+      );
+  
+      $log->noticef(
+          '%sFinished on %s', '|...' x $level, $prereq->full_name,
+      );
+  
+      return;
+  }
+  
+  sub _recursive_build_phase {
+      my ( $self, $package, $category, $phase, $level ) = @_;
+      my @prereqs = keys %{ $package->prereqs->{$category}{$phase} };
+  
+      foreach my $prereq_name (@prereqs) {
+          # Right now everything is pinned so there is only
+          # One result. Once the version ranges feature is introduced,
+          # we will be able to get the latest version.
+          my ($pkg_str) = grep m{^ \Q$category\E / \Q$prereq_name\E =}xms,
+              @{ $self->config_repo->all_object_ids() };
+  
+          my $req = Pakket::Requirement->new_from_string($pkg_str);
+  
+          $self->run_build( $req, { 'level' => $level } );
+      }
+  }
+  
+  # FIXME: This subroutine needs to get a package object
+  sub snapshot_build_dir {
+      my ( $self, $category, $package_name, $main_build_dir, $error_out ) = @_;
+      $error_out //= 1;
+  
+      $log->debug('Scanning directory.');
+  
+      # XXX: this is just a bit of a smarter && dumber rsync(1):
+      # rsync -qaz BUILD/main/ output_dir/
+      # the reason is that we need the diff.
+      # if you can make it happen with rsync, remove all of this. :P
+      # perhaps rsync(1) should be used to deploy the package files
+      # (because then we want *all* content)
+      # (only if unpacking it directly into the directory fails)
+      my $package_files = $self->retrieve_new_files(
+          $category, $package_name, $main_build_dir,
+      );
+  
+      if ($error_out) {
+          keys %{$package_files} or do {
+              $log->criticalf(
+                  'This is odd. %s/%s build did not generate new files. '
+                      . 'Cannot package.',
+                  $category, $package_name,
+              );
+              exit 1;
+          };
+      }
+  
+      # store per all packages to get the diff
+      @{ $self->build_files_manifest }{ keys( %{$package_files} ) }
+          = values %{$package_files};
+  
+      return $package_files;
+  }
+  
+  sub retrieve_new_files {
+      my ( $self, $category, $package_name, $build_dir ) = @_;
+  
+      my $nodes = $self->_scan_directory($build_dir);
+      my $new_files
+          = $self->_diff_nodes_list( $self->build_files_manifest, $nodes, );
+  
+      return $new_files;
+  }
+  
+  sub _scan_directory {
+      my ( $self, $dir ) = @_;
+  
+      my $visitor = sub {
+          my ( $node, $state ) = @_;
+  
+          return if $node->is_dir;
+  
+          # save the symlink path in order to symlink them
+          if ( -l $node ) {
+              path( $state->{ $node->absolute } = readlink $node )->is_absolute
+                  and $log->critical(
+                  "Error. Absolute path symlinks aren't supported."), exit 1;
+          } else {
+              $state->{ $node->absolute } = '';
+          }
+      };
+  
+      return $dir->visit(
+          $visitor,
+          { 'recurse' => 1, 'follow_symlinks' => 0 },
+      );
+  }
+  
+  # There is a possible micro optimization gain here
+  # if we diff and copy in the same loop
+  # instead of two steps
+  sub _diff_nodes_list {
+      my ( $self, $old_nodes, $new_nodes ) = @_;
+  
+      my %nodes_diff;
+      diff_hashes(
+          $old_nodes,
+          $new_nodes,
+          'added'   => sub { $nodes_diff{ $_[0] } = $_[1] },
+          'deleted' => sub {
+              $log->critical(
+                  "Last build deleted previously existing file: $_[0]");
+              exit 1;
+          },
+      );
+  
+      return \%nodes_diff;
+  }
+  
+  sub get_configure_flags {
+      my ( $self, $config, $expand_env ) = @_;
+  
+      $config or return [];
+  
+      my @flags = map +( join '=', $_, $config->{$_} ), keys %{$config};
+  
+      $self->_expand_flags_inplace( \@flags, $expand_env );
+  
+      return \@flags;
+  }
+  
+  sub _expand_flags_inplace {
+      my ( $self, $flags, $env ) = @_;
+  
+      for my $flag ( @{$flags} ) {
+          for my $key ( keys %{$env} ) {
+              my $placeholder = '%' . uc($key) . '%';
+              $flag =~ s/$placeholder/$env->{$key}/gsm;
+          }
+      }
+  
+      return;
+  }
+  
+  __PACKAGE__->meta->make_immutable;
+  
+  no Moose;
+  
+  1;
+  
+  __END__
+PAKKET_BUILDER
+
+$fatpacked{"Pakket/Builder/Native.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_BUILDER_NATIVE';
+  package Pakket::Builder::Native;
+  # ABSTRACT: Build Native Pakket packages
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  use Log::Any qw< $log >;
+  use Pakket::Log;
+  use Pakket::Builder::Native::Makefile;
+  
+  with qw<Pakket::Role::Builder>;
+  
+  sub build_package {
+      my ( $self, $package, $build_dir, $prefix, $flags ) = @_;
+  
+      if (   $build_dir->child('configure')->exists
+          || $build_dir->child('config')->exists )
+      {
+          my $builder = Pakket::Builder::Native::Makefile->new();
+          $builder->build_package( $package, $build_dir, $prefix, $flags );
+      } else {
+          $log->critical("I cannot build this native package. No 'configure'.");
+          exit 1;
+      }
+  
+      return;
+  }
+  
+  no Moose;
+  __PACKAGE__->meta->make_immutable;
+  
+  1;
+  
+  __END__
+  
+  =pod
+PAKKET_BUILDER_NATIVE
+
+$fatpacked{"Pakket/Builder/Native/Makefile.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_BUILDER_NATIVE_MAKEFILE';
+  package Pakket::Builder::Native::Makefile;
+  # ABSTRACT: Build Native Pakket packages that use Makefile
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  use Log::Any   qw< $log >;
+  use Path::Tiny qw< path >;
+  use Pakket::Log;
+  use Pakket::Utils qw< generate_env_vars >;
+  
+  with qw<Pakket::Role::Builder>;
+  
+  sub build_package {
+      my ( $self, $package, $build_dir, $prefix, $flags ) = @_;
+  
+      $log->info("Building Native library: $package");
+  
+      my $opts = {
+          'env' => {
+              generate_env_vars($build_dir, $prefix),
+          },
+      };
+  
+      my $configurator;
+      if ( -f $build_dir->child('configure') ) {
+          $configurator = './configure';
+      } elsif ( -f $build_dir->child('config') ) {
+          $configurator = './config';
+      } elsif ( -f $build_dir->child('Configure') ) {
+          $configurator = './Configure';
+      } else {
+          $log->critical( "Don't know how to configure $package"
+                  . " (Cannot find executale 'configure' or 'config')" );
+          exit 1;
+      }
+  
+      my @seq = (
+  
+          # configure
+          [
+              $build_dir,
+              [
+                  $configurator, '--prefix=' . $prefix->absolute,
+                  @{$flags},
+              ],
+              $opts,
+          ],
+  
+          # build
+          [ $build_dir, ['make'], $opts, ],
+  
+          # install
+          [ $build_dir, [ 'make', 'install' ], $opts, ],
+      );
+  
+      my $success = $self->run_command_sequence(@seq);
+  
+      if ( !$success ) {
+          $log->critical("Failed to build $package");
+          exit 1;
+      }
+  
+      $log->info("Done preparing $package");
+  
+      return;
+  }
+  
+  no Moose;
+  __PACKAGE__->meta->make_immutable;
+  
+  1;
+  
+  __END__
+  
+  =pod
+PAKKET_BUILDER_NATIVE_MAKEFILE
+
+$fatpacked{"Pakket/Builder/NodeJS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_BUILDER_NODEJS';
+  package Pakket::Builder::NodeJS;
+  # ABSTRACT: Build Perl Pakket packages
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  use English    qw< -no_match_vars >;
+  use Log::Any   qw< $log >;
+  use Path::Tiny qw< path >;
+  use Pakket::Log;
+  use Pakket::Utils qw< generate_env_vars >;
+  
+  with qw<Pakket::Role::Builder>;
+  
+  sub build_package {
+      my ( $self, $package, $build_dir, $prefix ) = @_;
+  
+      $log->info("Building NodeJS module: $package");
+  
+      my $opts = {
+          'env' => {
+              generate_env_vars($prefix),
+          },
+      };
+  
+      my $original_dir = Path::Tiny->cwd;
+      my $install_base = $prefix->absolute;
+  
+      my $source = $build_dir;
+  
+      if ( $ENV{'NODE_NPM_REGISTRY'} ) {
+          $self->run_command( $build_dir,
+              [ qw< npm set registry >, $ENV{'NODE_NPM_REGISTRY'} ], $opts );
+          $source = $package;
+      }
+  
+      my $success
+          = $self->run_command( $build_dir, [ qw< npm install -g >, $source ],
+          $opts );
+  
+      if ( !$success ) {
+          $log->critical("Failed to build $package");
+          exit 1;
+      }
+  
+      $log->info("Done preparing $package");
+  
+      return;
+  }
+  
+  no Moose;
+  __PACKAGE__->meta->make_immutable;
+  
+  1;
+  
+  __END__
+  
+  =pod
+PAKKET_BUILDER_NODEJS
+
+$fatpacked{"Pakket/Builder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_BUILDER_PERL';
+  package Pakket::Builder::Perl;
+  # ABSTRACT: Build Perl Pakket packages
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  use English    qw< -no_match_vars >;
+  use Log::Any   qw< $log >;
+  use Pakket::Log;
+  use Pakket::Utils qw< generate_env_vars >;
+  use Carp ();
+  
+  with qw<Pakket::Role::Builder>;
+  
+  sub build_package {
+      my ( $self, $package, $build_dir, $prefix, $flags ) = @_;
+  
+      $log->info("Building Perl module: $package");
+  
+      my $opts = {
+          'env' => {
+              generate_env_vars($build_dir, $prefix),
+          },
+      };
+  
+      my $install_base = $prefix->absolute;
+  
+      # taken from cpanminus
+      my %should_use_mm = map +( "perl/$_" => 1 ),
+          qw( version ExtUtils-ParseXS ExtUtils-Install ExtUtils-Manifest );
+  
+      my @seq;
+      if ( $build_dir->child('Build.PL')->exists
+          && !exists $should_use_mm{$package} )
+      {
+          @seq = (
+  
+              # configure
+              [
+                  $build_dir,
+                  [ 'perl', '-f', 'Build.PL', '--install_base', $install_base, @{$flags} ],
+                  $opts,
+              ],
+  
+              # build
+              [ $build_dir, ['perl', '-f', './Build'], $opts ],
+  
+              # install
+              [ $build_dir, [ 'perl', '-f', './Build', 'install' ], $opts ],
+          );
+      } elsif ( $build_dir->child('Makefile.PL')->exists ) {
+          @seq = (
+  
+              # configure
+              [
+                  $build_dir,
+                  [ 'perl', '-f', 'Makefile.PL', "INSTALL_BASE=$install_base", @{$flags} ],
+                  $opts,
+              ],
+  
+              # build
+              [ $build_dir, ['make'], $opts ],
+  
+              # install
+              [ $build_dir, [ 'make', 'install' ], $opts ],
+          );
+      } else {
+          Carp::croak('Could not find an installer (Makefile.PL/Build.PL)');
+      }
+  
+      my $success = $self->run_command_sequence(@seq);
+  
+      if ( !$success ) {
+          $log->critical("Failed to build $package");
+          exit 1;
+      }
+  
+      $log->info("Done preparing $package");
+  
+      return;
+  }
+  
+  no Moose;
+  __PACKAGE__->meta->make_immutable;
+  
+  1;
+  
+  __END__
+  
+  =pod
+PAKKET_BUILDER_PERL
+
+$fatpacked{"Pakket/Bundler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_BUNDLER';
+  package Pakket::Bundler;
+  # ABSTRACT: Bundle pakket packages into a parcel file
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  use JSON::MaybeXS;
+  use File::Spec;
+  use Path::Tiny        qw< path >;
+  use Types::Path::Tiny qw< AbsPath >;
+  use Log::Any          qw< $log >;
+  
+  use Pakket::Package;
+  use Pakket::Repository::Parcel;
+  
+  use Pakket::Constants qw<
+      PARCEL_FILES_DIR
+      PARCEL_METADATA_FILE
+  >;
+  
+  use constant {
+      'BUNDLE_DIR_TEMPLATE' => 'BUNDLE-XXXXXX',
+  };
+  
+  has 'parcel_repo' => (
+      'is'      => 'ro',
+      'isa'     => 'Pakket::Repository::Parcel',
+      'lazy'    => 1,
+      'builder' => '_build_parcel_repo',
+  );
+  
+  has 'bundle_dir' => (
+      'is'      => 'ro',
+      'isa'     => AbsPath,
+      'coerce'  => 1,
+      'default' => sub { return path('output')->absolute },
+  );
+  
+  has 'files_manifest' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub { return +{} },
+  );
+  
+  # We're starting with a local repo
+  # but in the future this will be dictated from a configuration
+  sub _build_parcel_repo {
+      my $self = shift;
+  
+      # Use default now for now, but use our directory at least
+      return Pakket::Repository::Parcel->new(
+          'directory' => $self->bundle_dir,
+      );
+  }
+  
+  sub bundle {
+      my ( $self, $build_dir, $pkg_data, $files ) = @_;
+  
+      my (
+          $package_category, $package_name,
+          $package_version,  $package_config,
+      ) = @{$pkg_data}{qw< category name version config >};
+  
+      my $original_dir = Path::Tiny->cwd;
+  
+      # totally arbitrary, maybe add to constants?
+      my $parcel_dir_path = Path::Tiny->tempdir(
+          'TEMPLATE' => BUNDLE_DIR_TEMPLATE(),
+          'CLEANUP'  => 1,
+      );
+  
+      $parcel_dir_path->child( PARCEL_FILES_DIR() )->mkpath;
+  
+      chdir $parcel_dir_path->child( PARCEL_FILES_DIR() )->stringify;
+  
+      foreach my $orig_file ( keys %{$files} ) {
+          $log->debug("Bundling $orig_file");
+          my $new_fullname = $self->_rebase_build_to_output_dir(
+              $build_dir, $orig_file,
+          );
+  
+          -e $new_fullname
+              and die 'Odd. File already seems to exist in packaging dir. '
+                    . "Stopping.\n";
+  
+          # create directories
+          $new_fullname->parent->mkpath;
+  
+          # regular file
+          if ( $files->{$orig_file} eq '' ) {
+              path($orig_file)->copy($new_fullname)
+                  or die "Failed to copy $orig_file to $new_fullname\n";
+  
+              my $raw_mode = ( stat($orig_file) )[2];
+              my $mode_str = sprintf '%04o', $raw_mode & oct('07777');
+              chmod oct($mode_str), $new_fullname;
+          } else {
+              my $new_symlink = $self->_rebase_build_to_output_dir(
+                  $build_dir, $files->{$orig_file},
+              );
+  
+              my $previous_dir = Path::Tiny->cwd;
+              chdir $new_fullname->parent;
+              symlink $new_symlink, $new_fullname->basename;
+              chdir $previous_dir;
+          }
+      }
+  
+      # FIXME: We need to add more information here, but it needs to be
+      #        synced with the Installer that reads it
+      ## no critic qw(ValuesAndExpressions::ProhibitLongChainsOfMethodCalls)
+      path( PARCEL_METADATA_FILE() )->spew_utf8(
+          JSON::MaybeXS->new->pretty->canonical->encode($package_config),
+      );
+  
+      chdir '..';
+  
+      # FIXME: This is because the Bundler isn't receiving a
+      #        Pakket::Package object
+      my $pkg_object = Pakket::Package->new_from_config($package_config);
+      $log->infof( 'Creating parcel file for %s', $pkg_object->full_name );
+  
+      # The lovely thing here is that is creates a parcel file from the
+      # bundled directory, which gets cleaned up automatically
+      $self->parcel_repo->store_package_parcel(
+          $pkg_object,
+          $parcel_dir_path,
+      );
+  
+      chdir $original_dir;
+  
+      return;
+  }
+  
+  sub _rebase_build_to_output_dir {
+      my ( $self, $build_dir, $orig_filename ) = @_;
+      ( my $new_filename = $orig_filename ) =~ s/^$build_dir//ms;
+      my @parts = File::Spec->splitdir($new_filename);
+  
+      # in case the path is absolute (leading slash)
+      # the split function will generate an empty first element
+      # if it's relative, it will have value and shouldn't be removed
+      $parts[0] eq '' and shift @parts;
+  
+      return path(@parts);
+  }
+  
+  __PACKAGE__->meta->make_immutable;
+  
+  no Moose;
+  
+  1;
+  
+  __END__
+PAKKET_BUNDLER
+
+$fatpacked{"Pakket/CLI.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI';
+  package Pakket::CLI;
+  # ABSTRACT: Command line interface for Pakket
+  
+  use strict;
+  use warnings;
+  use App::Cmd::Setup '-app';
+  
+  1;
+PAKKET_CLI
+
+$fatpacked{"Pakket/CLI/Command/build.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_BUILD';
+  package Pakket::CLI::Command::build;
+  # ABSTRACT: Build a Pakket package
+  
+  use strict;
+  use warnings;
+  
+  use Pakket::CLI '-command';
+  use Pakket::Constants qw< PAKKET_PACKAGE_SPEC PAKKET_LATEST_VERSION >;
+  use Pakket::Builder;
+  use Pakket::Requirement;
+  use Pakket::Log;           # predefined loggers
+  
+  use Path::Tiny qw< path >;
+  use Log::Any   qw< $log >; # to log
+  use Log::Any::Adapter;     # to set the logger
+  
+  # TODO:
+  # - move all hardcoded values (confs) to constants
+  # - add make process log (and add it with -v -v)
+  # - check all operations (chdir, mkpath, etc.) (move() already checked)
+  # - should we detect a file change during BUILD and die/warn?
+  # - stop calling system(), use a proper Open module instead so we can
+  #   easily check the success/fail and protect against possible injects
+  
+  # FIXME: pass on the "output-dir" to the bundler
+  
+  sub abstract    { 'Build a package' }
+  sub description { 'Build a package' }
+  
+  sub opt_spec {
+      return (
+          [ 'category=s',     'build only this key the index' ],
+          [ 'input-file=s',   'build stuff from this file' ],
+          [ 'skip=s',         'skip this index entry' ],
+          [ 'build-dir=s',    'use an existing build directory' ],
+          [ 'keep-build-dir', 'do not delete the build directory' ],
+          [
+              'config-dir=s',
+              'directory holding the configurations',
+              { 'required' => 1 },
+          ],
+          [
+              'source-dir=s',
+              'directory holding the sources',
+              { 'required' => 1 },
+          ],
+          [ 'output-dir=s', 'output directory (default: .)' ],
+          [ 'verbose|v+',   'verbose output (can be provided multiple times)' ],
+      );
+  }
+  
+  sub validate_args {
+      my ( $self, $opt, $args ) = @_;
+  
+      Log::Any::Adapter->set(
+          'Dispatch',
+          'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ),
+      );
+  
+      # Check that the directory for configs exists
+      # (How do we get it from the CLI?)
+      my $config_dir = path( $opt->{'config_dir'} );
+      $config_dir->exists && $config_dir->is_dir
+          or $self->usage_error("Incorrect config directory specified: '$config_dir'");
+      $self->{'builder'}{'config_dir'} = $config_dir;
+  
+      if ( defined ( my $output_dir = $opt->{'output_dir'} ) ) {
+          $self->{'bundler'}{'bundle_dir'} = path($output_dir)->absolute;
+          $self->{'builder'}{'parcel_dir'} = $output_dir;
+      }
+  
+      my @specs;
+      if ( defined ( my $file = $opt->{'input_file'} ) ) {
+          my $path = path($file);
+          $path->exists && $path->is_file
+              or $self->usage_error("Bad input file: $path");
+  
+          push @specs, $path->lines_utf8( { 'chomp' => 1 } );
+      } elsif ( @{$args} ) {
+          @specs = @{$args};
+      } else {
+          $self->usage_error('Must specify at least one package or a file');
+      }
+  
+      foreach my $spec_str (@specs) {
+          my ( $cat, $name, $version ) = $spec_str =~ PAKKET_PACKAGE_SPEC()
+              or $self->usage_error("Provide category/name, not '$spec_str'");
+  
+          my $req;
+          eval { $req = Pakket::Requirement->new_from_string($spec_str); 1; }
+          or do {
+              my $error = $@ || 'Zombie';
+              $log->debug("Failed to create Pakket::Requirement: $error");
+              $self->usage_error(
+                  "We do not understand this package string: $spec_str",
+              );
+          };
+  
+          push @{ $self->{'to_build'} }, $req;
+      }
+  
+      if ( $opt->{'build_dir'} ) {
+          -d $opt->{'build_dir'}
+              or die "You asked to use a build dir that does not exist.\n";
+  
+          $self->{'builder'}{'build_dir'} = $opt->{'build_dir'};
+      }
+  
+      $self->{'builder'}{'keep_build_dir'} = $opt->{'keep_build_dir'};
+  
+      # XXX These will get removed eventually
+      $self->{'builder'}{'config_dir'} = $opt->{'config_dir'};
+      $self->{'builder'}{'source_dir'} = $opt->{'source_dir'};
+  }
+  
+  sub execute {
+      my $self    = shift;
+      my $builder = Pakket::Builder->new(
+          # default main object
+          map( +(
+              defined $self->{'builder'}{$_}
+                  ? ( $_ => $self->{'builder'}{$_} )
+                  : ()
+          ), qw< parcel_dir config_dir source_dir build_dir keep_build_dir > ),
+  
+          # bundler args
+          'bundler_args' => {
+              map( +(
+                  defined $self->{'bundler'}{$_}
+                      ? ( $_ => $self->{'bundler'}{$_} )
+                      : ()
+              ), qw< bundle_dir > ),
+          },
+      );
+  
+      foreach my $prereq ( @{ $self->{'to_build'} } ) {
+          $builder->build($prereq);
+      }
+  }
+  
+  1;
+  
+  __END__
+PAKKET_CLI_COMMAND_BUILD
+
+$fatpacked{"Pakket/CLI/Command/generate.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_GENERATE';
+  package Pakket::CLI::Command::generate;
+  # ABSTRACT: The pakket install command
+  
+  use strict;
+  use warnings;
+  use Log::Any::Adapter;
+  use Path::Tiny qw< path  >;
+  use List::Util qw< first >;
+  
+  use Pakket::CLI '-command';
+  use Pakket::Log;
+  use Pakket::Scaffolder::Perl;
+  
+  sub abstract    { 'Scaffold a project' }
+  sub description { 'Scaffold a project' }
+  
+  sub opt_spec {
+      return (
+          [
+              'name=s',
+              'category/module name (e.g. "perl/Moose")',
+          ],
+          [
+              'cpanfile=s',
+              'cpanfile to configure from',
+          ],
+          [
+              'config-dir=s',
+              'directory to write the configuration to (JSON files)',
+              { required => 1 },
+          ],
+          [
+              'source-dir=s',
+              'directory to write the sources to (downloads if provided)',
+          ],
+          [
+              'index-file=s',
+              'file to generate json configuration to',
+          ],
+          [
+              'additional_phase=s@',
+              "additional phases to use ('develop' = author_requires, 'test' = test_requires). configure & runtime are done by default.",
+          ],
+          [
+              'extract',
+              'extract downloaded source tarball',
+              { default => 0 },
+          ],
+          [ 'verbose|v+',     'verbose output (can be provided multiple times)' ],
+      );
+  }
+  
+  sub validate_args {
+      my ( $self, $opt, $args ) = @_;
+  
+      Log::Any::Adapter->set( 'Dispatch',
+          'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
+  
+      @{ $args } and $self->usage_error("No extra arguments are allowed.\n");
+  
+      my $category;
+      my $name;
+      my $type;
+  
+      if ( $opt->{'name'} ) {
+          ( $category, $name ) = split /\//xms => $opt->{'name'};
+          first { $_ eq $category } qw< perl > # add supported categories
+              or $self->usage_error( "Wrong 'name' format\n" );
+          $type = 'module';
+      }
+      elsif ( $opt->{'cpanfile'} ) {
+          $category = 'perl';
+          $name     = $opt->{'cpanfile'};
+          $type     = 'cpanfile';
+      }
+      else {
+          $self->usage_error( "Must provide 'name' or 'cpanfile'\n" ); # future: others
+      }
+  
+      $self->{'config'} = +{
+          name       => $name,
+          category   => $category,
+          type       => $type,
+          config_dir => $opt->{'config_dir'},
+          source_dir => $opt->{'source_dir'},
+          index_file => $opt->{'index_file'},
+          extract    => $opt->{'extract'},
+      };
+  }
+  
+  sub execute {
+      my $self = shift;
+      my $scaffolder = $self->_get_scaffolder();
+      $scaffolder->run;
+  }
+  
+  sub _get_scaffolder {
+      my $self = shift;
+      $self->{'config'}{'category'} eq 'perl'
+          and return $self->gen_scaffolder_perl();
+      die "failed to create a scaffolder\n";
+  }
+  
+  sub gen_scaffolder_perl {
+      my $self   = shift;
+      my $config = $self->{'config'};
+  
+      return Pakket::Scaffolder::Perl->new(
+          config_dir        => $config->{'config_dir'},
+          json_file         => $config->{'index_file'},
+          source_dir        => $config->{'source_dir'},
+          extract           => $config->{'extract'},
+          $config->{'type'} => $config->{'name'},
+      );
+  }
+  
+  1;
+  __END__
+PAKKET_CLI_COMMAND_GENERATE
+
+$fatpacked{"Pakket/CLI/Command/init.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_INIT';
+  package Pakket::CLI::Command::init;
+  
+  # ABSTRACT: Initialize a pakket instance
+  
+  use strict;
+  use warnings;
+  use English '-no_match_vars';
+  use Pakket::CLI '-command';
+  use Pakket::Log;
+  use Pakket::Utils qw< is_writeable >;
+  use Log::Any::Adapter;
+  use Log::Any   qw< $log >;
+  use Path::Tiny qw< path >;
+  use File::HomeDir;
+  
+  sub abstract    {'Initialize Pakket'}
+  sub description {'Initialize Pakket'}
+  
+  sub opt_spec {
+      return (
+          [ 'repo-dir=s', 'repo directory (default: /var/lib/pakket)' ],
+          [ 'local',      'short-hand for --repo-dir=~/.pakket' ],
+          [ 'force|f',    'force init (for reinitialization)' ],
+          [ 'verbose|v+', 'verbose output (can be provided multiple times)' ],
+      );
+  }
+  
+  sub validate_args {
+      my ( $self, $opt, $args ) = @_;
+  
+      my $logger = Pakket::Log->cli_logger(2); # verbosity
+      Log::Any::Adapter->set( 'Dispatch', dispatcher => $logger );
+  
+      # global installation and pakket is already available
+      if (  !$opt->{'repo_dir'}
+          && $ENV{'PAKKET_REPO'}
+          && -d $ENV{'PAKKET_REPO'}
+          && !$opt->{'force'} )
+      {
+          $log->critical(
+              "Pakket is already globally initialized at $ENV{'PAKKET_REPO'}");
+          exit 1;
+      }
+  
+      $self->{'repo'} = path(
+          $opt->{'repo_dir'} // $opt->{'local'}
+          ? ( File::HomeDir->my_home, '.pakket' )
+          : ( Path::Tiny->rootdir, qw< usr local pakket > ),
+      );
+  }
+  
+  sub execute {
+      my $self = shift;
+  
+      # 1. create main repo directory
+      # TODO: allow configuration files? interactive?
+      my $repo_dir = $self->{'repo'};
+  
+      if ( !is_writeable($repo_dir) ) {
+          $log->critical("No permissions to write to $repo_dir.");
+          exit 1;
+      }
+  
+      $repo_dir->is_dir
+          or $repo_dir->mkpath;
+  
+      # 2. print the configuration
+      my $pakket_homedir
+          = path( File::HomeDir->my_home,
+          $OSNAME =~ m{win}ms ? 'pakket' : '.pakket' );
+  
+      $pakket_homedir->is_dir
+          or $pakket_homedir->mkpath;
+  
+      # FIXME: currently only bash support, what about csh/fish/zsh/Windows?
+      my $shellfile = path( $pakket_homedir, 'pakket.sh' );
+      $shellfile->spew(
+          "export PAKKET_REPO=$repo_dir\n",
+          "export PERL5LIB=$repo_dir/lib/perl5:\$PERL5LIB\n",
+          "export LD_LIBRARY_PATH=$repo_dir/lib:\$LD_LIBRARY_PATH\n",
+      );
+  
+      $log->info("Done. Please add $shellfile to your bashrc.");
+  }
+  
+  1;
+  
+  __END__
+PAKKET_CLI_COMMAND_INIT
+
+$fatpacked{"Pakket/CLI/Command/install.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_INSTALL';
+  package Pakket::CLI::Command::install;
+  # ABSTRACT: The pakket install command
+  
+  use strict;
+  use warnings;
+  use Pakket::CLI '-command';
+  use Pakket::Installer;
+  use Pakket::Log;
+  use Log::Any::Adapter;
+  use Path::Tiny      qw< path >;
+  
+  sub abstract    { 'Install a package' }
+  sub description { 'Install a package' }
+  
+  sub opt_spec {
+      return (
+          [
+              'to=s',
+              'directory to install the package in',
+              { 'required' => 1 },
+          ],
+          [
+              'from=s',
+              'directory to install the packages from',
+              { 'required' => 1 },
+          ],
+          [ 'input-file=s', 'install eveything listed in this file' ],
+          [ 'verbose|v+',   'verbose output (can be provided multiple times)', { 'default' => 1 } ],
+      );
+  }
+  
+  sub validate_args {
+      my ( $self, $opt, $args ) = @_;
+  
+      Log::Any::Adapter->set( 'Dispatch',
+          'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
+  
+      $self->{'installer'}{'pakket_dir'} = $opt->{'to'};
+      $self->{'installer'}{'parcel_dir'} = $opt->{'from'};
+  
+      if ( defined $opt->{'input_file'} ) {
+          $self->{'installer'}{'input_file'} = $opt->{'input_file'};
+          $self->{'parcels'} = [];
+      } else {
+          @{$args} == 0
+              and $self->usage_error('Must provide parcels to install');
+  
+          my @parcels = @{$args};
+  
+          $self->{'parcels'} = \@parcels;
+      }
+  }
+  
+  sub execute {
+      my $self      = shift;
+      my $installer = Pakket::Installer->new(
+          map( +(
+              defined $self->{'installer'}{$_}
+                  ? ( $_ => $self->{'installer'}{$_} )
+                  : ()
+          ), qw< pakket_dir parcel_dir input_file > ),
+      );
+  
+      return $installer->install( @{ $self->{'parcels'} } );
+  }
+  
+  1;
+  
+  __END__
+PAKKET_CLI_COMMAND_INSTALL
+
+$fatpacked{"Pakket/CLI/Command/run.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_RUN';
+  package Pakket::CLI::Command::run;
+  # ABSTRACT: The pakket run command
+  
+  use strict;
+  use warnings;
+  use Pakket::CLI '-command';
+  use Pakket::Runner;
+  use Pakket::Log;
+  use Log::Any::Adapter;
+  use Path::Tiny      qw< path >;
+  
+  sub abstract    { 'Run commands using pakket' }
+  sub description { 'Run commands using pakket' }
+  
+  sub opt_spec {
+      return (
+          [
+              'from=s',
+              'defines pakket active directory to use. (mandatory, unless set in PAKKET_ACTIVE_PATH)',
+              { 'required' => 1 },
+          ],
+      );
+  }
+  
+  sub validate_args {
+      my ( $self, $opt, $args ) = @_;
+  
+      Log::Any::Adapter->set( 'Dispatch',
+          'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
+  
+      my $active_path
+          = exists $ENV{'PAKKET_ACTIVE_PATH'}
+          ? $ENV{'PAKKET_ACTIVE_PATH'}
+          : $opt->{'from'};
+  
+      $active_path
+          or $self->usage_error('No active path provided');
+  
+      $self->{'runner'}{'args'}        = $args;
+      $self->{'runner'}{'active_path'} = $active_path;
+  }
+  
+  sub execute {
+      my $self = shift;
+  
+      my $runner = Pakket::Runner->new(
+          'active_path' => $self->{'runner'}{'active_path'},
+      );
+  
+      exit $runner->run( @{ $self->{'runner'}{'args'} } );
+  }
+  
+  1;
+  
+  __END__
+PAKKET_CLI_COMMAND_RUN
+
+$fatpacked{"Pakket/CLI/Command/serve.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_SERVE';
+  package Pakket::CLI::Command::serve;
+  # ABSTRACT: Serve Pakket objects over HTTP
+  
+  use strict;
+  use warnings;
+  
+  use Path::Tiny      qw< path >;
+  use Log::Any::Adapter;
+  
+  use Pakket::CLI '-command';
+  use Pakket::Server;
+  use Pakket::Log;
+  
+  sub abstract    { 'Serve objects' }
+  sub description { 'Serve objects' }
+  
+  sub opt_spec {
+      return (
+          [ 'port=s',     'port where server will listen', ],
+          [ 'verbose|v+', 'verbose output (can be provided multiple times)' ],
+      );
+  }
+  
+  sub validate_args {
+      my ( $self, $opt, $args ) = @_;
+  
+      $self->{'server'}{$_} = $opt->{$_} for qw< port >;
+  
+      Log::Any::Adapter->set( 'Dispatch',
+          'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
+  }
+  
+  sub execute {
+      my $self   = shift;
+      my $server = Pakket::Server->new(
+          # default main object
+          map( +(
+              defined $self->{'server'}{$_}
+                  ? ( $_ => $self->{'server'}{$_} )
+                  : ()
+          ), qw< port > ),
+      );
+  
+      $server->run();
+  }
+  
+  1;
+  
+  __END__
+PAKKET_CLI_COMMAND_SERVE
+
+$fatpacked{"Pakket/Constants.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CONSTANTS';
+  package Pakket::Constants; ## no critic (Subroutines::ProhibitExportingUndeclaredSubs)
+  # ABSTRACT: Constants used in Pakket
+  
+  use strict;
+  use warnings;
+  use parent 'Exporter';
+  
+  use constant {
+      'PARCEL_EXTENSION'     => 'pkt',
+      'PARCEL_FILES_DIR'     => 'files',
+      'PARCEL_METADATA_FILE' => 'meta.json',
+  
+      # CATEGORY/PACKAGE         == latest version
+      # CATEGORY/PACKAGE=VERSION == Exact version
+      'PAKKET_PACKAGE_SPEC'  => qr{
+          ^
+          ([^/]+)     # category
+          /
+          ([^=]+)    # name
+          (?:
+              =
+              (.+) # optional version
+          )?
+          $
+      }x,
+  
+      'PAKKET_LATEST_VERSION' => 'LATEST',
+  };
+  
+  our @EXPORT_OK = qw<
+      PARCEL_EXTENSION
+      PARCEL_FILES_DIR
+      PARCEL_METADATA_FILE
+      PAKKET_PACKAGE_SPEC
+      PAKKET_LATEST_VERSION
+  >;
+  
+  1;
+PAKKET_CONSTANTS
+
+$fatpacked{"Pakket/Installer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_INSTALLER';
+  package Pakket::Installer;
+  # ABSTRACT: Install pakket packages into an installation directory
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  use Path::Tiny            qw< path  >;
+  use Types::Path::Tiny     qw< Path  >;
+  use File::Copy::Recursive qw< dircopy >;
+  use Time::HiRes           qw< time >;
+  use Log::Any              qw< $log >;
+  use JSON::MaybeXS         qw< decode_json >;
+  use Archive::Any;
+  
+  use Pakket::Repository::Parcel;
+  use Pakket::Package;
+  use Pakket::Utils         qw< is_writeable >;
+  use Pakket::Constants qw<
+      PARCEL_METADATA_FILE
+      PARCEL_FILES_DIR
+      PAKKET_PACKAGE_SPEC
+  >;
+  
+  with 'Pakket::Role::RunCommand';
+  
+  # Sample structure:
+  # ~/.pakket/
+  #        bin/
+  #        etc/
+  #        repos/
+  #        libraries/
+  #                  active ->
+  #
+  
+  has 'pakket_libraries_dir' => (
+      'is'      => 'ro',
+      'isa'     => Path,
+      'coerce'  => 1,
+      'builder' => '_build_pakket_libraries_dir',
+  );
+  
+  has 'pakket_dir' => (
+      'is'       => 'ro',
+      'isa'      => Path,
+      'coerce'   => 1,
+      'required' => 1,
+  );
+  
+  has 'parcel_dir' => (
+      'is'       => 'ro',
+      'isa'      => Path,
+      'coerce'   => 1,
+      'required' => 1,
+  );
+  
+  has 'keep_copies' => (
+      'is'      => 'ro',
+      'isa'     => 'Int',
+      'default' => sub {1},
+  );
+  
+  has 'input_file' => (
+      'is'        => 'ro',
+      'isa'       => Path,
+      'coerce'    => 1,
+      'predicate' => '_has_input_file',
+  );
+  
+  has 'parcel_repo' => (
+      'is'      => 'ro',
+      'isa'     => 'Pakket::Repository::Parcel',
+      'lazy'    => 1,
+      'builder' => '_build_parcel_repo',
+  );
+  
+  # We're starting with a local repo
+  # # but in the future this will be dictated from a configuration
+  sub _build_parcel_repo {
+      my $self   = shift;
+  
+      # Use default for now, but use the directory we want at least
+      return Pakket::Repository::Parcel->new(
+          'directory' => $self->parcel_dir,
+      );
+  }
+  
+  sub _build_pakket_libraries_dir {
+      my $self = shift;
+      return $self->pakket_dir->child('libraries');
+  }
+  
+  # TODO:
+  # this should be implemented using a fetcher class
+  # because it might be from HTTP/FTP/Git/Custom/etc.
+  sub fetch_package;
+  
+  sub _clean_packages {
+      my ( $self, $packages ) = @_;
+      my @clean_packages;
+  
+      foreach my $package_str ( @{$packages} ) {
+          my ( $pkg_cat, $pkg_name, $pkg_version ) =
+              $package_str =~ PAKKET_PACKAGE_SPEC();
+  
+          if ( !defined $pkg_version ) {
+              $log->critical(
+                  'Currently you must provide a version to install',
+              );
+  
+              exit 1;
+          }
+  
+          push @clean_packages, Pakket::Package->new(
+              'category' => $pkg_cat,
+              'name'     => $pkg_name,
+              'version'  => $pkg_version,
+          );
+      }
+  
+      @{ $packages } = @clean_packages;
+  }
+  
+  sub install {
+      my ( $self, @packages ) = @_;
+  
+      $self->_has_input_file and
+          push @packages, $self->input_file->lines_utf8( { 'chomp' => 1 } );
+  
+      $self->_clean_packages(\@packages);
+  
+      if ( !@packages ) {
+          $log->notice('Did not receive any parcels to deliver');
+          return;
+      }
+  
+      my $pakket_libraries_dir = $self->pakket_libraries_dir;
+  
+      $pakket_libraries_dir->is_dir
+          or $pakket_libraries_dir->mkpath();
+  
+      my $work_dir = $pakket_libraries_dir->child( time() );
+  
+      if ( $work_dir->exists ) {
+          $log->critical(
+              "Internal installation directory exists ($work_dir), exiting",
+          );
+  
+          exit 1;
+      }
+  
+      $work_dir->mkpath();
+  
+      # The only way to make a symlink point somewhere else in an atomic way is
+      # to create a new symlink pointing to the target, and then rename it to the
+      # existing symlink (that is, overwriting it).
+      #
+      # This actually works, but there is a caveat: how to generate a name for
+      # the new symlink? File::Temp will both create a new file name and open it,
+      # returning a handle; not what we need.
+      #
+      # So, we just create a file name that looks like 'active_P_T.tmp', where P
+      # is the pid and T is the current time.
+      my $active_link = $pakket_libraries_dir->child('active');
+      my $active_temp = $pakket_libraries_dir->child(
+          sprintf('active_%s_%s.tmp', $$, time()),
+      );
+  
+      # we copy any previous installation
+      if ( $active_link->exists ) {
+          my $orig_work_dir = eval { my $link = readlink $active_link } or do {
+              $log->critical("$active_link is not a symlink");
+              exit 1;
+          };
+  
+          dircopy( $pakket_libraries_dir->child($orig_work_dir), $work_dir );
+      }
+  
+      my $installer_cache = {};
+      foreach my $package (@packages) {
+          $self->install_package( $package, $work_dir, { 'cache' => $installer_cache } );
+      }
+  
+      # We finished installing each one recursively to the work directory
+      # Now we need to set the symlink
+  
+      if ( $active_temp->exists ) {
+          # Huh? why does this temporary pathname exist? Try to delete it...
+          $log->debug('Deleting existing temporary active object');
+          if ( ! $active_temp->remove ) {
+              $log->error('Could not activate new installation (temporary symlink remove failed)');
+              exit 1;
+          }
+      }
+  
+      $log->debug('Setting temporary active symlink to new work directory');
+      if ( ! symlink $work_dir->basename, $active_temp ) {
+          $log->error('Could not activate new installation (temporary symlink create failed)');
+          exit 1;
+      }
+      if ( ! $active_temp->move($active_link) ) {
+          $log->error('Could not atomically activate new installation (symlink rename failed)');
+          exit 1;
+      }
+  
+      $log->infof(
+          "Finished installing %d packages into $pakket_libraries_dir",
+          scalar keys %{$installer_cache},
+      );
+  
+      # Clean up
+      my $keep = $self->keep_copies;
+  
+      if ( $keep <= 0 ) {
+          $log->warning(
+              "You have set your 'keep_copies' to 0 or less. " .
+              "Resetting it to '1'.",
+          );
+  
+          $keep = 1;
+      }
+  
+      my @dirs = sort { $a->stat->mtime <=> $b->stat->mtime }
+                 grep +( $_->basename ne 'active' && $_->is_dir ),
+                 $pakket_libraries_dir->children;
+  
+      my $num_dirs = @dirs;
+      foreach my $dir (@dirs) {
+          $num_dirs-- <= $keep and last;
+          $log->debug("Removing old directory: $dir");
+          path($dir)->remove_tree( { 'safe' => 0 } );
+      }
+  
+      return;
+  }
+  
+  sub try_to_install_package {
+      my ( $self, $package, $dir, $opts ) = @_;
+  
+      $log->debugf( 'Trying to install %s', $package->full_name );
+  
+      eval {
+          $self->install_package( $package, $dir, $opts );
+          1;
+      } or do {
+          $log->debugf( 'Could not install %s', $package->full_name );
+          return;
+      };
+  
+      return 1;
+  }
+  
+  sub install_package {
+      my ( $self, $package, $dir, $opts ) = @_;
+      my $installer_cache = $opts->{'cache'};
+  
+      # Are we in a regular (non-bootstrap) mode?
+      # Are we using a bootstrap version of a package?
+      if ( ! $opts->{'skip_prereqs'} && $package->is_bootstrap ) {
+          $log->critical(
+              'You are trying to install a bootstrap version of %s.'
+            . ' Please rebuild this package from scratch.',
+              $package->full_name,
+          );
+  
+          exit 1;
+      }
+  
+      my $pkg_cat        = $package->category;
+      my $pkg_name       = $package->name;
+      my $pkg_version    = $package->version;
+      my $pkg_short_name = $package->short_name;
+  
+      $log->debugf( "About to install %s (into $dir)", $package->full_name );
+  
+      if ( defined $installer_cache->{$pkg_cat}{$pkg_name} ) {
+          my $version = $installer_cache->{$pkg_cat}{$pkg_name};
+  
+          if ( $version ne $pkg_version ) {
+              $log->critical(
+                  "$pkg_short_name=$version already installed. "
+                . "Cannot install new version: $pkg_version",
+              );
+  
+              exit 1;
+          }
+  
+          $log->debugf( '%s already installed.', $package->full_name );
+  
+          return;
+      } else {
+          $installer_cache->{$pkg_cat}{$pkg_name} = $pkg_version;
+      }
+  
+      if ( !is_writeable($dir) ) {
+          $log->critical(
+              "Can't write to your installation directory ($dir)",
+          );
+  
+          exit 1;
+      }
+  
+      my $parcel_file
+          = $self->parcel_repo->retrieve_location( $package->full_name );
+  
+      $parcel_file->copy($dir);
+  
+      my $parcel_basename = $parcel_file->basename;
+  
+      $log->debug("Unpacking $parcel_basename into $dir");
+  
+      # Create a place for pkt files to be extracted
+      $dir->sibling("extracted")->mkpath;
+  
+      # Unpack into a separate directory
+      my $tmp_extraction_dir = Path::Tiny->tempdir(
+          'CLEANUP' => 1,
+          'DIR'     => $dir->sibling("extracted")->stringify,
+      );
+  
+      my $archive = Archive::Any->new($parcel_file);
+      $archive->extract($tmp_extraction_dir);
+  
+      my $full_parcel_dir = $tmp_extraction_dir->child( PARCEL_FILES_DIR() );
+  
+      my $spec_file = $full_parcel_dir->child( PARCEL_METADATA_FILE() );
+      my $config    = decode_json $spec_file->slurp_utf8;
+  
+      $dir->child($parcel_basename)->remove;
+  
+      my $prereqs = $config->{'Prereqs'};
+      foreach my $prereq_category ( keys %{$prereqs} ) {
+          my $runtime_prereqs = $prereqs->{$prereq_category}{'runtime'};
+  
+          foreach my $prereq_name ( keys %{$runtime_prereqs} ) {
+              my $prereq_data    = $runtime_prereqs->{$prereq_name};
+              my $prereq_version = $prereq_data->{'version'};
+  
+              # FIXME We shouldn't be constructing this,
+              #       We should just ask the repo for it
+              #       It should maintain metadata for this
+              #       and API to retrieve it
+              # FIXME This shouldn't be a package but a prereq object
+              my $next_pkg = Pakket::Package->new(
+                  'category' => $prereq_category,
+                  'name'     => $prereq_name,
+                  'version'  => $prereq_version,
+              );
+  
+              $self->install_package( $next_pkg, $dir, $opts );
+          }
+      }
+  
+      foreach my $item ( $full_parcel_dir->children ) {
+          my $basename = $item->basename;
+  
+          $basename eq PARCEL_METADATA_FILE()
+              and next;
+  
+          my $target_dir = $dir->child($basename);
+          dircopy( $item, $target_dir );
+      }
+  
+      my $actual_version = $config->{'Package'}{'version'};
+      $log->info("Delivered parcel $pkg_cat/$pkg_name ($actual_version)");
+  
+      return;
+  }
+  
+  __PACKAGE__->meta->make_immutable;
+  
+  no Moose;
+  
+  1;
+  
+  __END__
+PAKKET_INSTALLER
+
+$fatpacked{"Pakket/Log.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_LOG';
+  package Pakket::Log;
+  # ABSTRACT: A logger for Pakket
+  
+  use strict;
+  use warnings;
+  use Log::Dispatch;
+  use Path::Tiny qw< path >;
+  
+  use constant {
+      'DEBUG_LOG_LEVEL'    => 3,
+      'DEBUG_INFO_LEVEL'   => 2,
+      'DEBUG_NOTICE_LEVEL' => 1,
+  };
+  
+  sub arg_default_logger {
+      return $_[1] || Log::Dispatch->new(
+          'outputs' => [
+              [
+                  'Screen',
+                  'min_level' => 'notice',
+                  'newline'   => 1,
+              ],
+          ],
+      );
+  }
+  
+  sub build_logger {
+      my ( $class, $verbose ) = @_;
+      my $logger = Log::Dispatch->new(
+          'outputs' => [
+              $class->_build_logger(),
+              $class->_cli_logger( $verbose // 1 ),
+          ],
+      );
+  
+      return $logger;
+  }
+  
+  sub _build_logger {
+      return [
+          'File',
+          'min_level' => 'debug',
+          'filename'  => path( Path::Tiny->cwd, 'build.log' )->stringify,
+          'newline'   => 1,
+      ];
+  }
+  
+  sub cli_logger {
+      my ( $class, $verbose ) = @_;
+  
+      my $logger = Log::Dispatch->new(
+          'outputs' => [ $class->_cli_logger($verbose) ],
+      );
+  
+      return $logger;
+  }
+  
+  sub _cli_logger {
+      my ( $class, $verbose ) = @_;
+  
+      $verbose ||= 0;
+  
+      my $screen_level =
+          $verbose >= +DEBUG_LOG_LEVEL    ? 'debug'  : # log 2
+          $verbose == +DEBUG_INFO_LEVEL   ? 'info'   : # log 1
+          $verbose == +DEBUG_NOTICE_LEVEL ? 'notice' : # log 0
+                                            'warning';
+      # The default color map for Log::Dispatch::Screen::Color
+      # is (to my eyes) really hard to read, let's make it saner.
+      my $colors = {
+          debug   => {
+              text        => 'green',
+          },
+          info    => {
+              text        => 'yellow',
+          },
+          error   => {
+              background  => 'red',
+          },
+          alert   => {
+              text        => 'red',
+              background  => 'white',
+          },
+          warning => {
+              text        => 'red',
+              background  => 'white',
+              bold        => 1,
+          },
+      };
+      return [
+          'Screen::Color',
+          'min_level' => $screen_level,
+          'newline'   => 1,
+          'color'     => $colors,
+      ];
+  }
+  
+  1;
+  
+  __END__
+PAKKET_LOG
+
+$fatpacked{"Pakket/Package.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_PACKAGE';
+  package Pakket::Package;
+  # ABSTRACT: An object representing a package
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  
+  with qw< Pakket::Role::PrintableNames >;
+  
+  has 'name' => (
+      'is'       => 'ro',
+      'isa'      => 'Str',
+      'required' => 1,
+  );
+  
+  has 'category' => (
+      'is'       => 'ro',
+      'isa'      => 'Str',
+      'required' => 1,
+  );
+  
+  has 'version' => (
+      'is'       => 'ro',
+      'isa'      => 'Str',
+      'required' => 1,
+  );
+  
+  has 'is_bootstrap' => (
+      'is'      => 'ro',
+      'isa'     => 'Bool',
+      'default' => sub {0},
+  );
+  
+  has [qw<build_opts bundle_opts>] => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub { +{} },
+  );
+  
+  has 'prereqs' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub { return +{} },
+  );
+  
+  # FIXME: GH #73 will make this more reasonable
+  has 'configure_prereqs' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'lazy'    => 1,
+      'builder' => '_build_configure_prereqs',
+  );
+  
+  has 'test_prereqs' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'lazy'    => 1,
+      'builder' => '_build_test_prereqs',
+  );
+  
+  has 'runtime_prereqs' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'lazy'    => 1,
+      'builder' => '_build_runtime_prereqs',
+  );
+  
+  sub _build_configure_prereqs {
+      my $self    = shift;
+      return $self->phase_prereqs('configure');
+  }
+  
+  sub _build_test_prereqs {
+      my $self    = shift;
+      return $self->phase_prereqs('test');
+  }
+  
+  sub _build_runtime_prereqs {
+      my $self    = shift;
+      return $self->phase_prereqs('runtime');
+  }
+  
+  sub phase_prereqs {
+      my ( $self, $phase ) = @_;
+      my $prereqs = $self->prereqs;
+      return +{
+          map { $_ => $prereqs->{$_}{$phase} }
+              keys %{$prereqs},
+      };
+  }
+  
+  sub config {
+      my $self = shift;
+  
+      return +{
+          'Package' => {
+              # This is so we don't see is_bootstrap in config
+              # if not required -- SX
+              ( 'is_bootstrap' => 1 )x!! $self->is_bootstrap,
+  
+              map +( $_ => $self->$_ ), qw<category name version>,
+          },
+  
+          'Prereqs' => $self->prereqs,
+  
+          map +( $_ => $self->$_ ), qw<build_opts bundle_opts>,
+      };
+  }
+  
+  sub new_from_config {
+      my ( $class, $config ) = @_;
+  
+      my %package_details = (
+          %{ $config->{'Package'} },
+          'prereqs'      => $config->{'Prereqs'}    || {},
+          'build_opts'   => $config->{'build_opts'} || {},
+          'is_bootstrap' => !!$config->{'is_bootstrap'},
+      );
+  
+      return $class->new(%package_details);
+  }
+  
+  __PACKAGE__->meta->make_immutable;
+  no Moose;
+  
+  1;
+PAKKET_PACKAGE
+
+$fatpacked{"Pakket/Repository.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY';
+  package Pakket::Repository;
+  # ABSTRACT: Build in-memory representation of repo
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  
+  use Log::Any      qw< $log >;
+  use Pakket::Types qw< PakketRepositoryBackend >;
+  
+  has 'backend' => (
+      'is'      => 'ro',
+      'does'    => 'PakketRepositoryBackend',
+      'coerce'  => 1,
+      'lazy'    => 1,
+      'builder' => '_build_backend',
+      'handles' => [ qw<
+          all_object_ids
+          store_content  retrieve_content  remove_content
+          store_location retrieve_location remove_location
+      > ],
+  );
+  
+  sub _build_backend {
+      my $self = shift;
+      $log->critical(
+          'You did not specify a backend '
+        . '(using parameter or builder)',
+      );
+  
+      exit 1;
+  }
+  
+  sub BUILD {
+      my $self = shift;
+      $self->backend();
+  }
+  
+  __PACKAGE__->meta->make_immutable;
+  no Moose;
+  
+  1;
+  
+  __END__
+  
+  =pod
+PAKKET_REPOSITORY
+
+$fatpacked{"Pakket/Repository/Backend/DBI.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_BACKEND_DBI';
+  package Pakket::Repository::Backend::DBI;
+  # ABSTRACT: A DBI-based backend repository
+  
+  # FIXME: Add methods: remove_location, remove_content
+  
+  use DBI qw(:sql_types);
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  
+  use Path::Tiny        qw< path >;
+  use Log::Any          qw< $log >;
+  use Types::DBI;
+  
+  with qw<
+      Pakket::Role::Repository::Backend
+  >;
+  
+  has dbh => (
+     is       => 'ro',
+     isa      => Dbh,
+     required => 1,
+     coerce   => 1,
+  );
+  
+  sub all_object_ids {
+      my $self = shift;
+      my $sql = qq{SELECT id FROM data};
+      my $stmt;
+      if (!($stmt = $self->dbh->prepare($sql))) {
+          $log->criticalf('Could not prepare statement [%s] => %s', $sql, $DBI::errstr);
+          exit 1;
+      }
+      if (!$stmt->execute()) {
+          $log->criticalf('Could not get remote all_object_ids: %s', $DBI::errstr);
+          exit 1;
+      }
+  
+      my @all_object_ids = map +( $_->[0] ), @{ $stmt->fetchall_arrayref() };
+      return \@all_object_ids;
+  }
+  
+  sub store_location {
+      my ( $self, $id, $file_to_store ) = @_;
+      my $content = path($file_to_store)->slurp( { 'binmode' => ':raw' } );
+      $self->store_content( $id, $content );
+  }
+  
+  sub retrieve_location {
+      my ( $self, $id ) = @_;
+      my $content = $self->retrieve_content->($id);
+      my $location = Path::Tiny->tempfile;
+      $location->spew( { 'binmode' => ':raw' }, $content );
+      return $location;
+  }
+  
+  sub store_content {
+      my ( $self, $id, $content ) = @_;
+      {
+          my $sql = qq{DELETE FROM data WHERE id = ?};
+          my $stmt;
+          if (!($stmt = $self->dbh->prepare($sql))) {
+              $log->criticalf('Could not prepare statement [%s] => %s', $sql, $DBI::errstr);
+              exit 1;
+          }
+          $stmt->bind_param(1, $id, SQL_VARCHAR);
+          if (!$stmt->execute()) {
+              $log->criticalf('Could not delete content for id %d: %s', $id, $DBI::errstr);
+              exit 1;
+          }
+      }
+      {
+          my $sql = qq{INSERT INTO data (id, content) VALUES (?, ?)};
+          my $stmt;
+          if (!($stmt = $self->dbh->prepare($sql))) {
+              $log->criticalf('Could not prepare statement [%s] => %s', $sql, $DBI::errstr);
+              exit 1;
+          }
+          $stmt->bind_param(1, $id, SQL_VARCHAR);
+          $stmt->bind_param(2, $content, SQL_BLOB);
+          if (!$stmt->execute()) {
+              $log->criticalf('Could not insert content for id %d: %s', $id, $DBI::errstr);
+              exit 1;
+          }
+      }
+  }
+  
+  sub retrieve_content {
+      my ( $self, $id ) = @_;
+      my $sql = qq{SELECT content FROM data WHERE id = ?};
+      my $stmt;
+      if (!($stmt = $self->dbh->prepare($sql))) {
+          $log->criticalf('Could not prepare statement [%s] => %s', $sql, $DBI::errstr);
+          exit 1;
+      }
+      $stmt->bind_param(1, $id, SQL_VARCHAR);
+      if (!$stmt->execute()) {
+          $log->criticalf('Could not retrieve content for id %d: %s', $id, $DBI::errstr);
+          exit 1;
+      }
+  
+      my $all_content = $stmt->fetchall_arrayref();
+      if (!$all_content || @$all_content != 1) {
+          $log->criticalf('Failed to retrieve exactly one row for id %d: %s', $id);
+          exit 1;
+      }
+      return $all_content->[0];
+  }
+  
+  __PACKAGE__->meta->make_immutable;
+  no Moose;
+  
+  1;
+  
+  __END__
+  
+  =pod
+PAKKET_REPOSITORY_BACKEND_DBI
+
+$fatpacked{"Pakket/Repository/Backend/File.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_BACKEND_FILE';
+  package Pakket::Repository::Backend::File;
+  # ABSTRACT: A file-based backend repository
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  
+  use JSON::MaybeXS     qw< encode_json decode_json >;
+  use Path::Tiny        qw< path >;
+  use Log::Any          qw< $log >;
+  use Types::Path::Tiny qw< Path >;
+  use Digest::SHA       qw< sha1_hex >;
+  
+  with qw<
+      Pakket::Role::HasDirectory
+      Pakket::Role::Repository::Backend
+  >;
+  
+  has 'file_extension' => (
+      'is'      => 'ro',
+      'isa'     => 'Str',
+      'default' => sub {'sgm'},
+  );
+  
+  has 'index_file' => (
+      'is'       => 'ro',
+      'isa'      => Path,
+      'coerce'   => 1,
+      'default'  => sub {
+          my $self = shift;
+          return $self->directory->child('index.json');
+      },
+  );
+  
+  has 'repo_index' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'builder' => '_build_repo_index',
+  );
+  
+  sub _build_repo_index {
+      my $self = shift;
+      my $file = $self->index_file;
+  
+      $file->is_file
+          or return +{};
+  
+      return decode_json( $file->slurp_utf8 );
+  }
+  
+  sub all_object_ids {
+      my $self           = shift;
+      my @all_object_ids = keys %{ $self->repo_index };
+      return \@all_object_ids;
+  }
+  
+  sub _store_in_index {
+      my ( $self, $id ) = @_;
+  
+      # Decide on a proper filename for $id
+      # Meaningless extension
+      my $filename = sha1_hex($id) . '.' . $self->file_extension;
+  
+      # Store in the index
+      $self->repo_index->{$id} = $filename;
+      $self->index_file->spew_utf8( encode_json( $self->repo_index ) );
+  
+      return $filename;
+  }
+  
+  sub _retrieve_from_index {
+      my ( $self, $id ) = @_;
+      return $self->repo_index->{$id};
+  }
+  
+  sub _remove_from_index {
+      my ( $self, $id ) = @_;
+      return delete $self->repo_index->{$id};
+  }
+  
+  sub store_location {
+      my ( $self, $id, $file_to_store ) = @_;
+      my $filename  = $self->_store_in_index($id);
+      my $directory = $self->directory;
+  
+      return path($file_to_store)->copy( $directory->child($filename) );
+  }
+  
+  sub retrieve_location {
+      my ( $self, $id ) = @_;
+      my $filename = $self->_retrieve_from_index($id);
+      $filename
+          and return $self->directory->child($filename);
+  
+      $log->debug("File for ID '$id' does not exist in storage");
+      return;
+  }
+  
+  sub remove_location {
+      my ( $self, $id ) = @_;
+      my $location = $self->retrieve_location($id);
+      $location or return;
+      $location->remove;
+      $self->_remove_from_index($id);
+      return 1;
+  }
+  
+  sub store_content {
+      my ( $self, $id, $content ) = @_;
+      my $file_to_store = Path::Tiny->tempfile;
+      $file_to_store->spew( { 'binmode' => ':raw' }, $content );
+      return $self->store_location( $id, $file_to_store );
+  }
+  
+  sub retrieve_content {
+      my ( $self, $id ) = @_;
+      return $self->retrieve_location($id)
+                  ->slurp( { 'binmode' => ':raw' } );
+  }
+  
+  sub remove_content {
+      my ( $self, $id ) = @_;
+      return $self->remove_location($id);
+  }
+  
+  __PACKAGE__->meta->make_immutable;
+  no Moose;
+  
+  1;
+  
+  __END__
+  
+  =pod
+PAKKET_REPOSITORY_BACKEND_FILE
+
+$fatpacked{"Pakket/Repository/Backend/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_BACKEND_HTTP';
+  package Pakket::Repository::Backend::HTTP;
+  # ABSTRACT: A remote HTTP backend repository
+  
+  # FIXME: Add methods: remove_location remove_content
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  
+  use URI::Escape       qw< uri_escape >;
+  use JSON::MaybeXS     qw< encode_json decode_json >;
+  use Path::Tiny        qw< path >;
+  use Log::Any          qw< $log >;
+  use Types::Path::Tiny qw< Path >;
+  use HTTP::Tiny;
+  
+  with qw<
+      Pakket::Role::Repository::Backend
+  >;
+  
+  has 'host' => (
+      'is'       => 'ro',
+      'isa'      => 'Str',
+      'required' => 1,
+  );
+  
+  has 'port' => (
+      'is'       => 'ro',
+      'isa'      => 'Str',
+      'required' => 1,
+  );
+  
+  has 'base_url' => (
+      'is'       => 'ro',
+      'isa'      => 'Str',
+      'lazy'     => 1,
+      'builder'  => '_build_base_url',
+  );
+  
+  has 'base_path' => (
+      'is'      => 'ro',
+      'isa'     => 'Str',
+      'default' => sub {''},
+  );
+  
+  has 'http_client' => (
+      'is'       => 'ro',
+      'isa'      => 'HTTP::Tiny',
+      'default'  => sub { HTTP::Tiny->new },
+  );
+  
+  sub _build_base_url {
+      my $self = shift;
+      return sprintf(
+          'http://%s:%s%s', $self->host, $self->port, $self->base_path,
+      );
+  }
+  
+  sub all_object_ids {
+      my $self     = shift;
+      my $url      = '/all_object_ids';
+      my $full_url = $self->base_url . $url;
+      my $response = $self->http_client->get($full_url);
+  
+      if ( !$response->{'success'} ) {
+          $log->criticalf( 'Could not get remote all_object_ids: %d -- %s',
+              $response->{'status'}, $response->{'reason'} );
+          exit 1;
+      }
+  
+      my $content = decode_json( $response->{'content'} );
+      return $content->{'data'};
+  }
+  
+  sub store_location {
+      my ( $self, $id, $file_to_store ) = @_;
+      my $content = {
+          'data' => path($file_to_store)->slurp( { 'binmode' => ':raw' } ),
+      };
+      $self->store_content( $id, $content );
+  }
+  
+  sub retrieve_location {
+      my ( $self, $id ) = @_;
+      my $url      = '/retrieve/location?id=' . uri_escape($id);
+      my $full_url = $self->base_url . $url;
+      my $response = $self->http_client->get($full_url);
+      my $content  = $response->{'content'};
+      my $location = Path::Tiny->tempfile;
+      $location->spew( { 'binmode' => ':raw' }, $content );
+      return $location;
+  }
+  
+  sub store_content {
+      my ( $self, $id, $content ) = @_;
+      my $url      = "/store/content";
+      my $full_url = $self->base_url . $url;
+  
+      my $response = $self->http_client->post(
+          $full_url => {
+              'content' => encode_json( { 'data' => $content, 'id' => $id, } ),
+              'headers' => {
+                  'Content-Type' => 'application/json',
+              },
+          },
+      );
+  
+      if ( !$response->{'success'} ) {
+          $log->criticalf( 'Could not store content for id %s', $id );
+          exit 1;
+      }
+  }
+  
+  sub retrieve_content {
+      my ( $self, $id ) = @_;
+      my $url      = '/retrieve/content?id=' . uri_escape($id);
+      my $full_url = $self->base_url . $url;
+      my $response = $self->http_client->get($full_url);
+  
+      if ( !$response->{'success'} ) {
+          $log->criticalf( 'Could not retrieve content for id %s', $id );
+          exit 1;
+      }
+  
+      return $response->{'content'};
+  }
+  
+  # FIXME: Add these
+  sub remove_content;
+  sub remove_location;
+  
+  __PACKAGE__->meta->make_immutable;
+  no Moose;
+  
+  1;
+  
+  __END__
+  
+  =pod
+PAKKET_REPOSITORY_BACKEND_HTTP
+
+$fatpacked{"Pakket/Repository/Config.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_CONFIG';
+  package Pakket::Repository::Config;
+  # ABSTRACT: A configuration repository
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  use Types::Path::Tiny qw< Path >;
+  use Carp              qw< croak >;
+  use JSON::MaybeXS     qw< encode_json decode_json >;
+  
+  extends qw< Pakket::Repository >;
+  with    qw< Pakket::Role::HasDirectory >;
+  
+  sub _build_backend {
+      my $self = shift;
+  
+      return [
+          'File',
+          'directory'      => $self->directory,
+          'file_extension' => 'ini',
+      ];
+  }
+  
+  sub retrieve_package_config {
+      my ( $self, $package ) = @_;
+  
+      my $config_str = $self->retrieve_content(
+          $package->full_name,
+      );
+  
+      my $config;
+      eval {
+          decode_json($config_str);
+          1;
+      } or do {
+          my $err = $@ || 'Unknown error';
+          croak("Cannot read config properly: $err");
+      };
+  
+  	return $config;
+  }
+  
+  sub store_package_config {
+  	my ( $self, $package ) = @_;
+  
+      return $self->store_content(
+          $package->full_name,
+          encode_json( $package->config ),
+      );
+  }
+  
+  no Moose;
+  __PACKAGE__->meta->make_immutable;
+  
+  1;
+PAKKET_REPOSITORY_CONFIG
+
+$fatpacked{"Pakket/Repository/Parcel.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_PARCEL';
+  package Pakket::Repository::Parcel;
+  # ABSTRACT: A parcel repository
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  
+  use Log::Any qw< $log >;
+  use Path::Tiny;
+  use Archive::Any;
+  use Archive::Tar::Wrapper;
+  
+  extends qw< Pakket::Repository >;
+  with    qw< Pakket::Role::HasDirectory >;
+  
+  sub _build_backend {
+      my $self = shift;
+  
+      return [
+          'File',
+          'directory'      => $self->directory,
+          'file_extension' => 'pkt',
+      ];
+  }
+  
+  # FIXME: This is duplicated in the Source repo
+  sub retrieve_package_parcel {
+      my ( $self, $package ) = @_;
+      my $file = $self->retrieve_location( $package->full_name );
+  
+      if ( !$file ) {
+          $log->criticalf(
+              'We do not have the parcel for package %s',
+              $package->full_name,
+          );
+  
+          exit 1;
+      }
+  
+      my $dir  = Path::Tiny->tempdir( 'CLEANUP' => 1 );
+      my $arch = Archive::Any->new( $file->stringify );
+      $arch->extract($dir);
+  
+      return $dir;
+  }
+  
+  sub store_package_parcel {
+      my ( $self, $package, $parcel_path ) = @_;
+  
+      my $arch = Archive::Tar::Wrapper->new();
+      $parcel_path->visit(
+          sub {
+              my ( $path, $stash ) = @_;
+  
+              $path->is_file
+                  or return;
+  
+              $arch->add(
+                  $path->relative($parcel_path)->stringify,
+                  $path->stringify,
+              );
+          },
+          { 'recurse' => 1 },
+      );
+  
+      my $file = Path::Tiny->tempfile();
+  
+      # Write and compress
+      $log->debug("Writing archive as $file");
+      $arch->write( $file->stringify, 1 );
+  
+      $log->debug("Storing $file");
+      $self->store_location( $package->full_name, $file );
+  }
+  
+  sub remove_package_parcel {
+      my ( $self, $package ) = @_;
+      return $self->remove_location( $package->full_name );
+  }
+  
+  no Moose;
+  __PACKAGE__->meta->make_immutable;
+  
+  1;
+PAKKET_REPOSITORY_PARCEL
+
+$fatpacked{"Pakket/Repository/Source.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_SOURCE';
+  package Pakket::Repository::Source;
+  # ABSTRACT: A source repository
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  
+  use Log::Any qw< $log >;
+  use Path::Tiny;
+  use Archive::Any;
+  use Archive::Tar::Wrapper;
+  
+  extends qw< Pakket::Repository >;
+  with    qw< Pakket::Role::HasDirectory >;
+  
+  sub _build_backend {
+      my $self = shift;
+  
+      return [
+          'File',
+          'directory'      => $self->directory,
+          'file_extension' => 'spkt',
+      ];
+  }
+  
+  # FIXME: This is duplicated in the Parcel repo
+  sub retrieve_package_source {
+      my ( $self, $package ) = @_;
+      my $file = $self->retrieve_location( $package->full_name );
+  
+      if ( !$file ) {
+          $log->criticalf(
+              'We do not have the source for package %s',
+              $package->full_name,
+          );
+  
+          exit 1;
+      }
+  
+      my $dir  = Path::Tiny->tempdir( 'CLEANUP' => 1 );
+      my $arch = Archive::Any->new( $file->stringify );
+      $arch->extract($dir);
+  
+      return $dir;
+  }
+  
+  sub store_package_source {
+      my ( $self, $package, $source_path ) = @_;
+  
+      my $arch = Archive::Tar::Wrapper->new();
+      $log->debug("Adding $source_path to file");
+  
+      $source_path->visit(
+          sub {
+              my ( $path, $stash ) = @_;
+  
+              $path->is_file
+                  or return;
+  
+              $arch->add(
+                  $path->relative($source_path)->stringify,
+                  $path->stringify,
+              );
+          },
+          { 'recurse' => 1 },
+      );
+  
+      my $file = Path::Tiny->tempfile();
+  
+      # Write and compress
+      $log->debug("Writing archive as $file");
+      $arch->write( $file->stringify, 1 );
+  
+      $log->debug("Storing $file");
+      $self->store_location( $package->full_name, $file );
+  }
+  
+  no Moose;
+  __PACKAGE__->meta->make_immutable;
+  
+  1;
+PAKKET_REPOSITORY_SOURCE
+
+$fatpacked{"Pakket/Requirement.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REQUIREMENT';
+  package Pakket::Requirement;
+  # ABSTRACT: A Pakket requirement
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  
+  use Log::Any          qw< $log >;
+  use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
+  use Pakket::Types;
+  
+  with qw< Pakket::Role::PrintableNames >;
+  
+  has [qw< category name >] => (
+      'is'       => 'ro',
+      'isa'      => 'Str',
+      'required' => 1,
+  );
+  
+  has 'version' => (
+      'is'       => 'ro',
+      'isa'      => 'PakketVersion',
+      'required' => 1,
+      'coerce'   => 1,
+  );
+  
+  sub new_from_string {
+      my ( $class, $req_str ) = @_;
+  
+      if ( $req_str !~ PAKKET_PACKAGE_SPEC() ) {
+          $log->critical("Cannot parse $req_str");
+          exit 1;
+      } else {
+          # This shuts up Perl::Critic
+          return $class->new(
+              'category' => $1,
+              'name'     => $2,
+              'version'  => $3,
+          );
+      }
+  }
+  
+  no Moose;
+  __PACKAGE__->meta->make_immutable;
+  
+  1;
+PAKKET_REQUIREMENT
+
+$fatpacked{"Pakket/Role/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_ROLE_BUILDER';
+  package Pakket::Role::Builder;
+  
+  # ABSTRACT: A role for all builders
+  
+  use Moose::Role;
+  
+  with qw< Pakket::Role::RunCommand >;
+  
+  requires qw< build_package >;
+  
+  no Moose::Role;
+  
+  1;
+PAKKET_ROLE_BUILDER
+
+$fatpacked{"Pakket/Role/ConfigReader.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_ROLE_CONFIGREADER';
+  package Pakket::Role::ConfigReader;
+  # ABSTRACT: A ConfigReader role
+  
+  use Moose::Role;
+  
+  requires qw< read_config >;
+  
+  no Moose::Role;
+  
+  1;
+PAKKET_ROLE_CONFIGREADER
+
+$fatpacked{"Pakket/Role/HasDirectory.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_ROLE_HASDIRECTORY';
+  package Pakket::Role::HasDirectory;
+  # ABSTRACT: A role to provide a directory attribute
+  
+  use Moose::Role;
+  use Types::Path::Tiny qw< AbsPath >;
+  
+  has 'directory' => (
+      'is'       => 'ro',
+      'isa'      => AbsPath,
+      'coerce'   => 1,
+      'required' => 1,
+  );
+  
+  no Moose::Role;
+  
+  1;
+  
+  __END__
+  
+  =pod
+  
+PAKKET_ROLE_HASDIRECTORY
+
+$fatpacked{"Pakket/Role/PrintableNames.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_ROLE_PRINTABLENAMES';
+  package Pakket::Role::PrintableNames;
+  # ABSTRACT: Some helpers to print names nicely
+  
+  use Moose::Role;
+  use Pakket::Utils qw< canonical_package_name >;
+  
+  sub short_name {
+      my $self = shift;
+      return canonical_package_name( $self->category, $self->name );
+  }
+  
+  sub full_name {
+      my $self = shift;
+      return canonical_package_name(
+          $self->category, $self->name, $self->version,
+      );
+  }
+  
+  no Moose::Role;
+  
+  1;
+  
+  __END__
+  
+  =pod
+PAKKET_ROLE_PRINTABLENAMES
+
+$fatpacked{"Pakket/Role/Repository/Backend.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_ROLE_REPOSITORY_BACKEND';
+  package Pakket::Role::Repository::Backend;
+  # ABSTRACT: A role for all repository backends
+  
+  use Moose::Role;
+  
+  # These are helper methods we want the backend to implement
+  # in order for the Repository to easily use across any backend
+  requires qw<
+      all_object_ids
+  
+      store_content  retrieve_content  remove_content
+      store_location retrieve_location remove_location
+  >;
+  
+  no Moose::Role;
+  
+  1;
+  
+  __END__
+  
+  =pod
+PAKKET_ROLE_REPOSITORY_BACKEND
+
+$fatpacked{"Pakket/Role/RunCommand.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_ROLE_RUNCOMMAND';
+  package Pakket::Role::RunCommand;
+  # ABSTRACT: Role for running commands
+  
+  use Moose::Role;
+  use System::Command;
+  use Path::Tiny qw< path >;
+  use Log::Any   qw< $log >;
+  
+  sub run_command {
+      my ( $self, $dir, $sys_cmds, $extra_opts ) = @_;
+      $log->debug( join ' ', @{$sys_cmds} );
+      foreach my $opt ( sort keys %{ $extra_opts->{'env'} || {} } ) {
+          $log->trace( 'export ' . join '=', $opt, $extra_opts->{'env'}{$opt} );
+      }
+  
+      my %opt = (
+          'cwd' => path($dir)->stringify,
+  
+          %{ $extra_opts || {} },
+  
+          # 'trace' => $ENV{SYSTEM_COMMAND_TRACE},
+      );
+  
+      my $cmd = System::Command->new( @{$sys_cmds}, \%opt );
+  
+      my $success = $cmd->loop_on(
+          'stdout' => sub {
+              my $msg = shift;
+              chomp $msg;
+              $log->debug($msg);
+              1;
+          },
+  
+          'stderr' => sub {
+              my $msg = shift;
+              chomp $msg;
+              $log->notice($msg);
+              1;
+          },
+      );
+  
+      $log->debugf(
+          "Command '%s' exited with '%d'",
+          join( ' ', $cmd->cmdline ),
+          $cmd->exit,
+      );
+  
+      return $success;
+  }
+  
+  # does more or less the same as `command1 && command2 ... && commandN`
+  sub run_command_sequence {
+      my ( $self, @commands ) = @_;
+  
+      $log->debugf( 'Starting a sequence of %d commands', 0+@commands );
+  
+      for my $idx ( 0 .. $#commands ) {
+          my $success = $self->run_command( @{ $commands[$idx] } );
+          unless ($success) {
+              $log->debug("Sequence terminated on item $idx");
+              return;
+          }
+      }
+  
+      $log->debug('Sequence finished');
+  
+      return 1;
+  }
+  
+  no Moose::Role;
+  
+  1;
+  
+  __END__
+PAKKET_ROLE_RUNCOMMAND
+
+$fatpacked{"Pakket/Runner.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_RUNNER';
+  package Pakket::Runner;
+  # ABSTRACT: Run Pakket-based applications
+  
+  use Moose;
+  use Types::Path::Tiny qw< AbsPath >;
+  
+  has 'active_path' => (
+      'is'       => 'ro',
+      'isa'      => AbsPath,
+      'coerce'   => 1,
+      'required' => 1,
+  );
+  
+  sub run {
+      my ( $self, @args ) = @_;
+  
+      my $active_path = $self->active_path;
+  
+      # Avoid uninitialized values
+      my $ENV_PATH            = $ENV{'PATH'}            // '';
+      my $ENV_LD_LIBRARY_PATH = $ENV{'LD_LIBRARY_PATH'} // '';
+  
+      local $ENV{'PATH'}            = "$active_path/bin:$ENV_PATH";
+      local $ENV{'PERL5LIB'}        = "$active_path/lib/perl5";
+      local $ENV{'LD_LIBRARY_PATH'} = "$active_path/lib:$ENV_LD_LIBRARY_PATH";
+  
+      # FIXME: Move to IPC::Open3, use the logger, etc.
+      # XXX:   Should this just use the RunCommand role?
+      if (@args) {
+          system @args;
+      } else {
+          print "$_=$ENV{$_}\n" for qw< PATH PERL5LIB LD_LIBRARY_PATH >;
+      }
+  
+      return 0;
+  }
+  
+  no Moose;
+  __PACKAGE__->meta->make_immutable;
+  
+  1;
+PAKKET_RUNNER
+
+$fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_SCAFFOLDER_PERL';
+  package Pakket::Scaffolder::Perl;
+  # ABSTRACT: Scffolding Perl distributions
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  use version 0.77;
+  use Archive::Any;
+  use CPAN::Meta::Prereqs;
+  use JSON::MaybeXS     qw< decode_json encode_json >;
+  use Ref::Util         qw< is_arrayref is_hashref >;
+  use Path::Tiny        qw< path    >;
+  use Log::Any          qw< $log    >;
+  use Carp ();
+  
+  use Pakket::Utils       qw< generate_json_conf >;
+  use Pakket::Utils::Perl qw< should_skip_module >;
+  use Pakket::Scaffolder::Perl::Module;
+  use Pakket::Scaffolder::Perl::CPANfile;
+  
+  with qw<
+      Pakket::Scaffolder::Role::Backend
+      Pakket::Scaffolder::Role::Config
+      Pakket::Scaffolder::Role::Terminal
+      Pakket::Scaffolder::Perl::Role::Borked
+  >;
+  
+  use constant {
+      'ARCHIVE_DIR_TEMPLATE' => 'ARCHIVE-XXXXXX',
+  };
+  
+  has 'metacpan_api' => (
+      'is'      => 'ro',
+      'isa'     => 'Str',
+      'lazy'    => 1,
+      'builder' => '_build_metacpan_api',
+  );
+  
+  has 'phases' => (
+      'is'  => 'ro',
+      'isa' => 'ArrayRef',
+  );
+  
+  has 'processed_dists' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub { return +{} },
+  );
+  
+  has 'modules' => (
+      'is'  => 'ro',
+      'isa' => 'HashRef',
+  );
+  
+  has 'prereqs' => (
+      'is'      => 'ro',
+      'isa'     => 'CPAN::Meta::Prereqs',
+      'lazy'    => 1,
+      'builder' => '_build_prereqs',
+  );
+  
+  sub _build_metacpan_api {
+      my $self = shift;
+      return $ENV{'PAKKET_METACPAN_API'}
+          || $self->pakket_config->{'perl'}{'metacpan_api'}
+          || 'https://fastapi.metacpan.org';
+  }
+  
+  sub _build_prereqs {
+      my $self = shift;
+      return CPAN::Meta::Prereqs->new( $self->modules );
+  }
+  
+  sub BUILDARGS {
+      my ( $class, @args ) = @_;
+      my %args = @args == 1 ? %{ $args[0] } : @args;
+  
+      my $module   = delete $args{'module'};
+      my $cpanfile = delete $args{'cpanfile'};
+      Carp::croak("Please provide either 'module' or 'cpanfile'")
+          unless $module xor $cpanfile;
+  
+      if ( $module ) {
+          my ( $version, $phase, $type ) = delete @args{qw< version phase type >};
+          $args{'modules'} =
+              Pakket::Scaffolder::Perl::Module->new(
+                  'name' => $module,
+                  ( version => $version )x!! defined $version,
+                  ( phase   => $phase   )x!! defined $phase,
+                  ( type    => $type    )x!! defined $type,
+              )->prereq_specs;
+      }
+      else {
+          $args{'modules'} =
+              Pakket::Scaffolder::Perl::CPANfile->new(
+                  'cpanfile' => $cpanfile
+              )->prereq_specs;
+      }
+  
+      $args{'phases'} = [ qw< configure runtime > ];
+  
+      if ( exists $args{'additional_phases'} and is_arrayref( $args{'additional_phases'} ) ) {
+          push @{ $args{'phases'} } =>
+              grep { $_ eq 'develop' or $_ eq 'test' } @{ $args{'additional_phases'} };
+      }
+  
+      return \%args;
+  }
+  
+  sub run {
+      my $self = shift;
+      my %failed;
+  
+      for my $phase ( @{ $self->phases } ) {
+          $log->debugf( 'phase: %s', $phase );
+          for my $type ( qw< requires recommends suggests > ) {
+              next unless is_hashref( $self->modules->{ $phase }{ $type } );
+  
+              my $requirements = $self->prereqs->requirements_for( $phase, $type );
+  
+              for ( sort keys %{ $self->modules->{ $phase }{ $type } } ) {
+                  eval {
+                      $self->create_config_for( module => $_, $requirements );
+                      1;
+                  } or do {
+                      my $err = $@ || 'zombie error';
+                      $failed{$_} = $err;
+                  };
+              }
+          }
+      }
+  
+      if ( $self->json_file ) {
+          generate_json_conf( $self->json_file, $self->config_dir );
+      }
+  
+      for my $f ( keys %failed ) {
+          $log->infof( "[FAILED] %s: %s", $f, $failed{$f} );
+      }
+  
+      return;
+  }
+  
+  sub skip_name {
+      my ( $self, $name ) = @_;
+  
+      if ( should_skip_module($name) ) {
+          $log->debugf( "%s* skipping %s (core module, not dual-life)", $self->spaces, $name );
+          return 1;
+      }
+  
+      if ( exists $self->known_names_to_skip->{ $name } ) {
+          $log->debugf( "%s* skipping %s (known 'bad' name for configuration)", $self->spaces, $name );
+          return 1;
+      }
+  
+      return 0;
+  }
+  
+  sub create_config_for {
+      my ( $self, $type, $name, $requirements ) = @_;
+      return if $self->skip_name($name);
+      return if $self->processed_dists->{ $name }++;
+  
+      my $release = $self->get_release_info($type, $name, $requirements);
+      return if exists $release->{'skip'};
+  
+      my $dist_name    = $release->{'distribution'};
+      my $rel_version  = $release->{'version'};
+      my $download_url = $self->rewrite_download_url( $release->{'download_url'} );
+      $log->infof( '%s-> Working on %s (%s)', $self->spaces, $dist_name, $rel_version );
+      $self->set_depth( $self->depth + 1 );
+  
+      my $conf_path = path( ( $self->config_dir // '.' ), 'perl', $dist_name );
+      $conf_path->mkpath;
+  
+      my $conf_file = path( $conf_path, "$rel_version.json" );
+  
+      # download source if dir provided and file doesn't already exist
+      if ( $self->source_dir ) {
+          if ( $download_url ) {
+              my $source_file = path( $self->source_dir, ( $download_url =~ s{^.+/}{}r ) );
+              if ( !$source_file->exists ) {
+                  $source_file->parent->mkpath;
+                  $self->ua->mirror( $download_url, $source_file );
+              }
+              if ( $self->extract ) {
+                  $self->extract_archive( $dist_name, $rel_version, $source_file );
+              }
+          }
+          else {
+              $log->errorf( "--- can't find download_url for %s-%s", $dist_name, $rel_version );
+          }
+      }
+  
+      if ( $conf_file->exists ) {
+          $self->set_depth( $self->depth - 1 );
+          return;
+      }
+  
+      my $package = {
+          'Package' => {
+              'category' => 'perl',
+              'name'     => $dist_name,
+              'version'  => $rel_version,
+          },
+      };
+  
+      my $dep_modules = $release->{'prereqs'};
+      my $dep_prereqs = CPAN::Meta::Prereqs->new( $dep_modules );
+  
+      # options: configure, develop, runtime, test
+      for my $phase ( @{ $self->phases } ) {
+          my $prereq_data = $package->{'Prereqs'}{'perl'}{$phase} = +{};
+  
+          for my $dep_type (qw< requires recommends suggests >) {
+              next unless is_hashref( $dep_modules->{ $phase }{ $dep_type } );
+  
+              my $dep_requirements = $dep_prereqs->requirements_for( $phase, $dep_type );
+  
+              for my $module ( keys %{ $dep_modules->{ $phase }{ $dep_type } } ) {
+                  next if $self->skip_name($module);
+  
+                  my $rel = $self->get_release_info( module => $module, $dep_requirements );
+                  next if exists $rel->{'skip'};
+  
+                  $prereq_data->{ $rel->{'distribution'} } = +{
+                      'version' => ( $rel->{'write_version_as_zero'} ? "0" : $rel->{'version'} )
+                  };
+              }
+  
+              # recurse through those as well
+              $self->create_config_for( 'dist' => $_, $dep_requirements )
+                  for keys %{ $package->{'Prereqs'}{'perl'}{$phase} };
+          }
+      }
+  
+      $self->set_depth( $self->depth - 1 );
+  
+      $conf_file->spew_utf8( encode_json($package) );
+  }
+  
+  sub extract_archive {
+      my ( $self, $dist_name, $rel_version, $source_file ) = @_;
+  
+      my $archive_path = Path::Tiny->tempdir(
+          'TEMPLATE' => ARCHIVE_DIR_TEMPLATE(),
+          'DIR'      => $self->source_dir,
+          'CLEANUP'  => 1,
+      );
+      my $archive = Archive::Any->new( $source_file );
+      $archive->extract( $archive_path );
+      my @children = $archive_path->children();
+      my $final_name = $dist_name . '-' . $rel_version;
+      if (@children == 0) {
+          $log->infof( 'Archive %s is empty, skipping', $source_file->stringify);
+      }
+      elsif (@children == 1 &&
+             $children[0]->is_dir()) {
+          my $child = $children[0];
+          my $dir_name = $child->basename;
+          $log->debugf( 'Archive %s contains single directory [%s], using as [%s]', $source_file->stringify, $dir_name, $final_name);
+          my $target = path( $self->source_dir, $final_name);
+          $child->move( $target );
+      }
+      else {
+          $log->debugf( 'Archive %s contains multiple entries, will put inside directory called [%s]', $source_file->stringify, $final_name);
+          my $target = path( $self->source_dir, $final_name);
+          $archive_path->move( $target );
+      }
+  
+      $source_file->remove;
+  }
+  
+  sub get_dist_name {
+      my ( $self, $module_name ) = @_;
+      $module_name = $self->known_incorrect_name_fixes->{ $module_name }
+          if exists $self->known_incorrect_name_fixes->{ $module_name };
+  
+      my $dist_name;
+      eval {
+          my $mod_url     = $self->metacpan_api . "/module/$module_name";
+          my $release_url = $self->metacpan_api . "/release/$module_name";
+          my $response    = $self->ua->get($mod_url);
+  
+          $response->{'status'} == 200
+              or $response = $self->ua->get($release_url);
+  
+          $response->{'status'} != 200
+              and Carp::croak("Cannot fetch $mod_url or $release_url");
+  
+          my $content = decode_json $response->{'content'};
+          $dist_name  = $content->{'distribution'};
+          1;
+      } or do {
+          my $error = $@ || 'Zombie error';
+          $log->debug($error);
+      };
+  
+      # another check (if not found yet): check if name matches a distribution name
+      if ( !$dist_name ) {
+          eval {
+              my $name = $module_name =~ s/::/-/rgsmx;
+              my $res = $self->ua->post( $self->metacpan_api . '/release',
+                  +{ 'content' => $self->get_is_dist_name_query($name) } );
+  
+              $res->{'status'} == 200 or Carp::croak();
+              my $res_body = decode_json $res->{'content'};
+              $res_body->{'hits'}{'total'} > 0 or Carp::croak();
+              $dist_name = $name;
+              1;
+          } or do {
+              my $error = $@ || 'Zombie error';
+              Carp::croak("-> Cannot find module by name: '$module_name'");
+          };
+      }
+  
+      return $dist_name;
+  }
+  
+  sub get_release_info {
+      my ( $self, $type, $name, $requirements ) = @_;
+  
+      my $dist_name = $type eq 'module'
+          ? $self->get_dist_name($name)
+          : $name;
+  
+      return +{ 'skip' => 1 } if $self->skip_name($dist_name);
+  
+      my $req_as_hash = $requirements->as_string_hash;
+      my $write_version_as_zero = !!(
+          defined $req_as_hash->{ $name }
+          and version->parse( $req_as_hash->{ $name } =~ s/[^0-9.]//gr ) == 0
+      );
+  
+      # first try the latest
+  
+      my $latest = $self->get_latest_release_info( $dist_name );
+      $latest->{'write_version_as_zero'} = $write_version_as_zero;
+      return $latest
+          if defined $latest->{'version'}
+             and defined $latest->{'download_url'}
+             and $requirements->accepts_module( $name => $latest->{'version'} );
+  
+  
+      # else: fetch all release versions for this distribution
+  
+      my $release_prereqs;
+      my $version;
+      my $download_url;
+  
+      my %all_dist_releases;
+      {
+          my $res = $self->ua->post( $self->metacpan_api . "/release",
+                                 +{ content => $self->get_release_query($dist_name) });
+          Carp::croak("Can't find any release for $dist_name") if $res->{'status'} != 200;
+          my $res_body = decode_json $res->{'content'};
+  
+          %all_dist_releases =
+              map +(
+                  $_->{'fields'}{'version'}[0] => {
+                      'prereqs'      => $_->{'_source'}{'metadata'}{'prereqs'},
+                      'download_url' => $_->{'_source'}{'download_url'},
+                  },
+              ), @{ $res_body->{'hits'}{'hits'} };
+      }
+  
+      # get the matching version according to the spec
+  
+      my @valid_versions;
+      for my $v ( keys %all_dist_releases ) {
+          eval {
+              version->parse($v);
+              push @valid_versions => $v;
+              1;
+          } or do {
+              my $err = $@ || 'zombie error';
+              $log->debugf( '[VERSION ERROR] distribution: %s, version: %s, error: %s',
+                            $dist_name, $v, $err );
+          };
+      }
+  
+      for my $v ( sort { version->parse($b) <=> version->parse($a) } @valid_versions ) {
+          if ( $requirements->accepts_module($name => $v) ) {
+              $version         = $v;
+              $release_prereqs = $all_dist_releases{$v}{'prereqs'} || {};
+              $download_url    =
+                  $self->rewrite_download_url( $all_dist_releases{$v}{'download_url'} );
+              last;
+          }
+      }
+      $version or Carp::croak("Cannot match release for $dist_name");
+  
+      $version = $self->known_incorrect_version_fixes->{ $dist_name }
+          if exists $self->known_incorrect_version_fixes->{ $dist_name };
+  
+      return +{
+          'distribution'          => $dist_name,
+          'version'               => $version,
+          'prereqs'               => $release_prereqs,
+          'download_url'          => $download_url,
+          'write_version_as_zero' => $write_version_as_zero,
+      };
+  }
+  
+  sub rewrite_download_url {
+      my ( $self, $download_url ) = @_;
+      my $rewrite = $self->pakket_config->{'perl'}{'metacpan'}{'rewrite_download_url'};
+      return $download_url unless is_hashref($rewrite);
+      my ( $from, $to ) = @{$rewrite}{qw< from to >};
+      return ( $download_url =~ s/$from/$to/r );
+  }
+  
+  sub get_latest_release_info {
+      my ( $self, $dist_name ) = @_;
+  
+      my $res = $self->ua->get( $self->metacpan_api . "/release/$dist_name" );
+      return unless $res->{'status'} == 200; # falling back to check all
+  
+      my $res_body= decode_json $res->{'content'};
+  
+      return +{
+          'distribution' => $dist_name,
+          'version'      => $res_body->{'version'},
+          'download_url' => $res_body->{'download_url'},
+          'prereqs'      => $res_body->{'metadata'}{'prereqs'},
+      };
+  }
+  
+  sub get_is_dist_name_query {
+      my ( $self, $name ) = @_;
+  
+      return encode_json(
+          {
+              'query'  => {
+                  'bool' => {
+                      'must' => [
+                          { 'term'  => { 'distribution' => $name } },
+                      ]
+                  }
+              },
+              'fields' => [qw< distribution >],
+              'size'   => 0,
+          }
+      );
+  }
+  
+  sub get_release_query {
+      my ( $self, $dist_name ) = @_;
+  
+      return encode_json(
+          {
+              'query'  => {
+                  'bool' => {
+                      'must' => [
+                          { 'term'  => { 'distribution' => $dist_name } },
+                          # { 'terms' => { 'status' => [qw< cpan latest >] } }
+                      ]
+                  }
+              },
+              'fields'  => [qw< version >],
+              '_source' => [qw< metadata.prereqs download_url >],
+              'size'    => 999,
+          }
+      );
+  }
+  
+  
+  __PACKAGE__->meta->make_immutable;
+  no Moose;
+  1;
+  __END__
+PAKKET_SCAFFOLDER_PERL
+
+$fatpacked{"Pakket/Scaffolder/Perl/CPANfile.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_SCAFFOLDER_PERL_CPANFILE';
+  package Pakket::Scaffolder::Perl::CPANfile;
+  # ABSTRACT: Scffolding Perl cpanfile reader
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  use Module::CPANfile;
+  
+  has 'cpanfile' => (
+      'is'       => 'ro',
+      'isa'      => 'Str',
+      'required' => 1,
+  );
+  
+  has 'prereq_specs' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'lazy'    => 1,
+      'builder' => '_build_prereq_specs',
+  );
+  
+  sub _build_prereq_specs {
+      my $self = shift;
+      my $file = Module::CPANfile->load( $self->cpanfile );
+      return $file->prereq_specs;
+  }
+  
+  
+  __PACKAGE__->meta->make_immutable;
+  no Moose;
+  1;
+  __END__
+PAKKET_SCAFFOLDER_PERL_CPANFILE
+
+$fatpacked{"Pakket/Scaffolder/Perl/Module.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_SCAFFOLDER_PERL_MODULE';
+  package Pakket::Scaffolder::Perl::Module;
+  # ABSTRACT: scaffolder: module config representation
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  
+  has 'name' => (
+      'is'       => 'ro',
+      'isa'      => 'Str',
+      'required' => sub {1},
+  );
+  
+  has 'version' => (
+      'is'      => 'ro',
+      'isa'     => 'Str',
+      'default' => sub {0},
+  );
+  
+  has 'phase' => (
+      'is'      => 'ro',
+      'isa'     => 'Str',
+      'default' => sub {'runtime'},
+  );
+  
+  has 'type' => (
+      'is'      => 'ro',
+      'isa'     => 'Str',
+      'default' => sub {'requires'},
+  );
+  
+  sub BUILDARGS {
+      my ( $class, @args ) = @_;
+      my %args = @args == 1 ? %{ $args[0] } : @args;
+  
+      if ( $args{'name'} =~ /^ (.+) \@ (.+) $/x ) {
+          $args{'name'}    = $1;
+          $args{'version'} = "== $2";
+      }
+      elsif ( $args{'name'} =~ /^ (.+) \~ (.+) $/x ) {
+          $args{'name'}    = $1;
+          $args{'version'} = $2;
+      }
+  
+      return \%args;
+  }
+  
+  sub prereq_specs {
+      my $self = shift;
+      return +{
+          $self->phase => +{
+              $self->type => +{
+                  $self->name => $self->version,
+              },
+          },
+      };
+  }
+  
+  __PACKAGE__->meta->make_immutable;
+  no Moose;
+  1;
+  __END__
+PAKKET_SCAFFOLDER_PERL_MODULE
+
+$fatpacked{"Pakket/Scaffolder/Perl/Role/Borked.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_SCAFFOLDER_PERL_ROLE_BORKED';
+  package Pakket::Scaffolder::Perl::Role::Borked;
+  # ABSTRACT: scaffolder: perl: known issues
+  
+  use Moose::Role;
+  
+  has 'known_incorrect_name_fixes' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub {
+          +{
+              'App::Fatpacker'            => 'App::FatPacker',
+              'Test::YAML::Meta::Version' => 'Test::YAML::Meta', # not sure about this
+              'Net::Server::SS::Prefork'  => 'Net::Server::SS::PreFork',
+          }
+      },
+  );
+  
+  has 'known_incorrect_version_fixes' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub {
+          +{
+              'ExtUtils-Constant' => '0.23',
+              'IO-Capture'        => '0.05',
+          }
+      },
+  );
+  
+  has 'known_names_to_skip' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub {
+          +{
+              'perl'                    => 1,
+              'tinyperl'                => 1,
+              'perl_mlb'                => 1,
+              'HTTP::GHTTP'             => 1,
+              'Text::MultiMarkdown::XS' => 1, # ADOPTME
+              'URI::file'               => 1, # in URI, appears with weird version
+              'URI::Escape'             => 1, # in URI, appears with weird version
+          }
+      },
+  );
+  
+  no Moose::Role;
+  1;
+  __END__
+PAKKET_SCAFFOLDER_PERL_ROLE_BORKED
+
+$fatpacked{"Pakket/Scaffolder/Role/Backend.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_SCAFFOLDER_ROLE_BACKEND';
+  package Pakket::Scaffolder::Role::Backend;
+  # ABSTRACT: scaffolder: role for backend
+  
+  use Moose::Role;
+  
+  use HTTP::Tiny;
+  
+  requires 'run';
+  
+  has [qw< config_dir source_dir json_file >]=> (
+      is       => 'ro',
+      isa      => 'Str',
+      required => 1,
+  );
+  
+  has extract => (
+      is      => 'ro',
+      isa     => 'Bool',
+      default => 0,
+  );
+  
+  has ua => (
+      is      => 'ro',
+      lazy    => 1,
+      builder => '_build_ua',
+  );
+  
+  sub _build_ua {
+      return HTTP::Tiny->new();
+  }
+  
+  no Moose::Role;
+  1;
+  __END__
+PAKKET_SCAFFOLDER_ROLE_BACKEND
+
+$fatpacked{"Pakket/Scaffolder/Role/Config.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_SCAFFOLDER_ROLE_CONFIG';
+  package Pakket::Scaffolder::Role::Config;
+  # ABSTRACT: scaffolder: role for config
+  
+  use Moose::Role;
+  use File::HomeDir;
+  use Config::Any;
+  use Path::Tiny qw< path >;
+  
+  has 'pakket_config' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'lazy'    => 1,
+      'builder' => '_build_pakket_config',
+  );
+  
+  sub _build_pakket_config {
+      my $config_file = path( File::HomeDir->my_home, '.pakket' );
+  
+      my $cfg = Config::Any->load_files({
+          'files'   => [ map "$config_file.$_", qw<json yaml yml conf cfg> ],
+          'use_ext' => 1,
+      });
+  
+      return $cfg;
+  }
+  
+  no Moose::Role;
+  1;
+  
+  __END__
+PAKKET_SCAFFOLDER_ROLE_CONFIG
+
+$fatpacked{"Pakket/Scaffolder/Role/Terminal.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_SCAFFOLDER_ROLE_TERMINAL';
+  package Pakket::Scaffolder::Role::Terminal;
+  # ABSTRACT: scaffolder: role for output handling
+  
+  use Moose::Role;
+  
+  has depth => (
+      is      => 'ro',
+      isa     => 'Num',
+      default => 0,
+      writer  => 'set_depth',
+  );
+  
+  sub spaces {
+      my $self = shift;
+      return ' 'x( $self->depth * 2 );
+  }
+  
+  
+  no Moose::Role;
+  1;
+  __END__
+PAKKET_SCAFFOLDER_ROLE_TERMINAL
+
+$fatpacked{"Pakket/Server.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_SERVER';
+  package Pakket::Server;
+  # ABSTRACT: Start a Pakket server
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  
+  use Log::Any          qw< $log >;
+  use Plack::Runner;
+  
+  use Pakket::Server::App;
+  
+  has 'port' => (
+      'is'        => 'ro',
+      'isa'       => 'Int',
+      'predicate' => 'has_port',
+  );
+  
+  sub run {
+      my $self = shift;
+  
+      Pakket::Server::App->setup();
+      my $app    = Pakket::Server::App->to_app;
+      my $runner = Plack::Runner->new();
+  
+      my @runner_opts = (
+          $self->has_port ? ( '--port', $self->port ) : (),
+      );
+  
+      $runner->parse_options(@runner_opts);
+      return $runner->run($app);
+  }
+  
+  __PACKAGE__->meta->make_immutable;
+  no Moose;
+  
+  1;
+  
+  __END__
+PAKKET_SERVER
+
+$fatpacked{"Pakket/Server/App.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_SERVER_APP';
+  package Pakket::Server::App;
+  # ABSTRACT: Webapp endpoints to server Pakket information
+  
+  use Dancer2;
+  use Dancer2::Plugin::Pakket::ParamTypes;
+  
+  use Log::Any qw< $log >;
+  use Pakket::Repository::Config;
+  use Pakket::Repository::Parcel;
+  use Pakket::Repository::Source;
+  
+  ## no critic qw(Modules::RequireExplicitInclusion)
+  
+  # Example
+  set 'repositories' => {
+      'Config' => [
+          'File' => { 'directory' => '/opt/pakket/configs' },
+      ],
+  
+      'Source' => [
+          'File' => { 'directory' => '/opt/pakket/sources' },
+      ],
+  
+      'Parcel' => [
+          'File' => { 'directory' => '/opt/pakket/parcels' },
+      ],
+  };
+  
+  sub setup {
+      my $class = shift;
+  
+      my $repositories_data = config()->{'repositories'};
+      foreach my $repository_type ( keys %{$repositories_data} ) {
+          my $repo_class = "Pakket::Repository::$repository_type";
+          my $repo       = $repo_class->new(
+              'backend' => $repositories_data->{$repository_type},
+          );
+  
+          my $prefix = lc $repository_type;
+  
+          prefix "/$prefix" => sub {
+              get '/all_object_ids' => sub {
+                  return encode_json({
+                      'object_ids' => $repo->all_object_ids,
+                  });
+              };
+  
+              prefix '/retrieve' => sub {
+                  get '/content' => with_types [
+                      [ 'query', 'id', 'Str', 'MissingID' ],
+                  ] => sub {
+                      my $id = query_parameters->get('id');
+  
+                      return encode_json( {
+                          'id'      => $id,
+                          'content' => $repo->retrieve_content($id),
+                      } );
+                  };
+  
+                  get '/location' => with_types [
+                      [ 'query', 'id', 'Str', 'MissingID' ],
+                  ] => sub {
+                      my $id   = query_parameters->get('id');
+                      my $file = $repo->retrieve_location($id);
+  
+                      # This is already anchored to the repo
+                      # (And no user input can change the path it will reach)
+                      send_file( $file, 'system_path' => 1 );
+                  };
+              };
+  
+              prefix '/store' => sub {
+                  post '/content' => with_types [
+                      [ 'body', 'id',      'Str',  'MissingID'      ],
+                      [ 'body', 'content', 'Str', 'MissingContent' ],
+                  ] => sub {
+                      my $id      = body_parameters->get('id');
+                      my $content = body_parameters->get('content');
+                      return $repo->store_content( $id, $content );
+                  };
+  
+                  post '/location' => with_types [
+                      [ 'body', 'id',       'Str',  'MissingID'       ],
+                      [ 'body', 'filename', 'Str', 'MissingFilename' ],
+                  ] => sub {
+                      my $id       = body_parameters->get('id');
+                      my $filename = upload('filename')->tempname;
+                      return $repo->store_location( $id, $filename );
+                  };
+              };
+          };
+      }
+  }
+  
+  1;
+  
+  __END__
+PAKKET_SERVER_APP
+
+$fatpacked{"Pakket/Types.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_TYPES';
+  package Pakket::Types;
+  # ABSTRACT: Type definitions for Pakket
+  
+  use strict;
+  use warnings;
+  
+  use Moose::Util::TypeConstraints;
+  use Log::Any qw< $log >;
+  use Safe::Isa;
+  use Module::Runtime qw<require_module>;
+  use Pakket::Constants qw< PAKKET_LATEST_VERSION >;
+  
+  sub _coerce_backend_from_arrayref {
+      my $backend_data = shift;
+      my ( $subclass, @args ) = @{$backend_data};
+      my $class = "Pakket::Repository::Backend::$subclass";
+  
+      eval { require_module($class); 1; } or do {
+          $log->critical("Failed to load backend '$class': $@");
+          exit 1;
+      };
+  
+      return $class->new(@args);
+  }
+  
+  subtype 'PakketRepositoryBackend', as 'Object', where {
+      $_->$_isa('ARRAY') || $_->$_does('Pakket::Role::Repository::Backend')
+  }, message {
+      'Must be a Pakket::Repository::Backend object or an arrayref'
+  };
+  
+  coerce 'PakketRepositoryBackend', from 'ArrayRef',
+      via { return _coerce_backend_from_arrayref($_); };
+  
+  subtype 'PakketVersion', as 'Str';
+  
+  coerce 'PakketVersion', from 'Undef',
+      via { return PAKKET_LATEST_VERSION() };
+  
+  no Moose::Util::TypeConstraints;
+  
+  1;
+  
+  __END__
+  
+  =pod
+PAKKET_TYPES
+
+$fatpacked{"Pakket/Utils.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_UTILS';
+  package Pakket::Utils;
+  # ABSTRACT: Utilities for Pakket
+  
+  use strict;
+  use warnings;
+  use version 0.77;
+  
+  use Exporter   qw< import >;
+  use Path::Tiny qw< path   >;
+  use JSON::MaybeXS;
+  
+  our @EXPORT_OK = qw<
+      is_writeable
+      generate_json_conf
+      generate_env_vars
+      canonical_package_name
+  >;
+  
+  sub is_writeable {
+      my $path = shift; # Path::Tiny objects
+  
+      while ( !$path->is_rootdir ) {
+          $path->exists and return -w $path;
+          $path = $path->parent;
+      }
+  
+      return -w $path;
+  }
+  
+  sub generate_json_conf {
+      my $output_file = shift;
+      my $config_dir  = shift;
+      my $index = {};
+  
+      my $output = path( $output_file );
+      $output->exists and $index = decode_json( $output->slurp_utf8 );
+  
+      my $category_iter = path( $config_dir )->iterator;
+      while ( my $category = $category_iter->() ) {
+          $category->is_dir and "$category" ne '.'
+              or return;
+  
+          my $category_name = $category->basename;
+          my $dist_iter     = $category->iterator;
+          while ( my $dist = $dist_iter->() ) {
+              my @versions = map s{.+/([^/]+)\.json$}{$1}r,
+                             grep $_->basename ne 'versioning.json',
+                             $dist->children(qr/\.json$/);
+  
+              my $latest_version;
+              if ( $category_name eq 'perl' ) {
+                  ($latest_version)
+                      = sort { version->parse($b) <=> version->parse($a) }
+                          @versions;
+              } else {
+                  ($latest_version) = sort { $b cmp $a } @versions;
+              }
+  
+              $index->{$category_name}{ $dist->basename } = {
+                  'latest'   => $latest_version,
+                  'versions' =>
+                      { map +( $_ => $dist->basename . "-$_" ), @versions, },
+              };
+  
+          }
+      }
+  
+      $output->spew_utf8( JSON::MaybeXS->new->pretty->canonical->encode($index) );
+  }
+  
+  sub generate_env_vars {
+      my ( $build_dir, $prefix ) = @_;
+      my $lib_path = generate_lib_path($prefix);
+      my $bin_path = generate_bin_path($prefix);
+  
+      my @perl5lib = (
+          $build_dir,
+          path( $prefix, qw<lib perl5> )->absolute->stringify,
+      );
+  
+      my %perl_opts = (
+          'PERL5LIB'                  => join( ':', @perl5lib ),
+          'PERL_LOCAL_LIB_ROOT'       => '',
+          'PERL5_CPAN_IS_RUNNING'     => 1,
+          'PERL5_CPANM_IS_RUNNING'    => 1,
+          'PERL5_CPANPLUS_IS_RUNNING' => 1,
+          'PERL_MM_USE_DEFAULT'       => 1,
+          'PERL_MB_OPT'               => '',
+          'PERL_MM_OPT'               => '',
+      );
+  
+      return (
+          'CPATH'           => $prefix->child('include')->stringify,
+          'LD_LIBRARY_PATH' => $lib_path,
+          'LIBRARY_PATH'    => $lib_path,
+          'PATH'            => $bin_path,
+          %perl_opts,
+      );
+  }
+  
+  sub generate_lib_path {
+      my $prefix = shift;
+  
+      my $lib_path = $prefix->child('lib')->absolute->stringify;
+      if ( defined( my $env_library_path = $ENV{'LD_LIBRARY_PATH'} ) ) {
+          $lib_path .= ":$env_library_path";
+      }
+  
+      return $lib_path;
+  }
+  
+  sub generate_bin_path {
+      my $prefix = shift;
+  
+      my $bin_path = $prefix->child('bin')->absolute->stringify;
+      if ( defined( my $env_bin_path = $ENV{'PATH'} ) ) {
+          $bin_path .= ":$env_bin_path";
+      }
+  
+      return $bin_path;
+  }
+  
+  sub canonical_package_name {
+      my ( $category, $package, $version ) = @_;
+  
+      $version
+          and return sprintf( '%s/%s=%s', $category, $package, $version );
+  
+      return sprintf( '%s/%s', $category, $package );
+  }
+  
+  1;
+  
+  __END__
+PAKKET_UTILS
+
+$fatpacked{"Pakket/Utils/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_UTILS_PERL';
+  package Pakket::Utils::Perl;
+  # ABSTRACT: Perl specific utilities for Pakket
+  
+  use strict;
+  use warnings;
+  use version 0.77;
+  use Exporter   qw< import >;
+  use Path::Tiny qw< path   >;
+  use Module::CoreList;
+  
+  our @EXPORT_OK = qw< list_core_modules should_skip_module >;
+  
+  sub list_core_modules {
+      ## no critic qw(Variables::ProhibitPackageVars)
+      return \%Module::CoreList::upstream;
+  }
+  
+  sub should_skip_module {
+      my $name = shift;
+  
+      if ( Module::CoreList::is_core($name) and !${Module::CoreList::upstream}{$name} ) {
+          return 1;
+      }
+  
+      return 0;
+  }
+  
+  1;
+PAKKET_UTILS_PERL
 
 $fatpacked{"Path/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PATH_TINY';
   use 5.008001;
@@ -5363,7 +9920,7 @@ $fatpacked{"Types/Serialiser/Error.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   
 TYPES_SERIALISER_ERROR
 
-$fatpacked{"common/sense.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'X86_64-LINUX-GNU-THREAD-MULTI_COMMON_SENSE';
+$fatpacked{"x86_64-linux-gnu-thread-multi/common/sense.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'X86_64-LINUX-GNU-THREAD-MULTI_COMMON_SENSE';
   package common::sense;
   
   our $VERSION = 3.74;

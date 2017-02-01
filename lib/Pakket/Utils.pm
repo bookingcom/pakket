@@ -43,9 +43,9 @@ sub generate_json_conf {
         my $category_name = $category->basename;
         my $dist_iter     = $category->iterator;
         while ( my $dist = $dist_iter->() ) {
-            my @versions = map s{.+/([^/]+)\.toml$}{$1}r,
-                           grep $_->basename ne 'versioning.toml',
-                           $dist->children(qr/\.toml$/);
+            my @versions = map s{.+/([^/]+)\.json$}{$1}r,
+                           grep $_->basename ne 'versioning.json',
+                           $dist->children(qr/\.json$/);
 
             my $latest_version;
             if ( $category_name eq 'perl' ) {

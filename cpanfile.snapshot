@@ -1600,29 +1600,6 @@ DISTRIBUTIONS
       perl 5.006
       strict 0
       warnings 0
-  TOML-0.97
-    pathname: K/KA/KARUPA/TOML-0.97.tar.gz
-    provides:
-      TOML 0.97
-    requirements:
-      Exporter 5.57
-      Module::Build::Tiny 0.035
-      TOML::Parser 0.04
-      perl 5.008005
-  TOML-Parser-0.07
-    pathname: K/KA/KARUPA/TOML-Parser-0.07.tar.gz
-    provides:
-      TOML::Parser 0.07
-      TOML::Parser::Tokenizer undef
-      TOML::Parser::Tokenizer::Strict undef
-      TOML::Parser::Util undef
-    requirements:
-      Encode 0
-      Exporter 5.57
-      Module::Build::Tiny 0.035
-      Types::Serialiser 0
-      parent 0
-      perl 5.008005
   Test-Fatal-0.014
     pathname: R/RJ/RJBS/Test-Fatal-0.014.tar.gz
     provides:

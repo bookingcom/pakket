@@ -5,7 +5,7 @@ use warnings;
 use MetaCPAN::Client;
 use Getopt::Long;
 use Path::Tiny;
-use TOML;
+use JSON::MaybeXS qw< decode_json >;
 
 Getopt::Long::GetOptions(
     "source-dir=s" => \my $source_dir,
@@ -17,11 +17,11 @@ Getopt::Long::GetOptions(
 my %seen;
 my $iter = path($config_dir)->iterator( { recurse => 1 } );
 while ( my $next = $iter->() ) {
-    if ( not $next->is_file or not $next =~ /\.toml$/ ) {
+    if ( not $next->is_file or not $next =~ /\.json$/ ) {
         next;
     }
 
-    my $module = TOML::from_toml( $next->slurp_utf8 );
+    my $module = decode_json( $next->slurp_utf8 );
 
     $seen{"$module->{Package}{name}-$module->{Package}{version}"} = undef;
 
