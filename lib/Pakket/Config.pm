@@ -6,18 +6,13 @@ use MooseX::StrictConstructor;
 use Config::Any;
 use Path::Tiny        qw< path >;
 use Types::Path::Tiny qw< Path >;
+use Log::Any          qw< $log >;
+use Carp              qw< croak >;
 
-has 'prefix' => (
+has 'paths' => (
     'is'      => 'ro',
-    'isa'     => 'Str',
-    'default' => sub { return '.pakket'; },
-);
-
-has 'dir' => (
-    'is'      => 'ro',
-    'isa'     => Path,
-    'coerce'  => 1,
-    'default' => sub { return path('~'); },
+    'isa'     => 'ArrayRef',
+    'default' => sub { return ['~/.pakket', '/etc/pakket'] },
 );
 
 has 'extensions' => (
@@ -31,15 +26,42 @@ has 'files' => (
     'isa'     => 'ArrayRef',
     'lazy'    => 1,
     'default' => sub {
-        my $self        = shift;
-        my $prefix_path = $self->dir->child( $self->prefix );
+        my $self = shift;
 
-        return [ map "$prefix_path.$_", @{ $self->extensions } ];
+        if ( $ENV{PAKKET_CONFIG_FILE} ) {
+            return [ $ENV{PAKKET_CONFIG_FILE} ];
+        }
+
+        my %files;
+        foreach my $path (@{$self->{paths}}) {
+            foreach my $extension (@{$self->{extensions}}) {
+                my $file = path("$path.$extension");
+
+                $file->exists
+                    or next;
+
+                $files{$path}
+                    and croak $log->criticalf(
+                        "Multiple extensions for same config file name: %s and %s",
+                        $files{$path}, $file);
+
+                $files{$path} = $file;
+            }
+
+            $files{$path}
+                and return [ $files{$path} ];
+        }
+
+        return [];
     },
 );
 
 sub read_config {
     my $self   = shift;
+
+    @{ $self->files }
+        or return {};
+
     my $config = Config::Any->load_files({
         'files'   => $self->files,
         'use_ext' => 1,
@@ -50,6 +72,7 @@ sub read_config {
         foreach my $filename ( keys %{$config_chunk} ) {
             my %config_part = %{ $config_chunk->{$filename} };
             @cfg{ keys(%config_part) } = values %config_part;
+            $log->info("Using config file $filename");
         }
     }
 
