@@ -23,6 +23,7 @@ sub opt_spec {
         [ 'cpanfile=s',   'cpanfile to configure from' ],
         [ 'spec-dir=s',   'directory to write the spec to (JSON files)' ],
         [ 'source-dir=s', 'directory to write the sources to (downloads if provided)' ],
+        [ 'parcel-dir=s', 'directory where build output (parcels) are' ],
         [ 'from-dir=s',   'directory to get sources from (optional)' ],
         [ 'additional-phase=s@',
           "additional phases to use ('develop' = author_requires, 'test' = test_requires). configure & runtime are done by default.",
@@ -50,44 +51,47 @@ sub validate_args {
     $self->_validate_arg_from_dir;
 
     $self->{'config'}{'env'}{'cli'} = 1;
-
-    $self->{'command'} eq 'add'    and $self->_validate_args_add;
-    $self->{'command'} eq 'remove' and $self->_validate_args_remove;
-    $self->{'command'} eq 'deps'   and $self->_validate_args_dependency;
 }
 
 sub execute {
     my $self = shift;
+    my $package;
 
-    my $package = Pakket::Package->new(
-        'category' => $self->{'category'},
-        'name'     => $self->{'module'}{'name'},
-        'version'  => $self->{'module'}{'version'},
-        'release'  => $self->{'module'}{'release'},
-    );
+    my $command = $self->{'command'};
 
-    if ( $self->{'command'} eq 'add' ) {
+    if ( $command eq 'remove' or $command eq 'deps' ) {
+        $package = Pakket::Package->new(
+            'category' => $self->{'category'},
+            'name'     => $self->{'module'}{'name'},
+            'version'  => $self->{'module'}{'version'},
+            'release'  => $self->{'module'}{'release'},
+        );
+    }
+
+    if ( $command eq 'add' ) {
         $self->_get_scaffolder->run;
 
-    } elsif ( $self->{'command'} eq 'remove' ) {
+    } elsif ( $command eq 'remove' ) {
         # TODO: check we are allowed to remove package (dependencies)
         $self->remove_package_spec($package);
         $self->remove_package_source($package);
 
-    } elsif ( $self->{'command'} eq 'deps' ) {
-        $self->{'deps_action'} eq 'add'
-            and $self->add_package_dependency($package);
+    } elsif ( $command eq 'deps' ) {
+        my $deps_action = $self->{'deps_action'};
+        $deps_action eq 'add'    and $self->add_package_dependency($package);
+        $deps_action eq 'remove' and $self->remove_package_dependency($package);
 
-        $self->{'deps_action'} eq 'remove'
-            and $self->remove_package_dependency($package);
+    } elsif ( $command eq 'list' ) {
+        $self->list_ids;
     }
 }
 
 
 sub _determine_config {
     my $self = shift;
+    my $opt  = $self->{'opt'};
 
-    my $config_file   = $self->{'opt'}{'config'};
+    my $config_file   = $opt->{'config'};
     my $config_reader = Pakket::Config->new(
         $config_file ? ( 'files' => [$config_file] ) : (),
     );
@@ -97,11 +101,14 @@ sub _determine_config {
     my %map = (
         'spec'   => [ 'spec_dir',   'ini' ],
         'source' => [ 'source_dir', 'spkt' ],
+        'parcel' => [ 'parcel_dir', 'pkt' ],
     );
 
     foreach my $type ( keys %map ) {
+        next if $type eq 'parcel' and !$opt->{'parcel_dir'};
+
         my ( $opt_key, $opt_ext ) = @{ $map{$type} };
-        my $directory = $self->{'opt'}{$opt_key};
+        my $directory = $opt->{$opt_key};
 
         if ($directory) {
             $config->{'repositories'}{$type} = [
@@ -127,12 +134,17 @@ sub _validate_arg_command {
     my $self = shift;
 
     my $command = shift @{ $self->{'args'} }
-        or $self->usage_error("Must pick action (add/remove/deps)");
+        or $self->usage_error("Must pick action (add/remove/deps/list)");
 
-    grep { $command eq $_ } qw< add remove deps >
-        or $self->usage_error( "Wrong command (add/remove/deps)\n" );
+    grep { $command eq $_ } qw< add remove deps list >
+        or $self->usage_error( "Wrong command (add/remove/deps/list)\n" );
 
     $self->{'command'} = $command;
+
+    $command eq 'add'    and $self->_validate_args_add;
+    $command eq 'remove' and $self->_validate_args_remove;
+    $command eq 'deps'   and $self->_validate_args_dependency;
+    $command eq 'list'   and $self->_validate_args_list;
 }
 
 sub _validate_arg_from_dir {
@@ -185,6 +197,20 @@ sub _validate_args_dependency {
 
     $self->{'dependency'}  = $dep;
     $self->{'deps_action'} = $opt->{'add'} ? 'add' : 'remove';
+}
+
+sub _validate_args_list {
+    my $self = shift;
+
+    my $type = shift @{ $self->{'args'} };
+
+    $type and grep { $type eq $_ } qw< parcels specs sources >
+        or $self->usage_error( "Invalid type of list (parcels/specs/sources): " . ($type||"") );
+
+    $type eq 'parcels' and !$self->{'opt'}{'parcel_dir'}
+        and $self->usage_error( "You muse provide arg --parcel-dir to list parcels." );
+
+    $self->{'list_type'} = $type =~ s/s$//r;
 }
 
 sub _read_spec_str {
@@ -253,17 +279,25 @@ sub _gen_scaffolder_perl {
     return Pakket::Scaffolder::Perl->new(@params);
 }
 
+sub _get_repo {
+    my ( $self, $key ) = @_;
+    my $class = 'Pakket::Repository::' . ucfirst($key);
+    return $class->new(
+        'backend' => $self->{'config'}{'repositories'}{$key},
+    );
+}
+
 sub remove_package_source {
     my ( $self, $package ) = @_;
-    my $source_repo = $self->_get_repo('source');
-    $source_repo->remove_package_source( $package );
+    my $repo = $self->_get_repo('source');
+    $repo->remove_package_source( $package );
     $log->info( sprintf("Removed %s from the source repo.", $package->id ) );
 }
 
 sub remove_package_spec {
     my ( $self, $package ) = @_;
-    my $spec_repo = $self->_get_repo('spec');
-    $spec_repo->remove_package_spec( $package );
+    my $repo = $self->_get_repo('spec');
+    $repo->remove_package_spec( $package );
     $log->info( sprintf("Removed %s from the spec repo.", $package->id ) );
 }
 
@@ -320,12 +354,10 @@ sub _package_dependency_edit {
     $repo->store_package_spec($package, $spec);
 }
 
-sub _get_repo {
-    my ( $self, $key ) = @_;
-    my $class = 'Pakket::Repository::' . ucfirst($key);
-    return $class->new(
-        'backend' => $self->{'config'}{'repositories'}{$key},
-    );
+sub list_ids {
+    my ( $self ) = @_;
+    my $repo = $self->_get_repo( $self->{'list_type'} );
+    print "$_\n" for sort @{ $repo->all_object_ids };
 }
 
 1;
