@@ -7,17 +7,10 @@ use Config::Any;
 use Path::Tiny        qw< path >;
 use Types::Path::Tiny qw< Path >;
 
-has 'prefix' => (
+has 'paths' => (
     'is'      => 'ro',
-    'isa'     => 'Str',
-    'default' => sub { return '.pakket'; },
-);
-
-has 'dir' => (
-    'is'      => 'ro',
-    'isa'     => Path,
-    'coerce'  => 1,
-    'default' => sub { return path('~'); },
+    'isa'     => 'ArrayRef',
+    'default' => sub { return ['/etc/pakket', '~/.pakket'] },
 );
 
 has 'extensions' => (
@@ -31,10 +24,31 @@ has 'files' => (
     'isa'     => 'ArrayRef',
     'lazy'    => 1,
     'default' => sub {
-        my $self        = shift;
-        my $prefix_path = $self->dir->child( $self->prefix );
+        my $self = shift;
 
-        return [ map "$prefix_path.$_", @{ $self->extensions } ];
+        if ( $ENV{PAKKET_CONFIG_FILE} ) {
+            return [ $ENV{PAKKET_CONFIG_FILE} ];
+        }
+
+        my %files;
+        foreach my $path (@{$self->{paths}}) {
+            foreach my $extension (@{$self->{extensions}}) {
+                my $file = path("$path.$extension");
+
+                $file->exists
+                    or next;
+
+                $files{$path}
+                    and die "Multiple extensions for same config file name";
+
+                $files{$path} = $file;
+            }
+
+            $files{$path}
+                and return [ $files{$path} ];
+        }
+
+        die "Could not find any config file";
     },
 );
 
