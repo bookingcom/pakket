@@ -30,11 +30,11 @@ sub retrieve_package_spec {
 }
 
 sub store_package_spec {
-    my ( $self, $package ) = @_;
+    my ( $self, $package, $spec ) = @_;
 
     return $self->store_content(
         $package->id,
-        encode_json_pretty( $package->spec ),
+        encode_json_pretty( $spec || $package->spec ),
     );
 }
 
