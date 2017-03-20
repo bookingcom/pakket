@@ -150,15 +150,29 @@ sub _validate_repos {
         my $directory = $self->{'opt'}{$opt_key};
 
         if ( $directory ) {
-            $config->{'repositories'}{$type} = [
-                'File',
-                'directory'      => $directory,
-                'file_extension' => $opt_ext,
-            ];
+            if ( $directory =~ m{^/} ) {
+                $config->{'repositories'}{$type} =
+                    [
+                        'File',
+                        'directory'      => $directory,
+                        'file_extension' => $opt_ext,
+                    ];
 
-            my $path = path($directory);
-            $path->exists && $path->is_dir
-                or $self->usage_error("Bad directory for $type repo: $path");
+                my $path = path($directory);
+                $path->exists && $path->is_dir
+                    or $self->usage_error("Bad directory for $type repo: $path");
+
+            } elsif ( $directory =~ m{^(https?)://([^/]+)(:[^/]+)?(/.*)?$} ) {
+                my ( $protocol, $host, $port, $base_path ) = ( $1, $2, $3, $4 );
+                $port or $port = $protocol eq 'http' ? 80 : 443;
+                $config->{'repositories'}{$type} =
+                    [
+                        'HTTP',
+                        'host'      => $host,
+                        'port'      => $port,
+                        'base_path' => $base_path,
+                    ];
+            }
         }
 
         $config->{'repositories'}{$type}

@@ -99,6 +99,7 @@ sub retrieve_location {
     my $url      = '/retrieve/location?id=' . uri_escape($id);
     my $full_url = $self->base_url . $url;
     my $response = $self->http_client->get($full_url);
+    $response->{'success'} or return;
     my $content  = $response->{'content'};
     my $location = Path::Tiny->tempfile;
     $location->spew( { 'binmode' => ':raw' }, $content );
