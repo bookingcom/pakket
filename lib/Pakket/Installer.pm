@@ -15,13 +15,14 @@ use English               qw< -no_match_vars >;
 use Pakket::Repository::Parcel;
 use Pakket::Requirement;
 use Pakket::Package;
+use Pakket::InfoFile;
+use Pakket::LibDir;
 use Pakket::Log;
 use Pakket::Types     qw< PakketRepositoryBackend >;
-use Pakket::Utils     qw< is_writeable encode_json_pretty >;
+use Pakket::Utils     qw< is_writeable >;
 use Pakket::Constants qw<
     PARCEL_METADATA_FILE
     PARCEL_FILES_DIR
-    PAKKET_INFO_FILE
 >;
 
 with qw<
@@ -30,30 +31,12 @@ with qw<
     Pakket::Role::RunCommand
 >;
 
-has 'pakket_libraries_dir' => (
-    'is'      => 'ro',
-    'isa'     => Path,
-    'coerce'  => 1,
-    'builder' => '_build_pakket_libraries_dir',
-);
-
 has 'pakket_dir' => (
     'is'       => 'ro',
     'isa'      => Path,
     'coerce'   => 1,
     'required' => 1,
 );
-
-has 'keep_copies' => (
-    'is'      => 'ro',
-    'isa'     => 'Int',
-    'default' => sub {1},
-);
-
-sub _build_pakket_libraries_dir {
-    my $self = shift;
-    return $self->pakket_dir->child('libraries');
-}
 
 sub install {
     my ( $self, @packages ) = @_;
@@ -63,99 +46,24 @@ sub install {
         return;
     }
 
-    my $pakket_libraries_dir = $self->pakket_libraries_dir;
-
-    $pakket_libraries_dir->is_dir
-        or $pakket_libraries_dir->mkpath();
-
-    my $work_dir = $pakket_libraries_dir->child( time() );
-
-    if ( $work_dir->exists ) {
-        die $log->critical(
-            "Internal installation directory exists ($work_dir), exiting",
-        );
-    }
-
-    $work_dir->mkpath();
-
-    # The only way to make a symlink point somewhere else in an atomic way is
-    # to create a new symlink pointing to the target, and then rename it to the
-    # existing symlink (that is, overwriting it).
-    #
-    # This actually works, but there is a caveat: how to generate a name for
-    # the new symlink? File::Temp will both create a new file name and open it,
-    # returning a handle; not what we need.
-    #
-    # So, we just create a file name that looks like 'active_P_T.tmp', where P
-    # is the pid and T is the current time.
-    my $active_link = $pakket_libraries_dir->child('active');
-    my $active_temp = $pakket_libraries_dir->child(
-        sprintf('active_%s_%s.tmp', $PID, time()),
-    );
-
-    # we copy any previous installation
-    if ( $active_link->exists ) {
-        my $orig_work_dir = eval { my $link = readlink $active_link } or do {
-            die $log->critical("$active_link is not a symlink");
-        };
-
-        dircopy( $pakket_libraries_dir->child($orig_work_dir), $work_dir );
-    }
+    my $work_dir = Pakket::LibDir::create_new_work_dir($self->pakket_dir);
 
     my $installer_cache = {};
     foreach my $package (@packages) {
         $self->install_package( $package, $work_dir, { 'cache' => $installer_cache } );
     }
 
-    # We finished installing each one recursively to the work directory
-    # Now we need to set the symlink
-
-    if ( $active_temp->exists ) {
-        # Huh? why does this temporary pathname exist? Try to delete it...
-        $log->debug('Deleting existing temporary active object');
-        if ( ! $active_temp->remove ) {
-            die $log->error('Could not activate new installation (temporary symlink remove failed)');
-        }
-    }
-
-    $log->debug('Setting temporary active symlink to new work directory');
-    if ( ! symlink $work_dir->basename, $active_temp ) {
-        die $log->error('Could not activate new installation (temporary symlink create failed)');
-    }
-    if ( ! $active_temp->move($active_link) ) {
-        die $log->error('Could not atomically activate new installation (symlink rename failed)');
-    }
+    Pakket::LibDir::activate_work_dir($work_dir);
 
     $log->infof(
-        "Finished installing %d packages into $pakket_libraries_dir",
+        "Finished installing %d packages into $self->pakket_dir",
         scalar keys %{$installer_cache},
     );
 
     log_success( 'Finished installing: ' . join ', ',
         map $_->full_name, @packages );
 
-    # Clean up
-    my $keep = $self->keep_copies;
-
-    if ( $keep <= 0 ) {
-        $log->warning(
-            "You have set your 'keep_copies' to 0 or less. " .
-            "Resetting it to '1'.",
-        );
-
-        $keep = 1;
-    }
-
-    my @dirs = sort { $a->stat->mtime <=> $b->stat->mtime }
-               grep +( $_->basename ne 'active' && $_->is_dir ),
-               $pakket_libraries_dir->children;
-
-    my $num_dirs = @dirs;
-    foreach my $dir (@dirs) {
-        $num_dirs-- <= $keep and last;
-        $log->debug("Removing old directory: $dir");
-        path($dir)->remove_tree( { 'safe' => 0 } );
-    }
+    Pakket::LibDir::remove_old_libraries($self->pakket_dir);
 
     return;
 }
@@ -297,57 +205,11 @@ sub install_package {
         dircopy( $item, $target_dir );
     }
 
-    $self->_update_info_file( $parcel_dir, $dir, $full_package, $opts );
+    Pakket::InfoFile::add_package( $parcel_dir, $dir, $full_package, $opts );
 
     log_success( sprintf 'Delivering parcel %s', $full_package->full_name );
 
     return;
-}
-
-sub _update_info_file {
-    my ( $self, $parcel_dir, $dir, $package, $opts ) = @_;
-
-    my $prereqs      = $package->prereqs;
-    my $info_file    = $dir->child( PAKKET_INFO_FILE() );
-    my $install_data = $info_file->exists
-        ? decode_json( $info_file->slurp_utf8 )
-        : {};
-
-    my %files;
-
-    # get list of files
-    $parcel_dir->visit(
-        sub {
-            my ( $path, $state ) = @_;
-
-            $path->is_file
-                or return;
-
-            my $filename = $path->relative($parcel_dir);
-            $files{$filename} = {
-                'category' => $package->category,
-                'name'     => $package->name,
-                'version'  => $package->version,
-                'release'  => $package->release,
-            };
-        },
-        { 'recurse' => 1 },
-    );
-
-    my ( $cat, $name ) = ( $package->category, $package->name );
-    $install_data->{'installed_packages'}{$cat}{$name} = {
-        'version'   => $package->version,
-        'release'   => $package->release,
-        'files'     => [ keys %files ],
-        'as_prereq' => $opts->{'as_prereq'} ? 1 : 0,
-        'prereqs'   => $package->prereqs,
-    };
-
-    foreach my $file ( keys %files ) {
-        $install_data->{'installed_files'}{$file} = $files{$file};
-    }
-
-    $info_file->spew_utf8( encode_json_pretty($install_data) );
 }
 
 __PACKAGE__->meta->make_immutable;
