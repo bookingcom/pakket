@@ -82,7 +82,8 @@ sub setup {
                         or send_error( 'Bad input', 400 )
                         for $id, $content;
 
-                    return $repo->store_content( $id, $content );
+                    $repo->store_content( $id, $content );
+                    return encode_json( { 'success' => 1 } );
                 };
 
                 post '/location' => with_types [
