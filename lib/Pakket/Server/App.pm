@@ -71,12 +71,17 @@ sub setup {
             };
 
             prefix '/store' => sub {
-                post '/content' => with_types [
-                    [ 'body', 'id',      'Str',  'MissingID'      ],
-                    [ 'body', 'content', 'Str', 'MissingContent' ],
-                ] => sub {
-                    my $id      = body_parameters->get('id');
-                    my $content = body_parameters->get('content');
+                # There is no body to check, because the body is JSON content
+                # So we manually decode and check
+                post '/content' => sub {
+                    my $data    = decode_json( request->body );
+                    my $id      = $data->{'id'};
+                    my $content = $data->{'content'};
+
+                    defined && length
+                        or send_error( 'Bad input', 400 )
+                        for $id, $content;
+
                     return $repo->store_content( $id, $content );
                 };
 
