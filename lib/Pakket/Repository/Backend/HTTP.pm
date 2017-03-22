@@ -88,9 +88,10 @@ sub has_object {
 
 sub store_location {
     my ( $self, $id, $file_to_store ) = @_;
-    my $content = {
-        'data' => path($file_to_store)->slurp( { 'binmode' => ':raw' } ),
-    };
+    my $content = path($file_to_store)->slurp(
+        { 'binmode' => ':raw' },
+    );
+
     $self->store_content( $id, $content );
 }
 
@@ -113,7 +114,10 @@ sub store_content {
 
     my $response = $self->http_client->post(
         $full_url => {
-            'content' => encode_json_canonical( { 'data' => $content, 'id' => $id, } ),
+            'content' => encode_json_canonical(
+                { 'content' => $content, 'id' => $id, },
+            ),
+
             'headers' => {
                 'Content-Type' => 'application/json',
             },
