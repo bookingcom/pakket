@@ -331,7 +331,7 @@ sub create_spec_for {
     # Source
 
     # check if we already have the source in the repo
-    if ( $self->source_repo->retrieve_location( $full_name ) ) {
+    if ( $self->source_repo->has_object( $package->id ) ) {
         $log->debugf(
             "Package %s - source already exists in repo (skipping).",
             $full_name
