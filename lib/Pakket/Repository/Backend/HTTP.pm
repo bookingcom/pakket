@@ -92,7 +92,21 @@ sub store_location {
         { 'binmode' => ':raw' },
     );
 
-    $self->store_content( $id, $content );
+    my $url = "/store/location?id=" . uri_escape($id);
+    my $full_url = $self->base_url . $url;
+
+    my $response = $self->http_client->post(
+        $full_url => {
+            'content' => $content,
+            'headers' => {
+                'Content-Type' => 'application/x-www-form-urlencoded',
+            },
+        },
+    );
+
+    if ( !$response->{'success'} ) {
+        die $log->criticalf( 'Could not store location for id %s', $id );
+    }
 }
 
 sub retrieve_location {

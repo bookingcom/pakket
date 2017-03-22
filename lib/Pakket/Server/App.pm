@@ -87,12 +87,13 @@ sub setup {
                 };
 
                 post '/location' => with_types [
-                    [ 'body', 'id',       'Str',  'MissingID'       ],
-                    [ 'body', 'filename', 'Str', 'MissingFilename' ],
+                    [ 'query', 'id', 'Str',  'MissingID' ],
                 ] => sub {
-                    my $id       = body_parameters->get('id');
-                    my $filename = upload('filename')->tempname;
-                    return $repo->store_location( $id, $filename );
+                    my $id   = query_parameters->get('id');
+                    my $file = Path::Tiny->tempfile;
+                    $file->spew_raw( request->body );
+                    $repo->store_location( $id, $file );
+                    return encode_json( { 'success' => 1 } );
                 };
             };
         };
