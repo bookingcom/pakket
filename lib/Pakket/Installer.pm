@@ -18,7 +18,7 @@ use Pakket::Requirement;
 use Pakket::Package;
 use Pakket::Log       qw< log_success log_fail >;
 use Pakket::Types     qw< PakketRepositoryBackend >;
-use Pakket::Utils     qw< is_writeable >;
+use Pakket::Utils     qw< is_writeable canonical_package_name >;
 use Pakket::Constants qw<
     PARCEL_METADATA_FILE
     PARCEL_FILES_DIR
@@ -247,6 +247,23 @@ sub pre_install_checks {
             "Can't write to your installation directory ($dir)",
         ) );
     }
+}
+
+sub show_installed {
+    my $self = shift;
+
+    my $install_data = $self->load_info_file($self->active_dir);
+    my $packages = $install_data->{'installed_packages'};
+    my @lines;
+    for my $category (keys %$packages) {
+        for my $name (keys %{$packages->{$category}}) {
+            my $package = $packages->{$category}{$name};
+            my $full_name = canonical_package_name(
+                $category, $name, $package->{'version'}, $package->{'release'});
+            push @lines, $full_name;
+        }
+    }
+    print join("\n", sort @lines) . "\n";
 }
 
 __PACKAGE__->meta->make_immutable;
