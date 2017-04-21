@@ -11,6 +11,7 @@ use IO::Prompt::Tiny qw< prompt >;
 use Path::Tiny qw< path >;
 
 use Pakket::CLI '-command';
+use Pakket::Config;
 use Pakket::Uninstaller;
 use Pakket::Log;
 use Pakket::Package;
@@ -43,19 +44,32 @@ sub _determine_packages {
     return \@packages;
 }
 
-sub _validate_arg_lib_dir {
+sub _determine_config {
     my ( $self, $opt ) = @_;
 
-    my $pakket_dir = $opt->{'pakket_dir'};
+    # Read configuration
+    my $config_file   = $opt->{'config'};
+    my $config_reader = Pakket::Config->new(
+        $config_file ? ( 'files' => [$config_file] ) : (),
+    );
 
-    $pakket_dir
-        or $self->usage_error(
-        "please define the library dir --pakket-dir <path_to_library>\n");
+    my $config = $config_reader->read_config;
 
-    path($pakket_dir)->exists
-        or $self->usage_error("Library dir: $pakket_dir doesn't exist\n");
+    if ( $opt->{'pakket_dir'} ) {
+        $config->{'install_dir'} = $opt->{'pakket_dir'};
+    }
 
-    $self->{'pakket_dir'} = $pakket_dir;
+    if ( !$config->{'install_dir'} ) {
+        $self->usage_error(
+            "please define the library dir --pakket-dir <path_to_library>\n"
+        );
+    }
+
+    path($config->{'install_dir'})->exists
+        or $self->usage_error( sprintf(
+            "Library dir: %s doesn't exist\n", $config->{'install_dir'}));
+
+    return $config;
 }
 
 sub opt_spec {
@@ -77,7 +91,7 @@ sub validate_args {
     Log::Any::Adapter->set( 'Dispatch',
         'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
 
-    $self->_validate_arg_lib_dir($opt);
+    $opt->{'config'}   = $self->_determine_config($opt);
     $opt->{'packages'} = $self->_determine_packages( $opt, $args );
 }
 
@@ -85,7 +99,7 @@ sub execute {
     my ( $self, $opt ) = @_;
 
     my $uninstaller = Pakket::Uninstaller->new(
-        'pakket_dir'           => $self->{'pakket_dir'},
+        'pakket_dir'           => $opt->{'config'}{'install_dir'},
         'packages'             => $opt->{'packages'},
         'without_dependencies' => $opt->{'without_dependencies'},
     );
