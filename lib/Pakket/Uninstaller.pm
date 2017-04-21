@@ -108,8 +108,11 @@ sub get_packages_available_for_uninstall {
     if ( !$self->without_dependencies ) {
         while ( 0 + @queue ) {
             my $package  = shift @queue;
-            my $prereqs = $installed_packages->{ $package->{category} }
-                { $package->{name} }{'prereqs'};
+            my $category = $package->{'category'};
+            my $name = $package->{'name'};
+            my $prereqs = ($installed_packages->{$category}{$name} // {})
+                                ->{'prereqs'};
+
             for my $category ( keys %$prereqs ) {
                 for my $type ( keys %{ $prereqs->{$category} } ) {
                     for my $name ( keys %{ $prereqs->{$category}{$type} } ) {
