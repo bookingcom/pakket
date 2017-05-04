@@ -68,8 +68,11 @@ sub install {
         scalar keys %{$installer_cache},
     );
 
-    log_success( 'Finished installing: ' . join ', ',
-        map $_->full_name, @packages );
+    my $installed_packages_str = 0+@packages > 1
+        ?   "\n" . join "\n", map $_->full_name, @packages
+        :   $packages[0]->full_name;
+
+    log_success( "Finished installing: $installed_packages_str");
 
     $self->remove_old_libraries;
 
