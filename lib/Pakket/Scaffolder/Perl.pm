@@ -193,6 +193,7 @@ sub BUILDARGS {
         unless $module xor $cpanfile;
 
     if ( $module ) {
+        $module =~ s/-/::/g; # TODO: find a more accurate way
         my ( $version, $phase, $type ) = delete @args{qw< version phase type >};
         $args{'modules'} =
             Pakket::Scaffolder::Perl::Module->new(
@@ -218,23 +219,23 @@ sub run {
 
     # Bootstrap toolchain
     if ( !( $self->no_bootstrap or $self->no_deps ) ) {
-        for my $dist ( @{ $self->perl_bootstrap_modules } ) {
+        for my $module ( @{ $self->perl_bootstrap_modules } ) {
             # TODO: check versions
-            if ( exists $self->spec_index->{$dist} ) {
+            if ( exists $self->spec_index->{$module} ) {
                 $log->debugf( 'Skipping %s (already have version: %s)',
-                              $dist, $self->spec_index->{$dist} );
+                              $module, $self->spec_index->{$module} );
                 next;
             }
 
-            $log->debugf( 'Bootstrapping config: %s', $dist );
+            $log->debugf( 'Bootstrapping config: %s', $module );
             my $requirements = $self->prereqs->requirements_for(qw< configure requires >);
 
             eval {
-                $self->create_spec_for( dist => $dist, $requirements );
+                $self->create_spec_for( $module, $requirements );
                 1;
             } or do {
                 my $err = $@ || 'zombie error';
-                Carp::croak("Cannot bootstrap toolchain distribution: $dist ($err)\n");
+                Carp::croak("Cannot bootstrap toolchain moduleribution: $module ($err)\n");
             };
         }
     }
@@ -249,7 +250,7 @@ sub run {
 
             for my $module ( sort keys %{ $self->modules->{ $phase }{ $type } } ) {
                 eval {
-                    $self->create_spec_for( module => $module, $requirements );
+                    $self->create_spec_for( $module, $requirements );
                     1;
                 } or do {
                     my $err = $@ || 'zombie error';
@@ -332,13 +333,13 @@ sub has_satisfying {
 }
 
 sub create_spec_for {
-    my ( $self, $type, $name, $requirements ) = @_;
+    my ( $self, $name, $requirements ) = @_;
 
     return if $self->skip_name($name);
     return if $self->processed_dists->{ $name }++;
     return if $self->has_satisfying($name, $requirements);
 
-    my $release = $self->get_release_info($type, $name, $requirements);
+    my $release = $self->get_release_info( $name, $requirements );
     return if exists $release->{'skip'};
 
     my $dist_name    = $release->{'distribution'};
@@ -457,7 +458,7 @@ sub create_spec_for {
             for my $module ( keys %{ $dep_modules->{ $phase }{ $dep_type } } ) {
                 next if $self->skip_name($module);
 
-                my $rel = $self->get_release_info( module => $module, $dep_requirements );
+                my $rel = $self->get_release_info( $module, $dep_requirements );
                 next if exists $rel->{'skip'};
 
                 my $dist = $rel->{'distribution'};
@@ -468,14 +469,14 @@ sub create_spec_for {
                     next;
                 }
 
-                $prereq_data->{ $dist } = +{
+                $prereq_data->{ $module } = +{
                     'version' => ( $dep_requirements->requirements_for_module( $module ) || 0 ),
                 };
             }
 
             # recurse through those as well
             if ( ! $self->no_deps ) {
-                $self->create_spec_for( 'dist' => $_, $dep_requirements )
+                $self->create_spec_for( $_, $dep_requirements )
                     for keys %{ $package_spec->{'Prereqs'}{'perl'}{$phase} };
             }
         }
@@ -612,25 +613,22 @@ sub get_release_info_local {
 }
 
 sub get_release_info {
-    my ( $self, $type, $name, $requirements ) = @_;
+    my ( $self, $name, $requirements ) = @_;
 
     # if is_local is set - generate info without upstream data
     exists $self->is_local->{$name}
         and return $self->get_release_info_local( $name, $requirements );
 
-    my $dist_name = $type eq 'module'
-        ? $self->get_dist_name($name)
-        : $name;
+    my $dist_name = $self->get_dist_name($name);
     return +{ 'skip' => 1 } if $self->skip_name($dist_name);
 
 
     # try the latest
-
     my $latest = $self->get_latest_release_info( $dist_name );
     return $latest
         if defined $latest->{'version'}
-           and defined $latest->{'download_url'}
-           and $requirements->accepts_module( $name => $latest->{'version'} );
+        and defined $latest->{'download_url'}
+        and $requirements->accepts_module( $name => $latest->{'version'} );
 
 
     # else: fetch all release versions for this distribution

@@ -11,9 +11,9 @@ has 'perl_bootstrap_modules' => (
     'isa'     => 'ArrayRef',
     'default' => sub {
         [qw<
-            ExtUtils-MakeMaker
-            Module-Build
-            Module-Build-WithXSpp
+            ExtUtils::MakeMaker
+            Module::Build
+            Module::Build::WithXSpp
         >]
     },
 );
