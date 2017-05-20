@@ -46,8 +46,10 @@ sub install {
         return;
     }
 
+    my $installed_packages = $self->load_installed_packages($self->active_dir);
+
     if ( !$self->force_reinstall ) {
-        @packages = $self->drop_installed_packages(@packages);
+        @packages = $self->skip_installed_packages($installed_packages, @packages);
         @packages or return;
     }
 
@@ -262,17 +264,20 @@ sub pre_install_checks {
 
 sub show_installed {
     my $self = shift;
-    my $installed_packages = $self->load_installed_packages($self->active_dir);
-    print join("\n", sort keys %{$installed_packages} ) . "\n";
+    my $packages = $self->load_installed_packages($self->active_dir);
+    my @full_names = sort map {$_->{'package'}->full_name} values %{$packages};
+    print join("\n", @full_names) . "\n";
 }
 
-sub drop_installed_packages {
-    my $self = shift;
-    my @packages = @_;
-    my $installed_packages = $self->load_installed_packages($self->active_dir);
+sub skip_installed_packages {
+    my $self               = shift;
+    my $installed_packages = shift;
+    my @packages           = @_;
     my @out;
     for my $package (@packages) {
-        if ($installed_packages->{$package->full_name}) {
+        my $installed = $installed_packages->{$package->short_name};
+        if ($installed
+                and $installed->{'package'}->full_name eq $package->full_name) {
             $log->infof( '%s already installed', $package->full_name );
         } else {
             push @out, $package;

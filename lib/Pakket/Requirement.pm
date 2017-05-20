@@ -6,6 +6,7 @@ use MooseX::StrictConstructor;
 
 use Carp     qw< croak >;
 use Log::Any qw< $log >;
+use Pakket::Utils qw< canonical_package_name >;
 
 has [ qw< category name > ] => (
     'is'       => 'ro',
@@ -18,6 +19,11 @@ has 'version' => (
     'isa'     => 'Str',
     'default' => sub { '>= 0' },
 );
+
+sub short_name {
+    my $self = shift;
+    return canonical_package_name( $self->category, $self->name );
+}
 
 no Moose;
 __PACKAGE__->meta->make_immutable;

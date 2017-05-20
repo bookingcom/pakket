@@ -7,7 +7,8 @@ use Log::Any qw< $log >;
 use JSON::MaybeXS qw< decode_json >;
 use Pakket::Utils qw< encode_json_pretty >;
 use Pakket::Constants qw<PAKKET_INFO_FILE>;
-use Pakket::Package;
+use Pakket::PackageQuery;
+use Pakket::Requirement;
 
 sub add_package_in_info_file {
     my ( $self, $parcel_dir, $dir, $package, $opts ) = @_;
@@ -82,13 +83,30 @@ sub load_installed_packages {
     for my $category (keys %$packages) {
         for my $name (keys %{$packages->{$category}}) {
             my $p = $packages->{$category}{$name};
-            my $package = Pakket::Package->new(
+            my $package = Pakket::PackageQuery->new(
                                 'category' => $category,
                                 'name'     => $name,
                                 'version'  => $p->{'version'},
                                 'release'  => $p->{'release'},
                             );
-            $packages{$package->full_name} = 1;
+            $packages{$package->short_name}{'package'} = $package;
+
+            my $prqs = $p->{'prereqs'};
+            for my $pr_category (keys %$prqs) {
+                my $runtime_prqs = $prqs->{$pr_category}{'runtime'};
+                for my $pr_name (keys %{$runtime_prqs}) {
+                    my $version = $runtime_prqs->{$pr_name}{'version'};
+                    my $prereq = Pakket::Requirement->new(
+                                     'category' => $pr_category,
+                                     'name'     => $pr_name,
+                                     'version'  => $version,
+                                );
+                    $packages{$package->short_name}{'prereqs'}
+                                        {$prereq->short_name} = $prereq;
+                    $packages{$prereq->short_name}{'used_by'}
+                                        {$package->short_name} = 1;
+                }
+            }
         }
     }
     return \%packages;
