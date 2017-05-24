@@ -39,11 +39,9 @@ sub build_package {
     my @seq;
     if ( $has_build_pl && !exists $should_use_mm{$package} ) {
         # Do we have Module::Build?
-        my $has_module_build = $self->run_command(
-            $build_dir,
-            [ 'perl', '-MModule::Build', '-e1' ],
-            $opts
-        );
+        my $has_module_build =
+            $self->run_command($build_dir, ['perl','-MModule::Build','-e1'], $opts)
+            || $self->run_command($build_dir,[ 'perl','-MModule::Build::Tiny','-e1'], $opts);
 
         # If you have Module::Build, we can use it!
         if ($has_module_build) {
