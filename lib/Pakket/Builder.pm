@@ -269,7 +269,7 @@ sub run_build {
     my $level             = $params->{'level'}                        || 0;
     my $skip_prereqs      = $params->{'bootstrapping_1_skip_prereqs'} || 0;
     my $bootstrap_prereqs = $params->{'bootstrapping_2_deps_only'}    || 0;
-    my $short_name        = $prereq->short_name;
+    my $full_name         = $prereq->full_name;
 
     # FIXME: GH #29
     if ( $prereq->category eq 'perl' ) {
@@ -278,37 +278,15 @@ sub run_build {
         $prereq->name eq 'perl'     and return;
     }
 
-    if ( ! $bootstrap_prereqs and defined $self->is_built->{$short_name} ) {
-        my $ver_rel = $self->is_built->{$short_name};
-        my ( $built_version, $built_release ) = @{$ver_rel};
-
-        # Check the versions mismatch
-        if ( $built_version ne $prereq->version ) {
-            croak( $log->criticalf(
-                'Asked to build %s when %s=%s already built',
-                $prereq->full_name, $short_name, $built_version,
-            ) );
-        }
-
-        # Check the releases mismatch
-        if ( $built_release ne $prereq->release ) {
-            croak( $log->criticalf(
-                'Asked to build %s when %s=%s:%s already built',
-                $prereq->full_name, $short_name, $built_version, $built_release,
-            ) );
-        }
-
+    if ( ! $bootstrap_prereqs and defined $self->is_built->{$full_name} ) {
         $log->debug(
-            "We already built or building $short_name, skipping...",
+            "We already built or building $full_name, skipping...",
         );
 
         return;
-    } else {
-        $self->is_built->{$short_name} = [
-            $prereq->version,
-            $prereq->release,
-        ];
     }
+
+    $self->is_built->{$full_name} = 1;
 
     $log->infof( '%s Working on %s', '|...' x $level, $prereq->full_name );
 
@@ -361,8 +339,8 @@ sub run_build {
                 foreach my $package_name (
                     keys %{ $installer_cache->{$category} } )
                 {
-                    $self->is_built->{"$category/$package_name"}
-                        = $installer_cache->{$category}{$package_name};
+                    my ($ver,$rel) = @{$installer_cache->{$category}{$package_name}};
+                    $self->is_built->{"$category/$package_name=$ver:$rel"} = 1;
                 }
             }
 
