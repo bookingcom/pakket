@@ -38,6 +38,12 @@ has 'force' => (
     'default' => sub {0},
 );
 
+has 'requirements' => (
+    'is'      => 'ro',
+    'isa'     => 'HashRef',
+    'default' => sub { +{} },
+);
+
 sub install {
     my ( $self, @packages ) = @_;
 
@@ -45,6 +51,8 @@ sub install {
         $log->notice('Did not receive any parcels to deliver');
         return;
     }
+
+    foreach (@packages) { $self->requirements->{$_->short_name} = $_ };
 
     if ( !$self->force ) {
         @packages = $self->drop_installed_packages(@packages);
@@ -150,31 +158,39 @@ sub install_package {
 }
 
 sub install_prereq {
-   my ($self, $category, $name, $prereq_data, $dir, $opts) = @_;
+    my ($self, $category, $name, $prereq_data, $dir, $opts) = @_;
+    my $package;
+    if (exists $self->requirements->{"$category/$name"}) {
+        $package = $self->requirements->{"$category/$name"};
+        # FIXME: should we check compatibility
+        # requested by user version of package
+        # with dependencies requirements?
+        # if yes, should we disable it by option --force?
+    } else {
+        # FIXME: This should be removed when we introduce version ranges
+        # This forces us to install the latest version we have of
+        # something, instead of finding the latest, based on the
+        # version range, which "$prereq_version" contains. -- SX
+        my $ver_rel = $self->parcel_repo->latest_version_release(
+                    $category,
+                    $name,
+                    $prereq_data->{'version'},
+                );
 
-   # FIXME: This should be removed when we introduce version ranges
-   # This forces us to install the latest version we have of
-   # something, instead of finding the latest, based on the
-   # version range, which "$prereq_version" contains. -- SX
-   my $ver_rel = $self->parcel_repo->latest_version_release(
-       $category,
-       $name,
-       $prereq_data->{'version'},
-   );
+        my ( $version, $release ) = @{$ver_rel};
 
-   my ( $version, $release ) = @{$ver_rel};
+        $package = Pakket::PackageQuery->new(
+                'category' => $category,
+                'name'     => $name,
+                'version'  => $version,
+                'release'  => $release,
+                );
+    }
 
-   my $query = Pakket::PackageQuery->new(
-       'category' => $category,
-       'name'     => $name,
-       'version'  => $version,
-       'release'  => $release,
-   );
-
-   $self->install_package(
-       $query, $dir,
-       { %{$opts}, 'as_prereq' => 1 },
-   );
+    $self->install_package(
+        $package, $dir,
+        { %{$opts}, 'as_prereq' => 1 },
+    );
 }
 
 sub copy_package_to_install_dir {
