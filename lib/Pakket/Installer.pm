@@ -27,6 +27,7 @@ use Pakket::Constants qw<
 with qw<
     Pakket::Role::HasConfig
     Pakket::Role::HasParcelRepo
+    Pakket::Role::HasSpecRepo
     Pakket::Role::HasInfoFile
     Pakket::Role::HasLibDir
     Pakket::Role::RunCommand
@@ -58,6 +59,8 @@ sub install {
         @packages = $self->drop_installed_packages(@packages);
         @packages or return;
     }
+
+    my $packages_to_install = $self->get_list_all_packages_to_install(@packages);
 
     my $installer_cache = {};
 
@@ -295,6 +298,53 @@ sub drop_installed_packages {
         }
     }
     return @out;
+}
+
+sub get_list_all_packages_to_install {
+    my $self = shift;
+    my @packages = @_;
+
+    my %packages_to_install;
+    my %seen = map { $_->short_name => 1  } @packages;
+    while (@packages) {
+        my $package = shift @packages;
+        $packages_to_install{$package->short_name} = $package;
+
+        # FIXME: I add dependency with spec_repo
+        # May be we should put specs in parcel_repo?
+        my $spec = $self->spec_repo->retrieve_package_spec($package);
+        my $prereqs = $spec->{'Prereqs'};
+        foreach my $category ( keys %{$prereqs}  ) {
+            my $runtime_prereqs = $prereqs->{$category}{'runtime'};
+
+            foreach my $name ( keys %{$runtime_prereqs}  ) {
+                my $prereq_data = $runtime_prereqs->{$name};
+
+                # FIXME: This should be removed when we introduce version ranges
+                # This forces us to install the latest version we have of
+                # something, instead of finding the latest, based on the
+                # version range, which "$prereq_version" contains. -- SX
+                my $ver_rel = $self->parcel_repo->latest_version_release(
+                                    $category,
+                                    $name,
+                                    $prereq_data->{'version'},
+                                );
+
+                my ( $version, $release  ) = @{$ver_rel};
+
+                my $prereq = Pakket::PackageQuery->new(
+                                    'category' => $category,
+                                    'name'     => $name,
+                                    'version'  => $version,
+                                    'release'  => $release,
+                                );
+                $seen{$prereq->short_name}++ and next;
+                push @packages, $prereq;
+            }
+        }
+    }
+
+    return \%packages_to_install;
 }
 
 __PACKAGE__->meta->make_immutable;
