@@ -7,6 +7,8 @@ use MooseX::StrictConstructor;
 use Carp     qw< croak >;
 use Log::Any qw< $log >;
 
+with qw< Pakket::Role::BasicPackageAttrs >;
+
 has [ qw< category name > ] => (
     'is'       => 'ro',
     'isa'      => 'Str',
