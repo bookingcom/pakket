@@ -266,8 +266,11 @@ sub run {
         }
     }
 
-    for my $f ( keys %failed ) {
-        $log->infof( "[FAILED] %s: %s", $f, $failed{$f} );
+    if (scalar keys %failed) {
+        for my $f ( keys %failed ) {
+            $log->errorf( "[FAILED] %s: %s", $f, $failed{$f} );
+        }
+        exit 1;
     }
 
     $log->info( 'Done' );
