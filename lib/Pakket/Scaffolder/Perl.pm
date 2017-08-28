@@ -697,7 +697,9 @@ sub get_release_info {
         };
     }
 
-    for my $v ( sort { version->parse($b) <=> version->parse($a) } @valid_versions ) {
+    @valid_versions = sort { version->parse($b) <=> version->parse($a) } @valid_versions;
+
+    for my $v ( @valid_versions ) {
         if ( $requirements->accepts_module($name => $v) ) {
             $version         = $v;
             $release_prereqs = $all_dist_releases{$v}{'prereqs'} || {};
@@ -706,7 +708,9 @@ sub get_release_info {
             last;
         }
     }
-    $version or Carp::croak("Cannot match release for $dist_name");
+    $version or Carp::croak("Cannot find a suitable version for $dist_name requirements: "
+                                . $requirements->requirements_for_module($name)
+                                . ", available: " . join(', ', @valid_versions));
 
     $version = $self->known_incorrect_version_fixes->{ $dist_name }
         if exists $self->known_incorrect_version_fixes->{ $dist_name };
