@@ -708,12 +708,13 @@ sub get_release_info {
             last;
         }
     }
-    $version or Carp::croak("Cannot find a suitable version for $dist_name requirements: "
-                                . $requirements->requirements_for_module($name)
-                                . ", available: " . join(', ', @valid_versions));
 
     $version = $self->known_incorrect_version_fixes->{ $dist_name }
         if exists $self->known_incorrect_version_fixes->{ $dist_name };
+
+    $version or Carp::croak("Cannot find a suitable version for $dist_name requirements: "
+                                . $requirements->requirements_for_module($name)
+                                . ", available: " . join(', ', @valid_versions));
 
     return +{
         'distribution' => $dist_name,
