@@ -172,7 +172,8 @@ sub show_package_deps {
 
 sub add_package {
     my $self = shift;
-    $self->_get_scaffolder->run;
+    my $errors = $self->_get_scaffolder->run;
+    $errors && exit(1);
 }
 
 sub remove_package {

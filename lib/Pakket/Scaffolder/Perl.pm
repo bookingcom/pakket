@@ -266,11 +266,15 @@ sub run {
         }
     }
 
-    for my $f ( keys %failed ) {
-        $log->errorf( "[FAILED] %s: %s", $f, $failed{$f} );
+    my $errors = keys %failed;
+    if ($errors) {
+        for my $f ( sort keys %failed ) {
+            $log->errorf( "[FAILED] %s: %s", $f, $failed{$f} );
+        }
+    } else {
+        $log->info( 'Done' );
     }
-
-    $log->info( 'Done' );
+    return $errors;
 }
 
 sub skip_name {
