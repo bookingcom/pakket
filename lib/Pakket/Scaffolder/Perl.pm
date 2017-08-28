@@ -267,7 +267,7 @@ sub run {
     }
 
     for my $f ( keys %failed ) {
-        $log->infof( "[FAILED] %s: %s", $f, $failed{$f} );
+        $log->errorf( "[FAILED] %s: %s", $f, $failed{$f} );
     }
 
     $log->info( 'Done' );
