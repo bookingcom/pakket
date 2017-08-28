@@ -28,6 +28,7 @@ has 'known_incorrect_version_fixes' => (
             'IO-Capture'        => '0.05',
             'Memoize-Memcached' => '0.04',
             'Statistics-Regression' => '0.53',
+            'Data-HexDump-Range' => 'v0.13.72',
         }
     },
 );
