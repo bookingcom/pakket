@@ -611,7 +611,8 @@ sub get_release_info_local {
     my $prereqs;
     my $dist_name = $self->get_dist_name($name);
 
-    my $from_file = path( $self->cache_dir, $dist_name . '-' . $ver . '.tar.gz' );
+    my $fix_ver = $ver =~ s/^[v]//r;
+    my $from_file = path( $self->cache_dir, $dist_name . '-' . $fix_ver . '.tar.gz' );
     if ( $from_file->exists ) {
         my $target = Path::Tiny->tempdir();
         my $dir    = $self->unpack( $target, $from_file );
