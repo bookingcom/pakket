@@ -233,7 +233,7 @@ sub run {
                 next;
             }
 
-            $log->debugf( 'Bootstrapping config: %s', $module );
+            $log->debugf( 'Bootstrapping toolchain: %s', $module );
             my $requirements = $self->prereqs->requirements_for(qw< configure requires >);
 
             eval {
