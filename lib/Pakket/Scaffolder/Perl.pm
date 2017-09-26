@@ -321,19 +321,29 @@ sub unpack {
     return $target;
 }
 
-sub has_satisfying {
+sub is_module_in_spec_repo {
     my ( $self, $module_name, $requirements ) = @_;
-    my $req_as_hash = $requirements->as_string_hash;
 
-    return unless exists $req_as_hash->{$module_name};
-
-    my $dist_name = $self->get_dist_name($module_name);
+    my $package_name = $self->get_dist_name($module_name);
 
     my @versions = map { $_ =~ PAKKET_PACKAGE_SPEC(); $3 }
-        @{ $self->spec_repo->all_object_ids_by_name($dist_name, 'perl') };
-    return unless @versions;
+        @{ $self->spec_repo->all_object_ids_by_name($package_name, 'perl') };
 
-    return $self->versioner->is_satisfying($req_as_hash->{$module_name}, @versions);
+    return 0 unless @versions; # there are no packages
+
+    my $req_as_hash = $requirements->as_string_hash;
+    if (!exists $req_as_hash->{$module_name}) {
+        $log->debugf("Found %d versions of module %s in spec repo (no requirements)",
+                        0+@versions, $module_name);
+        return 1;
+    }
+
+    if ($self->versioner->is_satisfying($req_as_hash->{$module_name}, @versions)) {
+        $log->debugf("Found satisfying version of module %s in spec repo", $module_name);
+        return 1;
+    }
+
+    return 0; # spec has package, but version is not compatible
 }
 
 sub create_spec_for {
@@ -341,7 +351,7 @@ sub create_spec_for {
 
     return if $self->processed_dists->{ $name }++;
     return if $self->skip_name($name);
-    return if $self->has_satisfying($name, $requirements);
+    return if $self->is_module_in_spec_repo($name, $requirements);
 
     my $release = $self->get_release_info( $name, $requirements );
     return if exists $release->{'skip'};
