@@ -135,8 +135,15 @@ has 'types' => (
 has 'dist_name' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'default' => sub { +{} },
+    'lazy'    => 1,
+    'builder' => '_build_dist_name',
 );
+
+sub _build_dist_name {
+    my $self = shift;
+    my %module_to_dist = map { $_->[0] => $_->[1] } @{$self->perl_bootstrap_modules};
+    return \%module_to_dist;
+}
 
 sub _build_metacpan_api {
     my $self = shift;
@@ -227,9 +234,10 @@ sub run {
     if ( !( $self->no_bootstrap or $self->no_deps ) ) {
         for my $module ( map { $_->[0] } @{ $self->perl_bootstrap_modules } ) {
             # TODO: check versions
-            if ( exists $self->spec_index->{$module} ) {
-                $log->debugf( 'Skipping %s (already have version: %s)',
-                              $module, $self->spec_index->{$module} );
+            my $package_name = $self->get_dist_name($module);
+            if ( exists $self->spec_index->{$package_name} ) {
+                $log->debugf( 'Skipping bootstrap module %s (already have version: %s)',
+                              $module, $self->spec_index->{$package_name} );
                 next;
             }
 
