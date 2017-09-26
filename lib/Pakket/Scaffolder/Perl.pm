@@ -277,16 +277,16 @@ sub run {
     return $errors;
 }
 
-sub skip_name {
-    my ( $self, $name ) = @_;
+sub skip_module {
+    my ( $self, $module_name ) = @_;
 
-    if ( should_skip_module($name) ) {
-        $log->debugf( "%sSkipping %s (core module, not dual-life)", $self->spaces, $name );
+    if ( should_skip_module($module_name) ) {
+        $log->debugf( "%sSkipping %s (core module, not dual-life)", $self->spaces, $module_name );
         return 1;
     }
 
-    if ( exists $self->known_names_to_skip->{ $name } ) {
-        $log->debugf( "%sSkipping %s (known 'bad' name for configuration)", $self->spaces, $name );
+    if ( exists $self->known_names_to_skip->{ $module_name } ) {
+        $log->debugf( "%sSkipping %s (known 'bad' module for configuration)", $self->spaces, $module_name );
         return 1;
     }
 
@@ -340,7 +340,7 @@ sub create_spec_for {
     my ( $self, $name, $requirements ) = @_;
 
     return if $self->processed_dists->{ $name }++;
-    return if $self->skip_name($name);
+    return if $self->skip_module($name);
     return if $self->has_satisfying($name, $requirements);
 
     my $release = $self->get_release_info( $name, $requirements );
@@ -460,7 +460,7 @@ sub create_spec_for {
             my $dep_requirements = $dep_prereqs->requirements_for( $phase, $dep_type );
 
             for my $module ( keys %{ $dep_modules->{ $phase }{ $dep_type } } ) {
-                next if $self->skip_name($module);
+                next if $self->skip_module($module);
 
                 my $rel = $self->get_release_info( $module, $dep_requirements );
                 next if exists $rel->{'skip'};
@@ -654,7 +654,7 @@ sub get_release_info {
         and return $self->get_release_info_local( $name, $requirements );
 
     my $dist_name = $self->get_dist_name($name);
-    return +{ 'skip' => 1 } if $self->skip_name($dist_name);
+    return +{ 'skip' => 1 } if $self->skip_module($dist_name);
 
 
     # try the latest
