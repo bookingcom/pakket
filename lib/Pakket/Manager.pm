@@ -7,6 +7,7 @@ use Carp     qw< croak >;
 use Safe::Isa;
 
 use Pakket::Log;
+use Pakket::Scaffolder::Native;
 use Pakket::Scaffolder::Perl;
 
 has 'config' => (
@@ -68,6 +69,11 @@ has 'no_bootstrap' => (
     'is'        => 'ro',
     'isa'       => 'Bool',
     'default'   => 0,
+);
+
+has 'source_archive' => (
+    'is'        => 'ro',
+    'isa'       => 'Maybe[Str]',
 );
 
 sub _build_category {
@@ -252,6 +258,8 @@ sub _get_scaffolder {
 
     $self->category eq 'perl'
         and return $self->_gen_scaffolder_perl;
+    $self->category eq 'native'
+        and return $self->_gen_scaffolder_native;
 
     croak("Scaffolder for category " . $self->category . " doesn't exist");
 }
@@ -293,6 +301,21 @@ sub _gen_scaffolder_perl {
         and $params{'no_bootstrap'} = $self->no_bootstrap;
 
     return Pakket::Scaffolder::Perl->new(%params);
+}
+
+sub _gen_scaffolder_native {
+    my $self = shift;
+
+    my $name = $self->package->name;
+    my $version = $self->package->version;
+
+    my %params = (
+        'package'         => $self->package,
+        'source_archive'  => $self->source_archive,
+        'config'          => $self->config,
+    );
+
+    return Pakket::Scaffolder::Native->new(%params);
 }
 
 __PACKAGE__->meta->make_immutable;

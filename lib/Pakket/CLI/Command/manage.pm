@@ -43,6 +43,7 @@ sub opt_spec {
         [ 'is-local=s@',  'do not use upstream sources (i.e. CPAN) for given packages' ],
         [ 'requires-only', 'do not set recommended/suggested dependencies' ],
         [ 'no-bootstrap',  'skip bootstrapping phase (toolchain packages)' ],
+        [ 'source-archive=s', 'archve with sources (optional, only for native)' ],
     );
 }
 
@@ -82,6 +83,7 @@ sub execute {
         requires_only   => $self->{'opt'}{'requires_only'},
         no_bootstrap    => $self->{'opt'}{'no_bootstrap'},
         is_local        => $is_local,
+        source_archive  => $self->{'source_archive'},
     );
 
     if ( $command eq 'add' ) {
@@ -207,6 +209,7 @@ sub _validate_args_add {
     my $additional_phase = $self->{'opt'}{'additional_phase'};
 
     $self->{'file_02packages'} = $self->{'opt'}{'cpan_02packages'};
+    $self->{'source_archive'}  = $self->{'opt'}{'source_archive'};
 
     if ( $cpanfile ) {
         @{ $self->{'args'} }
