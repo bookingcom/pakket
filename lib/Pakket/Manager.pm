@@ -114,6 +114,17 @@ SHOW
         }
     }
 
+    if ($spec->{'build_opts'}) {
+        print "build options:\n";
+        if ($spec->{'build_opts'}{'configure_flags'}) {
+            print "    configure flags:\n";
+            for my $flag (@{$spec->{'build_opts'}{'configure_flags'}}) {
+                print "        $flag\n";
+            }
+        }
+        print "\n";
+    }
+
     # TODO: reverse dependencies (requires map)
 }
 
