@@ -23,12 +23,16 @@ sub build_package {
     };
 
     my $configurator;
+    my @configurator_flags = ('--prefix=' . $prefix->absolute);
     if ( -f $build_dir->child('configure') ) {
         $configurator = './configure';
     } elsif ( -f $build_dir->child('config') ) {
         $configurator = './config';
     } elsif ( -f $build_dir->child('Configure') ) {
         $configurator = './Configure';
+    } elsif ( -e $build_dir->child('cmake') ) {
+        $configurator = 'cmake';
+        @configurator_flags = ('-DCMAKE_INSTALL_PREFIX=' . $prefix->absolute, '.') ;
     } else {
         croak( $log->critical( "Don't know how to configure native package '$package'"
                 . " (Cannot find executale '[Cc]onfigure' or 'config')" ) );
@@ -40,7 +44,7 @@ sub build_package {
         [
             $build_dir,
             [
-                $configurator, '--prefix=' . $prefix->absolute,
+                $configurator, @configurator_flags,
                 @{$flags},
             ],
             $opts,

@@ -15,7 +15,8 @@ sub build_package {
 
     if (   $build_dir->child('configure')->exists
         || $build_dir->child('config')->exists
-        || $build_dir->child('Configure')->exists )
+        || $build_dir->child('Configure')->exists
+        || $build_dir->child('cmake')->exists )
     {
         my $builder = Pakket::Builder::Native::Makefile->new();
         $builder->build_package( $package, $build_dir, $prefix, $flags );
