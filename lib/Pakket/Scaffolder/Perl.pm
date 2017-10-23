@@ -772,9 +772,11 @@ sub load_pakket_json {
 
     # Section 'module_to_distribution'
     # Using to map module->distribution for local not-CPAN modules
-    for my $module_name ( keys %{$data->{'module_to_distribution'}}  ) {
-        my $dist_name = $data->{'module_to_distribution'}{$module_name};
-        $self->dist_name->{$module_name} = $dist_name;
+    if ($data->{'module_to_distribution'}) {
+        for my $module_name ( keys %{$data->{'module_to_distribution'}}  ) {
+            my $dist_name = $data->{'module_to_distribution'}{$module_name};
+            $self->dist_name->{$module_name} = $dist_name;
+        }
     }
 }
 
