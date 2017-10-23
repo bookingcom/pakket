@@ -131,6 +131,12 @@ has 'dist_name' => (
     'default' => sub { +{} },
 );
 
+has 'pakket_json' => (
+    'is'      => 'ro',
+    'isa'     => 'HashRef',
+    'default' => sub { return +{} },
+);
+
 sub _build_metacpan_api {
     my $self = shift;
     return $ENV{'PAKKET_METACPAN_API'}
@@ -391,6 +397,8 @@ sub add_spec_for_package {
             $self->scaffold_package( @{$dependency} );
         }
     }
+
+    $self->merge_pakket_json_into_spec($spec);
 
     # We had a partial Package object
     # So now we have to recreate that package object
@@ -776,6 +784,29 @@ sub load_pakket_json {
             my $dist_name = $data->{'module_to_distribution'}{$module_name};
             $self->dist_name->{$module_name} = $dist_name;
         }
+    }
+
+    $self->{'pakket_json'} = $data;
+}
+
+sub merge_pakket_json_into_spec {
+    my ($self, $spec) = @_;
+
+    if ($self->pakket_json->{'prereqs'}) {
+        # package type: perl, native
+        for my $type (keys %{$self->pakket_json->{'prereqs'}}) {
+            # phase: runtime, configure
+            for my $phase (keys %{$self->pakket_json->{'prereqs'}{$type}}) {
+                for my $module (keys %{$self->pakket_json->{'prereqs'}{$type}{$phase}}) {
+                    $spec->{'Prereqs'}{$type}{$phase}{$module}{'version'} =
+                            $self->pakket_json->{'prereqs'}{$type}{$phase}{$module};
+                }
+            }
+        }
+    }
+
+    if ($self->pakket_json->{'build_opts'}) {
+        $spec->{'build_opts'} =  $self->pakket_json->{'build_opts'};
     }
 }
 
