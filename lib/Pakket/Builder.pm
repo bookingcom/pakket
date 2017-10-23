@@ -580,7 +580,7 @@ sub get_configure_flags {
 
     $config or return [];
 
-    my @flags = map +( join '=', $_, $config->{$_} ), keys %{$config};
+    my @flags = @{$config};
 
     $self->_expand_flags_inplace( \@flags, $expand_env );
 
