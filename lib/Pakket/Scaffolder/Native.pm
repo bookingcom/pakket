@@ -4,7 +4,6 @@ package Pakket::Scaffolder::Native;
 use Moose;
 use MooseX::StrictConstructor;
 use Path::Tiny          qw< path >;
-use Types::Path::Tiny   qw< Path  >;
 use Log::Any            qw< $log >;
 
 with qw<
@@ -19,8 +18,7 @@ has 'package' => (
 
 has 'source_archive' => (
     'is'      => 'ro',
-    'isa'     => Path,
-    'coerce'  => 1,
+    'isa'     => 'Maybe[Str]',
 );
 
 sub run {
@@ -51,12 +49,17 @@ sub add_source {
         return;
     }
 
-    if (!$self->source_archive->exists) {
+    if (!$self->source_archive) {
+        Carp::croak("Please specify --source-archive=<sources_file_name>");
+    }
+
+    my $file = path($self->source_archive);
+    if (!$file->exists) {
         Carp::croak("Archive with sources doesn't exist: ", $self->source_archive);
     }
 
     my $target = Path::Tiny->tempdir();
-    my $dir    = $self->unpack($target, $self->source_archive);
+    my $dir    = $self->unpack($target, $file);
 
     $log->debugf("Uploading %s into source repo from %s", $self->package->full_name, $dir);
     $self->source_repo->store_package_source($self->package, $dir);
