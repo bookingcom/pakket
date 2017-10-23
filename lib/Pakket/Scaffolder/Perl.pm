@@ -758,8 +758,7 @@ sub get_release_query {
 
 # parsing Pakket.json
 # Packet.json should be in root directory of package, near META.json
-# We want to put there some pakket settings for packages.
-# Currently it keeps map 'module_to_distribution' for local non-CPAN dependencies.
+# It keeps some settings which we are missing in META.json.
 sub load_pakket_json {
     my ($self, $dir) = @_;
     my $pakket_json = $dir->child('Pakket.json');
