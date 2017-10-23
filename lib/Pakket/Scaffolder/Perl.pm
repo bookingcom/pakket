@@ -766,6 +766,8 @@ sub load_pakket_json {
 
     $pakket_json->exists or return;
 
+    $log->debug("Found Pakket.json");
+
     my $data = decode_json($pakket_json->slurp_utf8);
 
     # Section 'module_to_distribution'
