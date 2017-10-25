@@ -131,12 +131,6 @@ has 'dist_name' => (
     'default' => sub { +{} },
 );
 
-has 'pakket_json' => (
-    'is'      => 'ro',
-    'isa'     => 'HashRef',
-    'default' => sub { return +{} },
-);
-
 sub _build_metacpan_api {
     my $self = shift;
     return $ENV{'PAKKET_METACPAN_API'}
@@ -398,7 +392,7 @@ sub add_spec_for_package {
         }
     }
 
-    $self->merge_pakket_json_into_spec($spec);
+    $self->merge_pakket_json_into_spec($package, $spec);
 
     # We had a partial Package object
     # So now we have to recreate that package object
@@ -773,7 +767,7 @@ sub load_pakket_json {
 
     $pakket_json->exists or return;
 
-    $log->debug("Found Pakket.json");
+    $log->debug("Found Pakket.json in $dir");
 
     my $data = decode_json($pakket_json->slurp_utf8);
 
@@ -785,28 +779,31 @@ sub load_pakket_json {
             $self->dist_name->{$module_name} = $dist_name;
         }
     }
-
-    $self->{'pakket_json'} = $data;
+    return $data;
 }
 
 sub merge_pakket_json_into_spec {
-    my ($self, $spec) = @_;
+    my ($self, $package, $spec) = @_;
 
-    if ($self->pakket_json->{'prereqs'}) {
+    my $src_dir = $self->source_repo->retrieve_package_source($package);
+
+    my $pakket_json = $self->load_pakket_json($src_dir);
+
+    if ($pakket_json->{'prereqs'}) {
         # package type: perl, native
-        for my $type (keys %{$self->pakket_json->{'prereqs'}}) {
+        for my $type (keys %{$pakket_json->{'prereqs'}}) {
             # phase: runtime, configure
-            for my $phase (keys %{$self->pakket_json->{'prereqs'}{$type}}) {
-                for my $module (keys %{$self->pakket_json->{'prereqs'}{$type}{$phase}}) {
+            for my $phase (keys %{$pakket_json->{'prereqs'}{$type}}) {
+                for my $module (keys %{$pakket_json->{'prereqs'}{$type}{$phase}}) {
                     $spec->{'Prereqs'}{$type}{$phase}{$module}{'version'} =
-                            $self->pakket_json->{'prereqs'}{$type}{$phase}{$module};
+                            $pakket_json->{'prereqs'}{$type}{$phase}{$module};
                 }
             }
         }
     }
 
-    if ($self->pakket_json->{'build_opts'}) {
-        $spec->{'build_opts'} =  $self->pakket_json->{'build_opts'};
+    if ($pakket_json->{'build_opts'}) {
+        $spec->{'build_opts'} =  $pakket_json->{'build_opts'};
     }
 }
 
