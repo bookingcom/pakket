@@ -6,6 +6,7 @@ use MooseX::StrictConstructor;
 use Pakket::Types;
 use Pakket::Constants qw< PAKKET_DEFAULT_RELEASE >;
 use JSON::MaybeXS qw< decode_json >;
+use version 0.77;
 
 with qw< Pakket::Role::BasicPackageAttrs >;
 
@@ -54,6 +55,16 @@ has 'runtime_prereqs' => (
     'lazy'    => 1,
     'builder' => '_build_runtime_prereqs',
 );
+
+sub BUILDARGS {
+    my ( $class, %args ) = @_;
+    if ($args{'category'} eq 'perl') {
+        my $ver = version->new($args{'version'});
+        if ($ver->is_qv) {$ver = version->new($ver->normal)};
+        $args{'version'} = $ver->stringify();
+    }
+    return \%args;
+}
 
 sub _build_configure_prereqs {
     my $self    = shift;

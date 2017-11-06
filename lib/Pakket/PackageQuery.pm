@@ -6,6 +6,7 @@ use MooseX::StrictConstructor;
 
 use Carp              qw< croak >;
 use Log::Any          qw< $log >;
+use version 0.77;
 use Pakket::Constants qw<
     PAKKET_PACKAGE_SPEC
     PAKKET_DEFAULT_RELEASE
@@ -32,6 +33,16 @@ has 'is_bootstrap' => (
     'isa'     => 'Bool',
     'default' => sub {0},
 );
+
+sub BUILDARGS {
+    my ( $class, %args ) = @_;
+    if ($args{'category'} eq 'perl') {
+        my $ver = version->new($args{'version'});
+        if ($ver->is_qv) {$ver = version->new($ver->normal)};
+        $args{'version'} = $ver->stringify();
+    }
+    return \%args;
+}
 
 sub new_from_string {
     my ( $class, $req_str ) = @_;
