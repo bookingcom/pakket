@@ -21,8 +21,14 @@ use Pakket::Constants qw<
     PAKKET_VALID_PHASES
 >;
 
-sub abstract    { 'Scaffold a project' }
-sub description { 'Scaffold a project' }
+sub abstract    { 'Manage Pakket packages and repositories' }
+sub description { return <<'_END_DESC';
+This command manages Pakket packages across repositories.
+It allows you to add new specs, sources, and packages, as well
+as edit existing ones, and view your repositories.
+_END_DESC
+}
+
 
 sub opt_spec {
     return (

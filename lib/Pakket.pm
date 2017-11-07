@@ -12,7 +12,7 @@ __END__
 
 =head1 DESCRIPTION
 
-Pakket is a meta-packaging system that allows you to manage your system
+Pakket is a meta-packaging system that allows you to manage
 dependencies. It works by trying to avoid work.
 
 =head2 What can you do with Pakket?
