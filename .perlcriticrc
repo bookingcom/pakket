@@ -496,7 +496,7 @@ equivalent_modules = Moo Moo::Role
 
 # 0.0.9
 [Perlsecret]
-allow_secrets = Bang Bang, Venus, Winking Fat Comma, Enterprise
+allow_secrets = Bang Bang, Venus, Winking Fat Comma, Enterprise, Baby Cart
 
 #--------------------------------------
 # - Perl::Critic::Policy::HTTPCookies -
