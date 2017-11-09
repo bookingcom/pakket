@@ -32,7 +32,7 @@ _END_DESC
 my %commands = map +( $_ => 1 ), qw<
     add-package
     remove-package
-    list-package
+    show-package
     remove-parcel
     add-deps
     list-deps
@@ -127,7 +127,7 @@ sub execute {
         'list-specs'     => sub { $manager->list_ids('spec'); },
         'list-sources'   => sub { $manager->list_ids('source'); },
         'list-parcels'   => sub { $manager->list_ids('parcel'); },
-        'list-package'   => sub { $manager->show_package_config; },
+        'show-package'   => sub { $manager->show_package_config; },
         'list-deps'      => sub { $manager->show_package_deps; },
     );
 
@@ -154,7 +154,7 @@ sub _validate_repos {
         'add-package'    => [ 'spec', 'source' ],
         'remove-package' => [ 'spec', 'source' ],
         'remove-parcel'  => [ 'parcel' ],
-        'list-package'   => [ 'spec'   ],
+        'show-package'   => [ 'spec'   ],
         'add-deps'       => [ 'spec'   ],
         'remove-deps'    => [ 'spec'   ],
         'list-deps'      => [ 'spec'   ],
@@ -202,7 +202,7 @@ sub _validate_arg_command {
     $command eq 'remove-package' and $self->_validate_args_remove;    # FIXME: Rename method
     $command eq 'remove-parcel'  and $self->_validate_args_remove_parcel;
     $command eq 'list-deps'      and $self->_validate_args_show_deps; # FIXME: Rename method
-    $command eq 'list-package'   and $self->_validate_args_show;      # FIXME: Rename method
+    $command eq 'show-package'   and $self->_validate_args_show;      # FIXME: Rename method
 
     $command eq 'add-deps' || $command eq 'remove-deps'
        and $self->_validate_args_dependency;
@@ -323,7 +323,7 @@ __END__
 =head1 SYNOPSIS
 
     $ pakket manage add-package perl/Dancer2=0.205000:1
-    $ pakket manage list-package perl/Dancer2=0.205000:1
+    $ pakket manage show-package perl/Dancer2=0.205000:1
     $ pakket manage remove-package perl/Dancer2=0.205000:1
     $ pakket manage remove-parcel perl/Dancer2=0.205000:1
 
