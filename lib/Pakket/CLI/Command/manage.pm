@@ -188,7 +188,7 @@ sub _validate_repos {
 
 sub _validate_arg_command {
     my $self     = shift;
-    my @cmd_list = keys %commands;
+    my @cmd_list = sort keys %commands;
 
     my $command = shift @{ $self->{'args'} }
         or $self->usage_error( "Must pick action (@{[ join '/', @cmd_list ]})" );
