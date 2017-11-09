@@ -41,64 +41,6 @@ my %commands = map +( $_ => 1 ), qw<
     list-parcels
 >;
 
-my %command_aliases = (
-    'add'           => 'add-package',
-    'remove'        => 'remove-package',
-    'remove_parcel' => 'remove-parcel',
-    'show'          => 'list-package',
-    'show-deps'     => 'list-deps',
-
-    'deps'          => sub {
-        # This can be either add-deps or deps-remove
-        my $self = shift;
-        my $opt  = $self->{'opt'};
-
-        $opt->{'add'} || $opt->{'remove'}
-            or $self->usage_error( "Missing arg: add/remove (mandatory for 'deps')" );
-
-        foreach my $type ( qw< add remove > ) {
-            if ( $opt->{$type} ) {
-                scalar keys %{ $opt->{$type} } > 1
-                    and $self->usage_error("Cannot provide multiple --$type");
-
-                my $phase = ( keys %{ $opt->{$type} } )[0];
-
-                $opt->{'phase'} = $phase;
-                $opt->{'on'}    = $opt->{$type}{$phase};
-
-                delete $opt->{$type};
-
-                return "$type-deps";
-            }
-        }
-
-        $self->usage_error("Invalid old deps command: deps");
-    },
-
-    'list'          => sub {
-        # This can be either list-spec, list-source, or list-parcel
-        my $self = shift;
-        my $args = $self->{'args'};
-
-        $args && @{$args}
-            or $self->usage_error('Not enough arguments for list');
-
-        if ( $args->[0] eq 'parcels' ) {
-            shift @{$args};
-            return 'list-parcels';
-        } elsif ( $args->[0] eq 'specs' ) {
-            shift @{$args};
-            return 'list-specs';
-        } elsif ( $args->[0] eq 'sources' ) {
-            shift @{$args};
-            return 'list-sources';
-        }
-
-        $self->usage_error("Invalid old deps command: list $args->[0]");
-    },
-);
-
-
 sub opt_spec {
     return (
         [ 'cpanfile=s',   'cpanfile to configure from' ],
@@ -119,8 +61,6 @@ sub opt_spec {
         [ 'requires-only', 'do not set recommended/suggested dependencies' ],
         [ 'no-bootstrap',  'skip bootstrapping phase (toolchain packages)' ],
         [ 'source-archive=s', 'archve with sources (optional, only for native)' ],
-        [ 'add=s%',       '[DEPRECATED] (deps) add the following dependency (phase=category/name=version[:release])' ],
-        [ 'remove=s%',    '[DEPRECATED] (deps) remove the following dependency (phase=category/name=version[:release])' ],
     );
 }
 
@@ -163,32 +103,35 @@ sub execute {
         source_archive  => $self->{'source_archive'},
     );
 
-    if ( $command eq 'add-package' ) {
-        $manager->add_package;
+    my %actions = (
+        'add-package'    => sub { $manager->add_package; },
+        'remove-package' => sub {
+            # TODO: check we are allowed to remove package (dependencies)
+            $manager->remove_package('spec');
+            $manager->remove_package('source');
+        },
 
-    } elsif ( $command eq 'remove-package' ) {
-        # TODO: check we are allowed to remove package (dependencies)
-        $manager->remove_package('spec');
-        $manager->remove_package('source');
+        'remove-parcel'  => sub {
+            # TODO: check we are allowed to remove package (dependencies)
+            $manager->remove_package('parcel');
+        },
 
-    } elsif ( $command eq 'remove-parcel' ) {
-        # TODO: check we are allowed to remove package (dependencies)
-        $manager->remove_package('parcel');
+        'add-deps'       => sub {
+            $manager->add_dependency( $self->{'dependency'} );
+        },
 
-    } elsif ( $command eq 'add-deps' ) {
-        $manager->add_dependency( $self->{'dependency'} );
-    } elsif ( $command eq 'remove-deps' ) {
-        $manager->remove_dependency( $self->{'dependency'} );
+        'remove-deps'    => sub {
+            $manager->remove_dependency( $self->{'dependency'} );
+        },
 
-    } elsif ( $command =~ m{^ list- (spec | source | parcel) s $}xms ) {
-        # list-parcel list-spec list-source
-        $manager->list_ids( $self->{'list_type'} );
-    } elsif ( $command eq 'list-package' ) {
-        $manager->show_package_config;
+        'list-specs'     => sub { $manager->list_ids('spec'); },
+        'list-sources'   => sub { $manager->list_ids('source'); },
+        'list-parcels'   => sub { $manager->list_ids('parcel'); },
+        'list-package'   => sub { $manager->show_package_config; },
+        'list-deps'      => sub { $manager->show_package_deps; },
+    );
 
-    } elsif ( $command eq 'list-deps' ) {
-        $manager->show_package_deps;
-    }
+    return $actions{$command}->();
 }
 
 sub _read_config {
@@ -250,10 +193,6 @@ sub _validate_arg_command {
     my $command = shift @{ $self->{'args'} }
         or $self->usage_error( "Must pick action (@{[ join '/', @cmd_list ]})" );
 
-    if ( my $alias = $command_aliases{$command} ) {
-        $command = is_coderef($alias) ? $alias->($self) : $alias;
-    }
-
     $commands{$command}
         or $self->usage_error( "Wrong command (@{[ join '/', @cmd_list ]})" );
 
@@ -267,10 +206,6 @@ sub _validate_arg_command {
 
     $command eq 'add-deps' || $command eq 'remove-deps'
        and $self->_validate_args_dependency;
-
-   # list-parcel list-spec list-source
-    $command =~ m{^ (?: list- ( parcel | spec | source ) s ) $}xms
-        and $self->{'list_type'} = $1;
 }
 
 sub _validate_arg_cache_dir {
@@ -328,8 +263,7 @@ sub _validate_args_dependency {
     # spec
     $self->_read_set_spec_str;
 
-    # Old: pakket manage deps --add | --remove runtime=Moo perl/Dancer2=...
-    # New: pakket manage add-deps perl/Dancer2=... --phase runtime --on perl/Moo=2.000
+    # pakket manage add-deps perl/Dancer2=0.9 --phase runtime --on perl/Moo=2
     defined $opt->{$_} or $self->usage_error("Missing argument $_")
         for qw< phase on >;
 
