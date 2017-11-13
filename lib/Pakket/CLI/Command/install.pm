@@ -130,23 +130,6 @@ sub execute {
         return $installer->show_installed();
     }
 
-    if ( $opt->{'ignore_failures'} ) {
-        foreach my $package ( @{ $opt->{'packages'} } ) {
-            my $installer = _create_installer($opt);
-
-            eval {
-                $installer->install($package);
-                1;
-            } or do {
-                my $error = $@ || 'Zombie error';
-                $log->warnf( 'Failed to install %s, skipping.',
-                    $package->full_name );
-            };
-        }
-
-        return;
-    }
-
     my $installer = _create_installer($opt);
     return $installer->install( @{ $opt->{'packages'} } );
 }
@@ -155,9 +138,10 @@ sub _create_installer {
     my $opt = shift;
 
     return Pakket::Installer->new(
-        'config'     => $opt->{'config'},
-        'pakket_dir' => $opt->{'config'}{'install_dir'},
-        'force'      => $opt->{'force'},
+        'config'          => $opt->{'config'},
+        'pakket_dir'      => $opt->{'config'}{'install_dir'},
+        'force'           => $opt->{'force'},
+        'ignore_failures' => $opt->{'ignore_failures'},
     );
 }
 

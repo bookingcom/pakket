@@ -44,6 +44,12 @@ has 'requirements' => (
     'default' => sub { +{} },
 );
 
+has 'ignore_failures' => (
+    'is'      => 'ro',
+    'isa'     => 'Bool',
+    'default' => sub {0},
+);
+
 sub install {
     my ( $self, @packages ) = @_;
 
@@ -62,11 +68,17 @@ sub install {
     my $installer_cache = {};
 
     foreach my $package (@packages) {
-        $self->install_package(
-            $package,
-            $self->work_dir,
-            { 'cache' => $installer_cache }
-        );
+        eval {
+            $self->install_package(
+                $package,
+                $self->work_dir,
+                { 'cache' => $installer_cache }
+            );
+            1;
+        } or do {
+            $self->ignore_failures or die $@;
+            $log->warnf( 'Failed to install %s, skipping', $package->full_name);
+        };
     }
 
     $self->activate_work_dir;
