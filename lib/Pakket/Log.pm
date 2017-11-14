@@ -95,8 +95,19 @@ sub build_logger {
 }
 
 sub _build_logger {
-    my $class = shift;
-    my $file  = shift || Path::Tiny::path('/tmp/build.log')->stringify;
+    my ($class, $file) = @_;
+
+    if (!$file) {
+        my $dir = Path::Tiny::path('~/.pakket');
+        eval {
+            $dir->mkpath;
+            1;
+        } or do {
+            die "Can't create directory $dir : " . $!;
+        };
+
+        $file = $dir->child("pakket.log")->stringify;
+    }
 
     return [
         'File',
