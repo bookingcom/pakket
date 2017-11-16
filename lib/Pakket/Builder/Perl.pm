@@ -12,7 +12,7 @@ use Carp ();
 with qw<Pakket::Role::Builder>;
 
 sub build_package {
-    my ( $self, $package, $build_dir, $prefix, $flags ) = @_;
+    my ( $self, $package, $build_dir, $prefix, $config_flags, $build_flags ) = @_;
 
     $log->info("Building Perl module: $package");
 
@@ -61,7 +61,7 @@ sub build_package {
 
         # If you have Module::Build, we can use it!
         if ($has_module_build) {
-            @seq = $self->_build_pl_cmds( $build_dir, $install_base, $flags, $opts );
+            @seq = $self->_build_pl_cmds( $build_dir, $install_base, $config_flags, $build_flags, $opts );
         } else {
             $log->warn(
                 'Defined Build.PL but can\'t load Module::Build. Will try Makefile.PL',
@@ -70,7 +70,7 @@ sub build_package {
     }
 
     if ($has_makefile_pl && !@seq) {
-        @seq = $self->_makefile_pl_cmds( $build_dir, $install_base, $flags, $opts );
+        @seq = $self->_makefile_pl_cmds( $build_dir, $install_base, $config_flags, $build_flags, $opts );
     }
 
     @seq or Carp::croak('Could not find an installer (Makefile.PL/Build.PL)');
@@ -87,18 +87,18 @@ sub build_package {
 }
 
 sub _build_pl_cmds {
-    my ( $self, $build_dir, $install_base, $flags, $opts ) = @_;
+    my ( $self, $build_dir, $install_base, $config_flags, $build_flags, $opts ) = @_;
     return (
 
         # configure
         [
             $build_dir,
-            [ 'perl', '-f', 'Build.PL', '--install_base', $install_base, @{$flags} ],
+            [ 'perl', '-f', 'Build.PL', '--install_base', $install_base, @{$config_flags} ],
             $opts,
         ],
 
         # build
-        [ $build_dir, [ 'perl', '-f', './Build' ], $opts ],
+        [ $build_dir, [ 'perl', '-f', './Build', @{$build_flags} ], $opts ],
 
         # install
         [ $build_dir, [ 'perl', '-f', './Build', 'install' ], $opts ],
@@ -106,18 +106,18 @@ sub _build_pl_cmds {
 }
 
 sub _makefile_pl_cmds {
-    my ( $self, $build_dir, $install_base, $flags, $opts ) = @_;
+    my ( $self, $build_dir, $install_base, $config_flags, $build_flags, $opts ) = @_;
     return (
 
         # configure
         [
             $build_dir,
-            [ 'perl', '-f', 'Makefile.PL', "INSTALL_BASE=$install_base", @{$flags} ],
+            [ 'perl', '-f', 'Makefile.PL', "INSTALL_BASE=$install_base", @{$config_flags} ],
             $opts,
         ],
 
         # build
-        [ $build_dir, ['make'], $opts ],
+        [ $build_dir, ['make', @{$build_flags}], $opts ],
 
         # install
         [ $build_dir, [ 'make', 'install' ], $opts ],

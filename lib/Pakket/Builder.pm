@@ -391,9 +391,14 @@ sub run_build {
     # FIXME: This shouldn't just be configure flags
     # we should allow the builder to have access to a general
     # metadata chunk which *might* include configure flags
+    my %env_vars = generate_env_vars( $top_build_dir, $main_build_dir );
     my $configure_flags = $self->get_configure_flags(
         $package->build_opts->{'configure_flags'},
-        { %ENV, generate_env_vars( $top_build_dir, $main_build_dir ) },
+        { %ENV, %env_vars },
+    );
+    my $build_flags = $self->get_configure_flags(
+        $package->build_opts->{'build_flags'},
+        { %ENV, %env_vars },
     );
 
     if ( my $builder = $self->builders->{ $package->category } ) {
@@ -416,6 +421,7 @@ sub run_build {
             $package_dst_dir,
             $main_build_dir,
             $configure_flags,
+            $build_flags,
         );
     } else {
         croak( $log->criticalf(

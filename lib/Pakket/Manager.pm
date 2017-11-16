@@ -128,6 +128,12 @@ SHOW
                 print "        $flag\n";
             }
         }
+        if ($spec->{'build_opts'}{'build_flags'}) {
+            print "    build flags:\n";
+            for my $flag (@{$spec->{'build_opts'}{'build_flags'}}) {
+                print "        $flag\n";
+            }
+        }
         print "\n";
     }
 
