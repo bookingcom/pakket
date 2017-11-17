@@ -396,6 +396,7 @@ sub run_build {
         $package->build_opts->{'configure_flags'},
         { %ENV, %env_vars },
     );
+
     my $build_flags = $self->get_configure_flags(
         $package->build_opts->{'build_flags'},
         { %ENV, %env_vars },
@@ -416,6 +417,15 @@ sub run_build {
         # we have to keep original mtime for files from tar archive
         fix_timestamps($package_src_dir, $package_dst_dir);
 
+        if ( $package->build_opts->{'pre_build'} ) {
+            foreach my $cmd ( @{ $package->build_opts->{'pre_build'} } ) {
+                $self->run_command(
+                    $package_src_dir,
+                    [$cmd],
+                );
+            }
+        }
+
         $builder->build_package(
             $package->name,
             $package_dst_dir,
@@ -423,6 +433,15 @@ sub run_build {
             $configure_flags,
             $build_flags,
         );
+
+        if ( $package->build_opts->{'post_build'} ) {
+            foreach my $cmd ( @{ $package->build_opts->{'post_build'} } ) {
+                $self->run_command(
+                    $package_src_dir,
+                    [$cmd],
+                );
+            }
+        }
     } else {
         croak( $log->criticalf(
             'I do not have a builder for category %s.',
