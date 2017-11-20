@@ -48,6 +48,22 @@ has 'http_client' => (
     'default'  => sub { HTTP::Tiny->new },
 );
 
+
+sub BUILD {
+    my $self = shift;
+
+    # check that repo exists
+
+    # TODO: should we create dedicated endpoint to check existence of repo
+    # because all_object_ids may be too heavy?
+    my $url = $self->base_url . '/all_object_ids';
+    my $response = $self->http_client->get($url);
+    if ( !$response->{'success'} ) {
+        croak( $log->criticalf( 'Could not connect to repository %s : %d -- %s',
+            $url, $response->{'status'}, $response->{'reason'} ) );
+    }
+}
+
 sub _build_base_url {
     my $self = shift;
     return sprintf(

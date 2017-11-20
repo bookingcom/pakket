@@ -4,6 +4,7 @@ package Pakket::Repository::Backend::File;
 use Moose;
 use MooseX::StrictConstructor;
 
+use Carp              qw< croak >;
 use JSON::MaybeXS     qw< decode_json >;
 use Path::Tiny        qw< path >;
 use Log::Any          qw< $log >;
@@ -44,6 +45,13 @@ has 'pretty_json' => (
     'isa'     => 'Bool',
     'default' => sub {1},
 );
+
+sub BUILD {
+    my $self = shift;
+    if (!$self->directory->exists) {
+        croak( $log->criticalf("Directory %s doesn't exist", $self->directory));
+    }
+}
 
 sub repo_index {
     my $self = shift;
