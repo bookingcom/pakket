@@ -214,6 +214,7 @@ sub copy_package_to_install_dir {
             and next;
 
         my $target_dir = $dir->child($basename);
+        local $File::Copy::Recursive::RMTrgFil = 1;
         dircopy($item, $target_dir)
             or croak($log->criticalf("Can't copy $item to $target_dir ($!)"));
     }
