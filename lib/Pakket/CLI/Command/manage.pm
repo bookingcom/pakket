@@ -95,7 +95,7 @@ sub execute {
         cpanfile        => $self->{'cpanfile'},
         cache_dir       => $self->{'cache_dir'},
         phases          => $self->{'gen_phases'},
-        package         => $self->{'spec'},
+        package         => $self->{'package'},
         file_02packages => $self->{'file_02packages'},
         no_deps         => $self->{'opt'}{'no_deps'},
         requires_only   => $self->{'opt'}{'requires_only'},
@@ -232,10 +232,10 @@ sub _validate_args_add {
 
     if ( $cpanfile ) {
         @{ $self->{'args'} }
-            and $self->usage_error( "You can't have both a 'spec' and a 'cpanfile'\n" );
+            and $self->usage_error( "You can't have both a 'package' and a 'cpanfile'\n" );
         $self->{'cpanfile'} = $cpanfile;
     } else {
-        $self->_read_set_spec_str;
+        $self->_read_set_package_str;
     }
 
     # TODO: config ???
@@ -249,26 +249,26 @@ sub _validate_args_add {
 
 sub _validate_args_remove {
     my $self = shift;
-    $self->_read_set_spec_str;
+    $self->_read_set_package_str;
 }
 
 sub _validate_args_remove_parcel {
     my $self = shift;
-    $self->_read_set_spec_str;
+    $self->_read_set_package_str;
 }
 
 sub _validate_args_dependency {
     my $self = shift;
     my $opt  = $self->{'opt'};
 
-    # spec
-    $self->_read_set_spec_str;
+    # package
+    $self->_read_set_package_str;
 
     # pakket manage add-deps perl/Dancer2=0.9 --phase runtime --on perl/Moo=2
     defined $opt->{$_} or $self->usage_error("Missing argument $_")
         for qw< phase on >;
 
-    my $dep = $self->_read_spec_str( $opt->{'on'} );
+    my $dep = $self->_read_package_str( $opt->{'on'} );
 
     defined $dep->{'version'}
         or $self->usage_error( "Invalid dependency: missing version" );
@@ -279,15 +279,15 @@ sub _validate_args_dependency {
 
 sub _validate_args_show {
     my $self = shift;
-    $self->_read_set_spec_str;
+    $self->_read_set_package_str;
 }
 
 sub _validate_args_show_deps {
     my $self = shift;
-    $self->_read_set_spec_str;
+    $self->_read_set_package_str;
 }
 
-sub _read_spec_str {
+sub _read_package_str {
     my ( $self, $spec_str ) = @_;
 
     my $spec;
@@ -306,13 +306,13 @@ sub _read_spec_str {
     return $spec;
 }
 
-sub _read_set_spec_str {
+sub _read_set_package_str {
     my $self = shift;
 
     my $spec_str = shift @{ $self->{'args'} };
     $spec_str or $self->usage_error( "Must provide a package id (category/name=version:release)" );
 
-    $self->{'spec'} = $self->_read_spec_str($spec_str);
+    $self->{'package'} = $self->_read_package_str($spec_str);
 }
 
 1;
