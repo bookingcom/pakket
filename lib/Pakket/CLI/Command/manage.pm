@@ -14,7 +14,6 @@ use Pakket::Log;
 use Pakket::Config;
 use Pakket::Manager;
 use Pakket::PackageQuery;
-use Pakket::Requirement;
 use Pakket::Utils::Repository qw< gen_repo_config >;
 use Pakket::Constants qw<
     PAKKET_PACKAGE_SPEC
@@ -290,13 +289,7 @@ sub _validate_args_show_deps {
 sub _read_package_str {
     my ( $self, $spec_str ) = @_;
 
-    my $spec;
-    if ( $self->{'command'} eq 'add-package' ) {
-        my ( $c, $n, $v ) = $spec_str =~ PAKKET_PACKAGE_SPEC();
-        !defined $v and $spec = Pakket::Requirement->new( category => $c, name => $n );
-    }
-
-    $spec //= Pakket::PackageQuery->new_from_string($spec_str);
+    my $spec = Pakket::PackageQuery->new_from_string($spec_str);
 
     # add supported categories
     if ( !( $spec->category eq 'perl' or $spec->category eq 'native' ) ) {

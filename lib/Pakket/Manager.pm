@@ -294,18 +294,8 @@ sub _gen_scaffolder_perl {
 
     if ( $self->cpanfile ) {
         $params{'cpanfile'} = $self->cpanfile;
-
     } else {
-        my $name = $self->package->name;
-        my $version = $self->package->version;
-        if (defined $version && $self->package->$_isa('Pakket::PackageQuery')) {
-            # hack to pass exact version in prereq syntax
-            # add '==' before number of version
-            $version =~ s/^/== /;
-        }
-
-        $params{'module'}  = $name;
-        $params{'version'} = $version;
+        $params{'module'} = $self->package;
     }
 
     $self->cache_dir

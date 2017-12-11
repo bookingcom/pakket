@@ -181,11 +181,17 @@ sub BUILDARGS {
         unless $module xor $cpanfile;
 
     if ( $module ) {
-        my ( $version, $phase, $type ) = delete @args{qw< version phase type >};
+        # hack to pass exact version in prereq syntax
+        # add '==' before number of version
+        my $version = $module->version
+                        ? "== " . $module->version
+                        : ">= 0";
+
+        my ( $phase, $type   ) = delete @args{qw< phase type >};
         $args{'modules'} =
             Pakket::Scaffolder::Perl::Module->new(
-                'name' => $module,
-                ( version => $version )x!! defined $version,
+                'name'    => $module->name,
+                'version' => $version,
                 ( phase   => $phase   )x!! defined $phase,
                 ( type    => $type    )x!! defined $type,
             )->prereq_specs;
