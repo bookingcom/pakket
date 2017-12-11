@@ -289,14 +289,14 @@ sub _validate_args_show_deps {
 sub _read_package_str {
     my ( $self, $spec_str ) = @_;
 
-    my $spec = Pakket::PackageQuery->new_from_string($spec_str);
+    my $package = Pakket::PackageQuery->new_from_string($spec_str);
 
     # add supported categories
-    if ( !( $spec->category eq 'perl' or $spec->category eq 'native' ) ) {
+    if ( !( $package->category eq 'perl' or $package->category eq 'native' ) ) {
         $self->usage_error( "Wrong 'name' format\n" );
     }
 
-    return $spec;
+    return $package;
 }
 
 sub _read_set_package_str {
