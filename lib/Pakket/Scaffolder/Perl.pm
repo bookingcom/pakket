@@ -295,17 +295,20 @@ sub add_source_for_package {
     my $download_url = $self->rewrite_download_url( $release_info->{'download_url'} );
 
     if ( $self->_has_cache_dir ) {
-        my $from_name = $download_url
-            ? $download_url =~ s{^.+/}{}r
-            : $package_name . '-' . $release_info->{'version'} . '.tar.gz';
-
-        my $from_file = path( $self->cache_dir, $from_name );
-        if ( $from_file->exists ) {
+        my $from_file;
+        if ($download_url) {
+            my $name_ver = $download_url =~ s{^.+/}{}r;
+            $from_file = path($self->cache_dir, $name_ver);
+            $from_file->exists or $from_file = undef;
+        } else {
+            $from_file = $self->get_source_archive_path($package_name,
+                    $release_info->{'version'}, $release_info->{'release'});
+        }
+        if ( $from_file ) {
             $log->debugf( 'Found source for %s in %s',
                             $package_name, $from_file->stringify);
 
             $self->upload_source_archive( $package, $from_file );
-
             return;
         }
     }
@@ -556,8 +559,8 @@ sub get_release_info_local {
     my $full_ver = $requirements->{$package_name} =~ s/^[=\ ]+//r;
     my ($ver, $release) = split(/:/, $full_ver);
     my $prereqs;
-    my $from_file = path( $self->cache_dir, $package_name . '-' . $ver . '.' . $release . '.tar.gz' );
-    if ( $from_file->exists ) {
+    my $from_file = $self->get_source_archive_path($package_name, $ver, $release);
+    if ( $from_file ) {
         my $target = Path::Tiny->tempdir();
         my $dir    = $self->unpack( $target, $from_file );
         $self->load_pakket_json($dir);
@@ -573,7 +576,7 @@ sub get_release_info_local {
             $log->warn("Can't find META.json or META.yml in $from_file");
         }
     } else {
-        Carp::croak("Can't find source file $from_file for package $package_name");
+        Carp::croak("Can't find source file for package $package_name");
     }
 
     return +{
@@ -796,6 +799,23 @@ sub merge_pakket_json_into_spec {
     if ($pakket_json->{'build_opts'}) {
         $spec->{'build_opts'} =  $pakket_json->{'build_opts'};
     }
+}
+
+sub get_source_archive_path {
+    my ($self, $name, $ver, $rel) = @_;
+    $rel //= 1;
+    my @possible_paths = (
+        path( $self->cache_dir, $name . '-' . $ver . '.' . $rel . '.tar.gz' ),
+        path( $self->cache_dir, $name . '-' . $ver . '.tar.gz' ),
+    );
+    for my $path (@possible_paths) {
+        if ($path->exists) {
+            $log->debugf( 'Found archive %s', $path->stringify);
+            return $path;
+        }
+    }
+    $log->debug("Can't find archive in:\n", join("\n", @possible_paths));
+    return 0;
 }
 
 __PACKAGE__->meta->make_immutable;
