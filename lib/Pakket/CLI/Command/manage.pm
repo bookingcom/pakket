@@ -218,6 +218,10 @@ sub _validate_arg_cache_dir {
             or $self->usage_error( "cache-dir: $cache_dir doesn't exist\n" );
         $self->{'cache_dir'} = $cache_dir;
     }
+    if ($self->{'opt'}{'is_local'} and !$self->{'cache_dir'}) {
+        $self->usage_error( "Flag --is-local doesn't make sense without --cache-dir.\n".
+                            "Please specify directory with sources --cache-dir.\n");
+    }
 }
 
 sub _validate_args_add {
