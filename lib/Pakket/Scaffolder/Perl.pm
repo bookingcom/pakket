@@ -8,7 +8,6 @@ use Carp ();
 use Archive::Any;
 use CPAN::DistnameInfo;
 use CPAN::Meta;
-use CPAN::Meta::Prereqs;
 use Parse::CPAN::Packages::Fast;
 use JSON::MaybeXS       qw< decode_json encode_json >;
 use Ref::Util           qw< is_arrayref is_hashref >;
@@ -59,13 +58,6 @@ has 'processed_packages' => (
 has 'modules' => (
     'is'  => 'ro',
     'isa' => 'HashRef',
-);
-
-has 'prereqs' => (
-    'is'      => 'ro',
-    'isa'     => 'CPAN::Meta::Prereqs',
-    'lazy'    => 1,
-    'builder' => '_build_prereqs',
 );
 
 has 'download_dir' => (
@@ -138,11 +130,6 @@ sub _build_metacpan_api {
         || 'https://fastapi.metacpan.org';
 }
 
-sub _build_prereqs {
-    my $self = shift;
-    return CPAN::Meta::Prereqs->new( $self->modules );
-}
-
 sub _build_download_dir {
     my $self = shift;
     return Path::Tiny->tempdir( 'CLEANUP' => 1 );
@@ -191,7 +178,7 @@ sub BUILDARGS {
         $args{'modules'} =
             Pakket::Scaffolder::Perl::Module->new(
                 'name'    => $module->name,
-                'version' => $version,
+                'version' => $version . ":" . $module->release,
                 ( phase   => $phase   )x!! defined $phase,
                 ( type    => $type    )x!! defined $type,
             )->prereq_specs;
@@ -202,7 +189,6 @@ sub BUILDARGS {
                 'cpanfile' => $cpanfile
             )->prereq_specs;
     }
-
     return \%args;
 }
 
@@ -212,7 +198,7 @@ sub run {
 
     # Bootstrap toolchain
     if ( !$self->no_bootstrap and !$self->no_deps ) {
-        my $requirements = $self->prereqs->requirements_for(qw< configure requires >);
+        my $requirements = $self->modules->{'configure'}{'requires'};
         for my $package ( @{ $self->perl_bootstrap_modules } ) {
             $log->debugf( 'Bootstrapping toolchain: %s', $package );
             eval {
@@ -230,7 +216,7 @@ sub run {
         for my $type ( @{ $self->types } ) {
             next unless is_hashref( $self->modules->{ $phase }{ $type } );
 
-            my $requirements = $self->prereqs->requirements_for( $phase, $type );
+            my $requirements = $self->modules->{$phase}{$type};
 
             for my $package ( sort keys %{ $self->modules->{ $phase }{ $type } } ) {
                 eval {
@@ -274,7 +260,7 @@ sub scaffold_package {
             'category' => 'perl',
             'name'     => $package_name,
             'version'  => $release_info->{'version'},
-            'release'  => 1, # hmm... ???
+            'release'  => $release_info->{'release'} // 1,
         },
     };
 
@@ -348,7 +334,6 @@ sub add_spec_for_package {
     }
     $log->debugf("Creating spec for %s", $package->full_name);
 
-    my $dep_prereqs = CPAN::Meta::Prereqs->new( $release_info->{'prereqs'} );
 
     my @dependencies_to_scaffold;
 
@@ -363,7 +348,7 @@ sub add_spec_for_package {
 
         for my $dep_type ( @{ $self->types } ) {  # dep_type: requires, recommends
             next unless is_hashref( $release_info->{'prereqs'}->{ $phase }{ $dep_type } );
-            my $dep_requirements = $dep_prereqs->requirements_for( $phase, $dep_type );
+            my $dep_requirements = $release_info->{'prereqs'}{$phase}{$dep_type};
 
             for my $module ( keys %{ $release_info->{'prereqs'}->{ $phase }{ $dep_type } } ) {
                 next if $self->skip_module($module);
@@ -379,7 +364,7 @@ sub add_spec_for_package {
 
                 # TODO: find out correct way to translate module version to package version
                 $spec_req->add_string_requirement( $package_name,
-                            $dep_requirements->requirements_for_module($module) );
+                            $dep_requirements->{$module} );
             }
         }
 
@@ -455,19 +440,18 @@ sub unpack {
 sub is_package_in_spec_repo {
     my ( $self, $package_name, $requirements ) = @_;
 
-    my @versions = map { $_ =~ PAKKET_PACKAGE_SPEC(); $3 }
+    my @versions = map { $_ =~ PAKKET_PACKAGE_SPEC(); "$3:$4" }
         @{ $self->spec_repo->all_object_ids_by_name($package_name, 'perl') };
 
     return 0 unless @versions; # there are no packages
 
-    my $req_as_hash = $requirements->as_string_hash;
-    if (!exists $req_as_hash->{$package_name}) {
+    if (!exists $requirements->{$package_name}) {
         $log->debugf("Skipping %s, already have version: %s",
                         $package_name, join(", ", @versions));
         return 1;
     }
 
-    if ($self->versioner->is_satisfying($req_as_hash->{$package_name}, @versions)) {
+    if ($self->versioner->is_satisfying($requirements->{$package_name}, @versions)) {
         $log->debugf("Skipping %s, already have satisfying version: %s",
                         $package_name, join(", ", @versions));
         return 1;
@@ -569,10 +553,10 @@ sub get_dist_name {
 sub get_release_info_local {
     my ( $self, $package_name, $requirements ) = @_;
 
-    my $req = $requirements->as_string_hash;
-    my $ver = $req->{$package_name} =~ s/^[=\ ]+//r;
+    my $full_ver = $requirements->{$package_name} =~ s/^[=\ ]+//r;
+    my ($ver, $release) = split(/:/, $full_ver);
     my $prereqs;
-    my $from_file = path( $self->cache_dir, $package_name . '-' . $ver . '.tar.gz' );
+    my $from_file = path( $self->cache_dir, $package_name . '-' . $ver . '.' . $release . '.tar.gz' );
     if ( $from_file->exists ) {
         my $target = Path::Tiny->tempdir();
         my $dir    = $self->unpack( $target, $from_file );
@@ -595,6 +579,7 @@ sub get_release_info_local {
     return +{
         'distribution' => $package_name,
         'version'      => $ver,
+        'release'      => $release,
         'prereqs'      => $prereqs,
     };
 }
@@ -610,7 +595,7 @@ sub get_release_info_for_package {
     # try the latest
     my $latest = $self->get_latest_release_info_for_distribution( $package_name );
     if ( $latest->{'version'} && defined $latest->{'download_url'}) {
-        if ($requirements->accepts_module( $package_name => $latest->{'version'} )) {
+        if ($self->versioner->is_satisfying($requirements->{$package_name}, $latest->{'version'})) {
             return $latest;
         }
         $log->debugf("Latest version of %s is %s. Doesn't satisfy requirements. Checking other old versions.",
@@ -642,7 +627,7 @@ sub get_release_info_for_package {
     @valid_versions = sort { version->parse($b) <=> version->parse($a) } @valid_versions;
 
     for my $v ( @valid_versions ) {
-        if ( $requirements->accepts_module($package_name => $v) ) {
+        if ($self->versioner->is_satisfying($requirements->{$package_name}, $v)) {
             $version         = $v;
             $release_prereqs = $all_dist_releases->{$v}{'prereqs'} || {};
             $download_url    =
@@ -655,7 +640,7 @@ sub get_release_info_for_package {
 
     if (!$version) {
         Carp::croak("Cannot find a suitable version for $package_name requirements: "
-                        . $requirements->requirements_for_module($package_name)
+                        . $requirements->{$package_name}
                         . ", available: " . join(', ', @valid_versions));
     }
 
