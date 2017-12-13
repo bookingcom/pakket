@@ -227,8 +227,7 @@ sub _package_dependency_edit {
 
     my ( $category, $phase ) = @{$dependency}{qw< category phase >};
 
-    my $dep_exists = ( defined $spec->{'Prereqs'}{$category}{$phase}{$dep_name}
-                           and $spec->{'Prereqs'}{$category}{$phase}{$dep_name}{'version'} eq $dep_version );
+    my $dep_exists = ( defined $spec->{'Prereqs'}{$category}{$phase}{$dep_name} );
 
     my $name = $self->package->name;
 
