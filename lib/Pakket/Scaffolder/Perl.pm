@@ -168,11 +168,9 @@ sub BUILDARGS {
         unless $module xor $cpanfile;
 
     if ( $module ) {
-        # hack to pass exact version in prereq syntax
-        # add '==' before number of version
         my $version = $module->version
-                        ? "== " . $module->version
-                        : ">= 0";
+                        ? "== " . $module->version  # exact version
+                        : ">= 0";                   # latest version
 
         my ( $phase, $type   ) = delete @args{qw< phase type >};
         $args{'modules'} =
@@ -189,6 +187,7 @@ sub BUILDARGS {
                 'cpanfile' => $cpanfile
             )->prereq_specs;
     }
+
     return \%args;
 }
 
