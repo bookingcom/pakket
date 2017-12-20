@@ -58,6 +58,8 @@ sub install {
         return;
     }
 
+    @packages = $self->set_latest_version_for_undefined(@packages);
+
     foreach (@packages) { $self->requirements->{$_->short_name} = $_ };
 
     if ( !$self->force ) {
@@ -309,6 +311,33 @@ sub drop_installed_packages {
         }
     }
     return @out;
+}
+
+sub set_latest_version_for_undefined {
+    my $self      = shift;
+    my @packages  = @_;
+
+    my @output;
+    for my $package (@packages) {
+        if ($package->version && $package->release) {
+            push @output, $package;
+        } else {
+            my $ver_condition = $package->version
+                ? "== " . $package->version
+                : ">= 0";
+
+            my ($ver, $rel) = @{$self->parcel_repo->latest_version_release(
+                                    $package->category, $package->name, $ver_condition)};
+
+            push @output, Pakket::Package->new(
+                                'category' => $package->category,
+                                'name'     => $package->name,
+                                'version'  => $ver,
+                                'release'  => $rel,
+                            );
+        }
+    }
+    return @output;
 }
 
 __PACKAGE__->meta->make_immutable;

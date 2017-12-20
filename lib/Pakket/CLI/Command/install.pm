@@ -69,18 +69,11 @@ sub _determine_packages {
         my ( $pkg_cat, $pkg_name, $pkg_version, $pkg_release ) =
             $package_str =~ PAKKET_PACKAGE_SPEC();
 
-        if ( !defined $pkg_version || !defined $pkg_release ) {
-            $self->usage_error(
-                'Currently you must provide a version and release to install: '
-                .  $package_str,
-            );
-        }
-
         push @packages, Pakket::Package->new(
             'category' => $pkg_cat,
             'name'     => $pkg_name,
-            'version'  => $pkg_version,
-            'release'  => $pkg_release,
+            'version'  => $pkg_version // 0,
+            'release'  => $pkg_release // 0,
         );
     }
 
