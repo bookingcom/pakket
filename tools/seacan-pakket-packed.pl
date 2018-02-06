@@ -5,251 +5,6 @@
 BEGIN {
 my %fatpacked;
 
-$fatpacked{"App/Seacan.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_SEACAN';
-  package App::Seacan;
-  use strict;
-  use warnings;
-  use constant { 'EXEC_MODE' => '0755' };
-  
-  # Semantic Vesioning: http://semver.org/
-  # Not sure if I want to use v-string, but I do want to follow
-  # semvar as a convention.
-  our $VERSION = "0.1.0";
-  
-  use English qw<-no_match_vars>;
-  use Mo qw<required coerce>;
-  use TOML qw<from_toml>;
-  use Path::Tiny qw<path>;
-  
-  has config => (
-      required => 1,
-      coerce   => sub {
-          my $c = $_[0];
-  
-          if ( !ref($c) && -f $c ) {
-              $c = from_toml( path($c)->slurp_utf8 );
-          }
-  
-          $c->{perl}{installed_as} //= "seacan";
-  
-          return $c;
-      }
-  );
-  
-  sub seacan_perlbrew_root {
-      my $self = shift;
-      return path($self->config->{seacan}{output}, "perlbrew");
-  }
-  
-  sub seacan_perl {
-      my $self = shift;
-      return $self->seacan_perlbrew_root->child(
-          'perls',
-          $self->config->{perl}{installed_as},
-          'bin',
-          'perl',
-     );
-  }
-  
-  sub perl_is_installed {
-      my $self = shift;
-  
-      my $perlbrew_root_path
-          = path( $self->config->{seacan}{output}, 'perlbrew' );
-  
-      $perlbrew_root_path->is_dir
-          or return 0;
-  
-      my $perl_executable = $perlbrew_root_path->child(
-          'perls',
-          $self->config->{perl}{installed_as},
-          'bin',
-          'perl',
-      );
-  
-      if ( $perl_executable->is_file ) {
-          print STDERR "perl is installed: $perl_executable\n";
-          return 1;
-      }
-  
-      return 0;
-  }
-  
-  sub install_perl {
-      my $self = shift;
-  
-      my $perlbrew_root_path = $self->seacan_perlbrew_root;
-  
-      # FIXME: Shouldn't this use 'safe' => 0 ?
-      $perlbrew_root_path->is_dir
-          or $perlbrew_root_path->mkpath();
-  
-      for (keys %ENV) {
-          delete $ENV{$_} if /\APERLBREW_/;
-      }
-      delete $ENV{PERL_CPANM_OPT};
-      delete $ENV{PERL_LOCAL_LIB_ROOT};
-      delete $ENV{PERL_MB_OPT};
-      delete $ENV{PERL_MM_OPT};
-      delete $ENV{PERL5LIB};
-  
-      $ENV{PERLBREW_ROOT} = $perlbrew_root_path;
-  
-      system("curl -L https://install.perlbrew.pl | bash") == 0 or die $!;
-      my $perlbrew_command = path($perlbrew_root_path, "bin", "perlbrew");
-  
-      my @perl_install_cmd = (
-          $perlbrew_command,
-          "install", $self->config->{perl}{version},
-          "--as",    $self->config->{perl}{installed_as},
-  
-          $self->config->{perl}{relocatable_INC}
-              ? ("-Duserelocatableinc")
-              : (),
-  
-          $self->config->{perl}{noman}
-              ? ("--noman")
-              : (),
-  
-          $self->config->{perl}{notest}
-              ? ("--notest")
-              : (),
-  
-          $self->config->{perl}{parallel}
-              ? ("-j", $self->config->{perl}{parallel})
-              : (),
-      );
-      system(@perl_install_cmd) == 0 or die $!;
-  
-      system($perlbrew_command, "install-cpanm", "--force");
-  
-      system($perlbrew_command, "clean");
-  }
-  
-  sub install_cpan {
-      my $self = shift;
-      my $cpanm_command = $self->seacan_perlbrew_root->child( "bin", "cpanm");
-      my $perl_command = $self->seacan_perl;
-  
-      local $OUTPUT_FIELD_SEPARATOR = q{ };
-      my $o = $self->config->{seacan}{output};
-      my $ap = $self->config->{seacan}{app};
-      print STDERR "===> $perl_command $cpanm_command --notest -L $o local --installdeps $ap";
-      system($perl_command, $cpanm_command, "--notest", "-L", path($self->config->{seacan}{output}, "local"), "--installdeps", $self->config->{seacan}{app} ) == 0 or die $!;
-  }
-  
-  sub copy_app {
-      my $self = shift;
-      my $target_directory = path($self->config->{seacan}{output}, "app", $self->config->{seacan}{app_name});
-      my $source_directory = $self->config->{seacan}{app};
-  
-      $target_directory->mkpath();
-  
-      unless ( $source_directory =~ m{/$} ) {
-          # this is telling rsync to copy the contents of $source_directory
-          # instead of $source_directory itself
-          $source_directory .= "/";
-      }
-  
-      system("rsync", "-8vPa", $source_directory, $target_directory) == 0 or die;
-  }
-  
-  sub create_launcher {
-      # Instead of giving a very long command to the user
-      # a launcher script is generated.
-      # app_name and main_script could be added to the configuration
-      # so we can add the info directly instead of "guessing" it
-      # through a regex.
-  
-      my $self = shift;
-      my $output = $self->config->{seacan}{output};
-  
-      # The launcher script goes into bin of the target directory
-      my $target_directory = path($output, 'bin');
-  
-      my $app_name = $self->config->{seacan}{app_name};
-      if ( !$app_name ) {
-          # This is a hack to determine the application name from the
-          # output value of the config in case it wasn't provided
-  
-          $app_name = $output;
-          $app_name =~ s/^.+\/(.+?)$/$1/;
-      }
-  
-      # Apps following the CPAN guidelines have a lib directory with the
-      # modules. Adding this to the PERL5LIB allows to run this distributions
-      # without installing them.
-      my $launcher_path = $target_directory->child($app_name);
-      $target_directory->mkpath();
-  
-      $launcher_path->spew_utf8(
-          "#!/bin/bash\n",
-          'CURRDIR=$(dirname $(readlink -f $0))' . "\n",
-          "PERL5LIB=\$CURRDIR/../local/lib/perl5:\$CURRDIR/../app/$app_name/lib\n",
-          "export PERL5LIB\n",
-  
-          # String "app" shouldn't be hardcoded and be part of the config
-          # app.pl will not be the likely name of the main script.
-          "\$CURRDIR/../perlbrew/perls/seacan/bin/perl \$CURRDIR/../app/$app_name/bin/$app_name \$@\n",
-      );
-  
-      $launcher_path->chmod( EXEC_MODE() );
-  }
-  
-  sub run {
-      my $self = shift;
-      $self->install_perl unless $self->perl_is_installed;
-      $self->install_cpan;
-      $self->copy_app;
-      $self->create_launcher;
-  }
-  
-  1;
-  
-  =encoding utf-8
-  
-  =head1 NAME
-  
-  Seacan - A tool to prepare a self-contained app directory.
-  
-  =head1 DESCRIPTION
-  
-  Read the README file for now. L<https://github.com/gugod/Seacan/blob/master/README.md>
-  
-  =head1 COPYRIGHT
-  
-  Copyright (c) 2016 Kang-min Liu C<< <gugod@gugod.org> >>.
-  
-  =head1 LICENCE
-  
-  The MIT License
-  
-  =head1 DISCLAIMER OF WARRANTY
-  
-  BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
-  FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
-  OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
-  PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
-  EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
-  ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
-  YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
-  NECESSARY SERVICING, REPAIR, OR CORRECTION.
-  
-  IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
-  WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
-  REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
-  LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
-  OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
-  THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
-  RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
-  FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
-  SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
-  SUCH DAMAGES.
-  
-  =cut
-APP_SEACAN
-
 $fatpacked{"Dancer2/Plugin/Pakket/ParamTypes.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'DANCER2_PLUGIN_PAKKET_PARAMTYPES';
   package Dancer2::Plugin::Pakket::ParamTypes;
   # ABSTRACT: Parameter types for the Dancer2 Pakket app
@@ -308,503 +63,6 @@ $fatpacked{"Dancer2/Plugin/Pakket/ParamTypes.pm"} = '#line '.(1+__LINE__).' "'._
   1;
 DANCER2_PLUGIN_PAKKET_PARAMTYPES
 
-$fatpacked{"Mo.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO';
-  package Mo;
-  $Mo::VERSION = '0.40';
-  $VERSION='0.40';
-  no warnings;my$M=__PACKAGE__.'::';*{$M.Object::new}=sub{my$c=shift;my$s=bless{@_},$c;my%n=%{$c.'::'.':E'};map{$s->{$_}=$n{$_}->()if!exists$s->{$_}}keys%n;$s};*{$M.import}=sub{import warnings;$^H|=1538;my($P,%e,%o)=caller.'::';shift;eval"no Mo::$_",&{$M.$_.::e}($P,\%e,\%o,\@_)for@_;return if$e{M};%e=(extends,sub{eval"no $_[0]()";@{$P.ISA}=$_[0]},has,sub{my$n=shift;my$m=sub{$#_?$_[0]{$n}=$_[1]:$_[0]{$n}};@_=(default,@_)if!($#_%2);$m=$o{$_}->($m,$n,@_)for sort keys%o;*{$P.$n}=$m},%e,);*{$P.$_}=$e{$_}for keys%e;@{$P.ISA}=$M.Object};
-MO
-
-$fatpacked{"Mo/Golf.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_GOLF';
-  ##
-  # name:      Mo::Golf
-  # abstract:  Module for Compacting Mo Modules
-  # author:    Ingy döt Net <ingy@ingy.net>
-  # license:   perl
-  # copyright: 2011
-  # see:
-  # - Mo
-  
-  use strict;
-  use warnings;
-  package Mo::Golf;
-  
-  our $VERSION='0.40';
-  
-  use PPI;
-  
-  # This is the mapping of common names to shorter forms that still make some
-  # sense.
-  my %short_names = (
-      (
-          map {($_, substr($_, 0, 1))}
-          qw(
-              args builder class default exports features
-              generator import is_lazy method MoPKG name
-              nonlazy_defaults options reftype self
-          )
-      ),
-      build_subs => 'B',
-      old_constructor => 'C',
-      caller_pkg => 'P',
-  );
-  
-  my %short_barewords = ( EAGERINIT => q{':E'}, NONLAZY => q{':N'} );
-  
-  my %hands_off = map {($_,1)} qw'&import *import';
-  
-  sub import {
-      return unless @_ == 2 and $_[1] eq 'golf';
-      binmode STDOUT;
-      my $text = do { local $/; <> };
-      print STDOUT golf( $text );
-  };
-  
-  sub golf {
-      my ( $text ) = @_;
-  
-      my $tree = PPI::Document->new( \$text );
-  
-      my %finder_subs = _finder_subs();
-  
-      my @order = qw( comments duplicate_whitespace whitespace trailing_whitespace );
-  
-      for my $name ( @order ) {
-          my $elements = $tree->find( $finder_subs{$name} );
-          die $@ if !defined $elements;
-          $_->delete for @{ $elements || [] };
-      }
-  
-      $tree->find( $finder_subs{$_} )
-        for qw( del_superfluous_concat del_last_semicolon_in_block separate_version shorten_var_names shorten_barewords );
-      die $@ if $@;
-  
-      for my $name ( 'double_semicolon' ) {
-          my $elements = $tree->find( $finder_subs{$name} );
-          die $@ if !defined $elements;
-          $_->delete for @{ $elements || [] };
-      }
-  
-      return $tree->serialize . "\n";
-  }
-  
-  sub tok { "PPI::Token::$_[0]" }
-  
-  sub _finder_subs {
-      return (
-          comments => sub { $_[1]->isa( tok 'Comment' ) },
-  
-          duplicate_whitespace => sub {
-              my ( $top, $current ) = @_;
-              return 0 if !$current->isa( tok 'Whitespace' );
-  
-              $current->set_content(' ') if 1 < length $current->content;
-  
-              return 0 if !$current->next_token;
-              return 0 if !$current->next_token->isa( tok 'Whitespace' );
-              return 1;
-          },
-  
-          whitespace => sub {
-              my ( $top, $current ) = @_;
-              return 0 if !$current->isa( tok 'Whitespace' );
-              my $prev = $current->previous_token;
-              my $next = $current->next_token;
-  
-              return 1 if $prev->isa( tok 'Number' ) and $next->isa( tok 'Operator' ) and $next->content =~ /^\W/; # my $P
-              return 1 if $prev->isa( tok 'Word' )   and $next->isa( tok 'Operator' ) and $next->content =~ /^\W/; # my $P
-              return 1 if $prev->isa( tok 'Symbol' ) and $next->isa( tok 'Operator' ) and $next->content =~ /^\W/; # $VERSION =  but not $v and
-  
-              return 1 if $prev->isa( tok 'Operator' ) and $next->isa( tok 'Quote::Single' ) and $next->content =~ /^\W/; # eq ''
-              return 1 if $prev->isa( tok 'Operator' ) and $next->isa( tok 'Quote::Double' ) and $next->content =~ /^\W/; # eq ""
-              return 1 if $prev->isa( tok 'Operator' ) and $next->isa( tok 'Symbol' )        and $next->content =~ /^\W/; # eq $v
-              return 1 if $prev->isa( tok 'Operator' ) and $next->isa( tok 'Structure' )     and $next->content =~ /^\W/; # eq (
-  
-              return 1 if $prev->isa( tok 'Word' )       and $next->isa( tok 'Symbol' );           # my $P
-              return 1 if $prev->isa( tok 'Word' )       and $next->isa( tok 'Structure' );        # sub {
-              return 1 if $prev->isa( tok 'Word' )       and $next->isa( tok 'Quote::Double' );    # eval "
-              return 1 if $prev->isa( tok 'Symbol' )     and $next->isa( tok 'Structure' );        # %a )
-              return 1 if $prev->isa( tok 'ArrayIndex' ) and $next->isa( tok 'Operator' );         # $#_ ?
-              return 1 if $prev->isa( tok 'Word' )       and $next->isa( tok 'Cast' );             # exists &$_
-              return 0;
-          },
-  
-          trailing_whitespace => sub {
-              my ( $top, $current ) = @_;
-              return 0 if !$current->isa( tok 'Whitespace' );
-              my $prev = $current->previous_token;
-  
-              return 1 if $prev->isa( tok 'Structure' );                                           # ;[\n\s]
-              return 1 if $prev->isa( tok 'Operator' ) and $prev->content =~ /\W$/;                # = 0.24
-              return 1 if $prev->isa( tok 'Quote::Double' );                                       # " .
-              return 1 if $prev->isa( tok 'Quote::Single' );                                       # ' }
-  
-              return 0;
-          },
-  
-          double_semicolon => sub {
-              my ( $top, $current ) = @_;
-              return 0 if !$current->isa( tok 'Structure' );
-              return 0 if $current->content ne ';';
-  
-              my $prev = $current->previous_token;
-  
-              return 0 if !$prev->isa( tok 'Structure' );
-              return 0 if $prev->content ne ';';
-  
-              return 1;
-          },
-  
-          del_last_semicolon_in_block => sub {
-              my ( $top, $current ) = @_;
-              return 0 if !$current->isa( 'PPI::Structure::Block' );
-  
-              my $last = $current->last_token;
-  
-              return 0 if !$last->isa( tok 'Structure' );
-              return 0 if $last->content ne '}';
-  
-              my $maybe_semi = $last->previous_token;
-  
-              return 0 if !$maybe_semi->isa( tok 'Structure' );
-              return 0 if $maybe_semi->content ne ';';
-  
-              $maybe_semi->delete;
-  
-              return 1;
-          },
-  
-          del_superfluous_concat => sub {
-              my ( $top, $current ) = @_;
-              return 0 if !$current->isa( tok 'Operator' );
-  
-              my $prev = $current->previous_token;
-              my $next = $current->next_token;
-  
-              return 0 if $current->content ne '.';
-              return 0 if !$prev->isa( tok 'Quote::Double' );
-              return 0 if !$next->isa( tok 'Quote::Double' );
-  
-              $current->delete;
-              $prev->set_content( $prev->{separator} . $prev->string . $next->string . $prev->{separator} );
-              $next->delete;
-  
-              return 1;
-          },
-  
-          separate_version => sub {
-              my ( $top, $current ) = @_;
-              return 0 if !$current->isa( 'PPI::Statement' );
-  
-              my $first = $current->first_token;
-              return 0 if $first->content ne '$VERSION';
-  
-              $current->$_( PPI::Token::Whitespace->new( "\n" ) ) for qw( insert_before insert_after );
-  
-              return 1;
-          },
-  
-          shorten_var_names => sub {
-              my ( $top, $current ) = @_;
-              return 0 if !$current->isa( tok 'Symbol' );
-  
-              my $long_name = $current->canonical;
-  
-              return 1 if $hands_off{$long_name};
-              (my $name = $long_name) =~ s/^([\$\@\%])// or die $long_name;
-              my $sigil = $1;
-              die "variable $long_name conflicts with shortened var name"
-                  if grep {
-                      $name eq $_
-                  } values %short_names;
-  
-              my $short_name = $short_names{$name};
-              $current->set_content( "$sigil$short_name" ) if $short_name;
-  
-              return 1;
-          },
-  
-          shorten_barewords => sub {
-              my ( $top, $current ) = @_;
-              return 0 if !$current->isa( tok 'Word' );
-  
-              my $name = $current->content;
-  
-              die "bareword $name conflicts with shortened bareword"
-                  if grep {
-                      $name eq $_
-                  } values %short_barewords;
-  
-              my $short_name = $short_barewords{$name};
-              $current->set_content( $short_name ) if $short_name;
-  
-              return 1;
-          },
-      );
-  }
-  
-  =head1 SYNOPSIS
-  
-      perl -MMo::Golf=golf < src/Mo/foo.pm > lib/Mo/foo.pm
-  
-  =head1 DESCRIPTION
-  
-  This is the module that is responsible for taking Mo code (which is
-  documented and fairly readable) and reducing it to a single undecipherable
-  line.
-MO_GOLF
-
-$fatpacked{"Mo/Inline.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_INLINE';
-  ##
-  # name:      Mo::Inline
-  # abstract:  Inline Mo and Features into your package
-  # author:    Ingy döt Net <ingy@ingy.net>
-  # license:   perl
-  # copyright: 2011
-  # see:
-  # - Mo
-  
-  package Mo::Inline;
-  use Mo;
-  
-  our $VERSION='0.40';
-  
-  use IO::All;
-  
-  my $matcher = qr/((?m:^#\s*use Mo(\s.*)?;.*\n))(?:#.*\n)*(?:.{400,}\n)?/;
-  
-  sub run {
-      my $self = shift;
-      my @files;
-      if (not @_ and -d 'lib') {
-          print "Searching the 'lib' directory for a Mo to inline:\n";
-          @_ = 'lib';
-      }
-      if (not @_ or @_ == 1 and $_[0] =~ /^(?:-\?|-h|--help)$/) {
-          print usage();
-          return 0;
-      }
-      for my $name (@_) {
-          die "No file or directory called '$name'"
-              unless -e $name;
-          die "'$name' is not a Perl module"
-              if -f $name and $name !~ /\.pm$/;
-          if (-f $name) {
-              push @files, $name;
-          }
-          elsif (-d $name) {
-              push @_, grep /\.pm$/, map { "$_" } io($name)->All_Files;
-          }
-      }
-  
-      die "No .pm files specified"
-          unless @files;
-  
-      for my $file (@files) {
-          my $text = io($file)->all;
-          if ($text !~ $matcher) {
-              print "Ignoring $file - No Mo to Inline!\n";
-              next;
-          }
-          $self->inline($file, 1);
-      }
-  }
-  
-  sub inline {
-      my ($self, $file, $noisy) = @_;
-      my $text = io($file)->all;
-      $text =~ s/$matcher/"$1" . &inliner($2)/eg;
-      io($file)->print($text);
-      print "Mo Inlined $file\n"
-          if $noisy;
-  }
-  
-  sub inliner {
-      my $mo = shift;
-      require Mo;
-      my @features = grep {$_ ne 'qw'} ($mo =~ /(\w+)/g);
-      for (@features) {
-          eval "require Mo::$_; 1" or die $@;
-      }
-      my $inline = '';
-      $inline .= $_ for map {
-          my $module = $_;
-          $module .= '.pm';
-          my @lines = io($INC{$module})->chomp->getlines;
-          $lines[-1];
-      } ('Mo', map { s!::!/!g; "Mo/$_" } @features);
-      return <<"...";
-  #   The following line of code was produced from the previous line by
-  #   Mo::Inline version $VERSION
-  $inline\@f=qw[@features];use strict;use warnings;
-  ...
-  }
-  
-  sub usage {
-      <<'...';
-  Usage: mo-linline <perl module files or directories>
-  
-  ...
-  }
-  
-  1;
-  
-  =head1 SYNOPSIS
-  
-  In your Mo module:
-  
-      # This is effectively your own private Mo(ose) setup
-      package MyModule::Mo;
-      # use Mo qw'build builder default import';
-      1;
-  
-  From the command line:
-  
-      > mo-inline lib/MyModule/Mo.pm
-  
-  or:
-  
-      > mo-inline lib/
-  
-  or (if you are really lazy):
-  
-      > mo-inline
-  
-  Then from another module:
-  
-      package MyModule::Foo;
-      use MyModule::Mo;       # gets build, builder and default automatically
-  
-  =head1 DESCRIPTION
-  
-  Mo is so small that you can easily inline it, along with any feature modules.
-  Mo provides a script called C<mo-inline> that will do it for you.
-  
-  All you need to do is comment out the line that uses Mo, and run C<mo-inline>
-  on the file. C<mo-inline> will find such comments and do the inlining for you.
-  It will also replace any old inlined Mo with the latest version.
-  
-  What Mo could you possibly want?
-  
-  =head1 AUTOMATIC FEATURES
-  
-  By using the L<Mo::import> feature, all uses of your Mo class will turn on all
-  the features you specified. You can override it if you want, but that will be
-  the default.
-  
-  =head1 REAL WORLD EXAMPLES
-  
-  For real world examples of Mo inlined using C<mo-inline>, see L<YAML::Mo>,
-  L<Pegex::Mo> and L<TestML::Mo>.
-MO_INLINE
-
-$fatpacked{"Mo/Moose.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_MOOSE';
-  package Mo::Moose;
-  $Mo::Moose::VERSION = '0.40';$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'Moose::e'}=sub{my($P,$e)=@_;$P=~s/::$//;%$e=(M=>1);require Moose;Moose->import({into=>$P});Moose::Util::MetaRole::apply_metaroles(for=>$P,class_metaroles=>{attribute=>['Attr::Trait']},)};BEGIN{package Attr::Trait;
-  $Attr::Trait::VERSION = '0.40';use Moose::Role;around _process_options=>sub{my$orig=shift;my$c=shift;my($n,$o)=@_;$o->{is}||='rw';$o->{lazy}||=1 if defined$o->{default}or defined$o->{builder};$c->$orig(@_)};$INC{'Attr/Trait.pm'}=1}
-MO_MOOSE
-
-$fatpacked{"Mo/Mouse.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_MOUSE';
-  package Mo::Mouse;
-  $Mo::Mouse::VERSION = '0.40';$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'Mouse::e'}=sub{my($P,$e)=@_;$P=~s/::$//;%$e=(M=>1);require Mouse;require Mouse::Util::MetaRole;Mouse->import({into=>$P});Mouse::Util::MetaRole::apply_metaroles(for=>$P,class_metaroles=>{attribute=>['Attr::Trait']},)};BEGIN{package Attr::Trait;
-  $Attr::Trait::VERSION = '0.40';use Mouse::Role;around _process_options=>sub{my$orig=shift;my$c=shift;my($n,$o)=@_;$o->{is}||='rw';$o->{lazy}||=1 if defined$o->{default}or defined$o->{builder};$c->$orig(@_)};$INC{'Attr/Trait.pm'}=1}
-MO_MOUSE
-
-$fatpacked{"Mo/build.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_BUILD';
-  package Mo::build;
-  $Mo::build::VERSION = '0.40';my$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'build::e'}=sub{my($P,$e)=@_;$e->{new}=sub{$c=shift;my$s=&{$M.Object::new}($c,@_);my@B;do{@B=($c.::BUILD,@B)}while($c)=@{$c.::ISA};exists&$_&&&$_($s)for@B;$s}};
-MO_BUILD
-
-$fatpacked{"Mo/builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_BUILDER';
-  package Mo::builder;
-  $Mo::builder::VERSION = '0.40';my$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'builder::e'}=sub{my($P,$e,$o)=@_;$o->{builder}=sub{my($m,$n,%a)=@_;my$b=$a{builder}or return$m;my$i=exists$a{lazy}?$a{lazy}:!${$P.':N'};$i or ${$P.':E'}{$n}=\&{$P.$b}and return$m;sub{$#_?$m->(@_):!exists$_[0]{$n}?$_[0]{$n}=$_[0]->$b:$m->(@_)}}};
-MO_BUILDER
-
-$fatpacked{"Mo/chain.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_CHAIN';
-  package Mo::chain;
-  $Mo::chain::VERSION = '0.40';my$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'chain::e'}=sub{my($P,$e,$o)=@_;$o->{chain}=sub{my($m,$n,%a)=@_;$a{chain}or return$m;sub{$#_?($m->(@_),return$_[0]):$m->(@_)}}};
-MO_CHAIN
-
-$fatpacked{"Mo/coerce.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_COERCE';
-  package Mo::coerce;
-  $Mo::coerce::VERSION = '0.40';my$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'coerce::e'}=sub{my($P,$e,$o)=@_;$o->{coerce}=sub{my($m,$n,%a)=@_;$a{coerce}or return$m;sub{$#_?$m->($_[0],$a{coerce}->($_[1])):$m->(@_)}};my$C=$e->{new}||*{$M.Object::new}{CODE};$e->{new}=sub{my$s=$C->(@_);$s->$_($s->{$_})for keys%$s;$s}};
-MO_COERCE
-
-$fatpacked{"Mo/default.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_DEFAULT';
-  package Mo::default;
-  $Mo::default::VERSION = '0.40';my$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'default::e'}=sub{my($P,$e,$o)=@_;$o->{default}=sub{my($m,$n,%a)=@_;exists$a{default}or return$m;my($d,$r)=$a{default};my$g='HASH'eq($r=ref$d)?sub{+{%$d}}:'ARRAY'eq$r?sub{[@$d]}:'CODE'eq$r?$d:sub{$d};my$i=exists$a{lazy}?$a{lazy}:!${$P.':N'};$i or ${$P.':E'}{$n}=$g and return$m;sub{$#_?$m->(@_):!exists$_[0]{$n}?$_[0]{$n}=$g->(@_):$m->(@_)}}};
-MO_DEFAULT
-
-$fatpacked{"Mo/exporter.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_EXPORTER';
-  package Mo::exporter;
-  $Mo::exporter::VERSION = '0.40';my$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'exporter::e'}=sub{my($P)=@_;if(@{$M.EXPORT}){*{$P.$_}=\&{$M.$_}for@{$M.EXPORT}}};
-MO_EXPORTER
-
-$fatpacked{"Mo/import.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_IMPORT';
-  package Mo::import;
-  $Mo::import::VERSION = '0.40';my$M="Mo::";
-  $VERSION='0.40';
-  my$i=\&import;*{$M.import}=sub{(@_==2 and not$_[1])?pop@_:@_==1?push@_,grep!/import/,@f:();goto&$i};
-MO_IMPORT
-
-$fatpacked{"Mo/importer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_IMPORTER';
-  package Mo::importer;
-  $Mo::importer::VERSION = '0.40';my$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'importer::e'}=sub{my($P,$e,$o,$f)=@_;(my$pkg=$P)=~s/::$//;&{$P.'importer'}($pkg,@$f)if defined&{$P.'importer'}};
-MO_IMPORTER
-
-$fatpacked{"Mo/is.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_IS';
-  package Mo::is;
-  $Mo::is::VERSION = '0.40';$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'is::e'}=sub{my($P,$e,$o)=@_;$o->{is}=sub{my($m,$n,%a)=@_;$a{is}or return$m;sub{$#_&&$a{is}eq'ro'&&caller ne'Mo::coerce'?die$n.' is ro':$m->(@_)}}};
-MO_IS
-
-$fatpacked{"Mo/nonlazy.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_NONLAZY';
-  package Mo::nonlazy;
-  $Mo::nonlazy::VERSION = '0.40';my$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'nonlazy::e'}=sub{${shift().':N'}=1};
-MO_NONLAZY
-
-$fatpacked{"Mo/option.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_OPTION';
-  package Mo::option;
-  $Mo::option::VERSION = '0.40';my$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'option::e'}=sub{my($P,$e,$o)=@_;$o->{option}=sub{my($m,$n,%a)=@_;$a{option}or return$m;my$n2=$n;*{$P."read_$n2"}=sub{$_[0]->{$n2}};sub{$#_?$m->(@_):$m->(@_,1);$_[0]}}};
-MO_OPTION
-
-$fatpacked{"Mo/required.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_REQUIRED';
-  package Mo::required;
-  $Mo::required::VERSION = '0.40';my$M="Mo::";
-  $VERSION='0.40';
-  *{$M.'required::e'}=sub{my($P,$e,$o)=@_;$o->{required}=sub{my($m,$n,%a)=@_;if($a{required}){my$C=*{$P."new"}{CODE}||*{$M.Object::new}{CODE};no warnings 'redefine';*{$P."new"}=sub{my$s=$C->(@_);my%a=@_[1..$#_];die$n." required"if!exists$a{$n};$s}}$m}};
-MO_REQUIRED
-
-$fatpacked{"Mo/xs.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'MO_XS';
-  package Mo::xs;
-  $Mo::xs::VERSION = '0.40';my$M="Mo::";
-  $VERSION='0.40';
-  require Class::XSAccessor;*{$M.'xs::e'}=sub{my($P,$e,$o,$f)=@_;$P=~s/::$//;$e->{has}=sub{my($n,%a)=@_;Class::XSAccessor->import(class=>$P,accessors=>{$n=>$n})}if!grep!/^xs$/,@$f};
-MO_XS
-
 $fatpacked{"Pakket.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET';
   package Pakket;
   # ABSTRACT: An Unopinionated Meta-Packaging System
@@ -820,26 +78,42 @@ $fatpacked{"Pakket.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET';
   
   =head1 DESCRIPTION
   
-  Pakket is a meta-packaging system that allows you to manage your system
+  Pakket is a meta-packaging system that allows you to manage
   dependencies. It works by trying to avoid work.
   
   =head2 What can you do with Pakket?
   
+  The main purpose of Pakket is simple: Package applications and
+  libraries. That is all.
+  
+  Pakket provides a lot of flexibility in how this is done. Here is a list
+  of specific things you can do with Pakket.
+  
   =over 4
+  
+  =item * You can generate spec files automatically
+  
+  Given an existing API for a language (Perl, Ruby, Python, Rust), Pakket
+  can generate the entire tree of configurations and all the dependencies
+  for a given language.
+  
+  If you are looking to convert all your Perl modules, Pakket will simply
+  generate the appropriate specs and requirements.
   
   =item * You can represent packages closer to their true nature
   
-  Unlike most packaging systems, Pakket works to I<avoid> reducing the
-  complexity of packages. Instead of trying to take away what makes each
-  package unique, Pakket tries to make it possible for packages to retain
-  the information relevant to them.
+  Arbitrary packaging systems (e.g., RPM, Deb, etc.) attempt to produce
+  the same packages as other more language-specific packaging systems
+  (Perl's CPAN, Ruby's Gem, Python's Pypi) by reducing the level of
+  detail each package provides.
   
-  One example of this is that different systems use different versioning
-  schemes, which can confuse packaging systems, not knowing which version
-  is older and which is newer.
+  Pakket doesn't do that. Pakket attempts to maintain as much information
+  from the source as it can in order to handle more complicated corner
+  cases.
   
-  Packages in Pakket can keep their version number, the way they see it.
-  That's just one example, though.
+  An example of this is the way different systems compare versions. CPAN
+  and Gem and Pypi handle versions differently, but they are all reduces
+  for the general purpose that RPM or Deb provide.
   
   =item * You can connect different packages
   
@@ -855,29 +129,31 @@ $fatpacked{"Pakket.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET';
   relationship in Pakket. Pakket will then know how to build the C++
   library and build your Perl module binding to that C++ library.
   
-  =item * You can build packages for delivery
+  =item * You can build packages for deployment
   
   Pakket builds simple package files that can then be delivered to a
-  different machine and used there. While you I<should> use the Pakket
-  installer to deal with these packages, you can also open them up
-  yourself; no magic here.
+  different machine and used there.
+  
+  I mean, why else would we do this?
   
   =item * You can install packages
   
   The Pakket installer allows installing a package and its dependencies
   recursively, from disk or mirrors, and to manage your installation tree.
   
-  =item * Atomic installations, oh yeah
+  Again, this is pretty mandatory.
+  
+  =item * Atomic installations
   
   Did we mention all installations in Pakket are atomic? This means that
   if you're installing 20 or 20,000 packages and it fails, everything
   still works. Pakket only activates the new installation once it finished
-  everything.
+  everything successfully.
   
-  =item * Reverts are also atomic, baby!
+  =item * Reverts are also atomic
   
   The Pakket installer allows, by default, to retain multiple
-  installation directories. This means any revert is simply a single
+  installation directories. This means any revert can be simply a single
   atomic operation of pointing to an older installation.
   
   =item * Multiple instances
@@ -930,7 +206,7 @@ $fatpacked{"Pakket.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET';
   =head3 Spec files
   
   Similar to RPM spec files, Pakket has spec files. You can create them
-  yourself or you can use the L<generate|Pakket::CLI::Command::generate>
+  yourself or you can use the L<generate|Pakket::CLI::Command::manage>
   command to create them for you.
   
   The basic spec file in Pakket contain a package's C<category>,
@@ -939,9 +215,7 @@ $fatpacked{"Pakket.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET';
   B<configure> (for build-time), B<test> (for when testing the build),
   and B<runtime> (for using it).
   
-  At the moment Pakket keeps its specs in JSON files.
-  
-  An example of a spec in Pakket:
+  An example of a spec in Pakket in JSON:
   
       {
          "Package" : {
@@ -976,23 +250,20 @@ $fatpacked{"Pakket.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET';
   in the C<Prereqs> section, under the C<native> or C<perl> categories,
   under the C<configure> or C<runtime> phase.
   
-  =head3 Index
-  
-  The B<index> is where Pakket maintains all known versions of every
-  package and their locations.
-  
-  One of the abilities Pakket gives you is maintaining multiple "trees"
-  of systems, each needing different versions of each package.
+  Pakket I<might> store these configurations in JSON, but it could also
+  store it in other ways if desired.
   
   =head3 Parcels
   
   Parcels are the result of building packages. Parcels are what gets
-  finally installed.
+  finally installed. You may also call them the "build artifacts" if you
+  wish.
   
   While other packaging systems usually have I<development packages> (or
   I<devel> or I<dev>), Pakket doesn't differentiate between those.
-  Instead, a Pakket package contains everything created at build time,
-  including the headers and the compiled results.
+  Instead, a Pakket package contains everything created at install time
+  for a built package, including the headers, if such would have been
+  installed.
 PAKKET
 
 $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_BUILDER';
@@ -1106,7 +377,7 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   has 'bootstrapping' => (
       'is'      => 'ro',
       'isa'     => 'Bool',
-      'default' => 1,
+      'default' => sub {1},
   );
   
   has 'requirements' => (
@@ -1124,8 +395,8 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   }
   
   sub build {
-      my ( $self, @requirements ) = @_;
-      my %categories = map +( $_->category => 1 ), @requirements;
+      my ( $self, @queries ) = @_;
+      my %categories = map +( $_->category => 1 ), @queries;
   
       $self->_setup_build_dir;
   
@@ -1136,8 +407,8 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
           }
       }
   
-      foreach my $requirement (@requirements ) {
-          $self->run_build($requirement);
+      foreach my $query (@queries) {
+          $self->run_build($query);
       }
   }
   
@@ -1172,7 +443,7 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
       my ( $self, $category ) = @_;
   
       my @dists =
-          $category eq 'perl' ? map { $_->[1] } @{ $self->perl_bootstrap_modules } :
+          $category eq 'perl' ? @{ $self->perl_bootstrap_modules } :
           # add more categories here
           ();
   
@@ -1268,19 +539,15 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   }
   
   sub run_build {
-      my ( $self, $prereq, $params ) = @_;
+      my ( $self, $query, $params ) = @_;
       $params //= {};
       my $level             = $params->{'level'}                        || 0;
       my $skip_prereqs      = $params->{'bootstrapping_1_skip_prereqs'} || 0;
       my $bootstrap_prereqs = $params->{'bootstrapping_2_deps_only'}    || 0;
-      my $full_name         = $prereq->full_name;
+      my $full_name         = $query->full_name;
   
-      # FIXME: GH #29
-      if ( $prereq->category eq 'perl' ) {
-          # XXX: perl_mlb is a MetaCPAN bug
-          $prereq->name eq 'perl_mlb' and return;
-          $prereq->name eq 'perl'     and return;
-      }
+      $self->builders->{ $query->category }->exclude_packages->{ $query->name }
+          and return;
   
       if ( ! $bootstrap_prereqs and defined $self->is_built->{$full_name} ) {
           $log->debug(
@@ -1292,11 +559,11 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   
       $self->is_built->{$full_name} = 1;
   
-      $log->infof( '%s Working on %s', '|...' x $level, $prereq->full_name );
+      $log->infof( '%s Working on %s', '|...' x $level, $query->full_name );
   
       # Create a Package instance from the spec
       # using the information we have on it
-      my $package_spec = $self->spec_repo->retrieve_package_spec($prereq);
+      my $package_spec = $self->spec_repo->retrieve_package_spec($query);
       my $package      = Pakket::Package->new_from_spec( +{
           %{$package_spec},
   
@@ -1317,7 +584,7 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   
               # Phase 3 needs to avoid trying to install
               # the bare minimum toolchain (Phase 1)
-              $prereq->category => { $package->name => $package->version },
+              $query->category => { $package->name => $package->version },
           };
   
           my $successfully_installed = $installer->try_to_install_package(
@@ -1334,7 +601,7 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
               # snapshot_build_dir
               $self->snapshot_build_dir( $package, $main_build_dir->absolute, 0 );
   
-              $log->infof( '%s Installed %s', '|...' x $level, $prereq->full_name );
+              $log->infof( '%s Installed %s', '|...' x $level, $query->full_name );
   
               # sync build cache with our install cache
               # so we do not accidentally build things
@@ -1386,12 +653,19 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   
       $log->debug('Copying package files');
   
+      my $env_vars_spec = $package->build_opts->{'env_vars'};
       # FIXME: This shouldn't just be configure flags
       # we should allow the builder to have access to a general
       # metadata chunk which *might* include configure flags
+      my %env_vars = generate_env_vars( $top_build_dir, $main_build_dir, $env_vars_spec );
       my $configure_flags = $self->get_configure_flags(
           $package->build_opts->{'configure_flags'},
-          { %ENV, generate_env_vars( $top_build_dir, $main_build_dir ) },
+          { %ENV, %env_vars },
+      );
+  
+      my $build_flags = $self->get_configure_flags(
+          $package->build_opts->{'build_flags'},
+          { %ENV, %env_vars },
       );
   
       if ( my $builder = $self->builders->{ $package->category } ) {
@@ -1404,12 +678,37 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   
           dircopy( $package_src_dir, $package_dst_dir );
   
+          # during coping, dircopy() resets mtime to current time,
+          # which breaks 'make' for some native libraries
+          # we have to keep original mtime for files from tar archive
+          fix_timestamps($package_src_dir, $package_dst_dir);
+  
+          if ( $package->build_opts->{'pre_build'} ) {
+              foreach my $cmd_set ( @{ $package->build_opts->{'pre_build'} } ) {
+                  $self->run_command(
+                      $package_src_dir,
+                      $cmd_set,
+                  );
+              }
+          }
+  
           $builder->build_package(
               $package->name,
               $package_dst_dir,
               $main_build_dir,
               $configure_flags,
+              $build_flags,
+              $env_vars_spec,
           );
+  
+          if ( $package->build_opts->{'post_build'} ) {
+              foreach my $cmd_set ( @{ $package->build_opts->{'post_build'} } ) {
+                  $self->run_command(
+                      $package_src_dir,
+                      $cmd_set,
+                  );
+              }
+          }
       } else {
           croak( $log->criticalf(
               'I do not have a builder for category %s.',
@@ -1428,10 +727,22 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
           $package_files,
       );
   
-      $log->infof( '%s Finished on %s', '|...' x $level, $prereq->full_name );
-      log_success( sprintf 'Building %s', $prereq->full_name );
+      $log->infof( '%s Finished on %s', '|...' x $level, $query->full_name );
+      log_success( sprintf 'Building %s', $query->full_name );
   
       return;
+  }
+  
+  sub fix_timestamps {
+      my ($src_dir, $dst_dir) = @_;
+      $src_dir->visit(
+          sub {
+              my $src = shift;
+              my $dst = path($dst_dir, $src->relative($src_dir));
+              $dst->touch( $src->stat->mtime );
+          },
+          { recurse => 1 }
+      );
   }
   
   sub _recursive_build_phase {
@@ -1497,7 +808,7 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
       my ( $self, $package_files ) = @_;
       my $paths;
       for my $path_and_timestamp (keys %$package_files) {
-          my ($path,$timespamp) = $path_and_timestamp =~ /^(.+)_(\d+?)$/;
+          my ($path) = $path_and_timestamp =~ /^(.+)_\d+?$/;
           $paths->{$path} = $package_files->{$path_and_timestamp};
       }
       return $paths;
@@ -1561,7 +872,7 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   
       $config or return [];
   
-      my @flags = map +( join '=', $_, $config->{$_} ), keys %{$config};
+      my @flags = @{$config};
   
       $self->_expand_flags_inplace( \@flags, $expand_env );
   
@@ -1588,6 +899,242 @@ $fatpacked{"Pakket/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   1;
   
   __END__
+  
+  =pod
+  
+  =head1 SYNOPSIS
+  
+      use Pakket::Builder;
+      my $builder = Pakket::Builder->new();
+      $builder->build('perl/Dancer2=0.205000');
+  
+  =head1 DESCRIPTION
+  
+  The L<Pakket::Builder> is in charge of building a Pakket package. It is
+  normally accessed with the C<pakket install> command. Please see
+  L<pakket> for the command line interface. Specifically
+  L<Pakket::CLI::Command::install> for the C<install> command
+  documentation.
+  
+  The building includes bootstrapping any toolchain systems (currently
+  only applicable to Perl) and then building all packages specifically.
+  
+  The installer (L<Pakket::Installer>) can be used to install pre-built
+  packages.
+  
+  Once the building is done, the files and their manifest is sent to the
+  bundler (L<Pakket::Bundler>) in order to create the final parcel. The
+  parcel will be stored in the appropriate storage, based on your
+  configuration.
+  
+  =head1 ATTRIBUTES
+  
+  =head2 bootstrapping
+  
+  A boolean indiciating if we want to bootstrap.
+  
+  Default: B<1>.
+  
+  =head2 build_dir
+  
+  The directory in which we build the packages.
+  
+  Default: A temporary build directory in your temp dir.
+  
+  =head2 build_files_manifest
+  
+  After building, the list of built files are stored in this hashref.
+  
+  =head2 builders
+  
+  A hashref of available builder classes.
+  
+  Currently, L<Pakket::Builder::Native>, L<Pakket::Builder::Perl>, and
+  L<Pakket::Builder::NodeJS>.
+  
+  =head2 bundler
+  
+  The L<Pakket::Bundler> object used for creating the parcel from the
+  built files.
+  
+  =head2 config
+  
+  A configuration hashref populated by L<Pakket::Config> from the config file.
+  
+  Read more at L<Pakket::Role::HasConfig>.
+  
+  =head2 installer
+  
+  The L<Pakket::Installer> object used for installing any pre-built
+  parcels during the build phase.
+  
+  =head2 installer_cache
+  
+  A cache for the installer to prevent installation loops.
+  
+  =head2 is_built
+  
+  A cache for the built packages for the builder to prevent a loop
+  during the build phase.
+  
+  =head2 keep_build_dir
+  
+  A boolean that controls whether the build dir will be deleted or
+  not. This is useful for debugging.
+  
+  Default: B<0>.
+  
+  =head2 perl_bootstrap_modules
+  
+  See L<Pakket::Role::Perl::BootstrapModules>.
+  
+  =head2 parcel_repo
+  
+  See L<Pakket::Role::HasParcelRole>.
+  
+  =head2 parcel_repo_backend
+  
+  See L<Pakket::Role::HasParcelRole>.
+  
+  =head2 source_repo
+  
+  See L<Pakket::Role::HasSourceRole>.
+  
+  =head2 source_repo_backend
+  
+  See L<Pakket::Role::HasSourceRole>.
+  
+  =head2 spec_repo
+  
+  See L<Pakket::Role::HasSpecRole>.
+  
+  =head2 spec_repo_backend
+  
+  See L<Pakket::Role::HasSpecRole>.
+  
+  =head2 requirements
+  
+  A hashref in which we store the requirements for further building
+  during the build phase.
+  
+  =head1 METHODS
+  
+  =head2 run_command
+  
+  See L<Pakket::Role::RunCommand>.
+  
+  =head2 run_command_sequence
+  
+  See L<Pakket::Role::RunCommand>.
+  
+  =head2 bootstrap_build($category)
+  
+  Build all the packages to bootstrap a build environment. This would
+  include any toolchain packages necessary.
+  
+      $builder->bootstrap_build('perl');
+  
+  This procedure requires three steps:
+  
+  =over 4
+  
+  =item 1.
+  
+  First, we build the bootstrapping packages within the context of the
+  builder. However, they will depend on any libraries or applications
+  already available in the current environment. For example, in a Perl
+  environment, it will use core modules available with the existing
+  interpreter.
+  
+  They will need to be built without any dependencies. Since they assume
+  on the available dependencies in the system, they will build
+  succesfully.
+  
+  =item 2.
+  
+  Secondly, we build their dependencies only. This will allow us to then
+  build on top of them the original bootstrapping modules, thus
+  separating them from the system entirely.
+  
+  =item 3.
+  
+  Lastly, we repeat the first step, except with dependencies, and
+  explicitly preferring the dependencies we built at step 2.
+  
+  =back
+  
+  =head2 build(@pkg_queries)
+  
+  The main method of the class. Sets up the bootstrapping and calls
+  C<run_build>.
+  
+      my $pkg_query = Pakket::PackageQuery->new(...);
+      $builder->build($pkg_query);
+  
+  See L<Pakket::PackageQuery> on defining a query for a package.
+  
+  =head2 get_configure_flags(\%configure_flags, \%env)
+  
+  This method generates the configure flags for a given package from its
+  configuration.
+  
+  =head2 normalize_paths(\%package_files);
+  
+  Given a set of paths and timestamps, returns a new hashref with
+  normalized paths.
+  
+  =head2 retrieve_new_files($build_dir)
+  
+  Once a build has finished, we attempt to install the directory to a
+  controlled environment. This method scans that directory to find any
+  new files generated. This is determined to get packaged in the parcel.
+  
+  =head2 run_build($pkg_query, \%params)
+  
+  You should not be calling this function directly.
+  
+  The guts of the class. Builds an available package and all of its
+  dependencies recursively.
+  
+      my $pkg_query = Pakket::PackageQuery->new(...);
+  
+      $builder->run_build(
+          $pkg_query,
+          {%parameters},
+      );
+  
+  See L<Pakket::PackageQuery> on defining a query for a package.
+  
+  The method receives a single package query object and a hashref of
+  parameters.
+  
+  =over 4
+  
+  =item * level
+  
+  This helps with debugging.
+  
+  =item * bootstrapping_1_skip_prereqs
+  
+  An indicator of phase 1 of boostrapping.
+  
+  =item * boostrapping_2_deps_only
+  
+  An indicator of phase 2 of boostrapping.
+  
+  =back
+  
+  =head2 snapshot_build_dir( $package, $build_dir, $error_out )
+  
+  This method generates the manifest list for the parcel from the scanned
+  files.
+  
+  =head2 DEMOLISH
+  
+  Clean up phase, provided by L<Moose>, used to remove the build
+  directory if C<keep_build_dir> is false.
+  
+  Do not call directly.
 PAKKET_BUILDER
 
 $fatpacked{"Pakket/Builder/Native.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_BUILDER_NATIVE';
@@ -1607,13 +1154,15 @@ $fatpacked{"Pakket/Builder/Native.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"
       my ( $self, $package, $build_dir, $prefix, $flags ) = @_;
   
       if (   $build_dir->child('configure')->exists
-          || $build_dir->child('config')->exists )
+          || $build_dir->child('config')->exists
+          || $build_dir->child('Configure')->exists
+          || $build_dir->child('cmake')->exists )
       {
           my $builder = Pakket::Builder::Native::Makefile->new();
           $builder->build_package( $package, $build_dir, $prefix, $flags );
       } else {
           croak( $log->critical(
-              "I cannot build this native package. No 'configure'.") );
+              "Cannot build native package '$package', no '[Cc]onfigure' or 'config'.") );
       }
   
       return;
@@ -1646,7 +1195,7 @@ $fatpacked{"Pakket/Builder/Native/Makefile.pm"} = '#line '.(1+__LINE__).' "'.__F
   sub build_package {
       my ( $self, $package, $build_dir, $prefix, $flags ) = @_;
   
-      $log->info("Building Native library: $package");
+      $log->info("Building native package '$package'");
   
       my $opts = {
           'env' => {
@@ -1655,15 +1204,19 @@ $fatpacked{"Pakket/Builder/Native/Makefile.pm"} = '#line '.(1+__LINE__).' "'.__F
       };
   
       my $configurator;
+      my @configurator_flags = ('--prefix=' . $prefix->absolute);
       if ( -f $build_dir->child('configure') ) {
           $configurator = './configure';
       } elsif ( -f $build_dir->child('config') ) {
           $configurator = './config';
       } elsif ( -f $build_dir->child('Configure') ) {
           $configurator = './Configure';
+      } elsif ( -e $build_dir->child('cmake') ) {
+          $configurator = 'cmake';
+          @configurator_flags = ('-DCMAKE_INSTALL_PREFIX=' . $prefix->absolute, '.') ;
       } else {
-          croak( $log->critical( "Don't know how to configure $package"
-                  . " (Cannot find executale 'configure' or 'config')" ) );
+          croak( $log->critical( "Don't know how to configure native package '$package'"
+                  . " (Cannot find executale '[Cc]onfigure' or 'config')" ) );
       }
   
       my @seq = (
@@ -1672,7 +1225,7 @@ $fatpacked{"Pakket/Builder/Native/Makefile.pm"} = '#line '.(1+__LINE__).' "'.__F
           [
               $build_dir,
               [
-                  $configurator, '--prefix=' . $prefix->absolute,
+                  $configurator, @configurator_flags,
                   @{$flags},
               ],
               $opts,
@@ -1688,10 +1241,10 @@ $fatpacked{"Pakket/Builder/Native/Makefile.pm"} = '#line '.(1+__LINE__).' "'.__F
       my $success = $self->run_command_sequence(@seq);
   
       if ( !$success ) {
-          croak( $log->critical("Failed to build $package") );
+          croak( $log->critical("Failed to build native package '$package'") );
       }
   
-      $log->info("Done preparing $package");
+      $log->info("Done building native package '$package'");
   
       return;
   }
@@ -1731,9 +1284,6 @@ $fatpacked{"Pakket/Builder/NodeJS.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"
               generate_env_vars($prefix),
           },
       };
-  
-      my $original_dir = Path::Tiny->cwd;
-      my $install_base = $prefix->absolute;
   
       my $source = $build_dir;
   
@@ -1780,12 +1330,39 @@ $fatpacked{"Pakket/Builder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   
   with qw<Pakket::Role::Builder>;
   
+  has '+exclude_packages' => (
+      'default' => sub {
+          return {
+              'perl'     => 1,
+  
+              # MetaCPAN bug
+              'perl_mlb' => 1,
+          };
+      },
+  );
+  
   sub build_package {
-      my ( $self, $package, $build_dir, $prefix, $flags ) = @_;
+      my ( $self, $package, $build_dir, $prefix, $config_flags, $build_flags, $env_vars ) = @_;
   
       $log->info("Building Perl module: $package");
   
-      my %env  = generate_env_vars( $build_dir, $prefix );
+  
+      # FIXME: run_command will not return output, so we do this for now
+      my $inc;
+      {
+          local $ENV{'PERL5LIB'}; # don't let us affect the exec'ed process
+          chomp( $inc = `perl -e'print join ":",\@INC'` );
+      }
+  
+      my %env = generate_env_vars( $build_dir, $prefix, { 'inc' => $inc }, $env_vars);
+  
+      # By default ExtUtils::Install checks if a file wasn't changed then skip it
+      # which breaks Builder::snapshot_build_dir().
+      # To change that behaviour and force installer to copy all files,
+      # ExtUtils::Install uses a parameter 'always_copy'
+      # or environment variable EU_INSTALL_ALWAYS_COPY.
+      $env{'EU_INSTALL_ALWAYS_COPY'} = 1;
+  
       my $opts = { 'env' => \%env };
   
       foreach my $env_var ( keys %env ) {
@@ -1814,7 +1391,7 @@ $fatpacked{"Pakket/Builder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   
           # If you have Module::Build, we can use it!
           if ($has_module_build) {
-              @seq = $self->_build_pl_cmds( $build_dir, $install_base, $flags, $opts );
+              @seq = $self->_build_pl_cmds( $build_dir, $install_base, $config_flags, $build_flags, $opts );
           } else {
               $log->warn(
                   'Defined Build.PL but can\'t load Module::Build. Will try Makefile.PL',
@@ -1823,7 +1400,7 @@ $fatpacked{"Pakket/Builder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
       }
   
       if ($has_makefile_pl && !@seq) {
-          @seq = $self->_makefile_pl_cmds( $build_dir, $install_base, $flags, $opts );
+          @seq = $self->_makefile_pl_cmds( $build_dir, $install_base, $config_flags, $build_flags, $opts );
       }
   
       @seq or Carp::croak('Could not find an installer (Makefile.PL/Build.PL)');
@@ -1840,18 +1417,18 @@ $fatpacked{"Pakket/Builder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   }
   
   sub _build_pl_cmds {
-      my ( $self, $build_dir, $install_base, $flags, $opts ) = @_;
+      my ( $self, $build_dir, $install_base, $config_flags, $build_flags, $opts ) = @_;
       return (
   
           # configure
           [
               $build_dir,
-              [ 'perl', '-f', 'Build.PL', '--install_base', $install_base, @{$flags} ],
+              [ 'perl', '-f', 'Build.PL', '--install_base', $install_base, @{$config_flags} ],
               $opts,
           ],
   
           # build
-          [ $build_dir, [ 'perl', '-f', './Build' ], $opts ],
+          [ $build_dir, [ 'perl', '-f', './Build', @{$build_flags} ], $opts ],
   
           # install
           [ $build_dir, [ 'perl', '-f', './Build', 'install' ], $opts ],
@@ -1859,18 +1436,18 @@ $fatpacked{"Pakket/Builder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   }
   
   sub _makefile_pl_cmds {
-      my ( $self, $build_dir, $install_base, $flags, $opts ) = @_;
+      my ( $self, $build_dir, $install_base, $config_flags, $build_flags, $opts ) = @_;
       return (
   
           # configure
           [
               $build_dir,
-              [ 'perl', '-f', 'Makefile.PL', "INSTALL_BASE=$install_base", @{$flags} ],
+              [ 'perl', '-f', 'Makefile.PL', "INSTALL_BASE=$install_base", @{$config_flags} ],
               $opts,
           ],
   
           # build
-          [ $build_dir, ['make'], $opts ],
+          [ $build_dir, ['make', @{$build_flags}], $opts ],
   
           # install
           [ $build_dir, [ 'make', 'install' ], $opts ],
@@ -1894,6 +1471,7 @@ $fatpacked{"Pakket/Bundler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   use Moose;
   use MooseX::StrictConstructor;
   use JSON::MaybeXS;
+  use File::chdir;
   use File::Spec;
   use Carp              qw< croak >;
   use Path::Tiny        qw< path >;
@@ -1919,30 +1497,10 @@ $fatpacked{"Pakket/Bundler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
       Pakket::Role::HasParcelRepo
   >;
   
-  has 'files_manifest' => (
-      'is'      => 'ro',
-      'isa'     => 'HashRef',
-      'default' => sub { return +{} },
-  );
-  
-  # TODO
-  # The reason behind this is to make sure we already inflate
-  # the Parcel Repo before using it, because we might chdir
-  # when we want to use it, and if the directory paths are
-  # relative, it might not match anymore. This is why it was
-  # AbsPath prior. We can try it and if it works remove this
-  # chunk. -- SX.
-  sub BUILD {
-      my $self = shift;
-      $self->parcel_repo;
-  }
-  
   sub bundle {
       my ( $self, $build_dir, $package, $files ) = @_;
   
-      my $original_dir = Path::Tiny->cwd;
-  
-      # totally arbitrary, maybe add to constants?
+      my $original_dir    = Path::Tiny->cwd;
       my $parcel_dir_path = Path::Tiny->tempdir(
           'TEMPLATE' => BUNDLE_DIR_TEMPLATE(),
           'CLEANUP'  => 1,
@@ -1977,11 +1535,10 @@ $fatpacked{"Pakket/Bundler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
               my $new_symlink = $self->_rebase_build_to_output_dir(
                   $build_dir, $files->{$orig_file},
               );
-  
-              my $previous_dir = Path::Tiny->cwd;
-              chdir $new_fullname->parent;
-              symlink $new_symlink, $new_fullname->basename;
-              chdir $previous_dir;
+              {
+                  local $CWD = $new_fullname->parent;
+                  symlink $new_symlink, $new_fullname->basename;
+              }
           }
       }
   
@@ -2007,7 +1564,7 @@ $fatpacked{"Pakket/Bundler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   
   sub _rebase_build_to_output_dir {
       my ( $self, $build_dir, $orig_filename ) = @_;
-      ( my $new_filename = $orig_filename ) =~ s/^$build_dir//ms;
+      ( my $new_filename = $orig_filename ) =~ s/^ \Q$build_dir\E //xms;
       my @parts = File::Spec->splitdir($new_filename);
   
       # in case the path is absolute (leading slash)
@@ -2025,6 +1582,37 @@ $fatpacked{"Pakket/Bundler.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   1;
   
   __END__
+  
+  =pod
+  
+  =head1 SYNOPSIS
+  
+  =head1 DESCRIPTION
+  
+  =head1 ATTRIBUTES
+  
+  =head2 config
+  
+  See L<Pakket::Role::HasConfig>.
+  
+  =head2 parcel_repo
+  
+  See L<Pakket::Role::HasParcelRepo>.
+  
+  =head1 METHODS
+  
+  =head2 BUILD
+  
+  Build phase, provided by L<Moose>, used to set up the parcel repo
+  before we begin bundling.
+  
+  Do not call directly.
+  
+  =head2 bundle($build_dir, $package, \%files)
+  
+  This will bundle the list of files for a given package in a given
+  directory. It will create a parcel file which will include the files,
+  including metadata on the package it includes.
 PAKKET_BUNDLER
 
 $fatpacked{"Pakket/CLI.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI';
@@ -2036,11 +1624,13 @@ $fatpacked{"Pakket/CLI.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKK
   use App::Cmd::Setup '-app';
   
   1;
+  
+  __END__
 PAKKET_CLI
 
 $fatpacked{"Pakket/CLI/Command/build.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_BUILD';
   package Pakket::CLI::Command::build;
-  # ABSTRACT: Build a Pakket package
+  # ABSTRACT: Build a Pakket parcel
   
   use strict;
   use warnings;
@@ -2062,15 +1652,16 @@ $fatpacked{"Pakket/CLI/Command/build.pm"} = '#line '.(1+__LINE__).' "'.__FILE__.
   
   sub opt_spec {
       return (
-          [ 'input-file=s',   'build stuff from this file' ],
-          [ 'build-dir=s',    'use an existing build directory' ],
-          [ 'keep-build-dir', 'do not delete the build directory' ],
-          [ 'spec-dir=s',     'directory holding the specs' ],
-          [ 'source-dir=s',   'directory holding the sources' ],
-          [ 'output-dir=s',   'output directory (default: .)' ],
-          [ 'config|c=s',     'configuration file' ],
-          [ 'verbose|v+',     'verbose output (can be provided multiple times)' ],
-          [ 'log-file=s',     'Log file (default: build.log)' ],
+          [ 'input-file=s',    'build stuff from this file' ],
+          [ 'build-dir=s',     'use an existing build directory' ],
+          [ 'keep-build-dir',  'do not delete the build directory' ],
+          [ 'spec-dir=s',      'directory holding the specs' ],
+          [ 'source-dir=s',    'directory holding the sources' ],
+          [ 'output-dir=s',    'output directory (default: .)' ],
+          [ 'config|c=s',      'configuration file' ],
+          [ 'verbose|v+',      'verbose output (can be provided multiple times)' ],
+          [ 'log-file=s',      'Log file (default: build.log)' ],
+          [ 'ignore-failures', 'Continue even if some builds fail' ],
       );
   }
   
@@ -2136,11 +1727,10 @@ $fatpacked{"Pakket/CLI/Command/build.pm"} = '#line '.(1+__LINE__).' "'.__FILE__.
           my ( $cat, $name, $version, $release ) =
               $spec_str =~ PAKKET_PACKAGE_SPEC();
   
-          if ( ! ( $cat && $name && $version && $release ) ) {
-              $self->usage_error(
+          $cat && $name && $version && $release
+              or $self->usage_error(
                   "Provide category/name=version:release, not '$spec_str'",
               );
-          }
   
           my $query;
           eval { $query = Pakket::PackageQuery->new_from_string($spec_str); 1; }
@@ -2175,12 +1765,63 @@ $fatpacked{"Pakket/CLI/Command/build.pm"} = '#line '.(1+__LINE__).' "'.__FILE__.
           ), qw< build_dir keep_build_dir > ),
       );
   
-      $builder->build( @{ $self->{'queries'} } );
+      if ( ! $opt->{'ignore_failures'} ) {
+          $builder->build( @{ $self->{'queries'} } );
+          return;
+      }
+  
+      foreach my $query ( @{ $self->{'queries'} } ) {
+          eval {
+              $builder->build($query);
+              1;
+          } or do {
+              my $error = $@ || 'Zombie error';
+              $log->warnf('Failed to build %s, skipping.', $query->full_name );
+          };
+      }
   }
   
   1;
   
   __END__
+  
+  =pod
+  
+  =head1 SYNOPSIS
+  
+      $ pakket build perl/Dancer2
+  
+      $ pakket build native/tidyp=1.04
+  
+      $ pakket build --help
+  
+          --input-file STR     build stuff from this file
+          --build-dir STR      use an existing build directory
+          --keep-build-dir     do not delete the build directory
+          --spec-dir STR       directory holding the specs
+          --source-dir STR     directory holding the sources
+          --output-dir STR     output directory (default: .)
+          -c STR --config STR  configuration file
+          -v --verbose         verbose output (can be provided multiple times)
+          --log-file STR       Log file (default: build.log)
+          --ignore-failures    Continue even if one the builds failed
+  
+  =head1 DESCRIPTION
+  
+  Once you have your configurations (spec) and the sources for your
+  packages, you can issue a build of them using this command. It will
+  generate parcels, which are the build artifacts.
+  
+  (The parcels are equivalent of C<.rpm> or C<.deb> files.)
+  
+      # Build latest version of package "Dancer2" of category "perl"
+      $ pakket build perl/Dancer2
+  
+      # Build specific version
+      $ pakket build perl/Dancer2=0.205000
+  
+  Depending on the configuration you have for Pakket, the result will
+  either be saved in a file or in a database or sent to a remote server.
 PAKKET_CLI_COMMAND_BUILD
 
 $fatpacked{"Pakket/CLI/Command/init.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_INIT';
@@ -2212,7 +1853,7 @@ $fatpacked{"Pakket/CLI/Command/init.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   }
   
   sub validate_args {
-      my ( $self, $opt, $args ) = @_;
+      my ( $self, $opt ) = @_;
   
       my $logger = Pakket::Log->cli_logger(2); # verbosity
       Log::Any::Adapter->set( 'Dispatch', dispatcher => $logger );
@@ -2274,7 +1915,7 @@ PAKKET_CLI_COMMAND_INIT
 
 $fatpacked{"Pakket/CLI/Command/install.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_INSTALL';
   package Pakket::CLI::Command::install;
-  # ABSTRACT: The pakket install command
+  # ABSTRACT: Install a Pakket parcel
   
   use strict;
   use warnings;
@@ -2284,8 +1925,9 @@ $fatpacked{"Pakket/CLI/Command/install.pm"} = '#line '.(1+__LINE__).' "'.__FILE_
   use Pakket::Log;
   use Pakket::Package;
   use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
+  use Log::Any          qw< $log >;
   use Log::Any::Adapter;
-  use Path::Tiny      qw< path >;
+  use Path::Tiny        qw< path >;
   
   sub abstract    { 'Install a package' }
   sub description { 'Install a package' }
@@ -2343,18 +1985,11 @@ $fatpacked{"Pakket/CLI/Command/install.pm"} = '#line '.(1+__LINE__).' "'.__FILE_
           my ( $pkg_cat, $pkg_name, $pkg_version, $pkg_release ) =
               $package_str =~ PAKKET_PACKAGE_SPEC();
   
-          if ( !defined $pkg_version || !defined $pkg_release ) {
-              $self->usage_error(
-                  'Currently you must provide a version and release to install: '
-                  .  $package_str,
-              );
-          }
-  
           push @packages, Pakket::Package->new(
               'category' => $pkg_cat,
               'name'     => $pkg_name,
-              'version'  => $pkg_version,
-              'release'  => $pkg_release,
+              'version'  => $pkg_version // 0,
+              'release'  => $pkg_release // 0,
           );
       }
   
@@ -2371,9 +2006,10 @@ $fatpacked{"Pakket/CLI/Command/install.pm"} = '#line '.(1+__LINE__).' "'.__FILE_
               'from=s',
               'directory to install the packages from',
           ],
-          [ 'input-file=s',   'install eveything listed in this file' ],
+          [ 'input-file=s',   'install everything listed in this file' ],
           [ 'config|c=s',     'configuration file' ],
           [ 'show-installed', 'print list of installed packages' ],
+          [ 'ignore-failures', 'Continue even if some installs fail' ],
           [ 'force|f',        'force reinstall if package exists' ],
           [
               'verbose|v+',
@@ -2398,21 +2034,57 @@ $fatpacked{"Pakket/CLI/Command/install.pm"} = '#line '.(1+__LINE__).' "'.__FILE_
   sub execute {
       my ( $self, $opt ) = @_;
   
-      my $installer = Pakket::Installer->new(
+      if ( $opt->{'show_installed'} ) {
+          my $installer = _create_installer($opt);
+          return $installer->show_installed();
+      }
+  
+      my $installer = _create_installer($opt);
+      return $installer->install( @{ $opt->{'packages'} } );
+  }
+  
+  sub _create_installer {
+      my $opt = shift;
+  
+      return Pakket::Installer->new(
           'config'          => $opt->{'config'},
           'pakket_dir'      => $opt->{'config'}{'install_dir'},
-          'force' => $opt->{'force'},
+          'force'           => $opt->{'force'},
+          'ignore_failures' => $opt->{'ignore_failures'},
       );
-  
-      $opt->{'show_installed'}
-          and return $installer->show_installed();
-  
-      return $installer->install( @{ $opt->{'packages'} } );
   }
   
   1;
   
   __END__
+  
+  =pod
+  
+  =head1 SYNOPSIS
+  
+      # Install the first release of a particular version
+      # of the package "Dancer2" of the category "perl"
+      $ pakket install perl/Dancer2=0.205000:1
+  
+      $ pakket install --help
+  
+          --to STR             directory to install the package in
+          --from STR           directory to install the packages from
+          --input-file STR     install everything listed in this file
+          -c STR --config STR  configuration file
+          --show-installed     print list of installed packages
+          --ignore-failures    Continue even if some installs fail
+          -f --force           force reinstall if package exists
+          -v --verbose         verbose output (can be provided multiple times)
+  
+  =head1 DESCRIPTION
+  
+  Installing Pakket packages requires knowing the package names,
+  including their category, their name, their version, and their release.
+  If you do not provide a version or release, it will simply take the
+  last one available.
+  
+  You can also show which packages are currently installed.
 PAKKET_CLI_COMMAND_INSTALL
 
 $fatpacked{"Pakket/CLI/Command/manage.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_MANAGE';
@@ -2423,7 +2095,7 @@ $fatpacked{"Pakket/CLI/Command/manage.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   use warnings;
   
   use Path::Tiny qw< path  >;
-  use Ref::Util  qw< is_arrayref >;
+  use Ref::Util  qw< is_arrayref is_coderef >;
   use Log::Any   qw< $log >; # to log
   use Log::Any::Adapter;     # to set the logger
   
@@ -2432,15 +2104,32 @@ $fatpacked{"Pakket/CLI/Command/manage.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   use Pakket::Config;
   use Pakket::Manager;
   use Pakket::PackageQuery;
-  use Pakket::Requirement;
   use Pakket::Utils::Repository qw< gen_repo_config >;
   use Pakket::Constants qw<
       PAKKET_PACKAGE_SPEC
       PAKKET_VALID_PHASES
   >;
   
-  sub abstract    { 'Scaffold a project' }
-  sub description { 'Scaffold a project' }
+  sub abstract    { 'Manage Pakket packages and repositories' }
+  sub description { return <<'_END_DESC';
+  This command manages Pakket packages across repositories.
+  It allows you to add new specs, sources, and packages, as well
+  as edit existing ones, and view your repositories.
+  _END_DESC
+  }
+  
+  my %commands = map +( $_ => 1 ), qw<
+      add-package
+      remove-package
+      show-package
+      remove-parcel
+      add-deps
+      remove-deps
+      list-deps
+      list-specs
+      list-sources
+      list-parcels
+  >;
   
   sub opt_spec {
       return (
@@ -2454,13 +2143,14 @@ $fatpacked{"Pakket/CLI/Command/manage.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
           ],
           [ 'config|c=s',   'configuration file' ],
           [ 'verbose|v+',   'verbose output (can be provided multiple times)' ],
-          [ 'add=s%',       '(deps) add the following dependency (phase=category/name=version[:release])' ],
-          [ 'remove=s%',    '(deps) add the following dependency (phase=category/name=version[:release])' ],
-          [ 'cpan-02packages=s', '02packages file (optional)' ],
+          [ 'phase=s',      '(deps) What phase is the dependency' ],
+          [ 'on=s',         '(deps) What is the dependency on'    ],
+          [ 'cpan-02packages=s', '02packages file (optional)'     ],
           [ 'no-deps',      'do not add dependencies (top-level only)' ],
           [ 'is-local=s@',  'do not use upstream sources (i.e. CPAN) for given packages' ],
           [ 'requires-only', 'do not set recommended/suggested dependencies' ],
           [ 'no-bootstrap',  'skip bootstrapping phase (toolchain packages)' ],
+          [ 'source-archive=s', 'archve with sources (optional, only for native)' ],
       );
   }
   
@@ -2485,13 +2175,8 @@ $fatpacked{"Pakket/CLI/Command/manage.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   
       my $command = $self->{'command'};
   
-      my $category =
-          $self->{'spec'}     ? $self->{'spec'}->category :
-          $self->{'cpanfile'} ? 'perl' :
-          undef;
-  
       my $is_local = +{
-          map { $_ => 1, s/-/::/gr => 1 } @{ $self->{'opt'}{'is_local'} }
+          map { $_ => 1 } @{ $self->{'opt'}{'is_local'} }
       };
   
       my $manager = Pakket::Manager->new(
@@ -2499,39 +2184,44 @@ $fatpacked{"Pakket/CLI/Command/manage.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
           cpanfile        => $self->{'cpanfile'},
           cache_dir       => $self->{'cache_dir'},
           phases          => $self->{'gen_phases'},
-          package         => $self->{'spec'},
+          package         => $self->{'package'},
           file_02packages => $self->{'file_02packages'},
           no_deps         => $self->{'opt'}{'no_deps'},
           requires_only   => $self->{'opt'}{'requires_only'},
           no_bootstrap    => $self->{'opt'}{'no_bootstrap'},
           is_local        => $is_local,
+          source_archive  => $self->{'source_archive'},
       );
   
-      if ( $command eq 'add' ) {
-          $manager->add_package;
+      my %actions = (
+          'add-package'    => sub { $manager->add_package; },
+          'remove-package' => sub {
+              # TODO: check we are allowed to remove package (dependencies)
+              $manager->remove_package('spec');
+              $manager->remove_package('source');
+          },
   
-      } elsif ( $command eq 'remove' ) {
-          # TODO: check we are allowed to remove package (dependencies)
-          $manager->remove_package('spec');
-          $manager->remove_package('source');
+          'remove-parcel'  => sub {
+              # TODO: check we are allowed to remove package (dependencies)
+              $manager->remove_package('parcel');
+          },
   
-      } elsif ( $command eq 'remove_parcel' ) {
-          # TODO: check we are allowed to remove package (dependencies)
-          $manager->remove_package('parcel');
+          'add-deps'       => sub {
+              $manager->add_dependency( $self->{'dependency'} );
+          },
   
-      } elsif ( $command eq 'deps' ) {
-          $self->{'opt'}{'add'}    and $manager->add_dependency( $self->{'dependency'} );
-          $self->{'opt'}{'remove'} and $manager->remove_dependency( $self->{'dependency'} );
+          'remove-deps'    => sub {
+              $manager->remove_dependency( $self->{'dependency'} );
+          },
   
-      } elsif ( $command eq 'list' ) {
-          $manager->list_ids( $self->{'list_type'} );
+          'list-specs'     => sub { $manager->list_ids('spec'); },
+          'list-sources'   => sub { $manager->list_ids('source'); },
+          'list-parcels'   => sub { $manager->list_ids('parcel'); },
+          'show-package'   => sub { $manager->show_package_config; },
+          'list-deps'      => sub { $manager->show_package_deps; },
+      );
   
-      } elsif ( $command eq 'show' ) {
-          $manager->show_package_config;
-  
-      } elsif ( $command eq 'show_deps' ) {
-          $manager->show_package_deps;
-      }
+      return $actions{$command}->();
   }
   
   sub _read_config {
@@ -2551,27 +2241,22 @@ $fatpacked{"Pakket/CLI/Command/manage.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
       my $self = shift;
   
       my %cmd2repo = (
-          'add'           => [ 'spec', 'source' ],
-          'remove'        => [ 'spec', 'source' ],
-          'remove_parcel' => [ 'parcel' ],
-          'deps'          => [ 'spec' ],
-          'show'          => [ 'spec' ],
-          'show_deps'     => [ 'spec' ],
-          'list'          => {
-              spec   => [ 'spec'   ],
-              parcel => [ 'parcel' ],
-              source => [ 'source' ],
-          },
+          'add-package'    => [ 'spec', 'source' ],
+          'remove-package' => [ 'spec', 'source' ],
+          'remove-parcel'  => [ 'parcel' ],
+          'show-package'   => [ 'spec'   ],
+          'add-deps'       => [ 'spec'   ],
+          'remove-deps'    => [ 'spec'   ],
+          'list-deps'      => [ 'spec'   ],
+          'list-specs'     => [ 'spec'   ],
+          'list-parcels'   => [ 'parcel' ],
+          'list-sources'   => [ 'source' ],
       );
   
       my $config  = $self->{'config'};
       my $command = $self->{'command'};
   
-      my @required_repos = @{
-          $command eq 'list'
-              ? $cmd2repo{$command}{ $self->{'list_type'} }
-              : $cmd2repo{$command}
-      };
+      my @required_repos = @{ $cmd2repo{$command} };
   
       my %repo_opt = (
           'spec'   => 'spec_dir',
@@ -2592,23 +2277,25 @@ $fatpacked{"Pakket/CLI/Command/manage.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   }
   
   sub _validate_arg_command {
-      my $self = shift;
+      my $self     = shift;
+      my @cmd_list = sort keys %commands;
   
       my $command = shift @{ $self->{'args'} }
-          or $self->usage_error("Must pick action (add/remove/remove_parcel/deps/list/show/show_deps)");
+          or $self->usage_error( "Must pick action (@{[ join '/', @cmd_list ]})" );
   
-      grep { $command eq $_ } qw< add remove remove_parcel deps list show show_deps >
-          or $self->usage_error( "Wrong command (add/remove/remove_parcel/deps/list/show/show_deps)" );
+      $commands{$command}
+          or $self->usage_error( "Wrong command (@{[ join '/', @cmd_list ]})" );
   
       $self->{'command'} = $command;
   
-      $command eq 'add'    and $self->_validate_args_add;
-      $command eq 'remove' and $self->_validate_args_remove;
-      $command eq 'deps'   and $self->_validate_args_dependency;
-      $command eq 'list'   and $self->_validate_args_list;
-      $command eq 'show'   and $self->_validate_args_show;
-      $command eq 'show_deps'     and $self->_validate_args_show_deps;
-      $command eq 'remove_parcel' and $self->_validate_args_remove_parcel;
+      $command eq 'add-package'    and $self->_validate_args_add;       # FIXME: Rename method
+      $command eq 'remove-package' and $self->_validate_args_remove;    # FIXME: Rename method
+      $command eq 'remove-parcel'  and $self->_validate_args_remove_parcel;
+      $command eq 'list-deps'      and $self->_validate_args_show_deps; # FIXME: Rename method
+      $command eq 'show-package'   and $self->_validate_args_show;      # FIXME: Rename method
+  
+      $command eq 'add-deps' || $command eq 'remove-deps'
+         and $self->_validate_args_dependency;
   }
   
   sub _validate_arg_cache_dir {
@@ -2621,6 +2308,10 @@ $fatpacked{"Pakket/CLI/Command/manage.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
               or $self->usage_error( "cache-dir: $cache_dir doesn't exist\n" );
           $self->{'cache_dir'} = $cache_dir;
       }
+      if ($self->{'opt'}{'is_local'} and !$self->{'cache_dir'}) {
+          $self->usage_error( "Flag --is-local doesn't make sense without --cache-dir.\n".
+                              "Please specify directory with sources --cache-dir.\n");
+      }
   }
   
   sub _validate_args_add {
@@ -2630,13 +2321,14 @@ $fatpacked{"Pakket/CLI/Command/manage.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
       my $additional_phase = $self->{'opt'}{'additional_phase'};
   
       $self->{'file_02packages'} = $self->{'opt'}{'cpan_02packages'};
+      $self->{'source_archive'}  = $self->{'opt'}{'source_archive'};
   
       if ( $cpanfile ) {
           @{ $self->{'args'} }
-              and $self->usage_error( "You can't have both a 'spec' and a 'cpanfile'\n" );
+              and $self->usage_error( "You can't have both a 'package' and a 'cpanfile'\n" );
           $self->{'cpanfile'} = $cpanfile;
       } else {
-          $self->_read_set_spec_str;
+          $self->_read_set_package_str;
       }
   
       # TODO: config ???
@@ -2650,87 +2342,92 @@ $fatpacked{"Pakket/CLI/Command/manage.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   
   sub _validate_args_remove {
       my $self = shift;
-      $self->_read_set_spec_str;
+      $self->_read_set_package_str;
   }
   
   sub _validate_args_remove_parcel {
       my $self = shift;
-      $self->_read_set_spec_str;
+      $self->_read_set_package_str;
   }
   
   sub _validate_args_dependency {
       my $self = shift;
       my $opt  = $self->{'opt'};
   
-      # spec
-      $self->_read_set_spec_str;
+      # package
+      $self->_read_set_package_str;
   
-      # dependency
-      my $action = $opt->{'add'} || $opt->{'remove'};
-      $action or $self->usage_error( "Missing arg: add/remove (mandatory for 'deps')" );
+      # pakket manage add-deps perl/Dancer2=0.9 --phase runtime --on perl/Moo=2
+      defined $opt->{$_} or $self->usage_error("Missing argument $_")
+          for qw< phase on >;
   
-      my ( $phase, $dep_str ) = %{ $action };
-      $phase or $self->usage_error( "Invalid dependency: missing phase" );
+      my $dep = $self->_read_package_str( $opt->{'on'} );
   
-      my $dep = $self->_read_spec_str($dep_str);
       defined $dep->{'version'}
           or $self->usage_error( "Invalid dependency: missing version" );
-      $dep->{'phase'} = $phase;
   
-      $self->{'dependency'}  = $dep;
-  }
-  
-  sub _validate_args_list {
-      my $self = shift;
-  
-      my $type = shift @{ $self->{'args'} };
-  
-      $type and grep { $type eq $_ or $type eq $_.'s' } qw< parcel spec source >
-          or $self->usage_error( "Invalid type of list (parcels/specs/sources): " . ($type||"") );
-  
-      $self->{'list_type'} = $type =~ s/s?$//r;
+      $dep->{'phase'}       = $opt->{'phase'}; # FIXME: Should be in instantiation above
+      $self->{'dependency'} = $dep;
   }
   
   sub _validate_args_show {
       my $self = shift;
-      $self->_read_set_spec_str;
+      $self->_read_set_package_str;
   }
   
   sub _validate_args_show_deps {
       my $self = shift;
-      $self->_read_set_spec_str;
+      $self->_read_set_package_str;
   }
   
-  sub _read_spec_str {
+  sub _read_package_str {
       my ( $self, $spec_str ) = @_;
   
-      my $spec;
-      if ( $self->{'command'} eq 'add' ) {
-          my ( $c, $n, $v, $r ) = $spec_str =~ PAKKET_PACKAGE_SPEC();
-          !defined $v and $spec = Pakket::Requirement->new( category => $c, name => $n );
-      }
-  
-      $spec //= Pakket::PackageQuery->new_from_string($spec_str);
+      my $package = Pakket::PackageQuery->new_from_string($spec_str);
   
       # add supported categories
-      if ( !( $spec->category eq 'perl' or $spec->category eq 'native' ) ) {
+      if ( !( $package->category eq 'perl' or $package->category eq 'native' ) ) {
           $self->usage_error( "Wrong 'name' format\n" );
       }
   
-      return $spec;
+      return $package;
   }
   
-  sub _read_set_spec_str {
+  sub _read_set_package_str {
       my $self = shift;
   
       my $spec_str = shift @{ $self->{'args'} };
       $spec_str or $self->usage_error( "Must provide a package id (category/name=version:release)" );
   
-      $self->{'spec'} = $self->_read_spec_str($spec_str);
+      $self->{'package'} = $self->_read_package_str($spec_str);
   }
   
   1;
+  
   __END__
+  
+  =pod
+  
+  =head1 SYNOPSIS
+  
+      $ pakket manage add-package perl/Dancer2=0.205000:1
+      $ pakket manage show-package perl/Dancer2=0.205000:1
+      $ pakket manage remove-package perl/Dancer2=0.205000:1
+      $ pakket manage remove-parcel perl/Dancer2=0.205000:1
+  
+      $ pakket manage list-deps perl/Dancer2=0.205000:1
+      $ pakket manage list-specs
+      $ pakket manage list-sources
+      $ pakket manage list-parcels
+  
+      $ pakket manage [-cv] [long options...]
+  
+  =head1 DESCRIPTION
+  
+  The C<manage> command does all management with the repositories. This
+  includes listing, adding, and removing packages. It includes listing
+  all information across repositories (specs, sources, parlces), as well
+  as dependencies for any package.
 PAKKET_CLI_COMMAND_MANAGE
 
 $fatpacked{"Pakket/CLI/Command/run.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_RUN';
@@ -2759,7 +2456,7 @@ $fatpacked{"Pakket/CLI/Command/run.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   }
   
   sub validate_args {
-      my ( $self, $opt, $args ) = @_;
+      my ( $self, $opt ) = @_;
   
       Log::Any::Adapter->set( 'Dispatch',
           'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
@@ -2788,6 +2485,22 @@ $fatpacked{"Pakket/CLI/Command/run.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   1;
   
   __END__
+  
+  =pod
+  
+  =head1 SYNOPSIS
+  
+      # Generate environment variables
+      $ pakket run --from=/opt/pakket/
+  
+      # Run application directly
+      $ pakekt run --from=/opt/pakket myscript.pl
+  
+  =head1 DESCRIPTION
+  
+  The runner allows you to either run your application in Pakket or set
+  up environment variables so you could run your application later, not
+  requiring the runner again.
 PAKKET_CLI_COMMAND_RUN
 
 $fatpacked{"Pakket/CLI/Command/serve.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_SERVE';
@@ -2838,6 +2551,59 @@ $fatpacked{"Pakket/CLI/Command/serve.pm"} = '#line '.(1+__LINE__).' "'.__FILE__.
   1;
   
   __END__
+  
+  =pod
+  
+  =head1 SYNOPSIS
+  
+      $ pakket serve
+      $ pakket serve --port 3000
+  
+  =head1 DESCRIPTION
+  
+  The C<serve> command allows you to start a web server for Pakket. It is
+  highly configurable and can serve any amount of repositories of all
+  kinds.
+  
+  It will load one of following files in the following order:
+  
+  =over 4
+  
+  =item * C<PAKKET_WEB_CONFIG> environment variable (to a filename)
+  
+  =item * C<~/.pakket-web.json>
+  
+  =item * C</etc/pakket-web.json>
+  
+  =back
+  
+  =head2 Configuration example
+  
+      $ cat ~/.pakket-web.json
+  
+      {
+          "repositories" : [
+              {
+                  "type" : "Spec",
+                  "path" : "/pakket/spec"
+                  "backend" : [
+                      "HTTP",
+                      "host", "pakket.mydomain.com",
+                      "port", 80
+                  ]
+              },
+              {
+                  "type" : "Source",
+                  "path" : "/pakket/source",
+                  "backend" : [
+                      "File",
+                      "directory", "/mnt/pakket-sources"
+                  ],
+              },
+  
+              ...
+          ]
+      }
 PAKKET_CLI_COMMAND_SERVE
 
 $fatpacked{"Pakket/CLI/Command/uninstall.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CLI_COMMAND_UNINSTALL';
@@ -2873,8 +2639,7 @@ $fatpacked{"Pakket/CLI/Command/uninstall.pm"} = '#line '.(1+__LINE__).' "'.__FIL
   
       my @packages;
       foreach my $package_str (@package_strs) {
-          my ( $pkg_cat, $pkg_name, $pkg_version, $pkg_release )
-              = $package_str =~ PAKKET_PACKAGE_SPEC();
+          my ( $pkg_cat, $pkg_name ) = $package_str =~ PAKKET_PACKAGE_SPEC();
   
           if ( !$pkg_cat || !$pkg_name ) {
               die $log->critical(
@@ -2918,7 +2683,7 @@ $fatpacked{"Pakket/CLI/Command/uninstall.pm"} = '#line '.(1+__LINE__).' "'.__FIL
   sub opt_spec {
       return (
           [ 'pakket-dir=s',         'path where installed pakket' ],
-          [ 'input-file=s',         'uninstall eveything listed in this file' ],
+          [ 'input-file=s',         'uninstall everything listed in this file' ],
           [ 'without-dependencies', 'don\'t remove dependencies' ],
           [
               'verbose|v+',
@@ -2966,6 +2731,16 @@ $fatpacked{"Pakket/CLI/Command/uninstall.pm"} = '#line '.(1+__LINE__).' "'.__FIL
   1;
   
   __END__
+  
+  =pod
+  
+  =head1 SYNOPSIS
+  
+      $ pakket uninstall perl/Dancer2
+  
+  =head1 DESCRIPTION
+  
+  Uninstall a given package.
 PAKKET_CLI_COMMAND_UNINSTALL
 
 $fatpacked{"Pakket/Config.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_CONFIG';
@@ -3160,6 +2935,27 @@ $fatpacked{"Pakket/Installer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       'default' => sub {0},
   );
   
+  has 'requirements' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub { +{} },
+  );
+  
+  has 'ignore_failures' => (
+      'is'      => 'ro',
+      'isa'     => 'Bool',
+      'default' => sub {0},
+  );
+  
+  has 'installed_packages' => (
+      'is'      => 'rw',
+      'isa'     => 'HashRef',
+      # Don't load installed_packages in constuctor.
+      # Installer is also used by Builder,
+      # which doesn't have installed_packages
+      'default' => sub { +{} },
+  );
+  
   sub install {
       my ( $self, @packages ) = @_;
   
@@ -3167,6 +2963,12 @@ $fatpacked{"Pakket/Installer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
           $log->notice('Did not receive any parcels to deliver');
           return;
       }
+  
+      @packages = $self->set_latest_version_for_undefined(@packages);
+  
+      foreach (@packages) { $self->requirements->{$_->short_name} = $_ };
+  
+      $self->installed_packages($self->load_installed_packages($self->active_dir));
   
       if ( !$self->force ) {
           @packages = $self->drop_installed_packages(@packages);
@@ -3176,18 +2978,24 @@ $fatpacked{"Pakket/Installer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
       my $installer_cache = {};
   
       foreach my $package (@packages) {
-          $self->install_package(
-              $package,
-              $self->work_dir,
-              { 'cache' => $installer_cache }
-          );
+          eval {
+              $self->install_package(
+                  $package,
+                  $self->work_dir,
+                  { 'cache' => $installer_cache }
+              );
+              1;
+          } or do {
+              $self->ignore_failures or die $@;
+              $log->warnf( 'Failed to install %s, skipping', $package->full_name);
+          };
       }
   
       $self->activate_work_dir;
   
       $log->infof(
-          "Finished installing %d packages into $self->pakket_dir",
-          scalar keys %{$installer_cache},
+          "Finished installing %d packages into '%s'",
+          scalar keys %{$installer_cache}, $self->pakket_dir,
       );
   
       log_success( 'Finished installing: ' . join ', ',
@@ -3229,7 +3037,7 @@ $fatpacked{"Pakket/Installer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   
       $log->debugf( "About to install %s (into $dir)", $package->full_name );
   
-      is_installed($installer_cache, $package)
+      $self->is_installed($installer_cache, $package)
           and return;
   
       mark_as_installed($installer_cache, $package);
@@ -3272,31 +3080,39 @@ $fatpacked{"Pakket/Installer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   }
   
   sub install_prereq {
-     my ($self, $category, $name, $prereq_data, $dir, $opts) = @_;
+      my ($self, $category, $name, $prereq_data, $dir, $opts) = @_;
+      my $package;
+      if (exists $self->requirements->{"$category/$name"}) {
+          $package = $self->requirements->{"$category/$name"};
+          # FIXME: should we check compatibility
+          # requested by user version of package
+          # with dependencies requirements?
+          # if yes, should we disable it by option --force?
+      } else {
+          # FIXME: This should be removed when we introduce version ranges
+          # This forces us to install the latest version we have of
+          # something, instead of finding the latest, based on the
+          # version range, which "$prereq_version" contains. -- SX
+          my $ver_rel = $self->parcel_repo->latest_version_release(
+                      $category,
+                      $name,
+                      $prereq_data->{'version'},
+                  );
   
-     # FIXME: This should be removed when we introduce version ranges
-     # This forces us to install the latest version we have of
-     # something, instead of finding the latest, based on the
-     # version range, which "$prereq_version" contains. -- SX
-     my $ver_rel = $self->parcel_repo->latest_version_release(
-         $category,
-         $name,
-         $prereq_data->{'version'},
-     );
+          my ( $version, $release ) = @{$ver_rel};
   
-     my ( $version, $release ) = @{$ver_rel};
+          $package = Pakket::PackageQuery->new(
+                  'category' => $category,
+                  'name'     => $name,
+                  'version'  => $version,
+                  'release'  => $release,
+                  );
+      }
   
-     my $query = Pakket::PackageQuery->new(
-         'category' => $category,
-         'name'     => $name,
-         'version'  => $version,
-         'release'  => $release,
-     );
-  
-     $self->install_package(
-         $query, $dir,
-         { %{$opts}, 'as_prereq' => 1 },
-     );
+      $self->install_package(
+          $package, $dir,
+          { %{$opts}, 'as_prereq' => 1 },
+      );
   }
   
   sub copy_package_to_install_dir {
@@ -3308,12 +3124,19 @@ $fatpacked{"Pakket/Installer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
               and next;
   
           my $target_dir = $dir->child($basename);
-          dircopy( $item, $target_dir );
+          local $File::Copy::Recursive::RMTrgFil = 1;
+          dircopy($item, $target_dir)
+              or croak($log->criticalf("Can't copy $item to $target_dir ($!)"));
       }
   }
   
   sub is_installed {
-      my ($installer_cache, $package) = @_;
+      my ($self, $installer_cache, $package) = @_;
+  
+      if ($self->installed_packages->{$package->full_name}) {
+          $log->infof( '%s already installed', $package->full_name );
+          return 1;
+      }
   
       my $pkg_cat  = $package->category;
       my $pkg_name = $package->name;
@@ -3391,16 +3214,42 @@ $fatpacked{"Pakket/Installer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   sub drop_installed_packages {
       my $self = shift;
       my @packages = @_;
-      my $installed_packages = $self->load_installed_packages($self->active_dir);
       my @out;
       for my $package (@packages) {
-          if ($installed_packages->{$package->full_name}) {
+          if ($self->installed_packages->{$package->full_name}) {
               $log->infof( '%s already installed', $package->full_name );
           } else {
               push @out, $package;
           }
       }
       return @out;
+  }
+  
+  sub set_latest_version_for_undefined {
+      my $self      = shift;
+      my @packages  = @_;
+  
+      my @output;
+      for my $package (@packages) {
+          if ($package->version && $package->release) {
+              push @output, $package;
+          } else {
+              my $ver_condition = $package->version
+                  ? "== " . $package->version
+                  : ">= 0";
+  
+              my ($ver, $rel) = @{$self->parcel_repo->latest_version_release(
+                                      $package->category, $package->name, $ver_condition)};
+  
+              push @output, Pakket::Package->new(
+                                  'category' => $package->category,
+                                  'name'     => $package->name,
+                                  'version'  => $ver,
+                                  'release'  => $rel,
+                              );
+          }
+      }
+      return @output;
   }
   
   __PACKAGE__->meta->make_immutable;
@@ -3410,6 +3259,133 @@ $fatpacked{"Pakket/Installer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<
   1;
   
   __END__
+  
+  =pod
+  
+  =head1 SYNOPSIS
+  
+  =head1 DESCRIPTION
+  
+  =head1 ATTRIBUTES
+  
+  =head2 config
+  
+  See L<Pakket::Role::HasConfig>.
+  
+  =head2 parcel_repo
+  
+  See L<Pakket::Role::HasParcelRepo>.
+  
+  =head2 parcel_repo_backend
+  
+  See L<Pakket::Role::HasParcelRepo>.
+  
+  =head2 requirements
+  
+  List in hashref built during install of additional requirements.
+  
+  =head2 force
+  
+  A boolean to install packages even if they are already installed.
+  
+  =head2 pakket_dir
+  
+  See L<Pakket::Role::HasLibDir>.
+  
+  =head2 libraries_dir
+  
+  See L<Pakket::Role::HasLibDir>.
+  
+  =head2 active_dir
+  
+  See L<Pakket::Role::HasLibDir>.
+  
+  =head2 work_dir
+  
+  See L<Pakket::Role::HasLibDir>.
+  
+  =head1 METHODS
+  
+  =head2 activate_work_dir
+  
+  See L<Pakket::Role::HasLibDir>.
+  
+  =head2 remove_old_libraries
+  
+  See L<Pakket::Role::HasLibDir>.
+  
+  =head2 add_package_in_info_file
+  
+  See L<Pakket::Role::HasInfoFile>.
+  
+  =head2 load_info_file
+  
+  See L<Pakket::Role::HasInfoFile>.
+  
+  =head2 save_info_file
+  
+  See L<Pakket::Role::HasInfoFile>.
+  
+  =head2 load_installed_packages
+  
+  See L<Pakket::Role::HasInfoFile>.
+  
+  =head2 install(@packages)
+  
+  The main method used to install packages.
+  
+  Installs all packages and then turns on the active directory link.
+  
+  =head2 try_to_install_package($package, $dir, \%opts)
+  
+  Attempts to install a package while reporting failure. This is useful
+  when it is possible to install but might not work. It is used by the
+  L<Pakket::Builder> to install all possible available pre-built
+  packages.
+  
+  =head2 install_package($package, $dir, \%opts)
+  
+  The guts of installing a package. This is used by C<install> and
+  C<try_to_install_package>.
+  
+  =head2 install_prereq($category, $name, \%prereq_data, $dir, \%opts)
+  
+  Takes a prereq from a package, finds the matching package and installs
+  it.
+  
+  =head2 copy_package_to_install_dir($source_dir, $target_dir)
+  
+  Recursively copy all the package directories and files to the install
+  directory.
+  
+  =head2 is_installed(\%installer_cache, $package)
+  
+  Check whether the package is already installed or not using our
+  installer cache.
+  
+  =head2 mark_as_installed(\%installer_cache, $package)
+  
+  Add to cache as installed.
+  
+  =head2 pre_install_checks($dir, $package, \%opts)
+  
+  Perform all the checks for the installation phase.
+  
+  =head2 show_installed()
+  
+  Display all the installed packages. This is helpful for debugging.
+  
+  =head2 drop_installed_packages(@packages)
+  
+  Removes installed packages from a list of given packages.
+  
+  =head2 run_command
+  
+  See L<Pakket::Role::RunCommad>.
+  
+  =head2 run_command_sequence
+  
+  See L<Pakket::Role::RunCommad>.
 PAKKET_INSTALLER
 
 $fatpacked{"Pakket/Log.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_LOG';
@@ -3510,8 +3486,19 @@ $fatpacked{"Pakket/Log.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKK
   }
   
   sub _build_logger {
-      my $class = shift;
-      my $file  = shift || Path::Tiny::path('/tmp/build.log')->stringify;
+      my ($class, $file) = @_;
+  
+      if (!$file) {
+          my $dir = Path::Tiny::path('~/.pakket');
+          eval {
+              $dir->mkpath;
+              1;
+          } or do {
+              die "Can't create directory $dir : " . $!;
+          };
+  
+          $file = $dir->child("pakket.log")->stringify;
+      }
   
       return [
           'File',
@@ -3561,8 +3548,10 @@ $fatpacked{"Pakket/Manager.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   use Moose;
   use Log::Any qw< $log >;
   use Carp     qw< croak >;
+  use Safe::Isa;
   
   use Pakket::Log;
+  use Pakket::Scaffolder::Native;
   use Pakket::Scaffolder::Perl;
   
   has 'config' => (
@@ -3626,6 +3615,11 @@ $fatpacked{"Pakket/Manager.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
       'default'   => 0,
   );
   
+  has 'source_archive' => (
+      'is'        => 'ro',
+      'isa'       => 'Maybe[Str]',
+  );
+  
   sub _build_category {
       my $self = shift;
       $self->{'cpanfile'} and return 'perl';
@@ -3668,6 +3662,30 @@ $fatpacked{"Pakket/Manager.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
               }
               print "\n";
           }
+      }
+  
+      if ($spec->{'build_opts'}) {
+          print "build options:\n";
+          if ($spec->{'build_opts'}{'configure_flags'}) {
+              print "    configure flags:\n";
+              for my $flag (@{$spec->{'build_opts'}{'configure_flags'}}) {
+                  print "        $flag\n";
+              }
+          }
+          if ($spec->{'build_opts'}{'build_flags'}) {
+              print "    build flags:\n";
+              for my $flag (@{$spec->{'build_opts'}{'build_flags'}}) {
+                  print "        $flag\n";
+              }
+          }
+          if ($spec->{'build_opts'}{'env_vars'}) {
+              print "    env vars:\n";
+              for my $var (keys %{$spec->{'build_opts'}{'env_vars'}}) {
+                  my $value = $spec->{'build_opts'}{'env_vars'}{$var};
+                  print "        $var=$value\n";
+              }
+          }
+          print "\n";
       }
   
       # TODO: reverse dependencies (requires map)
@@ -3723,13 +3741,14 @@ $fatpacked{"Pakket/Manager.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
               }
           }
   
-          foreach (@deps) { push @queue, $_ };
+          push @queue, @deps;
       }
   }
   
   sub add_package {
       my $self = shift;
-      $self->_get_scaffolder->run;
+      my $errors = $self->_get_scaffolder->run;
+      $errors && exit(1);
   }
   
   sub remove_package {
@@ -3759,8 +3778,7 @@ $fatpacked{"Pakket/Manager.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   
       my ( $category, $phase ) = @{$dependency}{qw< category phase >};
   
-      my $dep_exists = ( defined $spec->{'Prereqs'}{$category}{$phase}{$dep_name}
-                             and $spec->{'Prereqs'}{$category}{$phase}{$dep_name}{'version'} eq $dep_version );
+      my $dep_exists = ( defined $spec->{'Prereqs'}{$category}{$phase}{$dep_name} );
   
       my $name = $self->package->name;
   
@@ -3807,8 +3825,10 @@ $fatpacked{"Pakket/Manager.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   
       $self->category eq 'perl'
           and return $self->_gen_scaffolder_perl;
+      $self->category eq 'native'
+          and return $self->_gen_scaffolder_native;
   
-      croak("failed to create a scaffolder\n");
+      croak("Scaffolder for category " . $self->category . " doesn't exist");
   }
   
   sub _gen_scaffolder_perl {
@@ -3824,18 +3844,8 @@ $fatpacked{"Pakket/Manager.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   
       if ( $self->cpanfile ) {
           $params{'cpanfile'} = $self->cpanfile;
-  
       } else {
-          my $name = $self->package->name;
-          my $version = $self->package->version;
-          # hack to pass exact version in prereq syntax
-          defined $version
-              and !$self->is_local->{ $name }
-              and ref($self->package) eq 'Pakket::PackageQuery'
-              and $version =~ s/^/== /;
-  
-          $params{'module'}  = $name;
-          $params{'version'} = $version;
+          $params{'module'} = $self->package;
       }
   
       $self->cache_dir
@@ -3848,6 +3858,21 @@ $fatpacked{"Pakket/Manager.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
           and $params{'no_bootstrap'} = $self->no_bootstrap;
   
       return Pakket::Scaffolder::Perl->new(%params);
+  }
+  
+  sub _gen_scaffolder_native {
+      my $self = shift;
+  
+      my $name = $self->package->name;
+      my $version = $self->package->version;
+  
+      my %params = (
+          'package'         => $self->package,
+          'source_archive'  => $self->source_archive,
+          'config'          => $self->config,
+      );
+  
+      return Pakket::Scaffolder::Native->new(%params);
   }
   
   __PACKAGE__->meta->make_immutable;
@@ -3868,6 +3893,7 @@ $fatpacked{"Pakket/Package.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
   use Pakket::Types;
   use Pakket::Constants qw< PAKKET_DEFAULT_RELEASE >;
   use JSON::MaybeXS qw< decode_json >;
+  use version 0.77;
   
   with qw< Pakket::Role::BasicPackageAttrs >;
   
@@ -3916,6 +3942,16 @@ $fatpacked{"Pakket/Package.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'
       'lazy'    => 1,
       'builder' => '_build_runtime_prereqs',
   );
+  
+  sub BUILDARGS {
+      my ( $class, %args ) = @_;
+      if ($args{'category'} eq 'perl') {
+          my $ver = version->new($args{'version'});
+          if ($ver->is_qv) {$ver = version->new($ver->normal)};
+          $args{'version'} = $ver->stringify();
+      }
+      return \%args;
+  }
   
   sub _build_configure_prereqs {
       my $self    = shift;
@@ -3987,6 +4023,7 @@ $fatpacked{"Pakket/PackageQuery.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   
   use Carp              qw< croak >;
   use Log::Any          qw< $log >;
+  use version 0.77;
   use Pakket::Constants qw<
       PAKKET_PACKAGE_SPEC
       PAKKET_DEFAULT_RELEASE
@@ -4013,6 +4050,16 @@ $fatpacked{"Pakket/PackageQuery.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
       'isa'     => 'Bool',
       'default' => sub {0},
   );
+  
+  sub BUILDARGS {
+      my ( $class, %args ) = @_;
+      if ($args{'category'} eq 'perl') {
+          my $ver = version->new($args{'version'});
+          if ($ver->is_qv) {$ver = version->new($ver->normal)};
+          $args{'version'} = $ver->stringify();
+      }
+      return \%args;
+  }
   
   sub new_from_string {
       my ( $class, $req_str ) = @_;
@@ -4045,7 +4092,8 @@ $fatpacked{"Pakket/Repository.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
   use Path::Tiny;
   use Archive::Any;
-  use Archive::Tar::Wrapper;
+  use Archive::Tar;
+  use File::chdir;
   use Carp ();
   use Log::Any      qw< $log >;
   use Pakket::Types qw< PakketRepositoryBackend >;
@@ -4069,7 +4117,7 @@ $fatpacked{"Pakket/Repository.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
       my $self = shift;
       Carp::croak( $log->critical(
           'You did not specify a backend '
-        . '(using parameter or builder)',
+        . '(using parameter or URI string)',
       ) );
   }
   
@@ -4124,7 +4172,7 @@ $fatpacked{"Pakket/Repository.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
           'native' => 'Perl',
       );
   
-      my @versions;
+      my %versions;
       foreach my $object_id ( @{ $self->all_object_ids } ) {
           my ( $my_category, $my_name, $my_version, $my_release ) =
               $object_id =~ PAKKET_PACKAGE_SPEC();
@@ -4134,30 +4182,38 @@ $fatpacked{"Pakket/Repository.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
               or next;
   
           # Add the version
-          push @versions, $my_version;
+          push @{ $versions{$my_version} }, $my_release;
       }
   
       my $versioner = Pakket::Versioning->new(
           'type' => $types{$category},
       );
   
-      my $latest_version = $versioner->latest( $category, $name, $req_string, @versions );
-      $latest_version
-          and return [ $latest_version, 1 ];
+      my $latest_version = $versioner->latest(
+          $category, $name, $req_string, keys %versions,
+      ) or Carp::croak(
+          $log->criticalf(
+              'Could not analyze %s/%s to find latest version', $category,
+              $name,
+          ),
+      );
   
-      Carp::croak( $log->criticalf(
-          'Could not analyze %s/%s to find latest version',
-          $category, $name,
-      ) );
+      # return the latest version and latest release available for this version
+      return [
+          $latest_version,
+          ( sort @{ $versions{$latest_version} } )[-1],
+      ];
   }
   
   sub freeze_location {
       my ( $self, $orig_path ) = @_;
   
-      my $arch = Archive::Tar::Wrapper->new();
+      my $base_path = $orig_path;
+      my @files;
   
       if ( $orig_path->is_file ) {
-          $arch->add( $orig_path->basename, $orig_path->stringify, );
+          $base_path = $orig_path->basename;
+          push @files, $orig_path;
       } elsif ( $orig_path->is_dir ) {
           $orig_path->children
               or Carp::croak(
@@ -4165,13 +4221,10 @@ $fatpacked{"Pakket/Repository.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
           $orig_path->visit(
               sub {
-                  my ( $path, $stash ) = @_;
+                  my $path = shift;
+                  $path->is_file or return;
   
-                  $path->is_file
-                      or return;
-  
-                  $arch->add( $path->relative($orig_path)->stringify,
-                      $path->stringify, );
+                  push @files, $path;
               },
               { 'recurse' => 1 },
           );
@@ -4180,11 +4233,17 @@ $fatpacked{"Pakket/Repository.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
               $log->criticalf( "Unknown location type: %s", $orig_path ) );
       }
   
-      my $file = Path::Tiny->tempfile();
+      @files = map {$_->relative($base_path)->stringify} @files;
   
       # Write and compress
+      my $arch = Archive::Tar->new();
+      {
+          local $CWD = $base_path; # chdir, to use relative paths in archive
+          $arch->add_files(@files);
+      }
+      my $file = Path::Tiny->tempfile();
       $log->debug("Writing archive as $file");
-      $arch->write( $file->stringify, 1 );
+      $arch->write( $file->stringify, COMPRESS_GZIP );
   
       return $file;
   }
@@ -4197,10 +4256,143 @@ $fatpacked{"Pakket/Repository.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   __END__
   
   =pod
+  
+  =head1 SYNOPSIS
+  
+      my $repository = Pakket::Repository::Spec->new(
+          'backend' => Pakket::Repository::Backend::file->new(...),
+      );
+  
+      # or
+      my $repository = Pakket::Repository::Spec->new(
+          'backend' => 'file:///var/lib/',
+      );
+  
+      ...
+  
+  This is an abstract class that represents all repositories. It
+  implements a few generic methods all repositories use. Other than that,
+  there is very little usage of instantiate this object.
+  
+  Below is the documentation for these generic methods, as well as how to
+  set the backend when instantiating. If you are interested in
+  documentation about particular repository methods, see:
+  
+  =over 4
+  
+  =item * L<Pakket::Repository::Spec>
+  
+  =item * L<Pakket::Repository::Source>
+  
+  =item * L<Pakket::Repository::Parcel>
+  
+  =back
+  
+  =head1 ATTRIBUTES
+  
+  =head2 backend
+  
+      my $repo = Pakket::Repository::Source->new(
+          'backend' => Pakket::Repository::Backend::file->new(
+              ...
+          ),
+      );
+  
+      # Or the short form:
+      my $repo = Pakket::Repository::Source->new(
+          'backed' => 'file://...',
+      );
+  
+      # Or, if you need additional parameters
+      my $repo = Pakket::Repository::Source->new(
+          'backed'       => 'file://...',
+          'backend_opts' => {
+              'file_extension' => 'src',
+          },
+      );
+  
+  You can either provide an object or a string URI. You can provide
+  
+  Holds the repository backend implementation. Can be set with either an
+  object instance or with a string URI. Additional parameters can be set
+  with C<backend_opts>.
+  
+  Existing backends are:
+  
+  =over 4
+  
+  =item * L<Pakket::Repository::Backend::file>
+  
+  File-based backend, useful locally.
+  
+  =item * L<Pakket::Repository::Backend::http>
+  
+  HTTP-based backend, useful remotely.
+  
+  =item * L<Pakket::Repository::Backend::dbi>
+  
+  Database-based backed, useful remotely.
+  
+  =back
+  
+  =head2 backend_opts
+  
+  A hash reference that holds any additional parameters that could either
+  be part of the URI specification (like a port) or extended beyond the
+  URI specification (like a file extension).
+  
+  See examples in C<backend> above.
+  
+  =head1 METHODS
+  
+  =head2 retrieve_package_file
+  
+  =head2 remove_package_file
+  
+  =head2 latest_version_release
+  
+  =head2 freeze_location
+  
+  =head2 all_object_ids
+  
+  This method will call C<all_object_ids> on the backend.
+  
+  =head2 all_object_ids_by_name
+  
+  This method will call C<all_object_ids_by_name> on the backend.
+  
+  =head2 has_object
+  
+  This method will call C<has_object> on the backend.
+  
+  =head2 store_content
+  
+  This method will call C<store_content> on the backend.
+  
+  =head2 retrieve_content
+  
+  This method will call C<retrieve_content> on the backend.
+  
+  =head2 remove_content
+  
+  This method will call C<remove_content> on the backend.
+  
+  =head2 store_location
+  
+  This method will call C<store_location> on the backend.
+  
+  =head2 retrieve_location
+  
+  This method will call C<retrieve_location> on the backend.
+  
+  =head2 remove_location
+  
+  This method will call C<remove_location> on the backend.
+  
 PAKKET_REPOSITORY
 
-$fatpacked{"Pakket/Repository/Backend/DBI.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_BACKEND_DBI';
-  package Pakket::Repository::Backend::DBI;
+$fatpacked{"Pakket/Repository/Backend/dbi.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_BACKEND_DBI';
+  package Pakket::Repository::Backend::dbi;
   # ABSTRACT: A DBI-based backend repository
   
   # FIXME: Add methods: remove_location, remove_content
@@ -4224,6 +4416,11 @@ $fatpacked{"Pakket/Repository/Backend/DBI.pm"} = '#line '.(1+__LINE__).' "'.__FI
      'required' => 1,
      'coerce'   => 1,
   );
+  
+  sub new_from_uri {
+      my ( $class, $uri ) = @_;
+      return $class->new( 'dbh' => $uri );
+  }
   
   ## no critic qw(Variables::ProhibitPackageVars)
   sub all_object_ids {
@@ -4355,18 +4552,20 @@ $fatpacked{"Pakket/Repository/Backend/DBI.pm"} = '#line '.(1+__LINE__).' "'.__FI
   =pod
 PAKKET_REPOSITORY_BACKEND_DBI
 
-$fatpacked{"Pakket/Repository/Backend/File.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_BACKEND_FILE';
-  package Pakket::Repository::Backend::File;
+$fatpacked{"Pakket/Repository/Backend/file.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_BACKEND_FILE';
+  package Pakket::Repository::Backend::file;
   # ABSTRACT: A file-based backend repository
   
   use Moose;
   use MooseX::StrictConstructor;
   
+  use Carp              qw< croak >;
   use JSON::MaybeXS     qw< decode_json >;
   use Path::Tiny        qw< path >;
   use Log::Any          qw< $log >;
   use Types::Path::Tiny qw< Path AbsPath >;
   use Digest::SHA       qw< sha1_hex >;
+  use Regexp::Common    qw< URI >;
   use Pakket::Utils     qw< encode_json_canonical encode_json_pretty >;
   use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
   
@@ -4402,6 +4601,23 @@ $fatpacked{"Pakket/Repository/Backend/File.pm"} = '#line '.(1+__LINE__).' "'.__F
       'isa'     => 'Bool',
       'default' => sub {1},
   );
+  
+  sub new_from_uri {
+      my ( $class, $uri ) = @_;
+  
+      $uri =~ /$RE{'URI'}{'file'}{'-keep'}/xms
+          or croak( $log->critical("URI '$uri' is not a proper file URI") );
+  
+      my $path = $3; # perldoc Regexp::Common::URI::file
+      return $class->new( 'directory' => $path );
+  }
+  
+  sub BUILD {
+      my $self = shift;
+      if (!$self->directory->exists) {
+          croak( $log->criticalf("Directory %s doesn't exist", $self->directory));
+      }
+  }
   
   sub repo_index {
       my $self = shift;
@@ -4524,10 +4740,186 @@ $fatpacked{"Pakket/Repository/Backend/File.pm"} = '#line '.(1+__LINE__).' "'.__F
   __END__
   
   =pod
+  
+  =head1 SYNOPSIS
+  
+      my $backend = Pakket::Repository::Backend::file->new(
+          'directory'      => '/var/lib/pakket/specs',
+          'file_extension' => 'json',
+          'index_file'     => 'index.json',
+          'pretty_json'    => 1,
+      );
+  
+      # Handling locations
+      $backend->store_location( $id, $path_to_file );
+      my $path_to_file = $backend->retrieve_location($id);
+      $backend->remove_location($id);
+  
+      # Handling content
+      $backend->store_content( $id, $structure );
+      my $structure = $backend->retrieve_content($id);
+      $backend->remove_content($id);
+  
+      # Getting data
+      my $ids = $backend->all_object_ids; # [ ... ]
+      my $ids = $backend->all_object_ids_by_name( 'Path::Tiny', 'perl' );
+      if ( $backend->has_object($id) ) {
+          ...
+      }
+  
+  =head1 DESCRIPTION
+  
+  This is a file-based repository backend, allowing a repository to store
+  information as files. It could store either content or files
+  ("locations").
+  
+  Every and content is stored using its ID. The backend maintains an
+  index file of all files so it could locate them quickly. The index file
+  is stored in a JSON format.
+  
+  You can control the file extension and the index filename. See below.
+  
+  =head1 ATTRIBUTES
+  
+  When creating a new class, you can provide the following attributes:
+  
+  =head2 directory
+  
+  This is the directory that will be used. There is no root so it is
+  better to provide an absolute path.
+  
+  This is a required parameter.
+  
+  =head2 file_extension
+  
+  The extension of files it stores. This has no effect on the format of
+  the files, only the file extension. The reason is to be able to differ
+  between files that contain specs versus files of parcels.
+  
+  Our preference is C<pkt> for packages, C<spkt> for sources, and C<json>
+  for specs.
+  
+  Default: B<< C<sgm> >>.
+  
+  =head2 index_file
+  
+  The index file contains a list of all packages IDs and the files that
+  correlate to it. Files are stored by their hashed ID and the index
+  contains a mapping from the non-hashed ID to the hashed ID.
+  
+  Default: B<< F<index.json> >>.
+  
+  =head2 pretty_json
+  
+  This is a boolean controlling whether the index file should store
+  pleasantly-readable JSON.
+  
+  Default: B<1>.
+  
+  =head1 METHODS
+  
+  All examples below use a particular string as the ID, but the ID could
+  be anything you wish. Pakket uses the package ID for it, which consists
+  of the category, name, version, and release.
+  
+  =head2 store_location
+  
+      $backend->store_location(
+          'perl/Path::Tiny=0.100:1',
+          '/tmp/myfile.tar.gz',
+      );
+  
+  This method stores the ID with the hashed value and moves the file
+  under its new name to the directory.
+  
+  It will return the file path.
+  
+  =head2 retrieve_location 
+  
+      my $path = $backend->retrieve_location('perl/Path::Tiny=0.100:1');
+  
+  This method locates the file in the directory and provides the full
+  path to it. It does not copy it elsewhere. If you want to change it,
+  you will need to do this yourself.
+  
+  =head2 remove_location
+  
+      $backend->remove_location('perl/Path::Tiny=0.100:1');
+  
+  This will remove the file from the directory and the index.
+  
+  =head2 store_content
+  
+      my $path = $backend->store_content(
+          'perl/Path::Tiny=0.100:1',
+          {
+              'Package' => {
+                  'category' => 'perl',
+                  'name'     => 'Path::Tiny',
+                  'version'  => 0.100,
+                  'release'  => 1,
+              },
+  
+              'Prereqs' => {...},
+          },
+      );
+  
+  This method stores content (normally spec files, but could be used for
+  anything) in the directory. It will create a file with the appropriate
+  hash ID and save it in the index by serializing it in JSON. This means
+  you cannot store objects, only plain structures.
+  
+  It will return the path of that file. However, this is likely not be
+  very helpful since you would like to retrieve the content. For this,
+  use C<retrieve_content> described below.
+  
+  =head2 retrieve_content
+  
+      my $struct = $backend->retrieve_content('perl/Path::Tiny=0.100:1');
+  
+  This method will find the file, unserialize the file content, and
+  return the structure it stores.
+  
+  =head2 remove_content
+  
+      $backend->remove_content('perl/Path::Tiny=0.100:1');
+  
+  =head2 repo_index
+  
+      my $repo_index_content = $backend->repo_index();
+  
+  This retrieves the unserialized content of the index. It is a hash
+  reference that maps IDs to hashed IDs that correlate to file paths.
+  
+  =head2 all_object_ids
+  
+      my $ids = $backend->all_object_ids();
+  
+  Returns all the IDs of objects it stores in an array reference. This
+  helps find whether an object is available or not.
+  
+  =head2 all_object_ids_by_name
+  
+      my $ids = $backend->all_object_ids_by_name( $name, $category );
+  
+  This is a more specialized method that receives a name and category for
+  a package and locates all matching IDs in the index. It then returns
+  them in an array reference.
+  
+  You do not normally need to use this method.
+  
+  =head2 has_object
+  
+      my $exists = $backend->has_object('perl/Path::Tiny=0.100:1');
+  
+  This method receives an ID and returns a boolean if it's available.
+  
+  This method depends on the index so if you screw up with the index, all
+  bets are off. The methods above make sure the index is consistent.
 PAKKET_REPOSITORY_BACKEND_FILE
 
-$fatpacked{"Pakket/Repository/Backend/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_BACKEND_HTTP';
-  package Pakket::Repository::Backend::HTTP;
+$fatpacked{"Pakket/Repository/Backend/http.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_BACKEND_HTTP';
+  package Pakket::Repository::Backend::http;
   # ABSTRACT: A remote HTTP backend repository
   
   use Moose;
@@ -4540,11 +4932,20 @@ $fatpacked{"Pakket/Repository/Backend/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__F
   use Log::Any          qw< $log >;
   use Types::Path::Tiny qw< Path >;
   use HTTP::Tiny;
+  use Regexp::Common    qw< URI >;
   use Pakket::Utils     qw< encode_json_canonical >;
+  
+  use constant { 'HTTP_DEFAULT_PORT' => 80 };
   
   with qw<
       Pakket::Role::Repository::Backend
   >;
+  
+  has 'scheme' => (
+      'is'      => 'ro',
+      'isa'     => 'Str',
+      'default' => sub {'http'},
+  );
   
   has 'host' => (
       'is'       => 'ro',
@@ -4553,9 +4954,9 @@ $fatpacked{"Pakket/Repository/Backend/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__F
   );
   
   has 'port' => (
-      'is'       => 'ro',
-      'isa'      => 'Str',
-      'required' => 1,
+      'is'      => 'ro',
+      'isa'     => 'Str',
+      'default' => sub { HTTP_DEFAULT_PORT() },
   );
   
   has 'base_url' => (
@@ -4572,15 +4973,55 @@ $fatpacked{"Pakket/Repository/Backend/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__F
   );
   
   has 'http_client' => (
-      'is'       => 'ro',
-      'isa'      => 'HTTP::Tiny',
-      'default'  => sub { HTTP::Tiny->new },
+      'is'      => 'ro',
+      'isa'     => 'HTTP::Tiny',
+      'default' => sub { HTTP::Tiny->new },
   );
+  
+  sub new_from_uri {
+      my ( $class, $uri ) = @_;
+  
+      # We allow the user to not include http, because we're nice like that
+      $uri !~ m{^https?://}xms
+          and $uri = "http://$uri";
+  
+      $uri =~ /$RE{'URI'}{'HTTP'}{ '-scheme' => qr{https?} }{'-keep'}/xms
+          or croak( $log->critical("URI '$uri' is not a proper HTTP URI") );
+  
+      # perldoc Regexp::Common::URI::http
+      return $class->new(
+          'scheme'    => $2,
+          'host'      => $3,
+  
+          # only if matched
+        ( 'port'      => $4 )x !!$4,
+        ( 'base_path' => $5 )x !!$5,
+      );
+  }
+  
+  sub BUILD {
+      my $self = shift;
+  
+      # check that repo exists
+  
+      # TODO: should we create dedicated endpoint to check existence of repo
+      # because all_object_ids may be too heavy?
+      # FIXME: If we set this to "head" instead of "get", we at least
+      # don't transfer the content. -- SX
+      my $url      = $self->base_url . '/all_object_ids';
+      my $response = $self->http_client->get($url);
+      if ( !$response->{'success'} ) {
+          croak( $log->criticalf( 'Could not connect to repository %s : %d -- %s',
+              $url, $response->{'status'}, $response->{'reason'} ) );
+      }
+  }
   
   sub _build_base_url {
       my $self = shift;
+  
       return sprintf(
-          'http://%s:%s%s', $self->host, $self->port, $self->base_path,
+          '%s://%s:%s%s',
+          $self->scheme, $self->host, $self->port, $self->base_path,
       );
   }
   
@@ -4604,7 +5045,7 @@ $fatpacked{"Pakket/Repository/Backend/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__F
       my $response = $self->http_client->get(
           sprintf( '%s/all_object_ids_by_name?name=%s&category=%s',
               $self->base_url, uri_escape($name), uri_escape($category),
-          )
+          ),
       );
   
       if ( !$response->{'success'} ) {
@@ -4637,7 +5078,7 @@ $fatpacked{"Pakket/Repository/Backend/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__F
           { 'binmode' => ':raw' },
       );
   
-      my $url = "/store/location?id=" . uri_escape($id);
+      my $url      = "/store/location?id=" . uri_escape($id);
       my $full_url = $self->base_url . $url;
   
       my $response = $self->http_client->post(
@@ -4650,7 +5091,9 @@ $fatpacked{"Pakket/Repository/Backend/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__F
       );
   
       if ( !$response->{'success'} ) {
-          croak( $log->criticalf( 'Could not store location for id %s', $id ) );
+          croak( $log->criticalf(
+              'Could not store location for id %s, URL: %s, Status: %s, Reason: %s',
+              $id, $response->{'url'}, $response->{'status'}, $response->{'reason'}));
       }
   }
   
@@ -4725,6 +5168,205 @@ $fatpacked{"Pakket/Repository/Backend/HTTP.pm"} = '#line '.(1+__LINE__).' "'.__F
   __END__
   
   =pod
+  
+  =head1 SYNOPSIS
+  
+      my $backend = Pakket::Repository::Backend::http->new(
+          'scheme'      => 'https',
+          'host'        => 'your.pakket.subdomain.company.com',
+          'port'        => '80',
+          'base_path'   => '/pakket/,
+          'http_client' => HTTP::Tiny->new(...),
+      );
+  
+      # Handling locations
+      $backend->store_location( $id, $path_to_file );
+      my $path_to_file = $backend->retrieve_location($id);
+      $backend->remove_location($id);
+  
+      # Handling content
+      $backend->store_content( $id, $structure );
+      my $structure = $backend->retrieve_content($id);
+      $backend->remove_content($id);
+  
+      # Getting data
+      my $ids = $backend->all_object_ids; # [ ... ]
+      my $ids = $backend->all_object_ids_by_name( 'Path::Tiny', 'perl' );
+      if ( $backend->has_object($id) ) {
+          ...
+      }
+  
+  =head1 DESCRIPTION
+  
+  This repository backend will use HTTP to store and retrieve files and
+  content structures. It is useful when you are using multiple client
+  machines that need to either build to a remote repository or install
+  from a remote repository.
+  
+  On the server side you will need to use L<Pakket::Web>.
+  
+  =head1 ATTRIBUTES
+  
+  When creating a new class, you can provide the following attributes:
+  
+  =head2 scheme
+  
+  The scheme to use.
+  
+  Default: B<https>.
+  
+  =head2 host
+  
+  Hostname or IP string to use.    
+  
+  This is a required parameter.
+  
+  =head2 port
+  
+  The port on which the remote server is listening.
+  
+  Default: B<80>.
+  
+  =head2 base_path
+  
+  The default path to prepend to the request URL. This is useful when you
+  serve it on a server that also serves other content, or when you have
+  multiple pakket instances and they are in subdirectories.
+  
+  Default: empty.
+  
+  =head2 base_url
+  
+  This is an advanced attribute that is generated automatically from the
+  C<host>, C<port>, and C<base_path>. This uses B<http> by default but
+  you can create your own with B<https>:
+  
+      my $backend = Pakket::Repository::Backend::http->new(
+          'base_path' => 'https://my.path:80/secure_packages/',
+      );
+  
+  Default: B<<C<http://HOST:PORT/BASE_URL>>>.
+  
+  =head2 http_client
+  
+  This is an advanced attribute defining the user agent to be used for
+  fetching or updating data. This uses L<HTTP::Tiny> so you need one that
+  is compatible or a subclass of it.
+  
+  Default: L<HTTP::Tiny> object.
+  
+  =head1 METHODS
+  
+  All examples below use a particular string as the ID, but the ID could
+  be anything you wish. Pakket uses the package ID for it, which consists
+  of the category, name, version, and release.
+  
+  =head2 store_location
+  
+      $backend->store_location(
+          'perl/Path::Tiny=0.100:1',
+          '/tmp/myfile.tar.gz',
+      );
+  
+  This method makes a request to the server in the path
+  C</store/location?id=$ID>. The C<$ID> is URI-escaped and the request
+  is made as a C<x-www-form-urlencoded> request.
+  
+  The request is guarded by a check that will report this error, making
+  the return value is useless.
+  
+  =head2 retrieve_location 
+  
+      my $path = $backend->retrieve_location('perl/Path::Tiny=0.100:1');
+  
+  This method makes a request to the server in the path
+  C</retrieve/location?id=$ID>. The C<$ID> is URI-escaped.
+  
+  A temporary file is then created with the content and the method
+  returns the location of this file.
+  
+  =head2 remove_location
+  
+      $backend->remove_location('perl/Path::Tiny=0.100:1');
+  
+  This method makes a request to the server in the path
+  C</remove/location?id=$ID>. The C<$ID> is URI-escaped.
+  
+  The return value is a boolean of the success or fail of this operation.
+  
+  =head2 store_content
+  
+      $backend->store_content(
+          'perl/Path::Tiny=0.100:1',
+          {
+              'Package' => {
+                  'category' => 'perl',
+                  'name'     => 'Path::Tiny',
+                  'version'  => 0.100,
+                  'release'  => 1,
+              },
+  
+              'Prereqs' => {...},
+          },
+      );
+  
+  This method makes a POST request to the server in the path
+  C</store/content>. The request body contains the content, encoded
+  into JSON. This means you cannot store objects, only plain structures.
+  
+  The request is guarded by a check that will report this error, making
+  the return value is useless. To retrieve the content, use
+  C<retrieve_content> described below.
+  
+  =head2 retrieve_content
+  
+      my $struct = $backend->retrieve_content('perl/Path::Tiny=0.100:1');
+  
+  This method makes a request to the server in the path
+  C</retrieve/content?id=$ID>. The C<$ID> is URI-escaped.
+  
+  It then returns the content as a structure, unserialized.
+  
+  =head2 remove_content
+  
+      my $success = $backend->remove_content('perl/Path::Tiny=0.100:1');
+  
+  This method makes a request to the server in the path
+  C</remove/content?id=$ID>. The C<$ID> is URI-escaped.
+  
+  The return value is a boolean of the success or fail of this operation.
+  
+  =head2 all_object_ids
+  
+      my $ids = $backend->all_object_ids();
+  
+  This method makes a request to the server in the path
+  C</all_object_ids> and returns all the IDs of objects it stores in an
+  array reference. This helps find whether an object is available or not.
+  
+  =head2 all_object_ids_by_name
+  
+      my $ids = $backend->all_object_ids_by_name( $name, $category );
+  
+  This is a more specialized method that receives a name and category for
+  a package and locates all matching IDs.
+  
+  This method makes a request to the server in the path
+  C</all_object_ids_by_name?name=$NAME&category=$CATEGORY>. The
+  C<$NAME> and C<$CATEGORY> are URI-escaped.
+  
+  It then returns all the IDs it finds in an array reference.
+  
+  You do not normally need to use this method.
+  
+  =head2 has_object
+  
+      my $exists = $backend->has_object('perl/Path::Tiny=0.100:1');
+  
+  This method receives an ID and returns a boolean if it's available.
+  
+  This method makes a request to the server in the path
+  C</has_object?id=$ID>. The C<$ID> is URI-escaped.
 PAKKET_REPOSITORY_BACKEND_HTTP
 
 $fatpacked{"Pakket/Repository/Parcel.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_REPOSITORY_PARCEL';
@@ -4934,6 +5576,12 @@ $fatpacked{"Pakket/Role/Builder.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n
   
   requires qw< build_package >;
   
+  has 'exclude_packages' => (
+      'is'      => 'ro',
+      'isa'     => 'HashRef',
+      'default' => sub { +{} },
+  );
+  
   no Moose::Role;
   
   1;
@@ -4960,9 +5608,26 @@ $fatpacked{"Pakket/Role/HasConfig.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"
   }
   
   no Moose::Role;
+  
   1;
   
   __END__
+  
+  =pod
+  
+  =head1 DESCRIPTION
+  
+  This role provides any consumer with a C<config> attribute and builder,
+  allowing the class to seamlessly load configuration and refer to it, as
+  well as letting users override it during instantiation.
+  
+  This role is a wrapper around L<Pakket::Config>.
+  
+  =head1 ATTRIBUTES
+  
+  =head2 config
+  
+  A hashref built from the config file using L<Pakket::Config>.
 PAKKET_ROLE_HASCONFIG
 
 $fatpacked{"Pakket/Role/HasInfoFile.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_ROLE_HASINFOFILE';
@@ -4980,7 +5645,6 @@ $fatpacked{"Pakket/Role/HasInfoFile.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   sub add_package_in_info_file {
       my ( $self, $parcel_dir, $dir, $package, $opts ) = @_;
   
-      my $prereqs      = $package->prereqs;
       my $install_data = $self->load_info_file($dir);
   
       my %files;
@@ -4989,9 +5653,7 @@ $fatpacked{"Pakket/Role/HasInfoFile.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
       $parcel_dir->visit(
           sub {
               my ( $path, $state ) = @_;
-  
-              $path->is_file
-                  or return;
+              $path->is_file or return;
   
               my $filename = $path->relative($parcel_dir);
               $files{$filename} = {
@@ -5133,14 +5795,13 @@ $fatpacked{"Pakket/Role/HasLibDir.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"
   sub _build_work_dir {
       my $self = shift;
   
-      my $work_dir = $self->libraries_dir->child( time() );
+      my $template = sprintf("%s/work_%s_%s_XXXXX", $self->libraries_dir, $PID, time());
+      my $work_dir = Path::Tiny->tempdir($template, TMPDIR => 0, CLEANUP => 1);
   
       $work_dir->exists
-          and croak( $log->critical(
-              "Internal installation directory exists ($work_dir), exiting",
+          or croak( $log->critical(
+              "Could not create installation directory ($work_dir), exiting",
           ) );
-  
-      $work_dir->mkpath();
   
       # we copy any previous installation
       if ( $self->active_dir->exists ) {
@@ -5175,24 +5836,35 @@ $fatpacked{"Pakket/Role/HasLibDir.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"
           );
   
       if ( $active_temp->exists ) {
-  
           # Huh? why does this temporary pathname exist? Try to delete it...
           $log->debug('Deleting existing temporary active object');
-  
           $active_temp->remove
               or croak( $log->error(
                   'Could not activate new installation (temporary symlink remove failed)'
               ) );
       }
   
-      $log->debugf( 'Setting temporary active symlink to new work directory %s',
-          $work_dir );
+      # Need to set proper permissions before we move the work directory
+      $work_dir->chmod('0755');
   
-      symlink( $work_dir->basename, $active_temp )
+      my $work_final = $self->libraries_dir->child( time() );
+      $log->debugf( 'Moving work directory %s to its final place %s', $work_dir, $work_final );
+      $work_dir->move($work_final)
+          or croak( $log->error(
+              'Could not move work_dir to its final place'
+          ) );
+  
+      # Unfortunately, if we die in the next call the work_dir will not be
+      # removed, because we already changed its name so no cleanup will happen.
+  
+      $log->debugf( 'Setting temporary active symlink to new work directory %s',
+          $work_final );
+      symlink( $work_final->basename, $active_temp )
           or croak( $log->error(
               'Could not activate new installation (temporary symlink create failed)'
           ) );
   
+      $log->debugf( 'Moving symlink %s to its final place %s', $active_temp, $self->active_dir );
       $active_temp->move($self->active_dir)
           or croak( $log->error(
               'Could not atomically activate new installation (symlink rename failed)'
@@ -5253,8 +5925,33 @@ $fatpacked{"Pakket/Role/HasParcelRepo.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   );
   
   no Moose::Role;
+  
   1;
+  
   __END__
+  
+  =pod
+  
+  =head1 DESCRIPTION
+  
+  =head1 ATTRIBUTES
+  
+  =head2 parcel_repo
+  
+  Stores the parcel repository, built with the backend using
+  C<parcel_repo_backend>.
+  
+  =head2 parcel_repo_backend
+  
+  A hashref of backend information populated from the config file.
+  
+  =head1 SEE ALSO
+  
+  =over 4
+  
+  =item * L<Pakket::Repository::Parcel>
+  
+  =back
 PAKKET_ROLE_HASPARCELREPO
 
 $fatpacked{"Pakket/Role/HasSourceRepo.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_ROLE_HASSOURCEREPO';
@@ -5289,8 +5986,33 @@ $fatpacked{"Pakket/Role/HasSourceRepo.pm"} = '#line '.(1+__LINE__).' "'.__FILE__
   );
   
   no Moose::Role;
+  
   1;
+  
   __END__
+  
+  =pod
+  
+  =head1 DESCRIPTION
+  
+  =head1 ATTRIBUTES
+  
+  =head2 source_repo
+  
+  Stores the source repository, built with the backend using
+  C<source_repo_backend>.
+  
+  =head2 source_repo_backend
+  
+  A hashref of backend information populated from the config file.
+  
+  =head1 SEE ALSO
+  
+  =over 4
+  
+  =item * L<Pakket::Repository::Source>
+  
+  =back
 PAKKET_ROLE_HASSOURCEREPO
 
 $fatpacked{"Pakket/Role/HasSpecRepo.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_ROLE_HASSPECREPO';
@@ -5325,8 +6047,33 @@ $fatpacked{"Pakket/Role/HasSpecRepo.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."
   );
   
   no Moose::Role;
+  
   1;
+  
   __END__
+  
+  =pod
+  
+  =head1 DESCRIPTION
+  
+  =head1 ATTRIBUTES
+  
+  =head2 spec_repo
+  
+  Stores the spec repository, built with the backend using
+  C<spec_repo_backend>.
+  
+  =head2 spec_repo_backend
+  
+  A hashref of backend information populated from the config file.
+  
+  =head1 SEE ALSO
+  
+  =over 4
+  
+  =item * L<Pakket::Repository::Spec>
+  
+  =back
 PAKKET_ROLE_HASSPECREPO
 
 $fatpacked{"Pakket/Role/Perl/BootstrapModules.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_ROLE_PERL_BOOTSTRAPMODULES';
@@ -5338,23 +6085,36 @@ $fatpacked{"Pakket/Role/Perl/BootstrapModules.pm"} = '#line '.(1+__LINE__).' "'.
   # hardcoded list of packages we have to build first
   # using core modules to break cyclic dependencies.
   # we have to maintain the order in order for packages to build
-  # this list is an arrayref to maintain order, the elements
-  # of the list are arrayref tuples of [ module_name, distribution_name ]
+  # this list is an arrayref to maintain order
   has 'perl_bootstrap_modules' => (
       'is'      => 'ro',
       'isa'     => 'ArrayRef',
       'default' => sub {
           [
-              [ 'ExtUtils::MakeMaker'     => 'ExtUtils-MakeMaker' ],
-              [ 'Module::Build'           => 'Module-Build' ],
-              [ 'Module::Build::WithXSpp' => 'Module-Build-WithXSpp' ],
+              'ExtUtils-MakeMaker',
+              'Module-Build',
+              'Module-Build-WithXSpp',
           ]
       },
   );
   
   no Moose::Role;
+  
   1;
+  
   __END__
+  
+  =pod
+  
+  =head1 DESCRIPTION
+  
+  =head1 ATTRIBUTES
+  
+  =head2 perl_bootstrap_modules
+  
+  An arrayref containing distribution names of bootstrap modules.
+  
+  It is used as a list of Perl modules to bootstrap.
 PAKKET_ROLE_PERL_BOOTSTRAPMODULES
 
 $fatpacked{"Pakket/Role/Repository/Backend.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_ROLE_REPOSITORY_BACKEND';
@@ -5366,6 +6126,8 @@ $fatpacked{"Pakket/Role/Repository/Backend.pm"} = '#line '.(1+__LINE__).' "'.__F
   # These are helper methods we want the backend to implement
   # in order for the Repository to easily use across any backend
   requires qw<
+      new_from_uri
+  
       all_object_ids all_object_ids_by_name has_object
   
       store_content  retrieve_content  remove_content
@@ -5453,6 +6215,48 @@ $fatpacked{"Pakket/Role/RunCommand.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   1;
   
   __END__
+  
+  =pod
+  
+  =head1 DESCRIPTION
+  
+  Methods that help run commands in a standardized way.
+  
+  =head1 METHODS
+  
+  =head2 run_command
+  
+  Run a command picking the directory it will run from and additional
+  options (such as environment or debugging). This uses
+  L<System::Command>.
+  
+      $self->run_command( $dir, $commands, $extra_opts );
+  
+      $self->run_command(
+          '/tmp/mydir',
+          [ 'echo', 'hello', 'world' ],
+  
+          # System::Command options
+          { 'env' => { 'SHELL' => '/bin/bash' } },
+      );
+  
+  =head2 run_command_sequence
+  
+  This method is useful when you want to run a sequence of commands in
+  which each commands depends on the previous one succeeding.
+  
+      $self->run_command_sequence(
+          [ $dir, $commands, $extra_opts ],
+          [ $dir, $commands, $extra_opts ],
+      );
+  
+  =head1 SEE ALSO
+  
+  =over 4
+  
+  =item * L<System::Command>
+  
+  =back
 PAKKET_ROLE_RUNCOMMAND
 
 $fatpacked{"Pakket/Role/Versioning.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_ROLE_VERSIONING';
@@ -5511,6 +6315,114 @@ $fatpacked{"Pakket/Runner.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'P
   1;
 PAKKET_RUNNER
 
+$fatpacked{"Pakket/Scaffolder/Native.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_SCAFFOLDER_NATIVE';
+  package Pakket::Scaffolder::Native;
+  # ABSTRACT: Scffolding Native distributions
+  
+  use Moose;
+  use MooseX::StrictConstructor;
+  use Path::Tiny          qw< path >;
+  use Log::Any            qw< $log >;
+  
+  with qw<
+      Pakket::Role::HasConfig
+      Pakket::Role::HasSpecRepo
+      Pakket::Role::HasSourceRepo
+  >;
+  
+  has 'package' => (
+      'is' => 'ro',
+  );
+  
+  has 'source_archive' => (
+      'is'      => 'ro',
+      'isa'     => 'Maybe[Str]',
+  );
+  
+  sub run {
+      my $self = shift;
+  
+      if ( $self->spec_repo->has_object( $self->package->id ) ) {
+          $log->debugf("Package %s already exists", $self->package->full_name);
+          return;
+      }
+  
+      $log->infof('Working on %s', $self->package->full_name);
+  
+      # Source
+      $self->add_source();
+  
+      # Spec
+      $self->add_spec();
+  
+      $log->infof('Done: %s', $self->package->full_name);
+  }
+  
+  sub add_source {
+      my $self = shift;
+  
+      if ($self->source_repo->has_object($self->package->id)) {
+          $log->debugf("Package %s already exists in source repo (skipping)",
+                          $self->package->full_name);
+          return;
+      }
+  
+      if (!$self->source_archive) {
+          Carp::croak("Please specify --source-archive=<sources_file_name>");
+      }
+  
+      my $file = path($self->source_archive);
+      if (!$file->exists) {
+          Carp::croak("Archive with sources doesn't exist: ", $self->source_archive);
+      }
+  
+      my $target = Path::Tiny->tempdir();
+      my $dir    = $self->unpack($target, $file);
+  
+      $log->debugf("Uploading %s into source repo from %s", $self->package->full_name, $dir);
+      $self->source_repo->store_package_source($self->package, $dir);
+  }
+  
+  sub add_spec {
+      my $self = shift;
+  
+      $log->debugf("Creating spec for %s", $self->package->full_name);
+  
+      my $package = Pakket::Package->new(
+              'category' => $self->package->category,
+              'name'     => $self->package->name,
+              'version'  => $self->package->version,
+              'release'  => $self->package->release,
+          );
+  
+      $self->spec_repo->store_package_spec($package);
+  }
+  
+  sub unpack {
+      my ($self, $target, $file) = @_;
+  
+      my $archive = Archive::Any->new($file);
+  
+      if ($archive->is_naughty) {
+          Carp::croak($log->critical("Suspicious module ($file)"));
+      }
+  
+      $archive->extract($target);
+  
+      my @files = $target->children();
+      if (@files == 1 && $files[0]->is_dir) {
+          return $files[0];
+      }
+  
+      return $target;
+  }
+  
+  __PACKAGE__->meta->make_immutable;
+  no Moose;
+  1;
+  __END__
+PAKKET_SCAFFOLDER_NATIVE
+
 $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_SCAFFOLDER_PERL';
   package Pakket::Scaffolder::Perl;
   # ABSTRACT: Scffolding Perl distributions
@@ -5522,7 +6434,6 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   use Archive::Any;
   use CPAN::DistnameInfo;
   use CPAN::Meta;
-  use CPAN::Meta::Prereqs;
   use Parse::CPAN::Packages::Fast;
   use JSON::MaybeXS       qw< decode_json encode_json >;
   use Ref::Util           qw< is_arrayref is_hashref >;
@@ -5532,7 +6443,7 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   
   use Pakket::Package;
   use Pakket::Types;
-  use Pakket::Utils::Perl qw< should_skip_module >;
+  use Pakket::Utils::Perl qw< should_skip_core_module >;
   use Pakket::Constants   qw< PAKKET_PACKAGE_SPEC >;
   use Pakket::Scaffolder::Perl::Module;
   use Pakket::Scaffolder::Perl::CPANfile;
@@ -5564,7 +6475,7 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
       'required' => 1,
   );
   
-  has 'processed_dists' => (
+  has 'processed_packages' => (
       'is'      => 'ro',
       'isa'     => 'HashRef',
       'default' => sub { return +{} },
@@ -5573,20 +6484,6 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   has 'modules' => (
       'is'  => 'ro',
       'isa' => 'HashRef',
-  );
-  
-  has 'spec_index' => (
-      'is'      => 'ro',
-      'isa'     => 'HashRef',
-      'lazy'    => 1,
-      'builder' => '_build_spec_index',
-  );
-  
-  has 'prereqs' => (
-      'is'      => 'ro',
-      'isa'     => 'CPAN::Meta::Prereqs',
-      'lazy'    => 1,
-      'builder' => '_build_prereqs',
   );
   
   has 'download_dir' => (
@@ -5659,25 +6556,9 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
           || 'https://fastapi.metacpan.org';
   }
   
-  sub _build_prereqs {
-      my $self = shift;
-      return CPAN::Meta::Prereqs->new( $self->modules );
-  }
-  
   sub _build_download_dir {
       my $self = shift;
       return Path::Tiny->tempdir( 'CLEANUP' => 1 );
-  }
-  
-  sub _build_spec_index {
-      my $self = shift;
-      my $spec_index = $self->spec_repo->all_object_ids;
-      my %spec_index;
-      for ( @{ $spec_index } ) {
-          m{^.*?/(.*)=(.*?)$};
-          $spec_index{$1}{$2} = 1;
-      }
-      return \%spec_index;
   }
   
   sub _build_cpan_02packages {
@@ -5713,12 +6594,15 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
           unless $module xor $cpanfile;
   
       if ( $module ) {
-          $module =~ s/-/::/g; # TODO: find a more accurate way
-          my ( $version, $phase, $type ) = delete @args{qw< version phase type >};
+          my $version = $module->version
+                          ? "== " . $module->version  # exact version
+                          : ">= 0";                   # latest version
+  
+          my ( $phase, $type   ) = delete @args{qw< phase type >};
           $args{'modules'} =
               Pakket::Scaffolder::Perl::Module->new(
-                  'name' => $module,
-                  ( version => $version )x!! defined $version,
+                  'name'    => $module->name,
+                  'version' => $version . ":" . $module->release,
                   ( phase   => $phase   )x!! defined $phase,
                   ( type    => $type    )x!! defined $type,
               )->prereq_specs;
@@ -5738,65 +6622,215 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
       my %failed;
   
       # Bootstrap toolchain
-      if ( !( $self->no_bootstrap or $self->no_deps ) ) {
-          for my $module ( map { $_->[0] } @{ $self->perl_bootstrap_modules } ) {
-              # TODO: check versions
-              if ( exists $self->spec_index->{$module} ) {
-                  $log->debugf( 'Skipping %s (already have version: %s)',
-                                $module, $self->spec_index->{$module} );
-                  next;
-              }
-  
-              $log->debugf( 'Bootstrapping config: %s', $module );
-              my $requirements = $self->prereqs->requirements_for(qw< configure requires >);
-  
+      if ( !$self->no_bootstrap and !$self->no_deps ) {
+          for my $package ( @{ $self->perl_bootstrap_modules } ) {
+              $log->debugf( 'Bootstrapping toolchain: %s', $package );
               eval {
-                  $self->create_spec_for( $module, $requirements );
+                  $self->scaffold_package( $package, { $package => "0" } );
                   1;
               } or do {
                   my $err = $@ || 'zombie error';
-                  Carp::croak("Cannot bootstrap toolchain module: $module ($err)\n");
+                  Carp::croak("Cannot bootstrap toolchain module: $package ($err)\n");
               };
           }
       }
   
       # the rest
       for my $phase ( @{ $self->phases } ) {
-          $log->debugf( 'Phase: %s', $phase );
           for my $type ( @{ $self->types } ) {
               next unless is_hashref( $self->modules->{ $phase }{ $type } );
   
-              my $requirements = $self->prereqs->requirements_for( $phase, $type );
+              my $requirements = $self->modules->{$phase}{$type};
   
-              for my $module ( sort keys %{ $self->modules->{ $phase }{ $type } } ) {
+              for my $package ( sort keys %{ $self->modules->{ $phase }{ $type } } ) {
                   eval {
-                      $self->create_spec_for( $module, $requirements );
+                      $self->scaffold_package( $package, $requirements );
                       1;
                   } or do {
                       my $err = $@ || 'zombie error';
-                      $failed{$module} = $err;
+                      $failed{$package} = $err;
                   };
               }
           }
       }
   
-      for my $f ( keys %failed ) {
-          $log->infof( "[FAILED] %s: %s", $f, $failed{$f} );
+      my $errors = keys %failed;
+      if ($errors) {
+          for my $f ( sort keys %failed ) {
+              $log->errorf( "[FAILED] %s: %s", $f, $failed{$f} );
+          }
+      } else {
+          $log->info( 'Done' );
       }
-  
-      $log->info( 'Done' );
+      return $errors;
   }
   
-  sub skip_name {
-      my ( $self, $name ) = @_;
+  sub scaffold_package {
+      my ( $self, $package_name, $requirements ) = @_;
   
-      if ( should_skip_module($name) ) {
-          $log->debugf( "%sSkipping %s (core module, not dual-life)", $self->spaces, $name );
+      if ( $self->processed_packages->{ $package_name }++ ) {
+          $log->debugf("Skipping $package_name, already processed");
+          return;
+      }
+  
+      if ( $self->is_package_in_spec_repo($package_name, $requirements) ) {
+          return;
+      }
+  
+      my $release_info = $self->get_release_info_for_package( $package_name, $requirements );
+  
+      my $package_spec = {
+          'Package' => {
+              'category' => 'perl',
+              'name'     => $package_name,
+              'version'  => $release_info->{'version'},
+              'release'  => $release_info->{'release'} // 1,
+          },
+      };
+  
+      my $package = Pakket::Package->new_from_spec($package_spec);
+  
+      $log->debug( '----------------------------------------------' );
+      $log->infof( '%sWorking on %s', $self->spaces, $package->full_name );
+      $self->set_depth( $self->depth + 1 );
+  
+      # Source
+      $self->add_source_for_package($package, $release_info);
+  
+      # Spec
+      $self->add_spec_for_package($package, $release_info, $package_spec);
+  
+      $log->infof( '%sDone: %s', $self->spaces, $package->full_name );
+      $self->set_depth( $self->depth - 1 );
+  }
+  
+  
+  sub add_source_for_package {
+      my ($self, $package, $release_info) = @_;
+      my $package_name = $package->name;
+  
+      # check if we already have the source in the repo
+      if ( $self->source_repo->has_object( $package->id ) ) {
+          $log->debugf("Package %s already exists in source repo (skipping)",
+                          $package->full_name);
+          return;
+      }
+  
+      my $download_url = $self->rewrite_download_url( $release_info->{'download_url'} );
+  
+      if ( $self->_has_cache_dir ) {
+          my $from_file;
+          if ($download_url) {
+              my $name_ver = $download_url =~ s{^.+/}{}r;
+              $from_file = path($self->cache_dir, $name_ver);
+              $from_file->exists or $from_file = undef;
+          } else {
+              $from_file = $self->get_source_archive_path($package_name,
+                      $release_info->{'version'}, $release_info->{'release'});
+          }
+          if ( $from_file ) {
+              $log->debugf( 'Found source for %s in %s',
+                              $package_name, $from_file->stringify);
+  
+              $self->upload_source_archive( $package, $from_file );
+              return;
+          }
+      }
+  
+      if ( $self->is_local->{$package_name} ) {
+          Carp::croak( "IMPOSSIBLE: Can't find archive with source for %s", $package_name );
+      }
+  
+      if ( !$download_url ) {
+          Carp::croak( "Don't have download_url for %s", $package_name );
+      }
+  
+      my $source_file = path( $self->download_dir,
+                              ( $download_url =~ s{^.+/}{}r ) );
+      $log->debugf("Downloading sources for %s (%s)", $package_name, $download_url);
+      $self->ua->mirror( $download_url, $source_file );
+      $self->upload_source_archive( $package, $source_file );
+  }
+  
+  sub add_spec_for_package {
+      my ($self, $package, $release_info, $spec) = @_;
+      if ( $self->spec_repo->has_object( $package->id ) ) {
+          $log->debugf("Package %s already exists in spec repo (skipping)",
+                          $package->full_name);
+          return;
+      }
+      $log->debugf("Creating spec for %s", $package->full_name);
+  
+  
+      my @dependencies_to_scaffold;
+  
+      for my $phase ( @{ $self->phases } ) {  # phases: configure, develop, runtime, test
+          $spec->{'Prereqs'}{'perl'}{$phase} = +{};
+  
+          # CPAN requirement is a list of modules and their versions.
+          # Pakket internally, in spec, keeps list of packages and their versions.
+          # It is possible that few different modules from CPAN requirement are in one distribution.
+          # We will gather distribution names and merge requirements of different modules of one distribution.
+          my $spec_req = CPAN::Meta::Requirements->new;
+  
+          for my $dep_type ( @{ $self->types } ) {  # dep_type: requires, recommends
+              next unless is_hashref( $release_info->{'prereqs'}->{ $phase }{ $dep_type } );
+              my $dep_requirements = $release_info->{'prereqs'}{$phase}{$dep_type};
+  
+              for my $module ( keys %{ $release_info->{'prereqs'}->{ $phase }{ $dep_type } } ) {
+                  next if $self->skip_module($module);
+  
+                  my $package_name = $self->get_dist_name($module);
+                  $log->debugf( "Found module $module in distribution $package_name" );
+  
+                  if ( exists $self->known_incorrect_dependencies->{ $package->name }{ $package_name } ) {
+                      $log->debugf( "%sskipping %s (known 'bad' dependency for %s)",
+                                    $self->spaces, $package_name, $package->name );
+                      next;
+                  }
+  
+                  # TODO: find out correct way to translate module version to package version
+                  $spec_req->add_string_requirement( $package_name,
+                              $dep_requirements->{$module} );
+              }
+          }
+  
+          my $spec_req_h = $spec_req->as_string_hash();
+          for my $package_name ( keys %{ $spec_req_h } ) {
+              push @dependencies_to_scaffold,
+                  { 'package_name' => $package_name, 'requirements' => $spec_req_h };
+              $spec->{'Prereqs'}{'perl'}{$phase}->{ $package_name } =
+                  +{ 'version' => ( $spec_req_h->{ $package_name } || 0 ) };
+          }
+      }
+  
+      if ( ! $self->no_deps ) {
+          $log->debugf( 'Scaffolding dependencies of %s', $package->full_name );
+          for my $dep (@dependencies_to_scaffold) {
+              $self->scaffold_package($dep->{'package_name'}, $dep->{'requirements'} );
+          }
+      }
+  
+      $self->merge_pakket_json_into_spec($package, $spec);
+  
+      # We had a partial Package object
+      # So now we have to recreate that package object
+      # based on the full specs (including prereqs)
+      $package = Pakket::Package->new_from_spec($spec);
+  
+      $self->spec_repo->store_package_spec($package);
+  }
+  
+  sub skip_module {
+      my ( $self, $module_name ) = @_;
+  
+      if ( should_skip_core_module($module_name) ) {
+          $log->debugf( "%sSkipping %s (core module, not dual-life)", $self->spaces, $module_name );
           return 1;
       }
   
-      if ( exists $self->known_names_to_skip->{ $name } ) {
-          $log->debugf( "%sSkipping %s (known 'bad' name for configuration)", $self->spaces, $name );
+      if ( exists $self->known_modules_to_skip->{ $module_name } ) {
+          $log->debugf( "%sSkipping %s (known 'bad' module for configuration)", $self->spaces, $module_name );
           return 1;
       }
   
@@ -5831,203 +6865,37 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
       return $target;
   }
   
-  sub has_satisfying {
-      my ( $self, $module_name, $requirements ) = @_;
-      my $req_as_hash = $requirements->as_string_hash;
+  sub is_package_in_spec_repo {
+      my ( $self, $package_name, $requirements ) = @_;
   
-      return unless exists $req_as_hash->{$module_name};
+      my @versions = map { $_ =~ PAKKET_PACKAGE_SPEC(); "$3:$4" }
+          @{ $self->spec_repo->all_object_ids_by_name($package_name, 'perl') };
   
-      my $dist_name = $self->get_dist_name($module_name);
+      return 0 unless @versions; # there are no packages
   
-      my @versions = map { $_ =~ PAKKET_PACKAGE_SPEC(); $3 }
-          @{ $self->spec_repo->all_object_ids_by_name($dist_name, 'perl') };
-      return unless @versions;
+      if (!exists $requirements->{$package_name}) {
+          $log->debugf("Skipping %s, already have version: %s",
+                          $package_name, join(", ", @versions));
+          return 1;
+      }
   
-      return $self->versioner->is_satisfying($req_as_hash->{$module_name}, @versions);
+      if ($self->versioner->is_satisfying($requirements->{$package_name}, @versions)) {
+          $log->debugf("Skipping %s, already have satisfying version: %s",
+                          $package_name, join(", ", @versions));
+          return 1;
+      }
+  
+      return 0; # spec has package, but version is not compatible
   }
   
-  sub create_spec_for {
-      my ( $self, $name, $requirements ) = @_;
-  
-      return if $self->processed_dists->{ $name }++;
-      return if $self->skip_name($name);
-      return if $self->has_satisfying($name, $requirements);
-  
-      my $release = $self->get_release_info( $name, $requirements );
-      return if exists $release->{'skip'};
-  
-      my $dist_name    = $release->{'distribution'};
-      my $rel_version  = $release->{'version'};
-  
-      $log->infof( '%sWorking on %s (%s)', $self->spaces, $dist_name, $rel_version );
-  
-      my $package_spec = {
-          'Package' => {
-              'category' => 'perl',
-              'name'     => $dist_name,
-              'version'  => $rel_version,
-              'release'  => 1, # hmm... ???
-          },
-      };
-  
-      my $package   = Pakket::Package->new_from_spec($package_spec);
-      my $full_name = $package->full_name;
-  
-      $self->set_depth( $self->depth + 1 );
-  
-  
-      # Source
-  
-      # check if we already have the source in the repo
-      if ( $self->source_repo->has_object( $package->id ) ) {
-          $log->debugf(
-              "Package %s - source already exists in repo (skipping).",
-              $full_name
-          );
-  
-      } elsif ( ! $self->is_local->{ $dist_name } ) {
-          # Download if source doesn't exist in cache
-          my $download     = 1;
-          my $download_url = $self->rewrite_download_url( $release->{'download_url'} );
-  
-          if ( $self->_has_cache_dir ) {
-              my $from_name = $download_url
-                  ? $download_url =~ s{^.+/}{}r
-                  : $dist_name . '-' . $rel_version . '.tar.gz';
-  
-              my $from_file = path( $self->cache_dir, $from_name );
-  
-              if ( $from_file->exists ) {
-                  $log->debugf(
-                      'Found source for %s [%s]',
-                      $full_name, $from_file->stringify
-                  );
-  
-                  my $target = Path::Tiny->tempdir();
-                  my $dir    = $self->unpack( $target, $from_file );
-  
-                  $self->source_repo->store_package_source(
-                      $package, $dir,
-                  );
-  
-                  $download = 0;
-              }
-          }
-  
-          if ( $download ) {
-              if ( $download_url ) {
-                  my $source_file = path(
-                      $self->download_dir,
-                      ( $download_url =~ s{^.+/}{}r )
-                  );
-                  $self->ua->mirror( $download_url, $source_file );
-                  $self->upload_unpacked( $package, $source_file );
-              }
-              else {
-                  $log->errorf( "--- can't find download_url for %s-%s", $dist_name, $rel_version );
-              }
-          }
-  
-      } else {
-          my %available = map {
-              my $d = CPAN::DistnameInfo->new($_);
-              $d->version => $d->pathname->canonpath
-          } path( $self->cache_dir )->children( qr{^$dist_name-.*\.tar.gz});
-  
-          my $version = $self->versioner->latest(
-              'perl', $name, $requirements->as_string_hash->{$name}, keys %available
-          );
-  
-          # update version for the spec --> for updating 'package' object
-          # (both here and for the spec)
-          $package_spec->{'Package'}{'version'} = $version;
-          $package = Pakket::Package->new_from_spec($package_spec);
-          $self->upload_unpacked( $package, $available{ $version } );
-      }
-  
-  
-      # Spec
-  
-      if ( $self->spec_repo->retrieve_location( $full_name ) ) {
-          $log->debugf(
-              "Package %s - spec already exists in repo (skipping).",
-              $full_name
-          );
-  
-          return;
-      }
-  
-      my $dep_modules = $release->{'prereqs'};
-      my $dep_prereqs = CPAN::Meta::Prereqs->new( $dep_modules );
-  
-      # options: configure, develop, runtime, test
-      for my $phase ( @{ $self->phases } ) {
-          my $prereq_data = $package_spec->{'Prereqs'}{'perl'}{$phase} = +{};
-  
-          for my $dep_type ( @{ $self->types } ) {
-              next unless is_hashref( $dep_modules->{ $phase }{ $dep_type } );
-  
-              my $dep_requirements = $dep_prereqs->requirements_for( $phase, $dep_type );
-  
-              for my $module ( keys %{ $dep_modules->{ $phase }{ $dep_type } } ) {
-                  next if $self->skip_name($module);
-  
-                  my $rel = $self->get_release_info( $module, $dep_requirements );
-                  next if exists $rel->{'skip'};
-  
-                  my $dist = $rel->{'distribution'};
-  
-                  if ( exists $self->known_incorrect_dependencies->{ $package->name }{ $dist } ) {
-                      $log->debugf( "%sskipping %s (known 'bad' dependency for %s)",
-                                    $self->spaces, $dist, $package->name );
-                      next;
-                  }
-  
-                  $prereq_data->{ $module } = +{
-                      'version' => ( $dep_requirements->requirements_for_module( $module ) || 0 ),
-                  };
-              }
-  
-              # recurse through those as well
-              if ( ! $self->no_deps ) {
-                  $self->create_spec_for( $_, $dep_requirements )
-                      for keys %{ $package_spec->{'Prereqs'}{'perl'}{$phase} };
-              }
-          }
-      }
-  
-      # convert module requirements to distribution names
-      # this is done as the next Pakket action (build) will
-      # accept requirements as Pakket package id and not
-      # Perl module name.
-      for my $phase ( keys %{ $package_spec->{'Prereqs'}{'perl'} } ) {
-          for my $key ( keys %{ $package_spec->{'Prereqs'}{'perl'}{$phase} } ) {
-              my $new_key = $self->get_dist_name($key);
-              $package_spec->{'Prereqs'}{'perl'}{$phase}{$new_key} =
-                  delete $package_spec->{'Prereqs'}{'perl'}{$phase}{$key};
-          }
-      }
-  
-      # We had a partial Package object
-      # So now we have to recreate that package object
-      # based on the full specs (including prereqs)
-      $package = Pakket::Package->new_from_spec($package_spec);
-  
-      my $filename = $self->spec_repo->store_package_spec($package);
-  
-      $self->set_depth( $self->depth - 1 );
-      $log->infof( '%sDone: %s (%s)', $self->spaces, $dist_name, $package->version );
-  }
-  
-  sub upload_unpacked {
+  sub upload_source_archive {
       my ( $self, $package, $file ) = @_;
   
       my $target = Path::Tiny->tempdir();
       my $dir    = $self->unpack( $target, $file );
   
-      $self->source_repo->store_package_source(
-          $package, $dir,
-      );
+      $log->debugf("Uploading %s into source repo from %s", $package->name, $dir);
+      $self->source_repo->store_package_source($package, $dir);
   }
   
   sub get_dist_name {
@@ -6037,15 +6905,12 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
       exists $self->dist_name->{$module_name}
           and return $self->dist_name->{$module_name};
   
-      # if "is_local" don't use uptream sources
-      exists $self->is_local->{$module_name}
-          and return ( $module_name =~ s{::}{-}gr );
-  
       my $dist_name;
   
       # check if we can get it from 02packages
       eval {
-          my $url = $self->metacpan_api . "/package/$module_name";
+          my $url = $self->metacpan_api . "/package/" . $module_name;
+          $log->debug("Requesting information about module $module_name ($url)");
           my $res = $self->ua->get($url);
   
           $res->{'status'} == 200
@@ -6072,6 +6937,7 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   
           eval {
               my $mod_url  = $self->metacpan_api . "/module/$module_name";
+              $log->debug("Requesting information about module $module_name ($mod_url)");
               my $response = $self->ua->get($mod_url);
   
               $response->{'status'} == 200
@@ -6089,21 +6955,20 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
       # fallback 3: check if name matches a distribution name
       if ( ! $dist_name ) {
           eval {
-              my $name = $module_name =~ s/::/-/rgsmx;
+              $dist_name = $module_name =~ s/::/-/rgsmx;
               my $url = $self->metacpan_api . '/release';
+              $log->debug("Requesting information about distribution $dist_name ($url)");
               my $res = $self->ua->post( $url,
-                                         +{ 'content' => $self->get_is_dist_name_query($name) }
+                                         +{ 'content' => $self->get_is_dist_name_query($dist_name) }
                                      );
               $res->{'status'} == 200 or Carp::croak();
   
               my $res_body = decode_json $res->{'content'};
               $res_body->{'hits'}{'total'} > 0 or Carp::croak();
   
-              $dist_name = $name;
               1;
           } or do {
-              my $error = $@ || 'Zombie error';
-              Carp::croak("Cannot find module by name: '$module_name'");
+              $log->warn("Cannot find distribution for module $module_name. Trying to use $dist_name as fallback");
           };
       }
   
@@ -6114,92 +6979,68 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   }
   
   sub get_release_info_local {
-      my ( $self, $name, $requirements ) = @_;
+      my ( $self, $package_name, $requirements ) = @_;
   
-      my $req = $requirements->as_string_hash;
-      my $ver = $req->{$name} =~ s/^[=\ ]//r;
+      my $full_ver = $requirements->{$package_name} =~ s/^[=\ ]+//r;
+      my ($ver, $release) = split(/:/, $full_ver);
       my $prereqs;
-      my $dist_name = $self->get_dist_name($name);
-  
-      my $from_file = path( $self->cache_dir, $dist_name . '-' . $ver . '.tar.gz' );
-      if ( $from_file->exists ) {
+      my $from_file = $self->get_source_archive_path($package_name, $ver, $release);
+      if ( $from_file ) {
           my $target = Path::Tiny->tempdir();
           my $dir    = $self->unpack( $target, $from_file );
-          if ( $dir->child('META.json')->is_file or $dir->child('META.yml')->is_file ) {
+          $self->load_pakket_json($dir);
+          if ( !$self->no_deps and
+               ( $dir->child('META.json')->is_file or $dir->child('META.yml')->is_file )
+          ) {
               my $file = $dir->child('META.json')->is_file
                   ? $dir->child('META.json')
                   : $dir->child('META.yml');
               my $meta = CPAN::Meta->load_file( $file );
               $prereqs = $meta->effective_prereqs->as_string_hash;
-              # YUCK, but for now, it will do the job.
-              for my $k1 ( keys %{ $prereqs } ) {
-                  for my $k2 ( keys %{ $prereqs->{$k1} } ) {
-                      for my $k3 ( keys %{ $prereqs->{$k1}{$k2} } ) {
-                          $prereqs->{$k1}{$k2}{ $self->get_dist_name($k3) } =
-                              delete $prereqs->{$k1}{$k2}{$k3};
-                      }
-                  }
-              }
+          } else {
+              $log->warn("Can't find META.json or META.yml in $from_file");
           }
+      } else {
+          Carp::croak("Can't find source file for package $package_name");
       }
   
       return +{
-          'distribution' => $dist_name,
+          'distribution' => $package_name,
           'version'      => $ver,
+          'release'      => $release,
           'prereqs'      => $prereqs,
       };
   }
   
-  sub get_release_info {
-      my ( $self, $name, $requirements ) = @_;
+  sub get_release_info_for_package {
+      my ( $self, $package_name, $requirements ) = @_;
   
       # if is_local is set - generate info without upstream data
-      exists $self->is_local->{$name}
-          and return $self->get_release_info_local( $name, $requirements );
-  
-      my $dist_name = $self->get_dist_name($name);
-      return +{ 'skip' => 1 } if $self->skip_name($dist_name);
-  
+      if ( $self->is_local->{$package_name} ) {
+          return $self->get_release_info_local( $package_name, $requirements );
+      }
   
       # try the latest
-      my $latest = $self->get_latest_release_info( $dist_name );
-      return $latest
-          if defined $latest->{'version'}
-          and defined $latest->{'download_url'}
-          and $requirements->accepts_module( $name => $latest->{'version'} );
-  
+      my $latest = $self->get_latest_release_info_for_distribution( $package_name );
+      if ( $latest->{'version'} && defined $latest->{'download_url'}) {
+          if ($self->versioner->is_satisfying($requirements->{$package_name}, $latest->{'version'})) {
+              return $latest;
+          }
+          $log->debugf("Latest version of %s is %s. Doesn't satisfy requirements. Checking other old versions.",
+                          $package_name, $latest->{'version'});
+      }
   
       # else: fetch all release versions for this distribution
-  
       my $release_prereqs;
       my $version;
       my $download_url;
   
-      my %all_dist_releases;
-      {
-          my $res = $self->ua->post( $self->metacpan_api . "/release",
-                                 +{ content => $self->get_release_query($dist_name) });
-          Carp::croak("Can't find any release for $dist_name") if $res->{'status'} != 200;
-          my $res_body = decode_json $res->{'content'};
-  
-          is_arrayref( $res_body->{'hits'}{'hits'} )
-              or Carp::croak("Can't find any release for $dist_name");
-  
-          %all_dist_releases =
-              map {
-                  my $v = $_->{'fields'}{'version'};
-                  ( is_arrayref($v) ? $v->[0] : $v ) => {
-                      'prereqs'      => $_->{'_source'}{'metadata'}{'prereqs'},
-                      'download_url' => $_->{'_source'}{'download_url'},
-                  },
-              }
-              @{ $res_body->{'hits'}{'hits'} };
-      }
+      my $all_dist_releases = $self->get_all_releases_for_distribution($package_name);
   
       # get the matching version according to the spec
   
       my @valid_versions;
-      for my $v ( keys %all_dist_releases ) {
+      for my $v ( keys %{$all_dist_releases} ) {
           eval {
               version->parse($v);
               push @valid_versions => $v;
@@ -6207,30 +7048,64 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
           } or do {
               my $err = $@ || 'zombie error';
               $log->debugf( '[VERSION ERROR] distribution: %s, version: %s, error: %s',
-                            $dist_name, $v, $err );
+                            $package_name, $v, $err );
           };
       }
   
-      for my $v ( sort { version->parse($b) <=> version->parse($a) } @valid_versions ) {
-          if ( $requirements->accepts_module($name => $v) ) {
+      @valid_versions = sort { version->parse($b) <=> version->parse($a) } @valid_versions;
+  
+      for my $v ( @valid_versions ) {
+          if ($self->versioner->is_satisfying($requirements->{$package_name}, $v)) {
               $version         = $v;
-              $release_prereqs = $all_dist_releases{$v}{'prereqs'} || {};
+              $release_prereqs = $all_dist_releases->{$v}{'prereqs'} || {};
               $download_url    =
-                  $self->rewrite_download_url( $all_dist_releases{$v}{'download_url'} );
+                  $self->rewrite_download_url( $all_dist_releases->{$v}{'download_url'} );
               last;
           }
       }
-      $version or Carp::croak("Cannot match release for $dist_name");
   
-      $version = $self->known_incorrect_version_fixes->{ $dist_name }
-          if exists $self->known_incorrect_version_fixes->{ $dist_name };
+      $version = $self->known_incorrect_version_fixes->{ $package_name } // $version;
+  
+      if (!$version) {
+          Carp::croak("Cannot find a suitable version for $package_name requirements: "
+                          . $requirements->{$package_name}
+                          . ", available: " . join(', ', @valid_versions));
+      }
   
       return +{
-          'distribution' => $dist_name,
+          'distribution' => $package_name,
           'version'      => $version,
           'prereqs'      => $release_prereqs,
           'download_url' => $download_url,
       };
+  }
+  
+  sub get_all_releases_for_distribution {
+      my ( $self, $distribution_name ) = @_;
+  
+      my $url = $self->metacpan_api . "/release";
+      $log->debugf("Requesting release info for all old versions of $distribution_name ($url)");
+      my $res = $self->ua->post( $url,
+              +{ content => $self->get_release_query($distribution_name) });
+      if ($res->{'status'} != 200) {
+          Carp::croak("Can't find any release for $distribution_name from $url, Status: "
+                  . $res->{'status'} . ", Reason: " . $res->{'reason'} );
+      }
+      my $res_body = decode_json $res->{'content'};
+      is_arrayref( $res_body->{'hits'}{'hits'} )
+          or Carp::croak("Can't find any release for $distribution_name");
+  
+      my %all_releases =
+          map {
+              my $v = $_->{'fields'}{'version'};
+              ( is_arrayref($v) ? $v->[0] : $v ) => {
+                  'prereqs'       => $_->{'_source'}{'metadata'}{'prereqs'},
+                  'download_url'  => $_->{'_source'}{'download_url'},
+              },
+          }
+          @{ $res_body->{'hits'}{'hits'} };
+  
+      return \%all_releases;
   }
   
   sub rewrite_download_url {
@@ -6241,24 +7116,27 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
       return ( $download_url =~ s/$from/$to/r );
   }
   
-  sub get_latest_release_info {
-      my ( $self, $dist_name ) = @_;
+  sub get_latest_release_info_for_distribution {
+      my ( $self, $package_name ) = @_;
   
-      my $res = $self->ua->get( $self->metacpan_api . "/release/$dist_name" );
-      return unless $res->{'status'} == 200; # falling back to check all
+      my $url = $self->metacpan_api . "/release/$package_name";
+      $log->debugf("Requesting release info for latest version of %s (%s)", $package_name, $url);
+      my $res = $self->ua->get( $url );
+      if ($res->{'status'} != 200) {
+          $log->debugf("Failed receive from $url, Status: %s, Reason: %s", $res->{'status'}, $res->{'reason'});
+          return;
+      }
   
       my $res_body= decode_json $res->{'content'};
-  
       my $version = $res_body->{'version'};
-      $version = $self->known_incorrect_version_fixes->{ $dist_name }
-          if exists $self->known_incorrect_version_fixes->{ $dist_name };
+      $version = $self->known_incorrect_version_fixes->{ $package_name } // $version;
   
       return +{
-          'distribution' => $dist_name,
-          'version'      => $version,
-          'download_url' => $res_body->{'download_url'},
-          'prereqs'      => $res_body->{'metadata'}{'prereqs'},
-      };
+              'distribution' => $package_name,
+              'version'      => $version,
+              'download_url' => $res_body->{'download_url'},
+              'prereqs'      => $res_body->{'metadata'}{'prereqs'},
+          };
   }
   
   sub get_is_dist_name_query {
@@ -6299,6 +7177,71 @@ $fatpacked{"Pakket/Scaffolder/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
       );
   }
   
+  # parsing Pakket.json
+  # Packet.json should be in root directory of package, near META.json
+  # It keeps some settings which we are missing in META.json.
+  sub load_pakket_json {
+      my ($self, $dir) = @_;
+      my $pakket_json = $dir->child('Pakket.json');
+  
+      $pakket_json->exists or return;
+  
+      $log->debug("Found Pakket.json in $dir");
+  
+      my $data = decode_json($pakket_json->slurp_utf8);
+  
+      # Section 'module_to_distribution'
+      # Using to map module->distribution for local not-CPAN modules
+      if ($data->{'module_to_distribution'}) {
+          for my $module_name ( keys %{$data->{'module_to_distribution'}}  ) {
+              my $dist_name = $data->{'module_to_distribution'}{$module_name};
+              $self->dist_name->{$module_name} = $dist_name;
+          }
+      }
+      return $data;
+  }
+  
+  sub merge_pakket_json_into_spec {
+      my ($self, $package, $spec) = @_;
+  
+      my $src_dir = $self->source_repo->retrieve_package_source($package);
+  
+      my $pakket_json = $self->load_pakket_json($src_dir);
+  
+      if ($pakket_json->{'prereqs'}) {
+          # package type: perl, native
+          for my $type (keys %{$pakket_json->{'prereqs'}}) {
+              # phase: runtime, configure
+              for my $phase (keys %{$pakket_json->{'prereqs'}{$type}}) {
+                  for my $module (keys %{$pakket_json->{'prereqs'}{$type}{$phase}}) {
+                      $spec->{'Prereqs'}{$type}{$phase}{$module}{'version'} =
+                              $pakket_json->{'prereqs'}{$type}{$phase}{$module};
+                  }
+              }
+          }
+      }
+  
+      if ($pakket_json->{'build_opts'}) {
+          $spec->{'build_opts'} =  $pakket_json->{'build_opts'};
+      }
+  }
+  
+  sub get_source_archive_path {
+      my ($self, $name, $ver, $rel) = @_;
+      $rel //= 1;
+      my @possible_paths = (
+          path( $self->cache_dir, $name . '-' . $ver . '.' . $rel . '.tar.gz' ),
+          path( $self->cache_dir, $name . '-' . $ver . '.tar.gz' ),
+      );
+      for my $path (@possible_paths) {
+          if ($path->exists) {
+              $log->debugf( 'Found archive %s', $path->stringify);
+              return $path;
+          }
+      }
+      $log->debug("Can't find archive in:\n", join("\n", @possible_paths));
+      return 0;
+  }
   
   __PACKAGE__->meta->make_immutable;
   no Moose;
@@ -6431,7 +7374,6 @@ $fatpacked{"Pakket/Scaffolder/Perl/Role/Borked.pm"} = '#line '.(1+__LINE__).' "'
               'Encode-HanConvert' => '0.35',
               'ExtUtils-Constant' => '0.23',
               'Frontier-RPC'      => '0.07',
-              'Getopt-Long'       => '2.49',
               'IO-Capture'        => '0.05',
               'Memoize-Memcached' => '0.04',
               'Statistics-Regression' => '0.53',
@@ -6455,7 +7397,7 @@ $fatpacked{"Pakket/Scaffolder/Perl/Role/Borked.pm"} = '#line '.(1+__LINE__).' "'
       },
   );
   
-  has 'known_names_to_skip' => (
+  has 'known_modules_to_skip' => (
       'is'      => 'ro',
       'isa'     => 'HashRef',
       'default' => sub {
@@ -6531,6 +7473,104 @@ $fatpacked{"Pakket/Scaffolder/Role/Terminal.pm"} = '#line '.(1+__LINE__).' "'.__
   __END__
 PAKKET_SCAFFOLDER_ROLE_TERMINAL
 
+$fatpacked{"Pakket/Tutorial.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_TUTORIAL';
+  package Pakket::Tutorial;
+  # ABSTRACT: A beginner's tutorial to Pakket
+  
+  use strict;
+  use warnings;
+  
+  1;
+  
+  __END__
+  
+  =pod
+  
+  =head1 Installing Pakket
+  
+  First, you will need to install Pakket. There is more than one way to
+  do this.
+  
+  Pakket uses Perl 5.22.2. While it is not required, we recommend having
+  it on local installations.
+  
+  =head2 Install from CPAN
+  
+  Once Pakket is released to CPAN, you could install it manually using
+  using L<cpan>, L<cpanm>, C<cpm>, or any other client.
+  
+      $ cpan Pakket
+      # or
+      $ cpanm Pakket
+      # or
+      $ cpm Pakket
+  
+  =head2 Carton
+  
+  =over 4
+  
+  =item * Install C<Carton>
+  
+      $ cpan Carton
+      # or
+      $ cpanm Carton
+      # or
+      $ cpm Carton
+  
+  =item * Clone the Pakket repo
+  
+      $ git clone https://github.com/xsawyerx/pakket.git
+  
+  =item * Set up carton
+  
+      $ cd pakket
+      $ carton
+  
+  =back
+  
+  To run pakket:
+  
+      carton exec perl -Ilib bin/pakket
+  
+  =head2 Build it yourself
+  
+  This is the preferred method for setting up a Pakket build machine. You
+  only need to have perl 5.10 and above. It will only be used for setting
+  up the initial environment.
+  
+  Pakket provides a small one-file script which you can run in order to
+  build all of Pakket in one go. It doesn't need any dependencies at all,
+  other than perl 5.10 and above.
+  
+  First, clone:
+  
+      $ git clone https://github.com/xsawyerx/pakket.git
+  
+  Now build a self-contained instance of Pakket:
+  
+      $ cd pakket
+      $ perl tools/seacan-pakket-packed.pl
+  
+  (You may need to install openssl-devel as a dependency beforehand.)
+  
+  This will download perl 5.22.2, all of the Perl dependencies Pakket
+  requires, and it will create a single tarball with everything put
+  together.
+  
+  Inside there will be a small I<bin> file that runs everything
+  without using C<anything> from your system. Once you run this and build
+  everything, you can take this tarball into any machine and use Pakket
+  without even having perl installed.
+  
+  Yes! This is an application that comes with everything included, even
+  the interpreter!
+  
+  =head2 RPM or Deb package
+  
+  This option is not yet available, but we intend to provide builds of
+  Pakket as either an C<.rpm> or C<.deb> packages.
+PAKKET_TUTORIAL
+
 $fatpacked{"Pakket/Types.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_TYPES';
   package Pakket::Types;
   # ABSTRACT: Type definitions for Pakket
@@ -6541,6 +7581,7 @@ $fatpacked{"Pakket/Types.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PA
   use Moose::Util::TypeConstraints;
   use Carp     qw< croak >;
   use Log::Any qw< $log >;
+  use Ref::Util qw< is_ref is_arrayref is_hashref >;
   use Safe::Isa;
   use Module::Runtime qw< require_module >;
   use Pakket::Constants qw<
@@ -6550,23 +7591,55 @@ $fatpacked{"Pakket/Types.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PA
   
   # PakketRepositoryBackend
   
-  sub _coerce_backend_from_arrayref {
-      my $backend_data = shift;
-      my ( $subclass, @args ) = @{$backend_data};
-      my $class = "Pakket::Repository::Backend::$subclass";
+  sub _coerce_backend_from_str {
+      my $uri = shift;
+      $uri = lc($uri);
+  
+      my ($scheme) = $uri =~ m{^ ( [a-zA-Z0-9_]+ ) :// }xms;
+      my $class    = "Pakket::Repository::Backend::$scheme";
   
       eval { require_module($class); 1; } or do {
           croak( $log->critical("Failed to load backend '$class': $@") );
       };
   
-      return $class->new(@args);
+      return $class->new_from_uri($uri);
+  }
+  
+  sub _coerce_backend_from_arrayref {
+      my $arrayref = shift;
+      my ( $name, $data ) = @{$arrayref};
+      $name = lc($name);
+      $data //= {};
+  
+      # TODO: Remove that later.
+      # For back compatibility with old config.
+      if (!is_hashref($data)) {
+          my ( $n, @params ) = @{$arrayref};
+          $data = { @params };
+      }
+  
+      is_hashref($data)
+          or croak( $log->critical('Second arg to backend is not hashref') );
+  
+      my $class = "Pakket::Repository::Backend::$name";
+  
+      eval { require_module($class); 1; } or do {
+          croak( $log->critical("Failed to load backend '$class': $@") );
+      };
+  
+      return $class->new($data);
   }
   
   subtype 'PakketRepositoryBackend', as 'Object', where {
-      $_->$_isa('ARRAY') || $_->$_does('Pakket::Role::Repository::Backend')
+      $_->$_does('Pakket::Role::Repository::Backend')
+          || is_arrayref($_)
+          || ( !is_ref($_) && length )
   }, message {
-      'Must be a Pakket::Repository::Backend object or an arrayref'
+      'Must be a Pakket::Repository::Backend object or a URI string or arrayref'
   };
+  
+  coerce 'PakketRepositoryBackend', from 'Str',
+      via { return _coerce_backend_from_str($_); };
   
   coerce 'PakketRepositoryBackend', from 'ArrayRef',
       via { return _coerce_backend_from_arrayref($_); };
@@ -6804,12 +7877,11 @@ $fatpacked{"Pakket/Uninstaller.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n"
   
       for my $file ( @{ $info->{files} } ) {
           delete $info_file->{installed_files}{$file};
-          my ( $type, $file_name ) = $file =~ /(\w+)\/(.+)/;
+          my ($file_name) = $file =~ /\w+\/(.+)/;
           my $path = $self->work_dir->child($file_name);
           $log->debugf( "Deleting file %s", $path );
-          if ($path->exists and !$path->remove ) {
-              $log->error("Could not remove $path: $!");
-          }
+          $path->exists and !$path->remove
+              and $log->error("Could not remove $path: $!");
   
           # remove parent dirs while there are no children
           my $parent = $path->parent;
@@ -6863,14 +7935,18 @@ $fatpacked{"Pakket/Utils.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PA
   }
   
   sub generate_env_vars {
-      my ( $build_dir, $prefix ) = @_;
+      my ( $build_dir, $prefix, $opts, $manual_env_vars ) = @_;
       my $lib_path       = generate_lib_path($prefix);
       my $bin_path       = generate_bin_path($prefix);
       my $pkgconfig_path = generate_pkgconfig_path($prefix);
   
+      my $inc = $opts->{'inc'} || '';
+      $manual_env_vars //= {};
+  
       my @perl5lib = (
+          $prefix->child(qw<lib perl5>)->absolute->stringify,
+          $inc,
           $build_dir,
-          $prefix->child( qw<lib perl5> )->absolute->stringify,
       );
   
       my %perl_opts = (
@@ -6885,13 +7961,28 @@ $fatpacked{"Pakket/Utils.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PA
       );
   
       return (
-          'CPATH'           => $prefix->child('include')->stringify,
+          'CPATH'           => generate_cpath($prefix),
           'PKG_CONFIG_PATH' => $pkgconfig_path,
           'LD_LIBRARY_PATH' => $lib_path,
           'LIBRARY_PATH'    => $lib_path,
           'PATH'            => $bin_path,
           %perl_opts,
+          %{$manual_env_vars},
       );
+  }
+  
+  sub generate_cpath {
+      my $prefix = shift;
+      my $cpath = '';
+  
+      my $include_dir = $prefix->child('include');
+      if ( $include_dir->exists ) {
+          my @paths = ( $include_dir->stringify );
+          push @paths,  map { $_->stringify } grep { $_->is_dir } $include_dir->children();
+          $cpath = join(":", @paths);
+      }
+  
+      return $cpath;
   }
   
   sub generate_lib_path {
@@ -6967,14 +8058,14 @@ $fatpacked{"Pakket/Utils/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   use Path::Tiny qw< path   >;
   use Module::CoreList;
   
-  our @EXPORT_OK = qw< list_core_modules should_skip_module >;
+  our @EXPORT_OK = qw< list_core_modules should_skip_core_module >;
   
   sub list_core_modules {
       ## no critic qw(Variables::ProhibitPackageVars)
       return \%Module::CoreList::upstream;
   }
   
-  sub should_skip_module {
+  sub should_skip_core_module {
       my $name = shift;
   
       if ( Module::CoreList::is_core($name) and !${Module::CoreList::upstream}{$name} ) {
@@ -6989,6 +8080,7 @@ PAKKET_UTILS_PERL
 
 $fatpacked{"Pakket/Utils/Repository.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_UTILS_REPOSITORY';
   package Pakket::Utils::Repository;
+  # ABSTRACT: Repository utility functions
   
   use strict;
   use warnings;
@@ -7045,6 +8137,7 @@ $fatpacked{"Pakket/Versioning.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   
   use Moose;
   use MooseX::StrictConstructor;
+  use Pakket::Types;
   use Carp            qw< croak >;
   use Log::Any        qw< $log >;
   use Module::Runtime qw< require_module >;
@@ -7154,7 +8247,12 @@ $fatpacked{"Pakket/Versioning/Perl.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\
   with qw< Pakket::Role::Versioning >;
   
   sub compare {
-      return version->parse( $_[1] ) <=> version->parse( $_[2] );
+      my ($ver1, $rel1) = split(/:/, $_[1]);
+      my ($ver2, $rel2) = split(/:/, $_[2]);
+      $rel1 //= 1;
+      $rel2 //= 1;
+      return (version->parse($ver1) <=> version->parse($ver2)
+              or $rel1 <=> $rel2);
   }
   
   no Moose;
@@ -7203,6 +8301,7 @@ PAKKET_WEB_APP
 
 $fatpacked{"Pakket/Web/Repo.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PAKKET_WEB_REPO';
   package Pakket::Web::Repo;
+  # ABSTRACT: A web repository app
   
   use Dancer2 'appname' => 'Pakket::Web';
   use Dancer2::Plugin::Pakket::ParamTypes;
@@ -7373,4692 +8472,6 @@ $fatpacked{"Pakket/Web/Server.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".
   __END__
 PAKKET_WEB_SERVER
 
-$fatpacked{"Path/Tiny.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'PATH_TINY';
-  use 5.008001;
-  use strict;
-  use warnings;
-  
-  package Path::Tiny;
-  # ABSTRACT: File path utility
-  
-  our $VERSION = '0.104';
-  
-  # Dependencies
-  use Config;
-  use Exporter 5.57   (qw/import/);
-  use File::Spec 0.86 ();          # shipped with 5.8.1
-  use Carp ();
-  
-  our @EXPORT    = qw/path/;
-  our @EXPORT_OK = qw/cwd rootdir tempfile tempdir/;
-  
-  use constant {
-      PATH     => 0,
-      CANON    => 1,
-      VOL      => 2,
-      DIR      => 3,
-      FILE     => 4,
-      TEMP     => 5,
-      IS_BSD   => ( scalar $^O =~ /bsd$/ ),
-      IS_WIN32 => ( $^O eq 'MSWin32' ),
-  };
-  
-  use overload (
-      q{""}    => sub    { $_[0]->[PATH] },
-      bool     => sub () { 1 },
-      fallback => 1,
-  );
-  
-  # FREEZE/THAW per Sereal/CBOR/Types::Serialiser protocol
-  sub FREEZE { return $_[0]->[PATH] }
-  sub THAW   { return path( $_[2] ) }
-  { no warnings 'once'; *TO_JSON = *FREEZE };
-  
-  my $HAS_UU; # has Unicode::UTF8; lazily populated
-  
-  sub _check_UU {
-      !!eval { require Unicode::UTF8; Unicode::UTF8->VERSION(0.58); 1 };
-  }
-  
-  my $HAS_PU; # has PerlIO::utf8_strict; lazily populated
-  
-  sub _check_PU {
-      !!eval { require PerlIO::utf8_strict; PerlIO::utf8_strict->VERSION(0.003); 1 };
-  }
-  
-  my $HAS_FLOCK = $Config{d_flock} || $Config{d_fcntl_can_lock} || $Config{d_lockf};
-  
-  # notions of "root" directories differ on Win32: \\server\dir\ or C:\ or \
-  my $SLASH      = qr{[\\/]};
-  my $NOTSLASH   = qr{[^\\/]};
-  my $DRV_VOL    = qr{[a-z]:}i;
-  my $UNC_VOL    = qr{$SLASH $SLASH $NOTSLASH+ $SLASH $NOTSLASH+}x;
-  my $WIN32_ROOT = qr{(?: $UNC_VOL $SLASH | $DRV_VOL $SLASH | $SLASH )}x;
-  
-  sub _win32_vol {
-      my ( $path, $drv ) = @_;
-      require Cwd;
-      my $dcwd = eval { Cwd::getdcwd($drv) }; # C: -> C:\some\cwd
-      # getdcwd on non-existent drive returns empty string
-      # so just use the original drive Z: -> Z:
-      $dcwd = "$drv" unless defined $dcwd && length $dcwd;
-      # normalize dwcd to end with a slash: might be C:\some\cwd or D:\ or Z:
-      $dcwd =~ s{$SLASH?$}{/};
-      # make the path absolute with dcwd
-      $path =~ s{^$DRV_VOL}{$dcwd};
-      return $path;
-  }
-  
-  # This is a string test for before we have the object; see is_rootdir for well-formed
-  # object test
-  sub _is_root {
-      return IS_WIN32() ? ( $_[0] =~ /^$WIN32_ROOT$/ ) : ( $_[0] eq '/' );
-  }
-  
-  BEGIN {
-      *_same = IS_WIN32() ? sub { lc( $_[0] ) eq lc( $_[1] ) } : sub { $_[0] eq $_[1] };
-  }
-  
-  # mode bits encoded for chmod in symbolic mode
-  my %MODEBITS = ( om => 0007, gm => 0070, um => 0700 ); ## no critic
-  { my $m = 0; $MODEBITS{$_} = ( 1 << $m++ ) for qw/ox ow or gx gw gr ux uw ur/ };
-  
-  sub _symbolic_chmod {
-      my ( $mode, $symbolic ) = @_;
-      for my $clause ( split /,\s*/, $symbolic ) {
-          if ( $clause =~ m{\A([augo]+)([=+-])([rwx]+)\z} ) {
-              my ( $who, $action, $perms ) = ( $1, $2, $3 );
-              $who =~ s/a/ugo/g;
-              for my $w ( split //, $who ) {
-                  my $p = 0;
-                  $p |= $MODEBITS{"$w$_"} for split //, $perms;
-                  if ( $action eq '=' ) {
-                      $mode = ( $mode & ~$MODEBITS{"${w}m"} ) | $p;
-                  }
-                  else {
-                      $mode = $action eq "+" ? ( $mode | $p ) : ( $mode & ~$p );
-                  }
-              }
-          }
-          else {
-              Carp::croak("Invalid mode clause '$clause' for chmod()");
-          }
-      }
-      return $mode;
-  }
-  
-  # flock doesn't work on NFS on BSD.  Since program authors often can't control
-  # or detect that, we warn once instead of being fatal if we can detect it and
-  # people who need it strict can fatalize the 'flock' category
-  
-  #<<< No perltidy
-  { package flock; use if Path::Tiny::IS_BSD(), 'warnings::register' }
-  #>>>
-  
-  my $WARNED_BSD_NFS = 0;
-  
-  sub _throw {
-      my ( $self, $function, $file, $msg ) = @_;
-      if (   IS_BSD()
-          && $function =~ /^flock/
-          && $! =~ /operation not supported/i
-          && !warnings::fatal_enabled('flock') )
-      {
-          if ( !$WARNED_BSD_NFS ) {
-              warnings::warn( flock => "No flock for NFS on BSD: continuing in unsafe mode" );
-              $WARNED_BSD_NFS++;
-          }
-      }
-      else {
-          $msg = $! unless defined $msg;
-          Path::Tiny::Error->throw( $function, ( defined $file ? $file : $self->[PATH] ),
-              $msg );
-      }
-      return;
-  }
-  
-  # cheapo option validation
-  sub _get_args {
-      my ( $raw, @valid ) = @_;
-      if ( defined($raw) && ref($raw) ne 'HASH' ) {
-          my ( undef, undef, undef, $called_as ) = caller(1);
-          $called_as =~ s{^.*::}{};
-          Carp::croak("Options for $called_as must be a hash reference");
-      }
-      my $cooked = {};
-      for my $k (@valid) {
-          $cooked->{$k} = delete $raw->{$k} if exists $raw->{$k};
-      }
-      if ( keys %$raw ) {
-          my ( undef, undef, undef, $called_as ) = caller(1);
-          $called_as =~ s{^.*::}{};
-          Carp::croak( "Invalid option(s) for $called_as: " . join( ", ", keys %$raw ) );
-      }
-      return $cooked;
-  }
-  
-  #--------------------------------------------------------------------------#
-  # Constructors
-  #--------------------------------------------------------------------------#
-  
-  #pod =construct path
-  #pod
-  #pod     $path = path("foo/bar");
-  #pod     $path = path("/tmp", "file.txt"); # list
-  #pod     $path = path(".");                # cwd
-  #pod     $path = path("~user/file.txt");   # tilde processing
-  #pod
-  #pod Constructs a C<Path::Tiny> object.  It doesn't matter if you give a file or
-  #pod directory path.  It's still up to you to call directory-like methods only on
-  #pod directories and file-like methods only on files.  This function is exported
-  #pod automatically by default.
-  #pod
-  #pod The first argument must be defined and have non-zero length or an exception
-  #pod will be thrown.  This prevents subtle, dangerous errors with code like
-  #pod C<< path( maybe_undef() )->remove_tree >>.
-  #pod
-  #pod If the first component of the path is a tilde ('~') then the component will be
-  #pod replaced with the output of C<glob('~')>.  If the first component of the path
-  #pod is a tilde followed by a user name then the component will be replaced with
-  #pod output of C<glob('~username')>.  Behaviour for non-existent users depends on
-  #pod the output of C<glob> on the system.
-  #pod
-  #pod On Windows, if the path consists of a drive identifier without a path component
-  #pod (C<C:> or C<D:>), it will be expanded to the absolute path of the current
-  #pod directory on that volume using C<Cwd::getdcwd()>.
-  #pod
-  #pod If called with a single C<Path::Tiny> argument, the original is returned unless
-  #pod the original is holding a temporary file or directory reference in which case a
-  #pod stringified copy is made.
-  #pod
-  #pod     $path = path("foo/bar");
-  #pod     $temp = Path::Tiny->tempfile;
-  #pod
-  #pod     $p2 = path($path); # like $p2 = $path
-  #pod     $t2 = path($temp); # like $t2 = path( "$temp" )
-  #pod
-  #pod This optimizes copies without proliferating references unexpectedly if a copy is
-  #pod made by code outside your control.
-  #pod
-  #pod Current API available since 0.017.
-  #pod
-  #pod =cut
-  
-  sub path {
-      my $path = shift;
-      Carp::croak("Path::Tiny paths require defined, positive-length parts")
-        unless 1 + @_ == grep { defined && length } $path, @_;
-  
-      # non-temp Path::Tiny objects are effectively immutable and can be reused
-      if ( !@_ && ref($path) eq __PACKAGE__ && !$path->[TEMP] ) {
-          return $path;
-      }
-  
-      # stringify objects
-      $path = "$path";
-  
-      # expand relative volume paths on windows; put trailing slash on UNC root
-      if ( IS_WIN32() ) {
-          $path = _win32_vol( $path, $1 ) if $path =~ m{^($DRV_VOL)(?:$NOTSLASH|$)};
-          $path .= "/" if $path =~ m{^$UNC_VOL$};
-      }
-  
-      # concatenations stringifies objects, too
-      if (@_) {
-          $path .= ( _is_root($path) ? "" : "/" ) . join( "/", @_ );
-      }
-  
-      # canonicalize, but with unix slashes and put back trailing volume slash
-      my $cpath = $path = File::Spec->canonpath($path);
-      $path =~ tr[\\][/] if IS_WIN32();
-      $path = "/" if $path eq '/..'; # for old File::Spec
-      $path .= "/" if IS_WIN32() && $path =~ m{^$UNC_VOL$};
-  
-      # root paths must always have a trailing slash, but other paths must not
-      if ( _is_root($path) ) {
-          $path =~ s{/?$}{/};
-      }
-      else {
-          $path =~ s{/$}{};
-      }
-  
-      # do any tilde expansions
-      if ( $path =~ m{^(~[^/]*).*} ) {
-          require File::Glob;
-          my ($homedir) = File::Glob::bsd_glob($1);
-          $homedir =~ tr[\\][/] if IS_WIN32();
-          $path =~ s{^(~[^/]*)}{$homedir};
-      }
-  
-      bless [ $path, $cpath ], __PACKAGE__;
-  }
-  
-  #pod =construct new
-  #pod
-  #pod     $path = Path::Tiny->new("foo/bar");
-  #pod
-  #pod This is just like C<path>, but with method call overhead.  (Why would you
-  #pod do that?)
-  #pod
-  #pod Current API available since 0.001.
-  #pod
-  #pod =cut
-  
-  sub new { shift; path(@_) }
-  
-  #pod =construct cwd
-  #pod
-  #pod     $path = Path::Tiny->cwd; # path( Cwd::getcwd )
-  #pod     $path = cwd; # optional export
-  #pod
-  #pod Gives you the absolute path to the current directory as a C<Path::Tiny> object.
-  #pod This is slightly faster than C<< path(".")->absolute >>.
-  #pod
-  #pod C<cwd> may be exported on request and used as a function instead of as a
-  #pod method.
-  #pod
-  #pod Current API available since 0.018.
-  #pod
-  #pod =cut
-  
-  sub cwd {
-      require Cwd;
-      return path( Cwd::getcwd() );
-  }
-  
-  #pod =construct rootdir
-  #pod
-  #pod     $path = Path::Tiny->rootdir; # /
-  #pod     $path = rootdir;             # optional export 
-  #pod
-  #pod Gives you C<< File::Spec->rootdir >> as a C<Path::Tiny> object if you're too
-  #pod picky for C<path("/")>.
-  #pod
-  #pod C<rootdir> may be exported on request and used as a function instead of as a
-  #pod method.
-  #pod
-  #pod Current API available since 0.018.
-  #pod
-  #pod =cut
-  
-  sub rootdir { path( File::Spec->rootdir ) }
-  
-  #pod =construct tempfile, tempdir
-  #pod
-  #pod     $temp = Path::Tiny->tempfile( @options );
-  #pod     $temp = Path::Tiny->tempdir( @options );
-  #pod     $temp = tempfile( @options ); # optional export
-  #pod     $temp = tempdir( @options );  # optional export
-  #pod
-  #pod C<tempfile> passes the options to C<< File::Temp->new >> and returns a C<Path::Tiny>
-  #pod object with the file name.  The C<TMPDIR> option is enabled by default.
-  #pod
-  #pod The resulting C<File::Temp> object is cached. When the C<Path::Tiny> object is
-  #pod destroyed, the C<File::Temp> object will be as well.
-  #pod
-  #pod C<File::Temp> annoyingly requires you to specify a custom template in slightly
-  #pod different ways depending on which function or method you call, but
-  #pod C<Path::Tiny> lets you ignore that and can take either a leading template or a
-  #pod C<TEMPLATE> option and does the right thing.
-  #pod
-  #pod     $temp = Path::Tiny->tempfile( "customXXXXXXXX" );             # ok
-  #pod     $temp = Path::Tiny->tempfile( TEMPLATE => "customXXXXXXXX" ); # ok
-  #pod
-  #pod The tempfile path object will be normalized to have an absolute path, even if
-  #pod created in a relative directory using C<DIR>.  If you want it to have
-  #pod the C<realpath> instead, pass a leading options hash like this:
-  #pod
-  #pod     $real_temp = tempfile({realpath => 1}, @options);
-  #pod
-  #pod C<tempdir> is just like C<tempfile>, except it calls
-  #pod C<< File::Temp->newdir >> instead.
-  #pod
-  #pod Both C<tempfile> and C<tempdir> may be exported on request and used as
-  #pod functions instead of as methods.
-  #pod
-  #pod B<Note>: for tempfiles, the filehandles from File::Temp are closed and not
-  #pod reused.  This is not as secure as using File::Temp handles directly, but is
-  #pod less prone to deadlocks or access problems on some platforms.  Think of what
-  #pod C<Path::Tiny> gives you to be just a temporary file B<name> that gets cleaned
-  #pod up.
-  #pod
-  #pod B<Note 2>: if you don't want these cleaned up automatically when the object
-  #pod is destroyed, File::Temp requires different options for directories and
-  #pod files.  Use C<< CLEANUP => 0 >> for directories and C<< UNLINK => 0 >> for
-  #pod files.
-  #pod
-  #pod B<Note 3>: Don't lose the temporary object by chaining a method call instead
-  #pod of storing it:
-  #pod
-  #pod     my $lost = tempdir()->child("foo"); # tempdir cleaned up right away
-  #pod
-  #pod B<Note 4>: The cached object may be accessed with the L</cached_temp> method.
-  #pod Keeping a reference to, or modifying the cached object may break the
-  #pod behavior documented above and is not supported.  Use at your own risk.
-  #pod
-  #pod Current API available since 0.097.
-  #pod
-  #pod =cut
-  
-  sub tempfile {
-      shift if @_ && $_[0] eq 'Path::Tiny'; # called as method
-      my $opts = ( @_ && ref $_[0] eq 'HASH' ) ? shift @_ : {};
-      $opts = _get_args( $opts, qw/realpath/ );
-  
-      my ( $maybe_template, $args ) = _parse_file_temp_args(@_);
-      # File::Temp->new demands TEMPLATE
-      $args->{TEMPLATE} = $maybe_template->[0] if @$maybe_template;
-  
-      require File::Temp;
-      my $temp = File::Temp->new( TMPDIR => 1, %$args );
-      close $temp;
-      my $self = $opts->{realpath} ? path($temp)->realpath : path($temp)->absolute;
-      $self->[TEMP] = $temp;                # keep object alive while we are
-      return $self;
-  }
-  
-  sub tempdir {
-      shift if @_ && $_[0] eq 'Path::Tiny'; # called as method
-      my $opts = ( @_ && ref $_[0] eq 'HASH' ) ? shift @_ : {};
-      $opts = _get_args( $opts, qw/realpath/ );
-  
-      my ( $maybe_template, $args ) = _parse_file_temp_args(@_);
-  
-      # File::Temp->newdir demands leading template
-      require File::Temp;
-      my $temp = File::Temp->newdir( @$maybe_template, TMPDIR => 1, %$args );
-      my $self = $opts->{realpath} ? path($temp)->realpath : path($temp)->absolute;
-      $self->[TEMP] = $temp;                # keep object alive while we are
-      # Some ActiveState Perls for Windows break Cwd in ways that lead
-      # File::Temp to get confused about what path to remove; this
-      # monkey-patches the object with our own view of the absolute path
-      $temp->{REALNAME} = $self->[CANON] if IS_WIN32;
-      return $self;
-  }
-  
-  # normalize the various ways File::Temp does templates
-  sub _parse_file_temp_args {
-      my $leading_template = ( scalar(@_) % 2 == 1 ? shift(@_) : '' );
-      my %args = @_;
-      %args = map { uc($_), $args{$_} } keys %args;
-      my @template = (
-            exists $args{TEMPLATE} ? delete $args{TEMPLATE}
-          : $leading_template      ? $leading_template
-          :                          ()
-      );
-      return ( \@template, \%args );
-  }
-  
-  #--------------------------------------------------------------------------#
-  # Private methods
-  #--------------------------------------------------------------------------#
-  
-  sub _splitpath {
-      my ($self) = @_;
-      @{$self}[ VOL, DIR, FILE ] = File::Spec->splitpath( $self->[PATH] );
-  }
-  
-  sub _resolve_symlinks {
-      my ($self) = @_;
-      my $new = $self;
-      my ( $count, %seen ) = 0;
-      while ( -l $new->[PATH] ) {
-          if ( $seen{ $new->[PATH] }++ ) {
-              $self->_throw( 'readlink', $self->[PATH], "symlink loop detected" );
-          }
-          if ( ++$count > 100 ) {
-              $self->_throw( 'readlink', $self->[PATH], "maximum symlink depth exceeded" );
-          }
-          my $resolved = readlink $new->[PATH] or $new->_throw( 'readlink', $new->[PATH] );
-          $resolved = path($resolved);
-          $new = $resolved->is_absolute ? $resolved : $new->sibling($resolved);
-      }
-      return $new;
-  }
-  
-  #--------------------------------------------------------------------------#
-  # Public methods
-  #--------------------------------------------------------------------------#
-  
-  #pod =method absolute
-  #pod
-  #pod     $abs = path("foo/bar")->absolute;
-  #pod     $abs = path("foo/bar")->absolute("/tmp");
-  #pod
-  #pod Returns a new C<Path::Tiny> object with an absolute path (or itself if already
-  #pod absolute).  If no argument is given, the current directory is used as the
-  #pod absolute base path.  If an argument is given, it will be converted to an
-  #pod absolute path (if it is not already) and used as the absolute base path.
-  #pod
-  #pod This will not resolve upward directories ("foo/../bar") unless C<canonpath>
-  #pod in L<File::Spec> would normally do so on your platform.  If you need them
-  #pod resolved, you must call the more expensive C<realpath> method instead.
-  #pod
-  #pod On Windows, an absolute path without a volume component will have it added
-  #pod based on the current drive.
-  #pod
-  #pod Current API available since 0.101.
-  #pod
-  #pod =cut
-  
-  sub absolute {
-      my ( $self, $base ) = @_;
-  
-      # absolute paths handled differently by OS
-      if (IS_WIN32) {
-          return $self if length $self->volume;
-          # add missing volume
-          if ( $self->is_absolute ) {
-              require Cwd;
-              # use Win32::GetCwd not Cwd::getdcwd because we're sure
-              # to have the former but not necessarily the latter
-              my ($drv) = Win32::GetCwd() =~ /^($DRV_VOL | $UNC_VOL)/x;
-              return path( $drv . $self->[PATH] );
-          }
-      }
-      else {
-          return $self if $self->is_absolute;
-      }
-  
-      # no base means use current directory as base
-      require Cwd;
-      return path( Cwd::getcwd(), $_[0]->[PATH] ) unless defined $base;
-  
-      # relative base should be made absolute; we check is_absolute rather
-      # than unconditionally make base absolute so that "/foo" doesn't become
-      # "C:/foo" on Windows.
-      $base = path($base);
-      return path( ( $base->is_absolute ? $base : $base->absolute ), $_[0]->[PATH] );
-  }
-  
-  #pod =method append, append_raw, append_utf8
-  #pod
-  #pod     path("foo.txt")->append(@data);
-  #pod     path("foo.txt")->append(\@data);
-  #pod     path("foo.txt")->append({binmode => ":raw"}, @data);
-  #pod     path("foo.txt")->append_raw(@data);
-  #pod     path("foo.txt")->append_utf8(@data);
-  #pod
-  #pod Appends data to a file.  The file is locked with C<flock> prior to writing.  An
-  #pod optional hash reference may be used to pass options.  Valid options are:
-  #pod
-  #pod =for :list
-  #pod * C<binmode>: passed to C<binmode()> on the handle used for writing.
-  #pod * C<truncate>: truncates the file after locking and before appending
-  #pod
-  #pod The C<truncate> option is a way to replace the contents of a file
-  #pod B<in place>, unlike L</spew> which writes to a temporary file and then
-  #pod replaces the original (if it exists).
-  #pod
-  #pod C<append_raw> is like C<append> with a C<binmode> of C<:unix> for fast,
-  #pod unbuffered, raw write.
-  #pod
-  #pod C<append_utf8> is like C<append> with a C<binmode> of
-  #pod C<:unix:encoding(UTF-8)> (or L<PerlIO::utf8_strict>).  If L<Unicode::UTF8>
-  #pod 0.58+ is installed, a raw append will be done instead on the data encoded
-  #pod with C<Unicode::UTF8>.
-  #pod
-  #pod Current API available since 0.060.
-  #pod
-  #pod =cut
-  
-  sub append {
-      my ( $self, @data ) = @_;
-      my $args = ( @data && ref $data[0] eq 'HASH' ) ? shift @data : {};
-      $args = _get_args( $args, qw/binmode truncate/ );
-      my $binmode = $args->{binmode};
-      $binmode = ( ( caller(0) )[10] || {} )->{'open>'} unless defined $binmode;
-      my $mode = $args->{truncate} ? ">" : ">>";
-      my $fh = $self->filehandle( { locked => 1 }, $mode, $binmode );
-      print {$fh} map { ref eq 'ARRAY' ? @$_ : $_ } @data;
-      close $fh or $self->_throw('close');
-  }
-  
-  sub append_raw {
-      my ( $self, @data ) = @_;
-      my $args = ( @data && ref $data[0] eq 'HASH' ) ? shift @data : {};
-      $args = _get_args( $args, qw/binmode truncate/ );
-      $args->{binmode} = ':unix';
-      append( $self, $args, @data );
-  }
-  
-  sub append_utf8 {
-      my ( $self, @data ) = @_;
-      my $args = ( @data && ref $data[0] eq 'HASH' ) ? shift @data : {};
-      $args = _get_args( $args, qw/binmode truncate/ );
-      if ( defined($HAS_UU) ? $HAS_UU : ( $HAS_UU = _check_UU() ) ) {
-          $args->{binmode} = ":unix";
-          append( $self, $args, map { Unicode::UTF8::encode_utf8($_) } @data );
-      }
-      elsif ( defined($HAS_PU) ? $HAS_PU : ( $HAS_PU = _check_PU() ) ) {
-          $args->{binmode} = ":unix:utf8_strict";
-          append( $self, $args, @data );
-      }
-      else {
-          $args->{binmode} = ":unix:encoding(UTF-8)";
-          append( $self, $args, @data );
-      }
-  }
-  
-  #pod =method assert
-  #pod
-  #pod     $path = path("foo.txt")->assert( sub { $_->exists } );
-  #pod
-  #pod Returns the invocant after asserting that a code reference argument returns
-  #pod true.  When the assertion code reference runs, it will have the invocant
-  #pod object in the C<$_> variable.  If it returns false, an exception will be
-  #pod thrown.  The assertion code reference may also throw its own exception.
-  #pod
-  #pod If no assertion is provided, the invocant is returned without error.
-  #pod
-  #pod Current API available since 0.062.
-  #pod
-  #pod =cut
-  
-  sub assert {
-      my ( $self, $assertion ) = @_;
-      return $self unless $assertion;
-      if ( ref $assertion eq 'CODE' ) {
-          local $_ = $self;
-          $assertion->()
-            or Path::Tiny::Error->throw( "assert", $self->[PATH], "failed assertion" );
-      }
-      else {
-          Carp::croak("argument to assert must be a code reference argument");
-      }
-      return $self;
-  }
-  
-  #pod =method basename
-  #pod
-  #pod     $name = path("foo/bar.txt")->basename;        # bar.txt
-  #pod     $name = path("foo.txt")->basename('.txt');    # foo
-  #pod     $name = path("foo.txt")->basename(qr/.txt/);  # foo
-  #pod     $name = path("foo.txt")->basename(@suffixes);
-  #pod
-  #pod Returns the file portion or last directory portion of a path.
-  #pod
-  #pod Given a list of suffixes as strings or regular expressions, any that match at
-  #pod the end of the file portion or last directory portion will be removed before
-  #pod the result is returned.
-  #pod
-  #pod Current API available since 0.054.
-  #pod
-  #pod =cut
-  
-  sub basename {
-      my ( $self, @suffixes ) = @_;
-      $self->_splitpath unless defined $self->[FILE];
-      my $file = $self->[FILE];
-      for my $s (@suffixes) {
-          my $re = ref($s) eq 'Regexp' ? qr/$s$/ : qr/\Q$s\E$/;
-          last if $file =~ s/$re//;
-      }
-      return $file;
-  }
-  
-  #pod =method canonpath
-  #pod
-  #pod     $canonical = path("foo/bar")->canonpath; # foo\bar on Windows
-  #pod
-  #pod Returns a string with the canonical format of the path name for
-  #pod the platform.  In particular, this means directory separators
-  #pod will be C<\> on Windows.
-  #pod
-  #pod Current API available since 0.001.
-  #pod
-  #pod =cut
-  
-  sub canonpath { $_[0]->[CANON] }
-  
-  #pod =method cached_temp
-  #pod
-  #pod Returns the cached C<File::Temp> or C<File::Temp::Dir> object if the
-  #pod C<Path::Tiny> object was created with C</tempfile> or C</tempdir>.
-  #pod If there is no such object, this method throws.
-  #pod
-  #pod B<WARNING>: Keeping a reference to, or modifying the cached object may
-  #pod break the behavior documented for temporary files and directories created
-  #pod with C<Path::Tiny> and is not supported.  Use at your own risk.
-  #pod
-  #pod Current API available since 0.101.
-  #pod
-  #pod =cut
-  
-  sub cached_temp {
-      my $self = shift;
-      $self->_throw( "cached_temp", $self, "has no cached File::Temp object" )
-        unless defined $self->[TEMP];
-      return $self->[TEMP];
-  }
-  
-  #pod =method child
-  #pod
-  #pod     $file = path("/tmp")->child("foo.txt"); # "/tmp/foo.txt"
-  #pod     $file = path("/tmp")->child(@parts);
-  #pod
-  #pod Returns a new C<Path::Tiny> object relative to the original.  Works
-  #pod like C<catfile> or C<catdir> from File::Spec, but without caring about
-  #pod file or directories.
-  #pod
-  #pod Current API available since 0.001.
-  #pod
-  #pod =cut
-  
-  sub child {
-      my ( $self, @parts ) = @_;
-      return path( $self->[PATH], @parts );
-  }
-  
-  #pod =method children
-  #pod
-  #pod     @paths = path("/tmp")->children;
-  #pod     @paths = path("/tmp")->children( qr/\.txt$/ );
-  #pod
-  #pod Returns a list of C<Path::Tiny> objects for all files and directories
-  #pod within a directory.  Excludes "." and ".." automatically.
-  #pod
-  #pod If an optional C<qr//> argument is provided, it only returns objects for child
-  #pod names that match the given regular expression.  Only the base name is used
-  #pod for matching:
-  #pod
-  #pod     @paths = path("/tmp")->children( qr/^foo/ );
-  #pod     # matches children like the glob foo*
-  #pod
-  #pod Current API available since 0.028.
-  #pod
-  #pod =cut
-  
-  sub children {
-      my ( $self, $filter ) = @_;
-      my $dh;
-      opendir $dh, $self->[PATH] or $self->_throw('opendir');
-      my @children = readdir $dh;
-      closedir $dh or $self->_throw('closedir');
-  
-      if ( not defined $filter ) {
-          @children = grep { $_ ne '.' && $_ ne '..' } @children;
-      }
-      elsif ( $filter && ref($filter) eq 'Regexp' ) {
-          @children = grep { $_ ne '.' && $_ ne '..' && $_ =~ $filter } @children;
-      }
-      else {
-          Carp::croak("Invalid argument '$filter' for children()");
-      }
-  
-      return map { path( $self->[PATH], $_ ) } @children;
-  }
-  
-  #pod =method chmod
-  #pod
-  #pod     path("foo.txt")->chmod(0777);
-  #pod     path("foo.txt")->chmod("0755");
-  #pod     path("foo.txt")->chmod("go-w");
-  #pod     path("foo.txt")->chmod("a=r,u+wx");
-  #pod
-  #pod Sets file or directory permissions.  The argument can be a numeric mode, a
-  #pod octal string beginning with a "0" or a limited subset of the symbolic mode use
-  #pod by F</bin/chmod>.
-  #pod
-  #pod The symbolic mode must be a comma-delimited list of mode clauses.  Clauses must
-  #pod match C<< qr/\A([augo]+)([=+-])([rwx]+)\z/ >>, which defines "who", "op" and
-  #pod "perms" parameters for each clause.  Unlike F</bin/chmod>, all three parameters
-  #pod are required for each clause, multiple ops are not allowed and permissions
-  #pod C<stugoX> are not supported.  (See L<File::chmod> for more complex needs.)
-  #pod
-  #pod Current API available since 0.053.
-  #pod
-  #pod =cut
-  
-  sub chmod {
-      my ( $self, $new_mode ) = @_;
-  
-      my $mode;
-      if ( $new_mode =~ /\d/ ) {
-          $mode = ( $new_mode =~ /^0/ ? oct($new_mode) : $new_mode );
-      }
-      elsif ( $new_mode =~ /[=+-]/ ) {
-          $mode = _symbolic_chmod( $self->stat->mode & 07777, $new_mode ); ## no critic
-      }
-      else {
-          Carp::croak("Invalid mode argument '$new_mode' for chmod()");
-      }
-  
-      CORE::chmod( $mode, $self->[PATH] ) or $self->_throw("chmod");
-  
-      return 1;
-  }
-  
-  #pod =method copy
-  #pod
-  #pod     path("/tmp/foo.txt")->copy("/tmp/bar.txt");
-  #pod
-  #pod Copies the current path to the given destination using L<File::Copy>'s
-  #pod C<copy> function. Upon success, returns the C<Path::Tiny> object for the
-  #pod newly copied file.
-  #pod
-  #pod Current API available since 0.070.
-  #pod
-  #pod =cut
-  
-  # XXX do recursively for directories?
-  sub copy {
-      my ( $self, $dest ) = @_;
-      require File::Copy;
-      File::Copy::copy( $self->[PATH], $dest )
-        or Carp::croak("copy failed for $self to $dest: $!");
-  
-      return -d $dest ? path( $dest, $self->basename ) : path($dest);
-  }
-  
-  #pod =method digest
-  #pod
-  #pod     $obj = path("/tmp/foo.txt")->digest;        # SHA-256
-  #pod     $obj = path("/tmp/foo.txt")->digest("MD5"); # user-selected
-  #pod     $obj = path("/tmp/foo.txt")->digest( { chunk_size => 1e6 }, "MD5" );
-  #pod
-  #pod Returns a hexadecimal digest for a file.  An optional hash reference of options may
-  #pod be given.  The only option is C<chunk_size>.  If C<chunk_size> is given, that many
-  #pod bytes will be read at a time.  If not provided, the entire file will be slurped
-  #pod into memory to compute the digest.
-  #pod
-  #pod Any subsequent arguments are passed to the constructor for L<Digest> to select
-  #pod an algorithm.  If no arguments are given, the default is SHA-256.
-  #pod
-  #pod Current API available since 0.056.
-  #pod
-  #pod =cut
-  
-  sub digest {
-      my ( $self, @opts ) = @_;
-      my $args = ( @opts && ref $opts[0] eq 'HASH' ) ? shift @opts : {};
-      $args = _get_args( $args, qw/chunk_size/ );
-      unshift @opts, 'SHA-256' unless @opts;
-      require Digest;
-      my $digest = Digest->new(@opts);
-      if ( $args->{chunk_size} ) {
-          my $fh = $self->filehandle( { locked => 1 }, "<", ":unix" );
-          my $buf;
-          $digest->add($buf) while read $fh, $buf, $args->{chunk_size};
-      }
-      else {
-          $digest->add( $self->slurp_raw );
-      }
-      return $digest->hexdigest;
-  }
-  
-  #pod =method dirname (deprecated)
-  #pod
-  #pod     $name = path("/tmp/foo.txt")->dirname; # "/tmp/"
-  #pod
-  #pod Returns the directory portion you would get from calling
-  #pod C<< File::Spec->splitpath( $path->stringify ) >> or C<"."> for a path without a
-  #pod parent directory portion.  Because L<File::Spec> is inconsistent, the result
-  #pod might or might not have a trailing slash.  Because of this, this method is
-  #pod B<deprecated>.
-  #pod
-  #pod A better, more consistently approach is likely C<< $path->parent->stringify >>,
-  #pod which will not have a trailing slash except for a root directory.
-  #pod
-  #pod Deprecated in 0.056.
-  #pod
-  #pod =cut
-  
-  sub dirname {
-      my ($self) = @_;
-      $self->_splitpath unless defined $self->[DIR];
-      return length $self->[DIR] ? $self->[DIR] : ".";
-  }
-  
-  #pod =method edit, edit_raw, edit_utf8
-  #pod
-  #pod     path("foo.txt")->edit( \&callback, $options );
-  #pod     path("foo.txt")->edit_utf8( \&callback );
-  #pod     path("foo.txt")->edit_raw( \&callback );
-  #pod
-  #pod These are convenience methods that allow "editing" a file using a single
-  #pod callback argument. They slurp the file using C<slurp>, place the contents
-  #pod inside a localized C<$_> variable, call the callback function (without
-  #pod arguments), and then write C<$_> (presumably mutated) back to the
-  #pod file with C<spew>.
-  #pod
-  #pod An optional hash reference may be used to pass options.  The only option is
-  #pod C<binmode>, which is passed to C<slurp> and C<spew>.
-  #pod
-  #pod C<edit_utf8> and C<edit_raw> act like their respective C<slurp_*> and
-  #pod C<spew_*> methods.
-  #pod
-  #pod Current API available since 0.077.
-  #pod
-  #pod =cut
-  
-  sub edit {
-      my $self = shift;
-      my $cb   = shift;
-      my $args = _get_args( shift, qw/binmode/ );
-      Carp::croak("Callback for edit() must be a code reference")
-        unless defined($cb) && ref($cb) eq 'CODE';
-  
-      local $_ =
-        $self->slurp( exists( $args->{binmode} ) ? { binmode => $args->{binmode} } : () );
-      $cb->();
-      $self->spew( $args, $_ );
-  
-      return;
-  }
-  
-  # this is done long-hand to benefit from slurp_utf8 optimizations
-  sub edit_utf8 {
-      my ( $self, $cb ) = @_;
-      Carp::croak("Callback for edit_utf8() must be a code reference")
-        unless defined($cb) && ref($cb) eq 'CODE';
-  
-      local $_ = $self->slurp_utf8;
-      $cb->();
-      $self->spew_utf8($_);
-  
-      return;
-  }
-  
-  sub edit_raw { $_[2] = { binmode => ":unix" }; goto &edit }
-  
-  #pod =method edit_lines, edit_lines_utf8, edit_lines_raw
-  #pod
-  #pod     path("foo.txt")->edit_lines( \&callback, $options );
-  #pod     path("foo.txt")->edit_lines_utf8( \&callback );
-  #pod     path("foo.txt")->edit_lines_raw( \&callback );
-  #pod
-  #pod These are convenience methods that allow "editing" a file's lines using a
-  #pod single callback argument.  They iterate over the file: for each line, the
-  #pod line is put into a localized C<$_> variable, the callback function is
-  #pod executed (without arguments) and then C<$_> is written to a temporary file.
-  #pod When iteration is finished, the temporary file is atomically renamed over
-  #pod the original.
-  #pod
-  #pod An optional hash reference may be used to pass options.  The only option is
-  #pod C<binmode>, which is passed to the method that open handles for reading and
-  #pod writing.
-  #pod
-  #pod C<edit_lines_utf8> and C<edit_lines_raw> act like their respective
-  #pod C<slurp_*> and C<spew_*> methods.
-  #pod
-  #pod Current API available since 0.077.
-  #pod
-  #pod =cut
-  
-  sub edit_lines {
-      my $self = shift;
-      my $cb   = shift;
-      my $args = _get_args( shift, qw/binmode/ );
-      Carp::croak("Callback for edit_lines() must be a code reference")
-        unless defined($cb) && ref($cb) eq 'CODE';
-  
-      my $binmode = $args->{binmode};
-      # get default binmode from caller's lexical scope (see "perldoc open")
-      $binmode = ( ( caller(0) )[10] || {} )->{'open>'} unless defined $binmode;
-  
-      # writing need to follow the link and create the tempfile in the same
-      # dir for later atomic rename
-      my $resolved_path = $self->_resolve_symlinks;
-      my $temp          = path( $resolved_path . $$ . int( rand( 2**31 ) ) );
-  
-      my $temp_fh = $temp->filehandle( { exclusive => 1, locked => 1 }, ">", $binmode );
-      my $in_fh = $self->filehandle( { locked => 1 }, '<', $binmode );
-  
-      local $_;
-      while (<$in_fh>) {
-          $cb->();
-          $temp_fh->print($_);
-      }
-  
-      close $temp_fh or $self->_throw( 'close', $temp );
-      close $in_fh or $self->_throw('close');
-  
-      return $temp->move($resolved_path);
-  }
-  
-  sub edit_lines_raw { $_[2] = { binmode => ":unix" }; goto &edit_lines }
-  
-  sub edit_lines_utf8 {
-      $_[2] = { binmode => ":raw:encoding(UTF-8)" };
-      goto &edit_lines;
-  }
-  
-  #pod =method exists, is_file, is_dir
-  #pod
-  #pod     if ( path("/tmp")->exists ) { ... }     # -e
-  #pod     if ( path("/tmp")->is_dir ) { ... }     # -d
-  #pod     if ( path("/tmp")->is_file ) { ... }    # -e && ! -d
-  #pod
-  #pod Implements file test operations, this means the file or directory actually has
-  #pod to exist on the filesystem.  Until then, it's just a path.
-  #pod
-  #pod B<Note>: C<is_file> is not C<-f> because C<-f> is not the opposite of C<-d>.
-  #pod C<-f> means "plain file", excluding symlinks, devices, etc. that often can be
-  #pod read just like files.
-  #pod
-  #pod Use C<-f> instead if you really mean to check for a plain file.
-  #pod
-  #pod Current API available since 0.053.
-  #pod
-  #pod =cut
-  
-  sub exists { -e $_[0]->[PATH] }
-  
-  sub is_file { -e $_[0]->[PATH] && !-d _ }
-  
-  sub is_dir { -d $_[0]->[PATH] }
-  
-  #pod =method filehandle
-  #pod
-  #pod     $fh = path("/tmp/foo.txt")->filehandle($mode, $binmode);
-  #pod     $fh = path("/tmp/foo.txt")->filehandle({ locked => 1 }, $mode, $binmode);
-  #pod     $fh = path("/tmp/foo.txt")->filehandle({ exclusive => 1  }, $mode, $binmode);
-  #pod
-  #pod Returns an open file handle.  The C<$mode> argument must be a Perl-style
-  #pod read/write mode string ("<" ,">", ">>", etc.).  If a C<$binmode>
-  #pod is given, it is set during the C<open> call.
-  #pod
-  #pod An optional hash reference may be used to pass options.
-  #pod
-  #pod The C<locked> option governs file locking; if true, handles opened for writing,
-  #pod appending or read-write are locked with C<LOCK_EX>; otherwise, they are
-  #pod locked with C<LOCK_SH>.  When using C<locked>, ">" or "+>" modes will delay
-  #pod truncation until after the lock is acquired.
-  #pod
-  #pod The C<exclusive> option causes the open() call to fail if the file already
-  #pod exists.  This corresponds to the O_EXCL flag to sysopen / open(2).
-  #pod C<exclusive> implies C<locked> and will set it for you if you forget it.
-  #pod
-  #pod See C<openr>, C<openw>, C<openrw>, and C<opena> for sugar.
-  #pod
-  #pod Current API available since 0.066.
-  #pod
-  #pod =cut
-  
-  # Note: must put binmode on open line, not subsequent binmode() call, so things
-  # like ":unix" actually stop perlio/crlf from being added
-  
-  sub filehandle {
-      my ( $self, @args ) = @_;
-      my $args = ( @args && ref $args[0] eq 'HASH' ) ? shift @args : {};
-      $args = _get_args( $args, qw/locked exclusive/ );
-      $args->{locked} = 1 if $args->{exclusive};
-      my ( $opentype, $binmode ) = @args;
-  
-      $opentype = "<" unless defined $opentype;
-      Carp::croak("Invalid file mode '$opentype'")
-        unless grep { $opentype eq $_ } qw/< +< > +> >> +>>/;
-  
-      $binmode = ( ( caller(0) )[10] || {} )->{ 'open' . substr( $opentype, -1, 1 ) }
-        unless defined $binmode;
-      $binmode = "" unless defined $binmode;
-  
-      my ( $fh, $lock, $trunc );
-      if ( $HAS_FLOCK && $args->{locked} ) {
-          require Fcntl;
-          # truncating file modes shouldn't truncate until lock acquired
-          if ( grep { $opentype eq $_ } qw( > +> ) ) {
-              # sysopen in write mode without truncation
-              my $flags = $opentype eq ">" ? Fcntl::O_WRONLY() : Fcntl::O_RDWR();
-              $flags |= Fcntl::O_CREAT();
-              $flags |= Fcntl::O_EXCL() if $args->{exclusive};
-              sysopen( $fh, $self->[PATH], $flags ) or $self->_throw("sysopen");
-  
-              # fix up the binmode since sysopen() can't specify layers like
-              # open() and binmode() can't start with just :unix like open()
-              if ( $binmode =~ s/^:unix// ) {
-                  # eliminate pseudo-layers
-                  binmode( $fh, ":raw" ) or $self->_throw("binmode (:raw)");
-                  # strip off real layers until only :unix is left
-                  while ( 1 < ( my $layers =()= PerlIO::get_layers( $fh, output => 1 ) ) ) {
-                      binmode( $fh, ":pop" ) or $self->_throw("binmode (:pop)");
-                  }
-              }
-  
-              # apply any remaining binmode layers
-              if ( length $binmode ) {
-                  binmode( $fh, $binmode ) or $self->_throw("binmode ($binmode)");
-              }
-  
-              # ask for lock and truncation
-              $lock  = Fcntl::LOCK_EX();
-              $trunc = 1;
-          }
-          elsif ( $^O eq 'aix' && $opentype eq "<" ) {
-              # AIX can only lock write handles, so upgrade to RW and LOCK_EX if
-              # the file is writable; otherwise give up on locking.  N.B.
-              # checking -w before open to determine the open mode is an
-              # unavoidable race condition
-              if ( -w $self->[PATH] ) {
-                  $opentype = "+<";
-                  $lock     = Fcntl::LOCK_EX();
-              }
-          }
-          else {
-              $lock = $opentype eq "<" ? Fcntl::LOCK_SH() : Fcntl::LOCK_EX();
-          }
-      }
-  
-      unless ($fh) {
-          my $mode = $opentype . $binmode;
-          open $fh, $mode, $self->[PATH] or $self->_throw("open ($mode)");
-      }
-  
-      do { flock( $fh, $lock ) or $self->_throw("flock ($lock)") } if $lock;
-      do { truncate( $fh, 0 ) or $self->_throw("truncate") } if $trunc;
-  
-      return $fh;
-  }
-  
-  #pod =method is_absolute, is_relative
-  #pod
-  #pod     if ( path("/tmp")->is_absolute ) { ... }
-  #pod     if ( path("/tmp")->is_relative ) { ... }
-  #pod
-  #pod Booleans for whether the path appears absolute or relative.
-  #pod
-  #pod Current API available since 0.001.
-  #pod
-  #pod =cut
-  
-  sub is_absolute { substr( $_[0]->dirname, 0, 1 ) eq '/' }
-  
-  sub is_relative { substr( $_[0]->dirname, 0, 1 ) ne '/' }
-  
-  #pod =method is_rootdir
-  #pod
-  #pod     while ( ! $path->is_rootdir ) {
-  #pod         $path = $path->parent;
-  #pod         ...
-  #pod     }
-  #pod
-  #pod Boolean for whether the path is the root directory of the volume.  I.e. the
-  #pod C<dirname> is C<q[/]> and the C<basename> is C<q[]>.
-  #pod
-  #pod This works even on C<MSWin32> with drives and UNC volumes:
-  #pod
-  #pod     path("C:/")->is_rootdir;             # true
-  #pod     path("//server/share/")->is_rootdir; #true
-  #pod
-  #pod Current API available since 0.038.
-  #pod
-  #pod =cut
-  
-  sub is_rootdir {
-      my ($self) = @_;
-      $self->_splitpath unless defined $self->[DIR];
-      return $self->[DIR] eq '/' && $self->[FILE] eq '';
-  }
-  
-  #pod =method iterator
-  #pod
-  #pod     $iter = path("/tmp")->iterator( \%options );
-  #pod
-  #pod Returns a code reference that walks a directory lazily.  Each invocation
-  #pod returns a C<Path::Tiny> object or undef when the iterator is exhausted.
-  #pod
-  #pod     $iter = path("/tmp")->iterator;
-  #pod     while ( $path = $iter->() ) {
-  #pod         ...
-  #pod     }
-  #pod
-  #pod The current and parent directory entries ("." and "..") will not
-  #pod be included.
-  #pod
-  #pod If the C<recurse> option is true, the iterator will walk the directory
-  #pod recursively, breadth-first.  If the C<follow_symlinks> option is also true,
-  #pod directory links will be followed recursively.  There is no protection against
-  #pod loops when following links. If a directory is not readable, it will not be
-  #pod followed.
-  #pod
-  #pod The default is the same as:
-  #pod
-  #pod     $iter = path("/tmp")->iterator( {
-  #pod         recurse         => 0,
-  #pod         follow_symlinks => 0,
-  #pod     } );
-  #pod
-  #pod For a more powerful, recursive iterator with built-in loop avoidance, see
-  #pod L<Path::Iterator::Rule>.
-  #pod
-  #pod See also L</visit>.
-  #pod
-  #pod Current API available since 0.016.
-  #pod
-  #pod =cut
-  
-  sub iterator {
-      my $self = shift;
-      my $args = _get_args( shift, qw/recurse follow_symlinks/ );
-      my @dirs = $self;
-      my $current;
-      return sub {
-          my $next;
-          while (@dirs) {
-              if ( ref $dirs[0] eq 'Path::Tiny' ) {
-                  if ( !-r $dirs[0] ) {
-                      # Directory is missing or not readable, so skip it.  There
-                      # is still a race condition possible between the check and
-                      # the opendir, but we can't easily differentiate between
-                      # error cases that are OK to skip and those that we want
-                      # to be exceptions, so we live with the race and let opendir
-                      # be fatal.
-                      shift @dirs and next;
-                  }
-                  $current = $dirs[0];
-                  my $dh;
-                  opendir( $dh, $current->[PATH] )
-                    or $self->_throw( 'opendir', $current->[PATH] );
-                  $dirs[0] = $dh;
-                  if ( -l $current->[PATH] && !$args->{follow_symlinks} ) {
-                      # Symlink attack! It was a real dir, but is now a symlink!
-                      # N.B. we check *after* opendir so the attacker has to win
-                      # two races: replace dir with symlink before opendir and
-                      # replace symlink with dir before -l check above
-                      shift @dirs and next;
-                  }
-              }
-              while ( defined( $next = readdir $dirs[0] ) ) {
-                  next if $next eq '.' || $next eq '..';
-                  my $path = $current->child($next);
-                  push @dirs, $path
-                    if $args->{recurse} && -d $path && !( !$args->{follow_symlinks} && -l $path );
-                  return $path;
-              }
-              shift @dirs;
-          }
-          return;
-      };
-  }
-  
-  #pod =method lines, lines_raw, lines_utf8
-  #pod
-  #pod     @contents = path("/tmp/foo.txt")->lines;
-  #pod     @contents = path("/tmp/foo.txt")->lines(\%options);
-  #pod     @contents = path("/tmp/foo.txt")->lines_raw;
-  #pod     @contents = path("/tmp/foo.txt")->lines_utf8;
-  #pod
-  #pod     @contents = path("/tmp/foo.txt")->lines( { chomp => 1, count => 4 } );
-  #pod
-  #pod Returns a list of lines from a file.  Optionally takes a hash-reference of
-  #pod options.  Valid options are C<binmode>, C<count> and C<chomp>.
-  #pod
-  #pod If C<binmode> is provided, it will be set on the handle prior to reading.
-  #pod
-  #pod If a positive C<count> is provided, that many lines will be returned from the
-  #pod start of the file.  If a negative C<count> is provided, the entire file will be
-  #pod read, but only C<abs(count)> will be kept and returned.  If C<abs(count)>
-  #pod exceeds the number of lines in the file, all lines will be returned.
-  #pod
-  #pod If C<chomp> is set, any end-of-line character sequences (C<CR>, C<CRLF>, or
-  #pod C<LF>) will be removed from the lines returned.
-  #pod
-  #pod Because the return is a list, C<lines> in scalar context will return the number
-  #pod of lines (and throw away the data).
-  #pod
-  #pod     $number_of_lines = path("/tmp/foo.txt")->lines;
-  #pod
-  #pod C<lines_raw> is like C<lines> with a C<binmode> of C<:raw>.  We use C<:raw>
-  #pod instead of C<:unix> so PerlIO buffering can manage reading by line.
-  #pod
-  #pod C<lines_utf8> is like C<lines> with a C<binmode> of C<:raw:encoding(UTF-8)>
-  #pod (or L<PerlIO::utf8_strict>).  If L<Unicode::UTF8> 0.58+ is installed, a raw
-  #pod UTF-8 slurp will be done and then the lines will be split.  This is
-  #pod actually faster than relying on C<:encoding(UTF-8)>, though a bit memory
-  #pod intensive.  If memory use is a concern, consider C<openr_utf8> and
-  #pod iterating directly on the handle.
-  #pod
-  #pod Current API available since 0.065.
-  #pod
-  #pod =cut
-  
-  sub lines {
-      my $self    = shift;
-      my $args    = _get_args( shift, qw/binmode chomp count/ );
-      my $binmode = $args->{binmode};
-      $binmode = ( ( caller(0) )[10] || {} )->{'open<'} unless defined $binmode;
-      my $fh = $self->filehandle( { locked => 1 }, "<", $binmode );
-      my $chomp = $args->{chomp};
-      # XXX more efficient to read @lines then chomp(@lines) vs map?
-      if ( $args->{count} ) {
-          my ( $counter, $mod, @result ) = ( 0, abs( $args->{count} ) );
-          while ( my $line = <$fh> ) {
-              $line =~ s/(?:\x{0d}?\x{0a}|\x{0d})$// if $chomp;
-              $result[ $counter++ ] = $line;
-              # for positive count, terminate after right number of lines
-              last if $counter == $args->{count};
-              # for negative count, eventually wrap around in the result array
-              $counter %= $mod;
-          }
-          # reorder results if full and wrapped somewhere in the middle
-          splice( @result, 0, 0, splice( @result, $counter ) )
-            if @result == $mod && $counter % $mod;
-          return @result;
-      }
-      elsif ($chomp) {
-          return map { s/(?:\x{0d}?\x{0a}|\x{0d})$//; $_ } <$fh>; ## no critic
-      }
-      else {
-          return wantarray ? <$fh> : ( my $count =()= <$fh> );
-      }
-  }
-  
-  sub lines_raw {
-      my $self = shift;
-      my $args = _get_args( shift, qw/binmode chomp count/ );
-      if ( $args->{chomp} && !$args->{count} ) {
-          return split /\n/, slurp_raw($self);                    ## no critic
-      }
-      else {
-          $args->{binmode} = ":raw";
-          return lines( $self, $args );
-      }
-  }
-  
-  my $CRLF = qr/(?:\x{0d}?\x{0a}|\x{0d})/;
-  
-  sub lines_utf8 {
-      my $self = shift;
-      my $args = _get_args( shift, qw/binmode chomp count/ );
-      if (   ( defined($HAS_UU) ? $HAS_UU : ( $HAS_UU = _check_UU() ) )
-          && $args->{chomp}
-          && !$args->{count} )
-      {
-          my $slurp = slurp_utf8($self);
-          $slurp =~ s/$CRLF$//; # like chomp, but full CR?LF|CR
-          return split $CRLF, $slurp, -1; ## no critic
-      }
-      elsif ( defined($HAS_PU) ? $HAS_PU : ( $HAS_PU = _check_PU() ) ) {
-          $args->{binmode} = ":unix:utf8_strict";
-          return lines( $self, $args );
-      }
-      else {
-          $args->{binmode} = ":raw:encoding(UTF-8)";
-          return lines( $self, $args );
-      }
-  }
-  
-  #pod =method mkpath
-  #pod
-  #pod     path("foo/bar/baz")->mkpath;
-  #pod     path("foo/bar/baz")->mkpath( \%options );
-  #pod
-  #pod Like calling C<make_path> from L<File::Path>.  An optional hash reference
-  #pod is passed through to C<make_path>.  Errors will be trapped and an exception
-  #pod thrown.  Returns the list of directories created or an empty list if
-  #pod the directories already exist, just like C<make_path>.
-  #pod
-  #pod Current API available since 0.001.
-  #pod
-  #pod =cut
-  
-  sub mkpath {
-      my ( $self, $args ) = @_;
-      $args = {} unless ref $args eq 'HASH';
-      my $err;
-      $args->{error} = \$err unless defined $args->{error};
-      require File::Path;
-      my @dirs = File::Path::make_path( $self->[PATH], $args );
-      if ( $err && @$err ) {
-          my ( $file, $message ) = %{ $err->[0] };
-          Carp::croak("mkpath failed for $file: $message");
-      }
-      return @dirs;
-  }
-  
-  #pod =method move
-  #pod
-  #pod     path("foo.txt")->move("bar.txt");
-  #pod
-  #pod Move the current path to the given destination path using Perl's
-  #pod built-in L<rename|perlfunc/rename> function. Returns the result
-  #pod of the C<rename> function.
-  #pod
-  #pod Current API available since 0.001.
-  #pod
-  #pod =cut
-  
-  sub move {
-      my ( $self, $dst ) = @_;
-  
-      return rename( $self->[PATH], $dst )
-        || $self->_throw( 'rename', $self->[PATH] . "' -> '$dst" );
-  }
-  
-  #pod =method openr, openw, openrw, opena
-  #pod
-  #pod     $fh = path("foo.txt")->openr($binmode);  # read
-  #pod     $fh = path("foo.txt")->openr_raw;
-  #pod     $fh = path("foo.txt")->openr_utf8;
-  #pod
-  #pod     $fh = path("foo.txt")->openw($binmode);  # write
-  #pod     $fh = path("foo.txt")->openw_raw;
-  #pod     $fh = path("foo.txt")->openw_utf8;
-  #pod
-  #pod     $fh = path("foo.txt")->opena($binmode);  # append
-  #pod     $fh = path("foo.txt")->opena_raw;
-  #pod     $fh = path("foo.txt")->opena_utf8;
-  #pod
-  #pod     $fh = path("foo.txt")->openrw($binmode); # read/write
-  #pod     $fh = path("foo.txt")->openrw_raw;
-  #pod     $fh = path("foo.txt")->openrw_utf8;
-  #pod
-  #pod Returns a file handle opened in the specified mode.  The C<openr> style methods
-  #pod take a single C<binmode> argument.  All of the C<open*> methods have
-  #pod C<open*_raw> and C<open*_utf8> equivalents that use C<:raw> and
-  #pod C<:raw:encoding(UTF-8)>, respectively.
-  #pod
-  #pod An optional hash reference may be used to pass options.  The only option is
-  #pod C<locked>.  If true, handles opened for writing, appending or read-write are
-  #pod locked with C<LOCK_EX>; otherwise, they are locked for C<LOCK_SH>.
-  #pod
-  #pod     $fh = path("foo.txt")->openrw_utf8( { locked => 1 } );
-  #pod
-  #pod See L</filehandle> for more on locking.
-  #pod
-  #pod Current API available since 0.011.
-  #pod
-  #pod =cut
-  
-  # map method names to corresponding open mode
-  my %opens = (
-      opena  => ">>",
-      openr  => "<",
-      openw  => ">",
-      openrw => "+<"
-  );
-  
-  while ( my ( $k, $v ) = each %opens ) {
-      no strict 'refs';
-      # must check for lexical IO mode hint
-      *{$k} = sub {
-          my ( $self, @args ) = @_;
-          my $args = ( @args && ref $args[0] eq 'HASH' ) ? shift @args : {};
-          $args = _get_args( $args, qw/locked/ );
-          my ($binmode) = @args;
-          $binmode = ( ( caller(0) )[10] || {} )->{ 'open' . substr( $v, -1, 1 ) }
-            unless defined $binmode;
-          $self->filehandle( $args, $v, $binmode );
-      };
-      *{ $k . "_raw" } = sub {
-          my ( $self, @args ) = @_;
-          my $args = ( @args && ref $args[0] eq 'HASH' ) ? shift @args : {};
-          $args = _get_args( $args, qw/locked/ );
-          $self->filehandle( $args, $v, ":raw" );
-      };
-      *{ $k . "_utf8" } = sub {
-          my ( $self, @args ) = @_;
-          my $args = ( @args && ref $args[0] eq 'HASH' ) ? shift @args : {};
-          $args = _get_args( $args, qw/locked/ );
-          $self->filehandle( $args, $v, ":raw:encoding(UTF-8)" );
-      };
-  }
-  
-  #pod =method parent
-  #pod
-  #pod     $parent = path("foo/bar/baz")->parent; # foo/bar
-  #pod     $parent = path("foo/wibble.txt")->parent; # foo
-  #pod
-  #pod     $parent = path("foo/bar/baz")->parent(2); # foo
-  #pod
-  #pod Returns a C<Path::Tiny> object corresponding to the parent directory of the
-  #pod original directory or file. An optional positive integer argument is the number
-  #pod of parent directories upwards to return.  C<parent> by itself is equivalent to
-  #pod C<parent(1)>.
-  #pod
-  #pod Current API available since 0.014.
-  #pod
-  #pod =cut
-  
-  # XXX this is ugly and coverage is incomplete.  I think it's there for windows
-  # so need to check coverage there and compare
-  sub parent {
-      my ( $self, $level ) = @_;
-      $level = 1 unless defined $level && $level > 0;
-      $self->_splitpath unless defined $self->[FILE];
-      my $parent;
-      if ( length $self->[FILE] ) {
-          if ( $self->[FILE] eq '.' || $self->[FILE] eq ".." ) {
-              $parent = path( $self->[PATH] . "/.." );
-          }
-          else {
-              $parent = path( _non_empty( $self->[VOL] . $self->[DIR] ) );
-          }
-      }
-      elsif ( length $self->[DIR] ) {
-          # because of symlinks, any internal updir requires us to
-          # just add more updirs at the end
-          if ( $self->[DIR] =~ m{(?:^\.\./|/\.\./|/\.\.$)} ) {
-              $parent = path( $self->[VOL] . $self->[DIR] . "/.." );
-          }
-          else {
-              ( my $dir = $self->[DIR] ) =~ s{/[^\/]+/$}{/};
-              $parent = path( $self->[VOL] . $dir );
-          }
-      }
-      else {
-          $parent = path( _non_empty( $self->[VOL] ) );
-      }
-      return $level == 1 ? $parent : $parent->parent( $level - 1 );
-  }
-  
-  sub _non_empty {
-      my ($string) = shift;
-      return ( ( defined($string) && length($string) ) ? $string : "." );
-  }
-  
-  #pod =method realpath
-  #pod
-  #pod     $real = path("/baz/foo/../bar")->realpath;
-  #pod     $real = path("foo/../bar")->realpath;
-  #pod
-  #pod Returns a new C<Path::Tiny> object with all symbolic links and upward directory
-  #pod parts resolved using L<Cwd>'s C<realpath>.  Compared to C<absolute>, this is
-  #pod more expensive as it must actually consult the filesystem.
-  #pod
-  #pod If the parent path can't be resolved (e.g. if it includes directories that
-  #pod don't exist), an exception will be thrown:
-  #pod
-  #pod     $real = path("doesnt_exist/foo")->realpath; # dies
-  #pod
-  #pod However, if the parent path exists and only the last component (e.g. filename)
-  #pod doesn't exist, the realpath will be the realpath of the parent plus the
-  #pod non-existent last component:
-  #pod
-  #pod     $real = path("./aasdlfasdlf")->realpath; # works
-  #pod
-  #pod The underlying L<Cwd> module usually worked this way on Unix, but died on
-  #pod Windows (and some Unixes) if the full path didn't exist.  As of version 0.064,
-  #pod it's safe to use anywhere.
-  #pod
-  #pod Current API available since 0.001.
-  #pod
-  #pod =cut
-  
-  # Win32 and some Unixes need parent path resolved separately so realpath
-  # doesn't throw an error resolving non-existent basename
-  sub realpath {
-      my $self = shift;
-      $self = $self->_resolve_symlinks;
-      require Cwd;
-      $self->_splitpath if !defined $self->[FILE];
-      my $check_parent =
-        length $self->[FILE] && $self->[FILE] ne '.' && $self->[FILE] ne '..';
-      my $realpath = eval {
-          # pure-perl Cwd can carp
-          local $SIG{__WARN__} = sub { };
-          Cwd::realpath( $check_parent ? $self->parent->[PATH] : $self->[PATH] );
-      };
-      # parent realpath must exist; not all Cwd::realpath will error if it doesn't
-      $self->_throw("resolving realpath")
-        unless defined $realpath && length $realpath && -e $realpath;
-      return ( $check_parent ? path( $realpath, $self->[FILE] ) : path($realpath) );
-  }
-  
-  #pod =method relative
-  #pod
-  #pod     $rel = path("/tmp/foo/bar")->relative("/tmp"); # foo/bar
-  #pod
-  #pod Returns a C<Path::Tiny> object with a path relative to a new base path
-  #pod given as an argument.  If no argument is given, the current directory will
-  #pod be used as the new base path.
-  #pod
-  #pod If either path is already relative, it will be made absolute based on the
-  #pod current directly before determining the new relative path.
-  #pod
-  #pod The algorithm is roughly as follows:
-  #pod
-  #pod =for :list
-  #pod * If the original and new base path are on different volumes, an exception
-  #pod   will be thrown.
-  #pod * If the original and new base are identical, the relative path is C<".">.
-  #pod * If the new base subsumes the original, the relative path is the original
-  #pod   path with the new base chopped off the front
-  #pod * If the new base does not subsume the original, a common prefix path is
-  #pod   determined (possibly the root directory) and the relative path will
-  #pod   consist of updirs (C<"..">) to reach the common prefix, followed by the
-  #pod   original path less the common prefix.
-  #pod
-  #pod Unlike C<File::Spec::abs2rel>, in the last case above, the calculation based
-  #pod on a common prefix takes into account symlinks that could affect the updir
-  #pod process.  Given an original path "/A/B" and a new base "/A/C",
-  #pod (where "A", "B" and "C" could each have multiple path components):
-  #pod
-  #pod =for :list
-  #pod * Symlinks in "A" don't change the result unless the last component of A is
-  #pod   a symlink and the first component of "C" is an updir.
-  #pod * Symlinks in "B" don't change the result and will exist in the result as
-  #pod   given.
-  #pod * Symlinks and updirs in "C" must be resolved to actual paths, taking into
-  #pod   account the possibility that not all path components might exist on the
-  #pod   filesystem.
-  #pod
-  #pod Current API available since 0.001.  New algorithm (that accounts for
-  #pod symlinks) available since 0.079.
-  #pod
-  #pod =cut
-  
-  sub relative {
-      my ( $self, $base ) = @_;
-      $base = path( defined $base && length $base ? $base : '.' );
-  
-      # relative paths must be converted to absolute first
-      $self = $self->absolute if $self->is_relative;
-      $base = $base->absolute if $base->is_relative;
-  
-      # normalize volumes if they exist
-      $self = $self->absolute if !length $self->volume && length $base->volume;
-      $base = $base->absolute if length $self->volume  && !length $base->volume;
-  
-      # can't make paths relative across volumes
-      if ( !_same( $self->volume, $base->volume ) ) {
-          Carp::croak("relative() can't cross volumes: '$self' vs '$base'");
-      }
-  
-      # if same absolute path, relative is current directory
-      return path(".") if _same( $self->[PATH], $base->[PATH] );
-  
-      # if base is a prefix of self, chop prefix off self
-      if ( $base->subsumes($self) ) {
-          $base = "" if $base->is_rootdir;
-          my $relative = "$self";
-          $relative =~ s{\A\Q$base/}{};
-          return path($relative);
-      }
-  
-      # base is not a prefix, so must find a common prefix (even if root)
-      my ( @common, @self_parts, @base_parts );
-      @base_parts = split /\//, $base->_just_filepath;
-  
-      # if self is rootdir, then common directory is root (shown as empty
-      # string for later joins); otherwise, must be computed from path parts.
-      if ( $self->is_rootdir ) {
-          @common = ("");
-          shift @base_parts;
-      }
-      else {
-          @self_parts = split /\//, $self->_just_filepath;
-  
-          while ( @self_parts && @base_parts && _same( $self_parts[0], $base_parts[0] ) ) {
-              push @common, shift @base_parts;
-              shift @self_parts;
-          }
-      }
-  
-      # if there are any symlinks from common to base, we have a problem, as
-      # you can't guarantee that updir from base reaches the common prefix;
-      # we must resolve symlinks and try again; likewise, any updirs are
-      # a problem as it throws off calculation of updirs needed to get from
-      # self's path to the common prefix.
-      if ( my $new_base = $self->_resolve_between( \@common, \@base_parts ) ) {
-          return $self->relative($new_base);
-      }
-  
-      # otherwise, symlinks in common or from common to A don't matter as
-      # those don't involve updirs
-      my @new_path = ( ("..") x ( 0+ @base_parts ), @self_parts );
-      return path(@new_path);
-  }
-  
-  sub _just_filepath {
-      my $self     = shift;
-      my $self_vol = $self->volume;
-      return "$self" if !length $self_vol;
-  
-      ( my $self_path = "$self" ) =~ s{\A\Q$self_vol}{};
-  
-      return $self_path;
-  }
-  
-  sub _resolve_between {
-      my ( $self, $common, $base ) = @_;
-      my $path = $self->volume . join( "/", @$common );
-      my $changed = 0;
-      for my $p (@$base) {
-          $path .= "/$p";
-          if ( $p eq '..' ) {
-              $changed = 1;
-              if ( -e $path ) {
-                  $path = path($path)->realpath->[PATH];
-              }
-              else {
-                  $path =~ s{/[^/]+/..$}{/};
-              }
-          }
-          if ( -l $path ) {
-              $changed = 1;
-              $path    = path($path)->realpath->[PATH];
-          }
-      }
-      return $changed ? path($path) : undef;
-  }
-  
-  #pod =method remove
-  #pod
-  #pod     path("foo.txt")->remove;
-  #pod
-  #pod This is just like C<unlink>, except for its error handling: if the path does
-  #pod not exist, it returns false; if deleting the file fails, it throws an
-  #pod exception.
-  #pod
-  #pod Current API available since 0.012.
-  #pod
-  #pod =cut
-  
-  sub remove {
-      my $self = shift;
-  
-      return 0 if !-e $self->[PATH] && !-l $self->[PATH];
-  
-      return unlink( $self->[PATH] ) || $self->_throw('unlink');
-  }
-  
-  #pod =method remove_tree
-  #pod
-  #pod     # directory
-  #pod     path("foo/bar/baz")->remove_tree;
-  #pod     path("foo/bar/baz")->remove_tree( \%options );
-  #pod     path("foo/bar/baz")->remove_tree( { safe => 0 } ); # force remove
-  #pod
-  #pod Like calling C<remove_tree> from L<File::Path>, but defaults to C<safe> mode.
-  #pod An optional hash reference is passed through to C<remove_tree>.  Errors will be
-  #pod trapped and an exception thrown.  Returns the number of directories deleted,
-  #pod just like C<remove_tree>.
-  #pod
-  #pod If you want to remove a directory only if it is empty, use the built-in
-  #pod C<rmdir> function instead.
-  #pod
-  #pod     rmdir path("foo/bar/baz/");
-  #pod
-  #pod Current API available since 0.013.
-  #pod
-  #pod =cut
-  
-  sub remove_tree {
-      my ( $self, $args ) = @_;
-      return 0 if !-e $self->[PATH] && !-l $self->[PATH];
-      $args = {} unless ref $args eq 'HASH';
-      my $err;
-      $args->{error} = \$err unless defined $args->{error};
-      $args->{safe}  = 1     unless defined $args->{safe};
-      require File::Path;
-      my $count = File::Path::remove_tree( $self->[PATH], $args );
-  
-      if ( $err && @$err ) {
-          my ( $file, $message ) = %{ $err->[0] };
-          Carp::croak("remove_tree failed for $file: $message");
-      }
-      return $count;
-  }
-  
-  #pod =method sibling
-  #pod
-  #pod     $foo = path("/tmp/foo.txt");
-  #pod     $sib = $foo->sibling("bar.txt");        # /tmp/bar.txt
-  #pod     $sib = $foo->sibling("baz", "bam.txt"); # /tmp/baz/bam.txt
-  #pod
-  #pod Returns a new C<Path::Tiny> object relative to the parent of the original.
-  #pod This is slightly more efficient than C<< $path->parent->child(...) >>.
-  #pod
-  #pod Current API available since 0.058.
-  #pod
-  #pod =cut
-  
-  sub sibling {
-      my $self = shift;
-      return path( $self->parent->[PATH], @_ );
-  }
-  
-  #pod =method slurp, slurp_raw, slurp_utf8
-  #pod
-  #pod     $data = path("foo.txt")->slurp;
-  #pod     $data = path("foo.txt")->slurp( {binmode => ":raw"} );
-  #pod     $data = path("foo.txt")->slurp_raw;
-  #pod     $data = path("foo.txt")->slurp_utf8;
-  #pod
-  #pod Reads file contents into a scalar.  Takes an optional hash reference which may
-  #pod be used to pass options.  The only available option is C<binmode>, which is
-  #pod passed to C<binmode()> on the handle used for reading.
-  #pod
-  #pod C<slurp_raw> is like C<slurp> with a C<binmode> of C<:unix> for
-  #pod a fast, unbuffered, raw read.
-  #pod
-  #pod C<slurp_utf8> is like C<slurp> with a C<binmode> of
-  #pod C<:unix:encoding(UTF-8)> (or L<PerlIO::utf8_strict>).  If L<Unicode::UTF8>
-  #pod 0.58+ is installed, a raw slurp will be done instead and the result decoded
-  #pod with C<Unicode::UTF8>.  This is just as strict and is roughly an order of
-  #pod magnitude faster than using C<:encoding(UTF-8)>.
-  #pod
-  #pod B<Note>: C<slurp> and friends lock the filehandle before slurping.  If
-  #pod you plan to slurp from a file created with L<File::Temp>, be sure to
-  #pod close other handles or open without locking to avoid a deadlock:
-  #pod
-  #pod     my $tempfile = File::Temp->new(EXLOCK => 0);
-  #pod     my $guts = path($tempfile)->slurp;
-  #pod
-  #pod Current API available since 0.004.
-  #pod
-  #pod =cut
-  
-  sub slurp {
-      my $self    = shift;
-      my $args    = _get_args( shift, qw/binmode/ );
-      my $binmode = $args->{binmode};
-      $binmode = ( ( caller(0) )[10] || {} )->{'open<'} unless defined $binmode;
-      my $fh = $self->filehandle( { locked => 1 }, "<", $binmode );
-      if ( ( defined($binmode) ? $binmode : "" ) eq ":unix"
-          and my $size = -s $fh )
-      {
-          my $buf;
-          read $fh, $buf, $size; # File::Slurp in a nutshell
-          return $buf;
-      }
-      else {
-          local $/;
-          return scalar <$fh>;
-      }
-  }
-  
-  sub slurp_raw { $_[1] = { binmode => ":unix" }; goto &slurp }
-  
-  sub slurp_utf8 {
-      if ( defined($HAS_UU) ? $HAS_UU : ( $HAS_UU = _check_UU() ) ) {
-          return Unicode::UTF8::decode_utf8( slurp( $_[0], { binmode => ":unix" } ) );
-      }
-      elsif ( defined($HAS_PU) ? $HAS_PU : ( $HAS_PU = _check_PU() ) ) {
-          $_[1] = { binmode => ":unix:utf8_strict" };
-          goto &slurp;
-      }
-      else {
-          $_[1] = { binmode => ":raw:encoding(UTF-8)" };
-          goto &slurp;
-      }
-  }
-  
-  #pod =method spew, spew_raw, spew_utf8
-  #pod
-  #pod     path("foo.txt")->spew(@data);
-  #pod     path("foo.txt")->spew(\@data);
-  #pod     path("foo.txt")->spew({binmode => ":raw"}, @data);
-  #pod     path("foo.txt")->spew_raw(@data);
-  #pod     path("foo.txt")->spew_utf8(@data);
-  #pod
-  #pod Writes data to a file atomically.  The file is written to a temporary file in
-  #pod the same directory, then renamed over the original.  An optional hash reference
-  #pod may be used to pass options.  The only option is C<binmode>, which is passed to
-  #pod C<binmode()> on the handle used for writing.
-  #pod
-  #pod C<spew_raw> is like C<spew> with a C<binmode> of C<:unix> for a fast,
-  #pod unbuffered, raw write.
-  #pod
-  #pod C<spew_utf8> is like C<spew> with a C<binmode> of C<:unix:encoding(UTF-8)>
-  #pod (or L<PerlIO::utf8_strict>).  If L<Unicode::UTF8> 0.58+ is installed, a raw
-  #pod spew will be done instead on the data encoded with C<Unicode::UTF8>.
-  #pod
-  #pod B<NOTE>: because the file is written to a temporary file and then renamed, the
-  #pod new file will wind up with permissions based on your current umask.  This is a
-  #pod feature to protect you from a race condition that would otherwise give
-  #pod different permissions than you might expect.  If you really want to keep the
-  #pod original mode flags, use L</append> with the C<truncate> option.
-  #pod
-  #pod Current API available since 0.011.
-  #pod
-  #pod =cut
-  
-  # XXX add "unsafe" option to disable flocking and atomic?  Check benchmarks on append() first.
-  sub spew {
-      my ( $self, @data ) = @_;
-      my $args = ( @data && ref $data[0] eq 'HASH' ) ? shift @data : {};
-      $args = _get_args( $args, qw/binmode/ );
-      my $binmode = $args->{binmode};
-      # get default binmode from caller's lexical scope (see "perldoc open")
-      $binmode = ( ( caller(0) )[10] || {} )->{'open>'} unless defined $binmode;
-  
-      # spewing need to follow the link
-      # and create the tempfile in the same dir
-      my $resolved_path = $self->_resolve_symlinks;
-  
-      my $temp = path( $resolved_path . $$ . int( rand( 2**31 ) ) );
-      my $fh = $temp->filehandle( { exclusive => 1, locked => 1 }, ">", $binmode );
-      print {$fh} map { ref eq 'ARRAY' ? @$_ : $_ } @data;
-      close $fh or $self->_throw( 'close', $temp->[PATH] );
-  
-      return $temp->move($resolved_path);
-  }
-  
-  sub spew_raw { splice @_, 1, 0, { binmode => ":unix" }; goto &spew }
-  
-  sub spew_utf8 {
-      if ( defined($HAS_UU) ? $HAS_UU : ( $HAS_UU = _check_UU() ) ) {
-          my $self = shift;
-          spew(
-              $self,
-              { binmode => ":unix" },
-              map { Unicode::UTF8::encode_utf8($_) } map { ref eq 'ARRAY' ? @$_ : $_ } @_
-          );
-      }
-      elsif ( defined($HAS_PU) ? $HAS_PU : ( $HAS_PU = _check_PU() ) ) {
-          splice @_, 1, 0, { binmode => ":unix:utf8_strict" };
-          goto &spew;
-      }
-      else {
-          splice @_, 1, 0, { binmode => ":unix:encoding(UTF-8)" };
-          goto &spew;
-      }
-  }
-  
-  #pod =method stat, lstat
-  #pod
-  #pod     $stat = path("foo.txt")->stat;
-  #pod     $stat = path("/some/symlink")->lstat;
-  #pod
-  #pod Like calling C<stat> or C<lstat> from L<File::stat>.
-  #pod
-  #pod Current API available since 0.001.
-  #pod
-  #pod =cut
-  
-  # XXX break out individual stat() components as subs?
-  sub stat {
-      my $self = shift;
-      require File::stat;
-      return File::stat::stat( $self->[PATH] ) || $self->_throw('stat');
-  }
-  
-  sub lstat {
-      my $self = shift;
-      require File::stat;
-      return File::stat::lstat( $self->[PATH] ) || $self->_throw('lstat');
-  }
-  
-  #pod =method stringify
-  #pod
-  #pod     $path = path("foo.txt");
-  #pod     say $path->stringify; # same as "$path"
-  #pod
-  #pod Returns a string representation of the path.  Unlike C<canonpath>, this method
-  #pod returns the path standardized with Unix-style C</> directory separators.
-  #pod
-  #pod Current API available since 0.001.
-  #pod
-  #pod =cut
-  
-  sub stringify { $_[0]->[PATH] }
-  
-  #pod =method subsumes
-  #pod
-  #pod     path("foo/bar")->subsumes("foo/bar/baz"); # true
-  #pod     path("/foo/bar")->subsumes("/foo/baz");   # false
-  #pod
-  #pod Returns true if the first path is a prefix of the second path at a directory
-  #pod boundary.
-  #pod
-  #pod This B<does not> resolve parent directory entries (C<..>) or symlinks:
-  #pod
-  #pod     path("foo/bar")->subsumes("foo/bar/../baz"); # true
-  #pod
-  #pod If such things are important to you, ensure that both paths are resolved to
-  #pod the filesystem with C<realpath>:
-  #pod
-  #pod     my $p1 = path("foo/bar")->realpath;
-  #pod     my $p2 = path("foo/bar/../baz")->realpath;
-  #pod     if ( $p1->subsumes($p2) ) { ... }
-  #pod
-  #pod Current API available since 0.048.
-  #pod
-  #pod =cut
-  
-  sub subsumes {
-      my $self = shift;
-      Carp::croak("subsumes() requires a defined, positive-length argument")
-        unless defined $_[0];
-      my $other = path(shift);
-  
-      # normalize absolute vs relative
-      if ( $self->is_absolute && !$other->is_absolute ) {
-          $other = $other->absolute;
-      }
-      elsif ( $other->is_absolute && !$self->is_absolute ) {
-          $self = $self->absolute;
-      }
-  
-      # normalize volume vs non-volume; do this after absolute path
-      # adjustments above since that might add volumes already
-      if ( length $self->volume && !length $other->volume ) {
-          $other = $other->absolute;
-      }
-      elsif ( length $other->volume && !length $self->volume ) {
-          $self = $self->absolute;
-      }
-  
-      if ( $self->[PATH] eq '.' ) {
-          return !!1; # cwd subsumes everything relative
-      }
-      elsif ( $self->is_rootdir ) {
-          # a root directory ("/", "c:/") already ends with a separator
-          return $other->[PATH] =~ m{^\Q$self->[PATH]\E};
-      }
-      else {
-          # exact match or prefix breaking at a separator
-          return $other->[PATH] =~ m{^\Q$self->[PATH]\E(?:/|$)};
-      }
-  }
-  
-  #pod =method touch
-  #pod
-  #pod     path("foo.txt")->touch;
-  #pod     path("foo.txt")->touch($epoch_secs);
-  #pod
-  #pod Like the Unix C<touch> utility.  Creates the file if it doesn't exist, or else
-  #pod changes the modification and access times to the current time.  If the first
-  #pod argument is the epoch seconds then it will be used.
-  #pod
-  #pod Returns the path object so it can be easily chained with other methods:
-  #pod
-  #pod     # won't die if foo.txt doesn't exist
-  #pod     $content = path("foo.txt")->touch->slurp;
-  #pod
-  #pod Current API available since 0.015.
-  #pod
-  #pod =cut
-  
-  sub touch {
-      my ( $self, $epoch ) = @_;
-      if ( !-e $self->[PATH] ) {
-          my $fh = $self->openw;
-          close $fh or $self->_throw('close');
-      }
-      if ( defined $epoch ) {
-          utime $epoch, $epoch, $self->[PATH]
-            or $self->_throw("utime ($epoch)");
-      }
-      else {
-          # literal undef prevents warnings :-(
-          utime undef, undef, $self->[PATH]
-            or $self->_throw("utime ()");
-      }
-      return $self;
-  }
-  
-  #pod =method touchpath
-  #pod
-  #pod     path("bar/baz/foo.txt")->touchpath;
-  #pod
-  #pod Combines C<mkpath> and C<touch>.  Creates the parent directory if it doesn't exist,
-  #pod before touching the file.  Returns the path object like C<touch> does.
-  #pod
-  #pod Current API available since 0.022.
-  #pod
-  #pod =cut
-  
-  sub touchpath {
-      my ($self) = @_;
-      my $parent = $self->parent;
-      $parent->mkpath unless $parent->exists;
-      $self->touch;
-  }
-  
-  #pod =method visit
-  #pod
-  #pod     path("/tmp")->visit( \&callback, \%options );
-  #pod
-  #pod Executes a callback for each child of a directory.  It returns a hash
-  #pod reference with any state accumulated during iteration.
-  #pod
-  #pod The options are the same as for L</iterator> (which it uses internally):
-  #pod C<recurse> and C<follow_symlinks>.  Both default to false.
-  #pod
-  #pod The callback function will receive a C<Path::Tiny> object as the first argument
-  #pod and a hash reference to accumulate state as the second argument.  For example:
-  #pod
-  #pod     # collect files sizes
-  #pod     my $sizes = path("/tmp")->visit(
-  #pod         sub {
-  #pod             my ($path, $state) = @_;
-  #pod             return if $path->is_dir;
-  #pod             $state->{$path} = -s $path;
-  #pod         },
-  #pod         { recurse => 1 }
-  #pod     );
-  #pod
-  #pod For convenience, the C<Path::Tiny> object will also be locally aliased as the
-  #pod C<$_> global variable:
-  #pod
-  #pod     # print paths matching /foo/
-  #pod     path("/tmp")->visit( sub { say if /foo/ }, { recurse => 1} );
-  #pod
-  #pod If the callback returns a B<reference> to a false scalar value, iteration will
-  #pod terminate.  This is not the same as "pruning" a directory search; this just
-  #pod stops all iteration and returns the state hash reference.
-  #pod
-  #pod     # find up to 10 files larger than 100K
-  #pod     my $files = path("/tmp")->visit(
-  #pod         sub {
-  #pod             my ($path, $state) = @_;
-  #pod             $state->{$path}++ if -s $path > 102400
-  #pod             return \0 if keys %$state == 10;
-  #pod         },
-  #pod         { recurse => 1 }
-  #pod     );
-  #pod
-  #pod If you want more flexible iteration, use a module like L<Path::Iterator::Rule>.
-  #pod
-  #pod Current API available since 0.062.
-  #pod
-  #pod =cut
-  
-  sub visit {
-      my $self = shift;
-      my $cb   = shift;
-      my $args = _get_args( shift, qw/recurse follow_symlinks/ );
-      Carp::croak("Callback for visit() must be a code reference")
-        unless defined($cb) && ref($cb) eq 'CODE';
-      my $next  = $self->iterator($args);
-      my $state = {};
-      while ( my $file = $next->() ) {
-          local $_ = $file;
-          my $r = $cb->( $file, $state );
-          last if ref($r) eq 'SCALAR' && !$$r;
-      }
-      return $state;
-  }
-  
-  #pod =method volume
-  #pod
-  #pod     $vol = path("/tmp/foo.txt")->volume;   # ""
-  #pod     $vol = path("C:/tmp/foo.txt")->volume; # "C:"
-  #pod
-  #pod Returns the volume portion of the path.  This is equivalent
-  #pod to what L<File::Spec> would give from C<splitpath> and thus
-  #pod usually is the empty string on Unix-like operating systems or the
-  #pod drive letter for an absolute path on C<MSWin32>.
-  #pod
-  #pod Current API available since 0.001.
-  #pod
-  #pod =cut
-  
-  sub volume {
-      my ($self) = @_;
-      $self->_splitpath unless defined $self->[VOL];
-      return $self->[VOL];
-  }
-  
-  package Path::Tiny::Error;
-  
-  our @CARP_NOT = qw/Path::Tiny/;
-  
-  use overload ( q{""} => sub { (shift)->{msg} }, fallback => 1 );
-  
-  sub throw {
-      my ( $class, $op, $file, $err ) = @_;
-      chomp( my $trace = Carp::shortmess );
-      my $msg = "Error $op on '$file': $err$trace\n";
-      die bless { op => $op, file => $file, err => $err, msg => $msg }, $class;
-  }
-  
-  1;
-  
-  
-  # vim: ts=4 sts=4 sw=4 et:
-  
-  __END__
-  
-  =pod
-  
-  =encoding UTF-8
-  
-  =head1 NAME
-  
-  Path::Tiny - File path utility
-  
-  =head1 VERSION
-  
-  version 0.104
-  
-  =head1 SYNOPSIS
-  
-    use Path::Tiny;
-  
-    # creating Path::Tiny objects
-  
-    $dir = path("/tmp");
-    $foo = path("foo.txt");
-  
-    $subdir = $dir->child("foo");
-    $bar = $subdir->child("bar.txt");
-  
-    # stringifies as cleaned up path
-  
-    $file = path("./foo.txt");
-    print $file; # "foo.txt"
-  
-    # reading files
-  
-    $guts = $file->slurp;
-    $guts = $file->slurp_utf8;
-  
-    @lines = $file->lines;
-    @lines = $file->lines_utf8;
-  
-    ($head) = $file->lines( {count => 1} );
-    ($tail) = $file->lines( {count => -1} );
-  
-    # writing files
-  
-    $bar->spew( @data );
-    $bar->spew_utf8( @data );
-  
-    # reading directories
-  
-    for ( $dir->children ) { ... }
-  
-    $iter = $dir->iterator;
-    while ( my $next = $iter->() ) { ... }
-  
-  =head1 DESCRIPTION
-  
-  This module provides a small, fast utility for working with file paths.  It is
-  friendlier to use than L<File::Spec> and provides easy access to functions from
-  several other core file handling modules.  It aims to be smaller and faster
-  than many alternatives on CPAN, while helping people do many common things in
-  consistent and less error-prone ways.
-  
-  Path::Tiny does not try to work for anything except Unix-like and Win32
-  platforms.  Even then, it might break if you try something particularly obscure
-  or tortuous.  (Quick!  What does this mean:
-  C<< ///../../..//./././a//b/.././c/././ >>?  And how does it differ on Win32?)
-  
-  All paths are forced to have Unix-style forward slashes.  Stringifying
-  the object gives you back the path (after some clean up).
-  
-  File input/output methods C<flock> handles before reading or writing,
-  as appropriate (if supported by the platform).
-  
-  The C<*_utf8> methods (C<slurp_utf8>, C<lines_utf8>, etc.) operate in raw
-  mode.  On Windows, that means they will not have CRLF translation from the
-  C<:crlf> IO layer.  Installing L<Unicode::UTF8> 0.58 or later will speed up
-  C<*_utf8> situations in many cases and is highly recommended.
-  Alternatively, installing L<PerlIO::utf8_strict> 0.003 or later will be
-  used in place of the default C<:encoding(UTF-8)>.
-  
-  This module depends heavily on PerlIO layers for correct operation and thus
-  requires Perl 5.008001 or later.
-  
-  =head1 CONSTRUCTORS
-  
-  =head2 path
-  
-      $path = path("foo/bar");
-      $path = path("/tmp", "file.txt"); # list
-      $path = path(".");                # cwd
-      $path = path("~user/file.txt");   # tilde processing
-  
-  Constructs a C<Path::Tiny> object.  It doesn't matter if you give a file or
-  directory path.  It's still up to you to call directory-like methods only on
-  directories and file-like methods only on files.  This function is exported
-  automatically by default.
-  
-  The first argument must be defined and have non-zero length or an exception
-  will be thrown.  This prevents subtle, dangerous errors with code like
-  C<< path( maybe_undef() )->remove_tree >>.
-  
-  If the first component of the path is a tilde ('~') then the component will be
-  replaced with the output of C<glob('~')>.  If the first component of the path
-  is a tilde followed by a user name then the component will be replaced with
-  output of C<glob('~username')>.  Behaviour for non-existent users depends on
-  the output of C<glob> on the system.
-  
-  On Windows, if the path consists of a drive identifier without a path component
-  (C<C:> or C<D:>), it will be expanded to the absolute path of the current
-  directory on that volume using C<Cwd::getdcwd()>.
-  
-  If called with a single C<Path::Tiny> argument, the original is returned unless
-  the original is holding a temporary file or directory reference in which case a
-  stringified copy is made.
-  
-      $path = path("foo/bar");
-      $temp = Path::Tiny->tempfile;
-  
-      $p2 = path($path); # like $p2 = $path
-      $t2 = path($temp); # like $t2 = path( "$temp" )
-  
-  This optimizes copies without proliferating references unexpectedly if a copy is
-  made by code outside your control.
-  
-  Current API available since 0.017.
-  
-  =head2 new
-  
-      $path = Path::Tiny->new("foo/bar");
-  
-  This is just like C<path>, but with method call overhead.  (Why would you
-  do that?)
-  
-  Current API available since 0.001.
-  
-  =head2 cwd
-  
-      $path = Path::Tiny->cwd; # path( Cwd::getcwd )
-      $path = cwd; # optional export
-  
-  Gives you the absolute path to the current directory as a C<Path::Tiny> object.
-  This is slightly faster than C<< path(".")->absolute >>.
-  
-  C<cwd> may be exported on request and used as a function instead of as a
-  method.
-  
-  Current API available since 0.018.
-  
-  =head2 rootdir
-  
-      $path = Path::Tiny->rootdir; # /
-      $path = rootdir;             # optional export 
-  
-  Gives you C<< File::Spec->rootdir >> as a C<Path::Tiny> object if you're too
-  picky for C<path("/")>.
-  
-  C<rootdir> may be exported on request and used as a function instead of as a
-  method.
-  
-  Current API available since 0.018.
-  
-  =head2 tempfile, tempdir
-  
-      $temp = Path::Tiny->tempfile( @options );
-      $temp = Path::Tiny->tempdir( @options );
-      $temp = tempfile( @options ); # optional export
-      $temp = tempdir( @options );  # optional export
-  
-  C<tempfile> passes the options to C<< File::Temp->new >> and returns a C<Path::Tiny>
-  object with the file name.  The C<TMPDIR> option is enabled by default.
-  
-  The resulting C<File::Temp> object is cached. When the C<Path::Tiny> object is
-  destroyed, the C<File::Temp> object will be as well.
-  
-  C<File::Temp> annoyingly requires you to specify a custom template in slightly
-  different ways depending on which function or method you call, but
-  C<Path::Tiny> lets you ignore that and can take either a leading template or a
-  C<TEMPLATE> option and does the right thing.
-  
-      $temp = Path::Tiny->tempfile( "customXXXXXXXX" );             # ok
-      $temp = Path::Tiny->tempfile( TEMPLATE => "customXXXXXXXX" ); # ok
-  
-  The tempfile path object will be normalized to have an absolute path, even if
-  created in a relative directory using C<DIR>.  If you want it to have
-  the C<realpath> instead, pass a leading options hash like this:
-  
-      $real_temp = tempfile({realpath => 1}, @options);
-  
-  C<tempdir> is just like C<tempfile>, except it calls
-  C<< File::Temp->newdir >> instead.
-  
-  Both C<tempfile> and C<tempdir> may be exported on request and used as
-  functions instead of as methods.
-  
-  B<Note>: for tempfiles, the filehandles from File::Temp are closed and not
-  reused.  This is not as secure as using File::Temp handles directly, but is
-  less prone to deadlocks or access problems on some platforms.  Think of what
-  C<Path::Tiny> gives you to be just a temporary file B<name> that gets cleaned
-  up.
-  
-  B<Note 2>: if you don't want these cleaned up automatically when the object
-  is destroyed, File::Temp requires different options for directories and
-  files.  Use C<< CLEANUP => 0 >> for directories and C<< UNLINK => 0 >> for
-  files.
-  
-  B<Note 3>: Don't lose the temporary object by chaining a method call instead
-  of storing it:
-  
-      my $lost = tempdir()->child("foo"); # tempdir cleaned up right away
-  
-  B<Note 4>: The cached object may be accessed with the L</cached_temp> method.
-  Keeping a reference to, or modifying the cached object may break the
-  behavior documented above and is not supported.  Use at your own risk.
-  
-  Current API available since 0.097.
-  
-  =head1 METHODS
-  
-  =head2 absolute
-  
-      $abs = path("foo/bar")->absolute;
-      $abs = path("foo/bar")->absolute("/tmp");
-  
-  Returns a new C<Path::Tiny> object with an absolute path (or itself if already
-  absolute).  If no argument is given, the current directory is used as the
-  absolute base path.  If an argument is given, it will be converted to an
-  absolute path (if it is not already) and used as the absolute base path.
-  
-  This will not resolve upward directories ("foo/../bar") unless C<canonpath>
-  in L<File::Spec> would normally do so on your platform.  If you need them
-  resolved, you must call the more expensive C<realpath> method instead.
-  
-  On Windows, an absolute path without a volume component will have it added
-  based on the current drive.
-  
-  Current API available since 0.101.
-  
-  =head2 append, append_raw, append_utf8
-  
-      path("foo.txt")->append(@data);
-      path("foo.txt")->append(\@data);
-      path("foo.txt")->append({binmode => ":raw"}, @data);
-      path("foo.txt")->append_raw(@data);
-      path("foo.txt")->append_utf8(@data);
-  
-  Appends data to a file.  The file is locked with C<flock> prior to writing.  An
-  optional hash reference may be used to pass options.  Valid options are:
-  
-  =over 4
-  
-  =item *
-  
-  C<binmode>: passed to C<binmode()> on the handle used for writing.
-  
-  =item *
-  
-  C<truncate>: truncates the file after locking and before appending
-  
-  =back
-  
-  The C<truncate> option is a way to replace the contents of a file
-  B<in place>, unlike L</spew> which writes to a temporary file and then
-  replaces the original (if it exists).
-  
-  C<append_raw> is like C<append> with a C<binmode> of C<:unix> for fast,
-  unbuffered, raw write.
-  
-  C<append_utf8> is like C<append> with a C<binmode> of
-  C<:unix:encoding(UTF-8)> (or L<PerlIO::utf8_strict>).  If L<Unicode::UTF8>
-  0.58+ is installed, a raw append will be done instead on the data encoded
-  with C<Unicode::UTF8>.
-  
-  Current API available since 0.060.
-  
-  =head2 assert
-  
-      $path = path("foo.txt")->assert( sub { $_->exists } );
-  
-  Returns the invocant after asserting that a code reference argument returns
-  true.  When the assertion code reference runs, it will have the invocant
-  object in the C<$_> variable.  If it returns false, an exception will be
-  thrown.  The assertion code reference may also throw its own exception.
-  
-  If no assertion is provided, the invocant is returned without error.
-  
-  Current API available since 0.062.
-  
-  =head2 basename
-  
-      $name = path("foo/bar.txt")->basename;        # bar.txt
-      $name = path("foo.txt")->basename('.txt');    # foo
-      $name = path("foo.txt")->basename(qr/.txt/);  # foo
-      $name = path("foo.txt")->basename(@suffixes);
-  
-  Returns the file portion or last directory portion of a path.
-  
-  Given a list of suffixes as strings or regular expressions, any that match at
-  the end of the file portion or last directory portion will be removed before
-  the result is returned.
-  
-  Current API available since 0.054.
-  
-  =head2 canonpath
-  
-      $canonical = path("foo/bar")->canonpath; # foo\bar on Windows
-  
-  Returns a string with the canonical format of the path name for
-  the platform.  In particular, this means directory separators
-  will be C<\> on Windows.
-  
-  Current API available since 0.001.
-  
-  =head2 cached_temp
-  
-  Returns the cached C<File::Temp> or C<File::Temp::Dir> object if the
-  C<Path::Tiny> object was created with C</tempfile> or C</tempdir>.
-  If there is no such object, this method throws.
-  
-  B<WARNING>: Keeping a reference to, or modifying the cached object may
-  break the behavior documented for temporary files and directories created
-  with C<Path::Tiny> and is not supported.  Use at your own risk.
-  
-  Current API available since 0.101.
-  
-  =head2 child
-  
-      $file = path("/tmp")->child("foo.txt"); # "/tmp/foo.txt"
-      $file = path("/tmp")->child(@parts);
-  
-  Returns a new C<Path::Tiny> object relative to the original.  Works
-  like C<catfile> or C<catdir> from File::Spec, but without caring about
-  file or directories.
-  
-  Current API available since 0.001.
-  
-  =head2 children
-  
-      @paths = path("/tmp")->children;
-      @paths = path("/tmp")->children( qr/\.txt$/ );
-  
-  Returns a list of C<Path::Tiny> objects for all files and directories
-  within a directory.  Excludes "." and ".." automatically.
-  
-  If an optional C<qr//> argument is provided, it only returns objects for child
-  names that match the given regular expression.  Only the base name is used
-  for matching:
-  
-      @paths = path("/tmp")->children( qr/^foo/ );
-      # matches children like the glob foo*
-  
-  Current API available since 0.028.
-  
-  =head2 chmod
-  
-      path("foo.txt")->chmod(0777);
-      path("foo.txt")->chmod("0755");
-      path("foo.txt")->chmod("go-w");
-      path("foo.txt")->chmod("a=r,u+wx");
-  
-  Sets file or directory permissions.  The argument can be a numeric mode, a
-  octal string beginning with a "0" or a limited subset of the symbolic mode use
-  by F</bin/chmod>.
-  
-  The symbolic mode must be a comma-delimited list of mode clauses.  Clauses must
-  match C<< qr/\A([augo]+)([=+-])([rwx]+)\z/ >>, which defines "who", "op" and
-  "perms" parameters for each clause.  Unlike F</bin/chmod>, all three parameters
-  are required for each clause, multiple ops are not allowed and permissions
-  C<stugoX> are not supported.  (See L<File::chmod> for more complex needs.)
-  
-  Current API available since 0.053.
-  
-  =head2 copy
-  
-      path("/tmp/foo.txt")->copy("/tmp/bar.txt");
-  
-  Copies the current path to the given destination using L<File::Copy>'s
-  C<copy> function. Upon success, returns the C<Path::Tiny> object for the
-  newly copied file.
-  
-  Current API available since 0.070.
-  
-  =head2 digest
-  
-      $obj = path("/tmp/foo.txt")->digest;        # SHA-256
-      $obj = path("/tmp/foo.txt")->digest("MD5"); # user-selected
-      $obj = path("/tmp/foo.txt")->digest( { chunk_size => 1e6 }, "MD5" );
-  
-  Returns a hexadecimal digest for a file.  An optional hash reference of options may
-  be given.  The only option is C<chunk_size>.  If C<chunk_size> is given, that many
-  bytes will be read at a time.  If not provided, the entire file will be slurped
-  into memory to compute the digest.
-  
-  Any subsequent arguments are passed to the constructor for L<Digest> to select
-  an algorithm.  If no arguments are given, the default is SHA-256.
-  
-  Current API available since 0.056.
-  
-  =head2 dirname (deprecated)
-  
-      $name = path("/tmp/foo.txt")->dirname; # "/tmp/"
-  
-  Returns the directory portion you would get from calling
-  C<< File::Spec->splitpath( $path->stringify ) >> or C<"."> for a path without a
-  parent directory portion.  Because L<File::Spec> is inconsistent, the result
-  might or might not have a trailing slash.  Because of this, this method is
-  B<deprecated>.
-  
-  A better, more consistently approach is likely C<< $path->parent->stringify >>,
-  which will not have a trailing slash except for a root directory.
-  
-  Deprecated in 0.056.
-  
-  =head2 edit, edit_raw, edit_utf8
-  
-      path("foo.txt")->edit( \&callback, $options );
-      path("foo.txt")->edit_utf8( \&callback );
-      path("foo.txt")->edit_raw( \&callback );
-  
-  These are convenience methods that allow "editing" a file using a single
-  callback argument. They slurp the file using C<slurp>, place the contents
-  inside a localized C<$_> variable, call the callback function (without
-  arguments), and then write C<$_> (presumably mutated) back to the
-  file with C<spew>.
-  
-  An optional hash reference may be used to pass options.  The only option is
-  C<binmode>, which is passed to C<slurp> and C<spew>.
-  
-  C<edit_utf8> and C<edit_raw> act like their respective C<slurp_*> and
-  C<spew_*> methods.
-  
-  Current API available since 0.077.
-  
-  =head2 edit_lines, edit_lines_utf8, edit_lines_raw
-  
-      path("foo.txt")->edit_lines( \&callback, $options );
-      path("foo.txt")->edit_lines_utf8( \&callback );
-      path("foo.txt")->edit_lines_raw( \&callback );
-  
-  These are convenience methods that allow "editing" a file's lines using a
-  single callback argument.  They iterate over the file: for each line, the
-  line is put into a localized C<$_> variable, the callback function is
-  executed (without arguments) and then C<$_> is written to a temporary file.
-  When iteration is finished, the temporary file is atomically renamed over
-  the original.
-  
-  An optional hash reference may be used to pass options.  The only option is
-  C<binmode>, which is passed to the method that open handles for reading and
-  writing.
-  
-  C<edit_lines_utf8> and C<edit_lines_raw> act like their respective
-  C<slurp_*> and C<spew_*> methods.
-  
-  Current API available since 0.077.
-  
-  =head2 exists, is_file, is_dir
-  
-      if ( path("/tmp")->exists ) { ... }     # -e
-      if ( path("/tmp")->is_dir ) { ... }     # -d
-      if ( path("/tmp")->is_file ) { ... }    # -e && ! -d
-  
-  Implements file test operations, this means the file or directory actually has
-  to exist on the filesystem.  Until then, it's just a path.
-  
-  B<Note>: C<is_file> is not C<-f> because C<-f> is not the opposite of C<-d>.
-  C<-f> means "plain file", excluding symlinks, devices, etc. that often can be
-  read just like files.
-  
-  Use C<-f> instead if you really mean to check for a plain file.
-  
-  Current API available since 0.053.
-  
-  =head2 filehandle
-  
-      $fh = path("/tmp/foo.txt")->filehandle($mode, $binmode);
-      $fh = path("/tmp/foo.txt")->filehandle({ locked => 1 }, $mode, $binmode);
-      $fh = path("/tmp/foo.txt")->filehandle({ exclusive => 1  }, $mode, $binmode);
-  
-  Returns an open file handle.  The C<$mode> argument must be a Perl-style
-  read/write mode string ("<" ,">", ">>", etc.).  If a C<$binmode>
-  is given, it is set during the C<open> call.
-  
-  An optional hash reference may be used to pass options.
-  
-  The C<locked> option governs file locking; if true, handles opened for writing,
-  appending or read-write are locked with C<LOCK_EX>; otherwise, they are
-  locked with C<LOCK_SH>.  When using C<locked>, ">" or "+>" modes will delay
-  truncation until after the lock is acquired.
-  
-  The C<exclusive> option causes the open() call to fail if the file already
-  exists.  This corresponds to the O_EXCL flag to sysopen / open(2).
-  C<exclusive> implies C<locked> and will set it for you if you forget it.
-  
-  See C<openr>, C<openw>, C<openrw>, and C<opena> for sugar.
-  
-  Current API available since 0.066.
-  
-  =head2 is_absolute, is_relative
-  
-      if ( path("/tmp")->is_absolute ) { ... }
-      if ( path("/tmp")->is_relative ) { ... }
-  
-  Booleans for whether the path appears absolute or relative.
-  
-  Current API available since 0.001.
-  
-  =head2 is_rootdir
-  
-      while ( ! $path->is_rootdir ) {
-          $path = $path->parent;
-          ...
-      }
-  
-  Boolean for whether the path is the root directory of the volume.  I.e. the
-  C<dirname> is C<q[/]> and the C<basename> is C<q[]>.
-  
-  This works even on C<MSWin32> with drives and UNC volumes:
-  
-      path("C:/")->is_rootdir;             # true
-      path("//server/share/")->is_rootdir; #true
-  
-  Current API available since 0.038.
-  
-  =head2 iterator
-  
-      $iter = path("/tmp")->iterator( \%options );
-  
-  Returns a code reference that walks a directory lazily.  Each invocation
-  returns a C<Path::Tiny> object or undef when the iterator is exhausted.
-  
-      $iter = path("/tmp")->iterator;
-      while ( $path = $iter->() ) {
-          ...
-      }
-  
-  The current and parent directory entries ("." and "..") will not
-  be included.
-  
-  If the C<recurse> option is true, the iterator will walk the directory
-  recursively, breadth-first.  If the C<follow_symlinks> option is also true,
-  directory links will be followed recursively.  There is no protection against
-  loops when following links. If a directory is not readable, it will not be
-  followed.
-  
-  The default is the same as:
-  
-      $iter = path("/tmp")->iterator( {
-          recurse         => 0,
-          follow_symlinks => 0,
-      } );
-  
-  For a more powerful, recursive iterator with built-in loop avoidance, see
-  L<Path::Iterator::Rule>.
-  
-  See also L</visit>.
-  
-  Current API available since 0.016.
-  
-  =head2 lines, lines_raw, lines_utf8
-  
-      @contents = path("/tmp/foo.txt")->lines;
-      @contents = path("/tmp/foo.txt")->lines(\%options);
-      @contents = path("/tmp/foo.txt")->lines_raw;
-      @contents = path("/tmp/foo.txt")->lines_utf8;
-  
-      @contents = path("/tmp/foo.txt")->lines( { chomp => 1, count => 4 } );
-  
-  Returns a list of lines from a file.  Optionally takes a hash-reference of
-  options.  Valid options are C<binmode>, C<count> and C<chomp>.
-  
-  If C<binmode> is provided, it will be set on the handle prior to reading.
-  
-  If a positive C<count> is provided, that many lines will be returned from the
-  start of the file.  If a negative C<count> is provided, the entire file will be
-  read, but only C<abs(count)> will be kept and returned.  If C<abs(count)>
-  exceeds the number of lines in the file, all lines will be returned.
-  
-  If C<chomp> is set, any end-of-line character sequences (C<CR>, C<CRLF>, or
-  C<LF>) will be removed from the lines returned.
-  
-  Because the return is a list, C<lines> in scalar context will return the number
-  of lines (and throw away the data).
-  
-      $number_of_lines = path("/tmp/foo.txt")->lines;
-  
-  C<lines_raw> is like C<lines> with a C<binmode> of C<:raw>.  We use C<:raw>
-  instead of C<:unix> so PerlIO buffering can manage reading by line.
-  
-  C<lines_utf8> is like C<lines> with a C<binmode> of C<:raw:encoding(UTF-8)>
-  (or L<PerlIO::utf8_strict>).  If L<Unicode::UTF8> 0.58+ is installed, a raw
-  UTF-8 slurp will be done and then the lines will be split.  This is
-  actually faster than relying on C<:encoding(UTF-8)>, though a bit memory
-  intensive.  If memory use is a concern, consider C<openr_utf8> and
-  iterating directly on the handle.
-  
-  Current API available since 0.065.
-  
-  =head2 mkpath
-  
-      path("foo/bar/baz")->mkpath;
-      path("foo/bar/baz")->mkpath( \%options );
-  
-  Like calling C<make_path> from L<File::Path>.  An optional hash reference
-  is passed through to C<make_path>.  Errors will be trapped and an exception
-  thrown.  Returns the list of directories created or an empty list if
-  the directories already exist, just like C<make_path>.
-  
-  Current API available since 0.001.
-  
-  =head2 move
-  
-      path("foo.txt")->move("bar.txt");
-  
-  Move the current path to the given destination path using Perl's
-  built-in L<rename|perlfunc/rename> function. Returns the result
-  of the C<rename> function.
-  
-  Current API available since 0.001.
-  
-  =head2 openr, openw, openrw, opena
-  
-      $fh = path("foo.txt")->openr($binmode);  # read
-      $fh = path("foo.txt")->openr_raw;
-      $fh = path("foo.txt")->openr_utf8;
-  
-      $fh = path("foo.txt")->openw($binmode);  # write
-      $fh = path("foo.txt")->openw_raw;
-      $fh = path("foo.txt")->openw_utf8;
-  
-      $fh = path("foo.txt")->opena($binmode);  # append
-      $fh = path("foo.txt")->opena_raw;
-      $fh = path("foo.txt")->opena_utf8;
-  
-      $fh = path("foo.txt")->openrw($binmode); # read/write
-      $fh = path("foo.txt")->openrw_raw;
-      $fh = path("foo.txt")->openrw_utf8;
-  
-  Returns a file handle opened in the specified mode.  The C<openr> style methods
-  take a single C<binmode> argument.  All of the C<open*> methods have
-  C<open*_raw> and C<open*_utf8> equivalents that use C<:raw> and
-  C<:raw:encoding(UTF-8)>, respectively.
-  
-  An optional hash reference may be used to pass options.  The only option is
-  C<locked>.  If true, handles opened for writing, appending or read-write are
-  locked with C<LOCK_EX>; otherwise, they are locked for C<LOCK_SH>.
-  
-      $fh = path("foo.txt")->openrw_utf8( { locked => 1 } );
-  
-  See L</filehandle> for more on locking.
-  
-  Current API available since 0.011.
-  
-  =head2 parent
-  
-      $parent = path("foo/bar/baz")->parent; # foo/bar
-      $parent = path("foo/wibble.txt")->parent; # foo
-  
-      $parent = path("foo/bar/baz")->parent(2); # foo
-  
-  Returns a C<Path::Tiny> object corresponding to the parent directory of the
-  original directory or file. An optional positive integer argument is the number
-  of parent directories upwards to return.  C<parent> by itself is equivalent to
-  C<parent(1)>.
-  
-  Current API available since 0.014.
-  
-  =head2 realpath
-  
-      $real = path("/baz/foo/../bar")->realpath;
-      $real = path("foo/../bar")->realpath;
-  
-  Returns a new C<Path::Tiny> object with all symbolic links and upward directory
-  parts resolved using L<Cwd>'s C<realpath>.  Compared to C<absolute>, this is
-  more expensive as it must actually consult the filesystem.
-  
-  If the parent path can't be resolved (e.g. if it includes directories that
-  don't exist), an exception will be thrown:
-  
-      $real = path("doesnt_exist/foo")->realpath; # dies
-  
-  However, if the parent path exists and only the last component (e.g. filename)
-  doesn't exist, the realpath will be the realpath of the parent plus the
-  non-existent last component:
-  
-      $real = path("./aasdlfasdlf")->realpath; # works
-  
-  The underlying L<Cwd> module usually worked this way on Unix, but died on
-  Windows (and some Unixes) if the full path didn't exist.  As of version 0.064,
-  it's safe to use anywhere.
-  
-  Current API available since 0.001.
-  
-  =head2 relative
-  
-      $rel = path("/tmp/foo/bar")->relative("/tmp"); # foo/bar
-  
-  Returns a C<Path::Tiny> object with a path relative to a new base path
-  given as an argument.  If no argument is given, the current directory will
-  be used as the new base path.
-  
-  If either path is already relative, it will be made absolute based on the
-  current directly before determining the new relative path.
-  
-  The algorithm is roughly as follows:
-  
-  =over 4
-  
-  =item *
-  
-  If the original and new base path are on different volumes, an exception will be thrown.
-  
-  =item *
-  
-  If the original and new base are identical, the relative path is C<".">.
-  
-  =item *
-  
-  If the new base subsumes the original, the relative path is the original path with the new base chopped off the front
-  
-  =item *
-  
-  If the new base does not subsume the original, a common prefix path is determined (possibly the root directory) and the relative path will consist of updirs (C<"..">) to reach the common prefix, followed by the original path less the common prefix.
-  
-  =back
-  
-  Unlike C<File::Spec::abs2rel>, in the last case above, the calculation based
-  on a common prefix takes into account symlinks that could affect the updir
-  process.  Given an original path "/A/B" and a new base "/A/C",
-  (where "A", "B" and "C" could each have multiple path components):
-  
-  =over 4
-  
-  =item *
-  
-  Symlinks in "A" don't change the result unless the last component of A is a symlink and the first component of "C" is an updir.
-  
-  =item *
-  
-  Symlinks in "B" don't change the result and will exist in the result as given.
-  
-  =item *
-  
-  Symlinks and updirs in "C" must be resolved to actual paths, taking into account the possibility that not all path components might exist on the filesystem.
-  
-  =back
-  
-  Current API available since 0.001.  New algorithm (that accounts for
-  symlinks) available since 0.079.
-  
-  =head2 remove
-  
-      path("foo.txt")->remove;
-  
-  This is just like C<unlink>, except for its error handling: if the path does
-  not exist, it returns false; if deleting the file fails, it throws an
-  exception.
-  
-  Current API available since 0.012.
-  
-  =head2 remove_tree
-  
-      # directory
-      path("foo/bar/baz")->remove_tree;
-      path("foo/bar/baz")->remove_tree( \%options );
-      path("foo/bar/baz")->remove_tree( { safe => 0 } ); # force remove
-  
-  Like calling C<remove_tree> from L<File::Path>, but defaults to C<safe> mode.
-  An optional hash reference is passed through to C<remove_tree>.  Errors will be
-  trapped and an exception thrown.  Returns the number of directories deleted,
-  just like C<remove_tree>.
-  
-  If you want to remove a directory only if it is empty, use the built-in
-  C<rmdir> function instead.
-  
-      rmdir path("foo/bar/baz/");
-  
-  Current API available since 0.013.
-  
-  =head2 sibling
-  
-      $foo = path("/tmp/foo.txt");
-      $sib = $foo->sibling("bar.txt");        # /tmp/bar.txt
-      $sib = $foo->sibling("baz", "bam.txt"); # /tmp/baz/bam.txt
-  
-  Returns a new C<Path::Tiny> object relative to the parent of the original.
-  This is slightly more efficient than C<< $path->parent->child(...) >>.
-  
-  Current API available since 0.058.
-  
-  =head2 slurp, slurp_raw, slurp_utf8
-  
-      $data = path("foo.txt")->slurp;
-      $data = path("foo.txt")->slurp( {binmode => ":raw"} );
-      $data = path("foo.txt")->slurp_raw;
-      $data = path("foo.txt")->slurp_utf8;
-  
-  Reads file contents into a scalar.  Takes an optional hash reference which may
-  be used to pass options.  The only available option is C<binmode>, which is
-  passed to C<binmode()> on the handle used for reading.
-  
-  C<slurp_raw> is like C<slurp> with a C<binmode> of C<:unix> for
-  a fast, unbuffered, raw read.
-  
-  C<slurp_utf8> is like C<slurp> with a C<binmode> of
-  C<:unix:encoding(UTF-8)> (or L<PerlIO::utf8_strict>).  If L<Unicode::UTF8>
-  0.58+ is installed, a raw slurp will be done instead and the result decoded
-  with C<Unicode::UTF8>.  This is just as strict and is roughly an order of
-  magnitude faster than using C<:encoding(UTF-8)>.
-  
-  B<Note>: C<slurp> and friends lock the filehandle before slurping.  If
-  you plan to slurp from a file created with L<File::Temp>, be sure to
-  close other handles or open without locking to avoid a deadlock:
-  
-      my $tempfile = File::Temp->new(EXLOCK => 0);
-      my $guts = path($tempfile)->slurp;
-  
-  Current API available since 0.004.
-  
-  =head2 spew, spew_raw, spew_utf8
-  
-      path("foo.txt")->spew(@data);
-      path("foo.txt")->spew(\@data);
-      path("foo.txt")->spew({binmode => ":raw"}, @data);
-      path("foo.txt")->spew_raw(@data);
-      path("foo.txt")->spew_utf8(@data);
-  
-  Writes data to a file atomically.  The file is written to a temporary file in
-  the same directory, then renamed over the original.  An optional hash reference
-  may be used to pass options.  The only option is C<binmode>, which is passed to
-  C<binmode()> on the handle used for writing.
-  
-  C<spew_raw> is like C<spew> with a C<binmode> of C<:unix> for a fast,
-  unbuffered, raw write.
-  
-  C<spew_utf8> is like C<spew> with a C<binmode> of C<:unix:encoding(UTF-8)>
-  (or L<PerlIO::utf8_strict>).  If L<Unicode::UTF8> 0.58+ is installed, a raw
-  spew will be done instead on the data encoded with C<Unicode::UTF8>.
-  
-  B<NOTE>: because the file is written to a temporary file and then renamed, the
-  new file will wind up with permissions based on your current umask.  This is a
-  feature to protect you from a race condition that would otherwise give
-  different permissions than you might expect.  If you really want to keep the
-  original mode flags, use L</append> with the C<truncate> option.
-  
-  Current API available since 0.011.
-  
-  =head2 stat, lstat
-  
-      $stat = path("foo.txt")->stat;
-      $stat = path("/some/symlink")->lstat;
-  
-  Like calling C<stat> or C<lstat> from L<File::stat>.
-  
-  Current API available since 0.001.
-  
-  =head2 stringify
-  
-      $path = path("foo.txt");
-      say $path->stringify; # same as "$path"
-  
-  Returns a string representation of the path.  Unlike C<canonpath>, this method
-  returns the path standardized with Unix-style C</> directory separators.
-  
-  Current API available since 0.001.
-  
-  =head2 subsumes
-  
-      path("foo/bar")->subsumes("foo/bar/baz"); # true
-      path("/foo/bar")->subsumes("/foo/baz");   # false
-  
-  Returns true if the first path is a prefix of the second path at a directory
-  boundary.
-  
-  This B<does not> resolve parent directory entries (C<..>) or symlinks:
-  
-      path("foo/bar")->subsumes("foo/bar/../baz"); # true
-  
-  If such things are important to you, ensure that both paths are resolved to
-  the filesystem with C<realpath>:
-  
-      my $p1 = path("foo/bar")->realpath;
-      my $p2 = path("foo/bar/../baz")->realpath;
-      if ( $p1->subsumes($p2) ) { ... }
-  
-  Current API available since 0.048.
-  
-  =head2 touch
-  
-      path("foo.txt")->touch;
-      path("foo.txt")->touch($epoch_secs);
-  
-  Like the Unix C<touch> utility.  Creates the file if it doesn't exist, or else
-  changes the modification and access times to the current time.  If the first
-  argument is the epoch seconds then it will be used.
-  
-  Returns the path object so it can be easily chained with other methods:
-  
-      # won't die if foo.txt doesn't exist
-      $content = path("foo.txt")->touch->slurp;
-  
-  Current API available since 0.015.
-  
-  =head2 touchpath
-  
-      path("bar/baz/foo.txt")->touchpath;
-  
-  Combines C<mkpath> and C<touch>.  Creates the parent directory if it doesn't exist,
-  before touching the file.  Returns the path object like C<touch> does.
-  
-  Current API available since 0.022.
-  
-  =head2 visit
-  
-      path("/tmp")->visit( \&callback, \%options );
-  
-  Executes a callback for each child of a directory.  It returns a hash
-  reference with any state accumulated during iteration.
-  
-  The options are the same as for L</iterator> (which it uses internally):
-  C<recurse> and C<follow_symlinks>.  Both default to false.
-  
-  The callback function will receive a C<Path::Tiny> object as the first argument
-  and a hash reference to accumulate state as the second argument.  For example:
-  
-      # collect files sizes
-      my $sizes = path("/tmp")->visit(
-          sub {
-              my ($path, $state) = @_;
-              return if $path->is_dir;
-              $state->{$path} = -s $path;
-          },
-          { recurse => 1 }
-      );
-  
-  For convenience, the C<Path::Tiny> object will also be locally aliased as the
-  C<$_> global variable:
-  
-      # print paths matching /foo/
-      path("/tmp")->visit( sub { say if /foo/ }, { recurse => 1} );
-  
-  If the callback returns a B<reference> to a false scalar value, iteration will
-  terminate.  This is not the same as "pruning" a directory search; this just
-  stops all iteration and returns the state hash reference.
-  
-      # find up to 10 files larger than 100K
-      my $files = path("/tmp")->visit(
-          sub {
-              my ($path, $state) = @_;
-              $state->{$path}++ if -s $path > 102400
-              return \0 if keys %$state == 10;
-          },
-          { recurse => 1 }
-      );
-  
-  If you want more flexible iteration, use a module like L<Path::Iterator::Rule>.
-  
-  Current API available since 0.062.
-  
-  =head2 volume
-  
-      $vol = path("/tmp/foo.txt")->volume;   # ""
-      $vol = path("C:/tmp/foo.txt")->volume; # "C:"
-  
-  Returns the volume portion of the path.  This is equivalent
-  to what L<File::Spec> would give from C<splitpath> and thus
-  usually is the empty string on Unix-like operating systems or the
-  drive letter for an absolute path on C<MSWin32>.
-  
-  Current API available since 0.001.
-  
-  =for Pod::Coverage openr_utf8 opena_utf8 openw_utf8 openrw_utf8
-  openr_raw opena_raw openw_raw openrw_raw
-  IS_BSD IS_WIN32 FREEZE THAW TO_JSON abs2rel
-  
-  =head1 EXCEPTION HANDLING
-  
-  Simple usage errors will generally croak.  Failures of underlying Perl
-  functions will be thrown as exceptions in the class
-  C<Path::Tiny::Error>.
-  
-  A C<Path::Tiny::Error> object will be a hash reference with the following fields:
-  
-  =over 4
-  
-  =item *
-  
-  C<op> — a description of the operation, usually function call and any extra info
-  
-  =item *
-  
-  C<file> — the file or directory relating to the error
-  
-  =item *
-  
-  C<err> — hold C<$!> at the time the error was thrown
-  
-  =item *
-  
-  C<msg> — a string combining the above data and a Carp-like short stack trace
-  
-  =back
-  
-  Exception objects will stringify as the C<msg> field.
-  
-  =head1 CAVEATS
-  
-  =head2 Subclassing not supported
-  
-  For speed, this class is implemented as an array based object and uses many
-  direct function calls internally.  You must not subclass it and expect
-  things to work properly.
-  
-  =head2 File locking
-  
-  If flock is not supported on a platform, it will not be used, even if
-  locking is requested.
-  
-  See additional caveats below.
-  
-  =head3 NFS and BSD
-  
-  On BSD, Perl's flock implementation may not work to lock files on an
-  NFS filesystem.  Path::Tiny has some heuristics to detect this
-  and will warn once and let you continue in an unsafe mode.  If you
-  want this failure to be fatal, you can fatalize the 'flock' warnings
-  category:
-  
-      use warnings FATAL => 'flock';
-  
-  =head3 AIX and locking
-  
-  AIX requires a write handle for locking.  Therefore, calls that normally
-  open a read handle and take a shared lock instead will open a read-write
-  handle and take an exclusive lock.  If the user does not have write
-  permission, no lock will be used.
-  
-  =head2 utf8 vs UTF-8
-  
-  All the C<*_utf8> methods by default use C<:encoding(UTF-8)> -- either as
-  C<:unix:encoding(UTF-8)> (unbuffered) or C<:raw:encoding(UTF-8)> (buffered) --
-  which is strict against the Unicode spec and disallows illegal Unicode
-  codepoints or UTF-8 sequences.
-  
-  Unfortunately, C<:encoding(UTF-8)> is very, very slow.  If you install
-  L<Unicode::UTF8> 0.58 or later, that module will be used by some C<*_utf8>
-  methods to encode or decode data after a raw, binary input/output operation,
-  which is much faster.  Alternatively, if you install L<PerlIO::utf8_strict>,
-  that will be used instead of C<:encoding(UTF-8)> and is also very fast.
-  
-  If you need the performance and can accept the security risk,
-  C<< slurp({binmode => ":unix:utf8"}) >> will be faster than C<:unix:encoding(UTF-8)>
-  (but not as fast as C<Unicode::UTF8>).
-  
-  Note that the C<*_utf8> methods read in B<raw> mode.  There is no CRLF
-  translation on Windows.  If you must have CRLF translation, use the regular
-  input/output methods with an appropriate binmode:
-  
-    $path->spew_utf8($data);                            # raw
-    $path->spew({binmode => ":encoding(UTF-8)"}, $data; # LF -> CRLF
-  
-  =head2 Default IO layers and the open pragma
-  
-  If you have Perl 5.10 or later, file input/output methods (C<slurp>, C<spew>,
-  etc.) and high-level handle opening methods ( C<filehandle>, C<openr>,
-  C<openw>, etc. ) respect default encodings set by the C<-C> switch or lexical
-  L<open> settings of the caller.  For UTF-8, this is almost certainly slower
-  than using the dedicated C<_utf8> methods if you have L<Unicode::UTF8>.
-  
-  =head1 TYPE CONSTRAINTS AND COERCION
-  
-  A standard L<MooseX::Types> library is available at
-  L<MooseX::Types::Path::Tiny>.  A L<Type::Tiny> equivalent is available as
-  L<Types::Path::Tiny>.
-  
-  =head1 SEE ALSO
-  
-  These are other file/path utilities, which may offer a different feature
-  set than C<Path::Tiny>.
-  
-  =over 4
-  
-  =item *
-  
-  L<File::chmod>
-  
-  =item *
-  
-  L<File::Fu>
-  
-  =item *
-  
-  L<IO::All>
-  
-  =item *
-  
-  L<Path::Class>
-  
-  =back
-  
-  These iterators may be slightly faster than the recursive iterator in
-  C<Path::Tiny>:
-  
-  =over 4
-  
-  =item *
-  
-  L<Path::Iterator::Rule>
-  
-  =item *
-  
-  L<File::Next>
-  
-  =back
-  
-  There are probably comparable, non-Tiny tools.  Let me know if you want me to
-  add a module to the list.
-  
-  This module was featured in the L<2013 Perl Advent Calendar|http://www.perladvent.org/2013/2013-12-18.html>.
-  
-  =for :stopwords cpan testmatrix url annocpan anno bugtracker rt cpants kwalitee diff irc mailto metadata placeholders metacpan
-  
-  =head1 SUPPORT
-  
-  =head2 Bugs / Feature Requests
-  
-  Please report any bugs or feature requests through the issue tracker
-  at L<https://github.com/dagolden/Path-Tiny/issues>.
-  You will be notified automatically of any progress on your issue.
-  
-  =head2 Source Code
-  
-  This is open source software.  The code repository is available for
-  public review and contribution under the terms of the license.
-  
-  L<https://github.com/dagolden/Path-Tiny>
-  
-    git clone https://github.com/dagolden/Path-Tiny.git
-  
-  =head1 AUTHOR
-  
-  David Golden <dagolden@cpan.org>
-  
-  =head1 CONTRIBUTORS
-  
-  =for stopwords Alex Efros Chris Williams Dave Rolsky David Steinbrunner Doug Bell Gabor Szabo Gabriel Andrade George Hartzell Geraud Continsouzas Goro Fuji Graham Knop Ollis James Hunt John Karr Karen Etheridge Mark Ellis Martin Kjeldsen Michael G. Schwern Nigel Gregoire Philippe Bruhat (BooK) Regina Verbae Roy Ivy III Shlomi Fish Smylers Tatsuhiko Miyagawa Toby Inkster Yanick Champoux 김도형 - Keedi Kim
-  
-  =over 4
-  
-  =item *
-  
-  Alex Efros <powerman@powerman.name>
-  
-  =item *
-  
-  Chris Williams <bingos@cpan.org>
-  
-  =item *
-  
-  Dave Rolsky <autarch@urth.org>
-  
-  =item *
-  
-  David Steinbrunner <dsteinbrunner@pobox.com>
-  
-  =item *
-  
-  Doug Bell <madcityzen@gmail.com>
-  
-  =item *
-  
-  Gabor Szabo <szabgab@cpan.org>
-  
-  =item *
-  
-  Gabriel Andrade <gabiruh@gmail.com>
-  
-  =item *
-  
-  George Hartzell <hartzell@cpan.org>
-  
-  =item *
-  
-  Geraud Continsouzas <geraud@scsi.nc>
-  
-  =item *
-  
-  Goro Fuji <gfuji@cpan.org>
-  
-  =item *
-  
-  Graham Knop <haarg@haarg.org>
-  
-  =item *
-  
-  Graham Ollis <plicease@cpan.org>
-  
-  =item *
-  
-  James Hunt <james@niftylogic.com>
-  
-  =item *
-  
-  John Karr <brainbuz@brainbuz.org>
-  
-  =item *
-  
-  Karen Etheridge <ether@cpan.org>
-  
-  =item *
-  
-  Mark Ellis <mark.ellis@cartridgesave.co.uk>
-  
-  =item *
-  
-  Martin Kjeldsen <mk@bluepipe.dk>
-  
-  =item *
-  
-  Michael G. Schwern <mschwern@cpan.org>
-  
-  =item *
-  
-  Nigel Gregoire <nigelgregoire@gmail.com>
-  
-  =item *
-  
-  Philippe Bruhat (BooK) <book@cpan.org>
-  
-  =item *
-  
-  Regina Verbae <regina-verbae@users.noreply.github.com>
-  
-  =item *
-  
-  Roy Ivy III <rivy@cpan.org>
-  
-  =item *
-  
-  Shlomi Fish <shlomif@shlomifish.org>
-  
-  =item *
-  
-  Smylers <Smylers@stripey.com>
-  
-  =item *
-  
-  Tatsuhiko Miyagawa <miyagawa@bulknews.net>
-  
-  =item *
-  
-  Toby Inkster <tobyink@cpan.org>
-  
-  =item *
-  
-  Yanick Champoux <yanick@babyl.dyndns.org>
-  
-  =item *
-  
-  김도형 - Keedi Kim <keedi@cpan.org>
-  
-  =back
-  
-  =head1 COPYRIGHT AND LICENSE
-  
-  This software is Copyright (c) 2014 by David Golden.
-  
-  This is free software, licensed under:
-  
-    The Apache License, Version 2.0, January 2004
-  
-  =cut
-PATH_TINY
-
-$fatpacked{"TOML.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TOML';
-  package TOML;
-  
-  # -------------------------------------------------------------------
-  # TOML - Parser for Tom's Obvious, Minimal Language.
-  #
-  # Copyright (C) 2013 Darren Chamberlain <darren@cpan.org>
-  # -------------------------------------------------------------------
-  
-  use 5.008005;
-  use strict;
-  use warnings;
-  use Exporter 'import';
-  
-  our ($VERSION, @EXPORT, @_NAMESPACE, $PARSER);
-  
-  use B;
-  use Carp qw(croak);
-  use TOML::Parser 0.03;
-  
-  $VERSION = "0.97";
-  @EXPORT = qw(from_toml to_toml);
-  $PARSER = TOML::Parser->new(inflate_boolean  => sub { $_[0] });
-  
-  sub to_toml {
-      my $stuff = shift;
-      local @_NAMESPACE = ();
-      _to_toml($stuff);
-  }
-  
-  sub _to_toml {
-      my ($stuff) = @_;
-  
-      if (ref $stuff eq 'HASH') {
-          my $res = '';
-          my @keys = sort keys %$stuff;
-          for my $key (grep { ref $stuff->{$_} ne 'HASH' } @keys) {
-              my $val = $stuff->{$key};
-              $res .= "$key = " . _serialize($val) . "\n";
-          }
-          for my $key (grep { ref $stuff->{$_} eq 'HASH' } @keys) {
-              my $val = $stuff->{$key};
-              local @_NAMESPACE = (@_NAMESPACE, $key);
-              $res .= sprintf("[%s]\n", join(".", @_NAMESPACE));
-              $res .= _to_toml($val);
-          }
-          return $res;
-      } else {
-          croak("You cannot convert non-HashRef values to TOML");
-      }
-  }
-  
-  sub _serialize {
-      my $value = shift;
-      my $b_obj = B::svref_2object(\$value);
-      my $flags = $b_obj->FLAGS;
-  
-      return $value
-          if $flags & ( B::SVp_IOK | B::SVp_NOK ) and !( $flags & B::SVp_POK ); # SvTYPE is IV or NV?
-  
-      my $type = ref($value);
-      if (!$type) {
-          return string_to_json($value);
-      } elsif ($type eq 'ARRAY') {
-          return sprintf('[%s]', join(", ", map { _serialize($_) } @$value));
-      } elsif ($type eq 'SCALAR') {
-          if (defined $$value) {
-              if ($$value eq '0') {
-                  return 'false';
-              } elsif ($$value eq '1') {
-                  return 'true';
-              } else {
-                  croak("cannot encode reference to scalar");
-              }
-          }
-          croak("cannot encode reference to scalar");
-      }
-      croak("Bad type in to_toml: $type");
-  }
-  
-  my %esc = (
-      "\n" => '\n',
-      "\r" => '\r',
-      "\t" => '\t',
-      "\f" => '\f',
-      "\b" => '\b',
-      "\"" => '\"',
-      "\\" => '\\\\',
-      "\'" => '\\\'',
-  );
-  sub string_to_json {
-      my ($arg) = @_;
-  
-      $arg =~ s/([\x22\x5c\n\r\t\f\b])/$esc{$1}/g;
-      $arg =~ s/([\x00-\x08\x0b\x0e-\x1f])/'\\u00' . unpack('H2', $1)/eg;
-  
-      return '"' . $arg . '"';
-  }
-  
-  sub from_toml {
-      my $string = shift;
-      local $@;
-      my $toml = eval { $PARSER->parse($string) };
-      return wantarray ? ($toml, $@) : $toml;
-  }
-  
-  1;
-  
-  __END__
-  
-  =encoding utf-8
-  
-  =for stopwords versa
-  
-  =head1 NAME
-  
-  TOML - Parser for Tom's Obvious, Minimal Language.
-  
-  =head1 SYNOPSIS
-  
-      use TOML qw(from_toml to_toml);
-  
-      # Parsing toml
-      my $toml = slurp("~/.foo.toml");
-      my $data = from_toml($toml);
-  
-      # With error checking
-      my ($data, $err) = from_toml($toml);
-      unless ($data) {
-          die "Error parsing toml: $err";
-      }
-  
-      # Creating toml
-      my $toml = to_toml($data); 
-  
-  =head1 DESCRIPTION
-  
-  C<TOML> implements a parser for Tom's Obvious, Minimal Language, as
-  defined at L<https://github.com/mojombo/toml>. C<TOML> exports two
-  subroutines, C<from_toml> and C<to_toml>,
-  
-  =head1 FAQ
-  
-  =over 4
-  
-  =item How change how to de-serialize?
-  
-  You can change C<$TOML::PARSER> for change how to de-serialize.
-  
-  example:
-  
-      use TOML;
-      use TOML::Parser;
-  
-      local $TOML::PARSER = TOML::Parser->new(
-          inflate_boolean => sub { $_[0] eq 'true' ? \1 : \0 },
-      );
-  
-      my $data = TOML::from_toml('foo = true');
-  
-  =back
-  
-  =head1 FUNCTIONS
-  
-  =over 4
-  
-  =item from_toml
-  
-  C<from_toml> transforms a string containing toml to a perl data
-  structure or vice versa. This data structure complies with the tests
-  provided at L<https://github.com/mojombo/toml/tree/master/tests>.
-  
-  If called in list context, C<from_toml> produces a (C<hash>,
-  C<error_string>) tuple, where C<error_string> is C<undef> on
-  non-errors. If there is an error, then C<hash> will be undefined and
-  C<error_string> will contains (scant) details about said error.
-  
-  =item to_toml
-  
-  C<to_toml> transforms a perl data structure into toml-formatted
-  string.
-  
-  =back
-  
-  =head1 SEE ALSO
-  
-  L<TOML::Parser>
-  
-  =head1 LICENSE
-  
-  This program is free software; you can redistribute it and/or
-  modify it under the terms of the GNU General Public License as
-  published by the Free Software Foundation; version 2.
-  
-  This program is distributed in the hope that it will be useful, but
-  WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-  General Public License for more details.
-  
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-  02111-1301 USA
-  
-  =head1 AUTHOR
-  
-  Darren Chamberlain <darren@cpan.org>
-  
-  =head1 CONTRIBUTORS
-  
-  =over 4
-  
-  =item Tokuhiro Matsuno <tokuhirom@cpan.org>
-  
-  =item Matthias Bethke <matthias@towiski.de>
-  
-  =item Sergey Romanov <complefor@rambler.ru>
-  
-  =item karupanerura <karupa@cpan.org>
-  
-  =back
-TOML
-
-$fatpacked{"TOML/Parser.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TOML_PARSER';
-  package TOML::Parser;
-  use 5.008005;
-  use strict;
-  use warnings;
-  use Encode;
-  
-  our $VERSION = "0.07";
-  
-  use TOML::Parser::Tokenizer qw/:constant/;
-  use TOML::Parser::Tokenizer::Strict;
-  use TOML::Parser::Util qw/unescape_str/;
-  use Types::Serialiser;
-  
-  sub new {
-      my $class = shift;
-      my $args  = (@_ == 1 and ref $_[0] eq 'HASH') ? +shift : +{ @_ };
-      return bless +{
-          inflate_datetime => sub { $_[0] },
-          inflate_boolean  => sub { $_[0] eq 'true' ? Types::Serialiser::true : Types::Serialiser::false },
-          strict_mode      => 0,
-          %$args,
-      } => $class;
-  }
-  
-  sub parse_file {
-      my ($self, $file) = @_;
-      open my $fh, '<:encoding(utf-8)', $file or die $!;
-      return $self->parse_fh($fh);
-  }
-  
-  sub parse_fh {
-      my ($self, $fh) = @_;
-      my $src = do { local $/; <$fh> };
-      return $self->parse($src);
-  }
-  
-  sub _tokenizer_class {
-      my $self = shift;
-      return $self->{strict_mode} ? 'TOML::Parser::Tokenizer::Strict' : 'TOML::Parser::Tokenizer';
-  }
-  
-  our @TOKENS;
-  our $ROOT;
-  our $CONTEXT;
-  sub parse {
-      my ($self, $src) = @_;
-  
-      local $ROOT    = {};
-      local $CONTEXT = $ROOT;
-      local @TOKENS  = $self->_tokenizer_class->tokenize($src);
-      return $self->_parse_tokens();
-  }
-  
-  sub _parse_tokens {
-      my $self = shift;
-  
-      while (my $token = shift @TOKENS) {
-          $self->_parse_token($token);
-      }
-  
-      return $CONTEXT;
-  }
-  
-  sub _parse_token {
-      my ($self, $token) = @_;
-  
-      my ($type, $val) = @$token;
-      if ($type eq TOKEN_TABLE) {
-          $self->_parse_table($val);
-      }
-      elsif ($type eq TOKEN_ARRAY_OF_TABLE) {
-          $self->_parse_array_of_table($val);
-      }
-      elsif (my ($key, $value) = $self->_parse_key_and_value($token)) {
-          die "Duplicate key. key:$key" if exists $CONTEXT->{$key};
-          $CONTEXT->{$key} = $value;
-      }
-      elsif ($type eq TOKEN_COMMENT) {
-          # pass through
-      }
-      else {
-          die "Unknown case. type:$type";
-      }
-  }
-  
-  sub _parse_key_and_value {
-      my ($self, $token) = @_;
-  
-      my ($type, $val) = @$token;
-      if ($type eq TOKEN_KEY) {
-          my $token = shift @TOKENS;
-  
-          my $key = $val;
-          my $value = $self->_parse_value_token($token);
-          return ($key, $value);
-      }
-  
-      return;
-  }
-  
-  sub _parse_table {
-      my ($self, $keys) = @_;
-      my @keys = @$keys;
-  
-      local $CONTEXT = $ROOT;
-      for my $k (@keys) {
-          if (exists $CONTEXT->{$k}) {
-              $CONTEXT = ref $CONTEXT->{$k} eq 'ARRAY' ? $CONTEXT->{$k}->[-1] :
-                         ref $CONTEXT->{$k} eq 'HASH'  ? $CONTEXT->{$k}       :
-                         die "invalid structure. @{[ join '.', @keys ]} cannot be `Table`";
-          }
-          else {
-              $CONTEXT = $CONTEXT->{$k} ||= +{};
-          }
-      }
-  
-      $self->_parse_tokens();
-  }
-  
-  sub _parse_array_of_table {
-      my ($self, $keys) = @_;
-      my @keys     = @$keys;
-      my $last_key = pop @keys;
-  
-      local $CONTEXT = $ROOT;
-      for my $k (@keys) {
-          if (exists $CONTEXT->{$k}) {
-              $CONTEXT = ref $CONTEXT->{$k} eq 'ARRAY' ? $CONTEXT->{$k}->[-1] :
-                         ref $CONTEXT->{$k} eq 'HASH'  ? $CONTEXT->{$k}       :
-                         die "invalid structure. @{[ join '.', @keys ]} cannot be `Array of table`.";
-          }
-          else {
-              $CONTEXT = $CONTEXT->{$k} ||= +{};
-          }
-      }
-  
-      $CONTEXT->{$last_key} = [] unless exists $CONTEXT->{$last_key};
-      die "invalid structure. @{[ join '.', @keys ]} cannot be `Array of table`" unless ref $CONTEXT->{$last_key} eq 'ARRAY';
-      push @{ $CONTEXT->{$last_key} } => $CONTEXT = {};
-  
-      $self->_parse_tokens();
-  }
-  
-  sub _parse_value_token {
-      my $self  = shift;
-      my $token = shift;
-  
-      my ($type, $val) = @$token;
-      if ($type eq TOKEN_COMMENT) {
-          return; # pass through
-      }
-      elsif ($type eq TOKEN_INTEGER || $type eq TOKEN_FLOAT) {
-          $val =~ tr/_//d;
-          return 0+$val;
-      }
-      elsif ($type eq TOKEN_BOOLEAN) {
-          return $self->inflate_boolean($val);
-      }
-      elsif ($type eq TOKEN_DATETIME) {
-          return $self->inflate_datetime($val);
-      }
-      elsif ($type eq TOKEN_STRING) {
-          return unescape_str($val);
-      }
-      elsif ($type eq TOKEN_MULTI_LINE_STRING_BEGIN) {
-          my $value = $self->_parse_value_token(shift @TOKENS);
-          $value =~ s/\A\s+//msg;
-          $value =~ s/\\\s+//msg;
-          if (my $token = shift @TOKENS) {
-              my ($type) = @$token;
-              return $value if $type eq TOKEN_MULTI_LINE_STRING_END;
-              die "Unexpected token: $type";
-          }
-      }
-      elsif ($type eq TOKEN_INLINE_TABLE_BEGIN) {
-          my %data;
-          while (my $token = shift @TOKENS) {
-              last if $token->[0] eq TOKEN_INLINE_TABLE_END;
-              my ($key, $value) = $self->_parse_key_and_value($token);
-              die "Duplicate key. key:$key" if exists $data{$key};
-              $data{$key} = $value;
-          }
-          return \%data;
-      }
-      elsif ($type eq TOKEN_ARRAY_BEGIN) {
-          my @data;
-  
-          my $last_token;
-          while (my $token = shift @TOKENS) {
-              last if $token->[0] eq TOKEN_ARRAY_END;
-              if ($self->{strict_mode} && $token->[0] ne TOKEN_COMMENT) {
-                  die "Unexpected token: $token->[0]" if defined $last_token && $token->[0] ne $last_token->[0];
-              }
-              push @data => $self->_parse_value_token($token);
-              $last_token = $token;
-          }
-          return \@data;
-      }
-  
-      die "Unexpected token: $type";
-  }
-  
-  sub inflate_datetime {
-      my $self = shift;
-      return $self->{inflate_datetime}->(@_);
-  }
-  
-  sub inflate_boolean {
-      my $self = shift;
-      return $self->{inflate_boolean}->(@_);
-  }
-  
-  1;
-  __END__
-  
-  =encoding utf-8
-  
-  =for stopwords versa
-  
-  =head1 NAME
-  
-  TOML::Parser - simple toml parser
-  
-  =head1 SYNOPSIS
-  
-      use TOML::Parser;
-  
-      my $parser = TOML::Parser->new;
-      my $data   = $parser->parse($toml);
-  
-  =head1 DESCRIPTION
-  
-  TOML::Parser is a simple toml parser.
-  
-  This data structure complies with the tests
-  provided at L<https://github.com/toml-lang/toml/tree/v0.4.0/tests>.
-  
-  The v0.4.0 specification is supported.
-  
-  =head1 METHODS
-  
-  =over
-  
-  =item my $parser = TOML::Parser->new(\%args)
-  
-  Creates a new TOML::Parser instance.
-  
-      use TOML::Parser;
-  
-      # create new parser
-      my $parser = TOML::Parser->new();
-  
-  Arguments can be:
-  
-  =over
-  
-  =item * C<inflate_datetime>
-  
-  If use it, You can replace inflate C<datetime> process.
-  The subroutine of default is C<identity>. C<e.g.) sub { $_[0] }>
-  
-      use TOML::Parser;
-      use DateTime;
-      use DateTime::Format::ISO8601;
-  
-      # create new parser
-      my $parser = TOML::Parser->new(
-          inflate_datetime => sub {
-              my $dt = shift;
-              return DateTime::Format::ISO8601->parse_datetime($dt);
-          },
-      );
-  
-  =item * C<inflate_boolean>
-  
-  If use it, You can replace inflate boolean process.
-  The return value of default subroutine is C<Types::Serialiser::true> or C<Types::Serialiser::false>.
-  
-      use TOML::Parser;
-  
-      # create new parser
-      my $parser = TOML::Parser->new(
-          inflate_boolean => sub {
-              my $boolean = shift;
-              return $boolean eq 'true' ? 1 : 0;
-          },
-      );
-  
-  =item * C<strict_mode>
-  
-  TOML::Parser is using a more flexible rule for compatibility with old TOML of default.
-  If make this option true value, You can parse a toml with strict rule.
-  
-      use TOML::Parser;
-  
-      # create new parser
-      my $parser = TOML::Parser->new(
-          strict_mode => 1
-      );
-  
-  =back
-  
-  =item my $data = $parser->parse_file($path)
-  
-  =item my $data = $parser->parse_fh($fh)
-  
-  =item my $data = $parser->parse($src)
-  
-  Transforms a string containing toml to a perl data structure or vice versa.
-  
-  =back
-  
-  =head1 SEE ALSO
-  
-  L<TOML>
-  
-  =head1 LICENSE
-  
-  Copyright (C) karupanerura.
-  
-  This library is free software; you can redistribute it and/or modify
-  it under the same terms as Perl itself.
-  
-  =head1 AUTHOR
-  
-  karupanerura E<lt>karupa@cpan.orgE<gt>
-  
-  =head1 CONTRIBUTOR
-  
-  Olivier Mengué E<lt>dolmen@cpan.orgE<gt>
-  
-  =cut
-TOML_PARSER
-
-$fatpacked{"TOML/Parser/Tokenizer.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TOML_PARSER_TOKENIZER';
-  package TOML::Parser::Tokenizer;
-  use 5.008005;
-  use strict;
-  use warnings;
-  
-  use Exporter 5.57 'import';
-  
-  use constant DEBUG => $ENV{TOML_PARSER_TOKENIZER_DEBUG} ? 1 : 0;
-  
-  BEGIN {
-      my @TOKENS = map uc, qw/
-          comment
-          table
-          array_of_table
-          key
-          integer
-          float
-          boolean
-          datetime
-          string
-          multi_line_string_begin
-          multi_line_string_end
-          inline_table_begin
-          inline_table_end
-          array_begin
-          array_end
-      /;
-      my %CONSTANTS = map {
-          ("TOKEN_$_" => $_)
-      } @TOKENS;
-  
-      require constant;
-      constant->import(\%CONSTANTS);
-  
-      # Exporter
-      our @EXPORT_OK   = keys %CONSTANTS;
-      our %EXPORT_TAGS = (
-          constant => [keys %CONSTANTS],
-      );
-  };
-  
-  sub grammar_regexp {
-      return +{
-          comment        => qr{#(.*)},
-          table          => {
-              start => qr{\[},
-              key   => qr{(?:"(.*?)(?<!(?<!\\)\\)"|\'(.*?)(?<!(?<!\\)\\)\'|([^.\s\\\]]+))},
-              sep   => qr{\.},
-              end   => qr{\]},
-          },
-          array_of_table => {
-              start => qr{\[\[},
-              key   => qr{(?:"(.*?)(?<!(?<!\\)\\)"|\'(.*?)(?<!(?<!\\)\\)\'|([^.\s\\\]]+))},
-              sep   => qr{\.},
-              end   => qr{\]\]},
-          },
-          key            => qr{(?:"(.*?)(?<!(?<!\\)\\)"|\'(.*?)(?<!(?<!\\)\\)\'|([^\s]+))\s*=},
-          value          => {
-              datetime => qr{([0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]+)?(?:Z|[-+][0-9]{2}:[0-9]{2}))},
-              float    => qr{([-+]?(?:[0-9_]+(?:\.[0-9_]+)?[eE][-+]?[0-9_]+|[0-9_]*\.[0-9_]+))},
-              integer  => qr{([-+]?[0-9_]+)},
-              boolean  => qr{(true|false)},
-              string   => qr{(?:"(.*?)(?<!(?<!\\)\\)"|\'(.*?)(?<!(?<!\\)\\)\')},
-              mlstring => qr{("""|''')},
-              inline   => {
-                  start => qr{\{},
-                  sep   => qr{\s*,\s*},
-                  end   => qr{\}},
-              },
-              array    => {
-                  start => qr{\[},
-                  sep   => qr{\s*,\s*},
-                  end   => qr{\]},
-              },
-          },
-      };
-  }
-  
-  sub tokenize {
-      my ($class, $src) = @_;
-  
-      local $_ = $src;
-      return $class->_tokenize();
-  }
-  
-  sub _tokenize {
-      my $class = shift;
-      my $grammar_regexp = $class->grammar_regexp();
-  
-      my @tokens;
-      until (/\G\z/mgco) {
-          if (/\G$grammar_regexp->{comment}/mgc) {
-              warn "[TOKEN] COMMENT: $1" if DEBUG;
-              $class->_skip_whitespace();
-              push @tokens => [TOKEN_COMMENT, $1 || ''];
-          }
-          elsif (/\G$grammar_regexp->{array_of_table}->{start}/mgc) {
-              push @tokens => $class->_tokenize_array_of_table();
-          }
-          elsif (/\G$grammar_regexp->{table}->{start}/mgc) {
-              push @tokens => $class->_tokenize_table();
-          }
-          elsif (my @t = $class->_tokenize_key_and_value()) {
-              push @tokens => @t;
-          }
-          elsif (/\G\s+/mgco) {
-              # pass through
-              $class->_skip_whitespace();
-          }
-          else {
-              $class->_syntax_error();
-          }
-      }
-      return @tokens;
-  }
-  
-  sub _tokenize_key_and_value {
-      my $class = shift;
-      my $grammar_regexp = $class->grammar_regexp();
-  
-      my @tokens;
-      if (/\G$grammar_regexp->{key}/mgc) {
-          my $key = $1 || $2 || $3;
-          warn "[TOKEN] KEY: $key" if DEBUG;
-          $class->_skip_whitespace();
-          push @tokens => [TOKEN_KEY, $key];
-          push @tokens => $class->_tokenize_value();
-          return @tokens;
-      }
-  
-      return;
-  }
-  
-  sub _tokenize_value {
-      my $class = shift;
-      my $grammar_regexp = $class->grammar_regexp();
-      warn "[CALL] _tokenize_value" if DEBUG;
-  
-      if (/\G$grammar_regexp->{comment}/mgc) {
-          warn "[TOKEN] COMMENT: $1" if DEBUG;
-          $class->_skip_whitespace();
-          return [TOKEN_COMMENT, $1 || ''];
-      }
-      elsif (/\G$grammar_regexp->{value}->{datetime}/mgc) {
-          warn "[TOKEN] DATETIME: $1" if DEBUG;
-          $class->_skip_whitespace();
-          return [TOKEN_DATETIME, $1];
-      }
-      elsif (/\G$grammar_regexp->{value}->{float}/mgc) {
-          warn "[TOKEN] FLOAT: $1" if DEBUG;
-          $class->_skip_whitespace();
-          return [TOKEN_FLOAT, $1];
-      }
-      elsif (/\G$grammar_regexp->{value}->{integer}/mgc) {
-          warn "[TOKEN] INTEGER: $1" if DEBUG;
-          $class->_skip_whitespace();
-          return [TOKEN_INTEGER, $1];
-      }
-      elsif (/\G$grammar_regexp->{value}->{boolean}/mgc) {
-          warn "[TOKEN] BOOLEAN: $1" if DEBUG;
-          $class->_skip_whitespace();
-          return [TOKEN_BOOLEAN, $1];
-      }
-      elsif (/\G$grammar_regexp->{value}->{mlstring}/mgc) {
-          warn "[TOKEN] BOOLEAN: $1" if DEBUG;
-          return (
-              [TOKEN_MULTI_LINE_STRING_BEGIN],
-              $class->_extract_multi_line_string($1),
-              [TOKEN_MULTI_LINE_STRING_END],
-          );
-      }
-      elsif (/\G$grammar_regexp->{value}->{string}/mgc) {
-          warn "[TOKEN] STRING: $1" if DEBUG;
-          $class->_skip_whitespace();
-          return [TOKEN_STRING, defined $1 ? $1 : defined $2 ? $2 : ''];
-      }
-      elsif (/\G$grammar_regexp->{value}->{inline}->{start}/mgc) {
-          warn "[TOKEN] INLINE TABLE" if DEBUG;
-          $class->_skip_whitespace();
-          return (
-              [TOKEN_INLINE_TABLE_BEGIN],
-              $class->_tokenize_inline_table(),
-              [TOKEN_INLINE_TABLE_END],
-          );
-      }
-      elsif (/\G$grammar_regexp->{value}->{array}->{start}/mgc) {
-          warn "[TOKEN] ARRAY" if DEBUG;
-          $class->_skip_whitespace();
-          return (
-              [TOKEN_ARRAY_BEGIN],
-              $class->_tokenize_array(),
-              [TOKEN_ARRAY_END],
-          );
-      }
-  
-      $class->_syntax_error();
-  }
-  
-  sub _tokenize_table {
-      my $class = shift;
-  
-      my $grammar_regexp = $class->grammar_regexp()->{table};
-      warn "[CALL] _tokenize_table" if DEBUG;
-  
-      $class->_skip_whitespace();
-  
-      my @expected = ($grammar_regexp->{key});
-  
-      my @keys;
-   LOOP:
-      while (1) {
-          for my $rx (@expected) {
-              if (/\G$rx/smgc) {
-                  if ($rx eq $grammar_regexp->{key}) {
-                      my $key = $1 || $2 || $3;
-                      warn "[TOKEN] table key: $key" if DEBUG;
-                      push @keys => $key;
-                      @expected = ($grammar_regexp->{sep}, $grammar_regexp->{end});
-                  }
-                  elsif ($rx eq $grammar_regexp->{sep}) {
-                      warn "[TOKEN] table key separator" if DEBUG;
-                      @expected = ($grammar_regexp->{key});
-                  }
-                  elsif ($rx eq $grammar_regexp->{end}) {
-                      warn "[TOKEN] table key end" if DEBUG;
-                      @expected = ();
-                      last LOOP;
-                  }
-                  $class->_skip_whitespace();
-                  next LOOP;
-              }
-          }
-  
-          $class->_syntax_error();
-      }
-  
-      warn "[TOKEN] TABLE: @{[ join '.', @keys ]}" if DEBUG;
-      return [TOKEN_TABLE, \@keys];
-  }
-  
-  sub _tokenize_array_of_table {
-      my $class = shift;
-  
-      my $grammar_regexp = $class->grammar_regexp()->{array_of_table};
-      warn "[CALL] _tokenize_array_of_table" if DEBUG;
-  
-      $class->_skip_whitespace();
-  
-      my @expected = ($grammar_regexp->{key});
-  
-      my @keys;
-   LOOP:
-      while (1) {
-          for my $rx (@expected) {
-              if (/\G$rx/smgc) {
-                  if ($rx eq $grammar_regexp->{key}) {
-                      my $key = $1 || $2 || $3;
-                      warn "[TOKEN] table key: $key" if DEBUG;
-                      push @keys => $key;
-                      @expected = ($grammar_regexp->{sep}, $grammar_regexp->{end});
-                  }
-                  elsif ($rx eq $grammar_regexp->{sep}) {
-                      warn "[TOKEN] table key separator" if DEBUG;
-                      @expected = ($grammar_regexp->{key});
-                  }
-                  elsif ($rx eq $grammar_regexp->{end}) {
-                      warn "[TOKEN] table key end" if DEBUG;
-                      @expected = ();
-                      last LOOP;
-                  }
-                  $class->_skip_whitespace();
-                  next LOOP;
-              }
-          }
-  
-          $class->_syntax_error();
-      }
-  
-      warn "[TOKEN] ARRAY_OF_TABLE: @{[ join '.', @keys ]}" if DEBUG;
-      return [TOKEN_ARRAY_OF_TABLE, \@keys];
-  }
-  
-  sub _extract_multi_line_string {
-      my ($class, $delimiter) = @_;
-      if (/\G(.+?)\Q$delimiter/smgc) {
-          warn "[TOKEN] MULTI LINE STRING: $1" if DEBUG;
-          $class->_skip_whitespace();
-          return [TOKEN_STRING, $1];
-      }
-      $class->_syntax_error();
-  }
-  
-  sub _tokenize_inline_table {
-      my $class = shift;
-      my $grammar_regexp = $class->grammar_regexp()->{value}->{inline};
-      warn "[CALL] _tokenize_inline_table" if DEBUG;
-      return if /\G(?:$grammar_regexp->{sep})?$grammar_regexp->{end}/smgc;
-  
-      my @tokens = $class->_tokenize_key_and_value();
-      while (/\G$grammar_regexp->{sep}/smgc || !/\G$grammar_regexp->{end}/mgc) {
-          last if /\G$grammar_regexp->{end}/mgc;
-          warn "[CONTEXT] _tokenize_inline_table [loop]" if DEBUG;
-          $class->_skip_whitespace();
-          push @tokens => $class->_tokenize_key_and_value();
-          $class->_skip_whitespace();
-      }
-  
-      return @tokens;
-  }
-  
-  sub _tokenize_array {
-      my $class = shift;
-      my $grammar_regexp = $class->grammar_regexp()->{value}->{array};
-      warn "[CALL] _tokenize_array" if DEBUG;
-      return if /\G(?:$grammar_regexp->{sep})?$grammar_regexp->{end}/smgc;
-  
-      my @tokens = $class->_tokenize_value();
-      while (/\G$grammar_regexp->{sep}/smgc || !/\G$grammar_regexp->{end}/mgc) {
-          last if /\G$grammar_regexp->{end}/mgc;
-          warn "[CONTEXT] _tokenize_array [loop]" if DEBUG;
-          $class->_skip_whitespace();
-          push @tokens => $class->_tokenize_value();
-          $class->_skip_whitespace();
-      }
-  
-      return @tokens;
-  }
-  
-  sub _skip_whitespace {
-      my $class = shift;
-      if (/\G\s+/smgco) {
-          # pass through
-          warn "[PASS] WHITESPACE" if DEBUG;
-      }
-  }
-  
-  sub _syntax_error { shift->_error('Syntax Error') }
-  
-  sub _error {
-      my ($class, $msg) = @_;
-  
-      my $src   = $_;
-      my $line  = 1;
-      my $start = pos $src || 0;
-      while ($src =~ /$/smgco and pos $src <= pos) {
-          $start = pos $src;
-          $line++;
-      }
-      my $end = pos $src;
-      my $len = pos() - $start;
-      $len-- if $len > 0;
-  
-      my $trace = join "\n",
-          "${msg}: line:$line",
-          substr($src, $start || 0, $end - $start),
-          (' ' x $len) . '^';
-      die $trace, "\n";
-  }
-  
-  1;
-  __END__
-TOML_PARSER_TOKENIZER
-
-$fatpacked{"TOML/Parser/Tokenizer/Strict.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TOML_PARSER_TOKENIZER_STRICT';
-  package TOML::Parser::Tokenizer::Strict;
-  use 5.008005;
-  use strict;
-  use warnings;
-  
-  use parent qw/TOML::Parser::Tokenizer/;
-  BEGIN { import TOML::Parser::Tokenizer qw/:constant/ }
-  
-  sub grammar_regexp {
-      my $grammar_regexp = {%{ shift->SUPER::grammar_regexp() }};
-      $grammar_regexp->{table}                 = {%{ $grammar_regexp->{table} }};
-      $grammar_regexp->{array_of_table}        = {%{ $grammar_regexp->{array_of_table} }};
-      $grammar_regexp->{table}->{key}          = qr{(?:"(.*?)(?<!(?<!\\)\\)"|([A-Za-z0-9_-]+))};
-      $grammar_regexp->{array_of_table}->{key} = qr{(?:"(.*?)(?<!(?<!\\)\\)"|([A-Za-z0-9_-]+))};
-      $grammar_regexp->{key}                   = qr{(?:"(.*?)(?<!(?<!\\)\\)"|([A-Za-z0-9_-]+))\s*=};
-      return $grammar_regexp;
-  }
-  
-  1;
-  __END__
-TOML_PARSER_TOKENIZER_STRICT
-
-$fatpacked{"TOML/Parser/Util.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TOML_PARSER_UTIL';
-  package TOML::Parser::Util;
-  use 5.008005;
-  use strict;
-  use warnings;
-  
-  use Exporter 5.57 'import';
-  our @EXPORT_OK = qw/unescape_str/;
-  
-  sub unescape_str {
-      my $str = shift;
-  
-      $str =~ s!\\b !\x08!xmgo;      # backspace       (U+0008)
-      $str =~ s!\\t !\x09!xmgo;      # tab             (U+0009)
-      $str =~ s!\\n !\x0A!xmgo;      # linefeed        (U+000A)
-      $str =~ s!\\f !\x0C!xmgo;      # form feed       (U+000C)
-      $str =~ s!\\r !\x0D!xmgo;      # carriage return (U+000D)
-      $str =~ s!\\" !\x22!xmgo;      # quote           (U+0022)
-      $str =~ s!\\/ !\x2F!xmgo;      # slash           (U+002F)
-      $str =~ s!\\\\!\x5C!xmgo;      # backslash       (U+005C)
-      $str =~ s{\\u([0-9A-Fa-f]{4})}{# unicode         (U+XXXX)
-          chr hex $1
-      }xmgeo;
-      $str =~ s{\\U([0-9A-Fa-f]{8})}{# unicode         (U+XXXXXXXX)
-          chr hex $1
-      }xmgeo;
-  
-      return $str;
-  }
-  
-  1;
-  __END__
-TOML_PARSER_UTIL
-
-$fatpacked{"Types/Serialiser.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TYPES_SERIALISER';
-  =head1 NAME
-  
-  Types::Serialiser - simple data types for common serialisation formats
-  
-  =encoding utf-8
-  
-  =head1 SYNOPSIS
-  
-  =head1 DESCRIPTION
-  
-  This module provides some extra datatypes that are used by common
-  serialisation formats such as JSON or CBOR. The idea is to have a
-  repository of simple/small constants and containers that can be shared by
-  different implementations so they become interoperable between each other.
-  
-  =cut
-  
-  package Types::Serialiser;
-  
-  use common::sense; # required to suppress annoying warnings
-  
-  our $VERSION = '1.0';
-  
-  =head1 SIMPLE SCALAR CONSTANTS
-  
-  Simple scalar constants are values that are overloaded to act like simple
-  Perl values, but have (class) type to differentiate them from normal Perl
-  scalars. This is necessary because these have different representations in
-  the serialisation formats.
-  
-  =head2 BOOLEANS (Types::Serialiser::Boolean class)
-  
-  This type has only two instances, true and false. A natural representation
-  for these in Perl is C<1> and C<0>, but serialisation formats need to be
-  able to differentiate between them and mere numbers.
-  
-  =over 4
-  
-  =item $Types::Serialiser::true, Types::Serialiser::true
-  
-  This value represents the "true" value. In most contexts is acts like
-  the number C<1>. It is up to you whether you use the variable form
-  (C<$Types::Serialiser::true>) or the constant form (C<Types::Serialiser::true>).
-  
-  The constant is represented as a reference to a scalar containing C<1> -
-  implementations are allowed to directly test for this.
-  
-  =item $Types::Serialiser::false, Types::Serialiser::false
-  
-  This value represents the "false" value. In most contexts is acts like
-  the number C<0>. It is up to you whether you use the variable form
-  (C<$Types::Serialiser::false>) or the constant form (C<Types::Serialiser::false>).
-  
-  The constant is represented as a reference to a scalar containing C<0> -
-  implementations are allowed to directly test for this.
-  
-  =item $is_bool = Types::Serialiser::is_bool $value
-  
-  Returns true iff the C<$value> is either C<$Types::Serialiser::true> or
-  C<$Types::Serialiser::false>.
-  
-  For example, you could differentiate between a perl true value and a
-  C<Types::Serialiser::true> by using this:
-  
-     $value && Types::Serialiser::is_bool $value
-  
-  =item $is_true = Types::Serialiser::is_true $value
-  
-  Returns true iff C<$value> is C<$Types::Serialiser::true>.
-  
-  =item $is_false = Types::Serialiser::is_false $value
-  
-  Returns false iff C<$value> is C<$Types::Serialiser::false>.
-  
-  =back
-  
-  =head2 ERROR (Types::Serialiser::Error class)
-  
-  This class has only a single instance, C<error>. It is used to signal
-  an encoding or decoding error. In CBOR for example, and object that
-  couldn't be encoded will be represented by a CBOR undefined value, which
-  is represented by the error value in Perl.
-  
-  =over 4
-  
-  =item $Types::Serialiser::error, Types::Serialiser::error
-  
-  This value represents the "error" value. Accessing values of this type
-  will throw an exception.
-  
-  The constant is represented as a reference to a scalar containing C<undef>
-  - implementations are allowed to directly test for this.
-  
-  =item $is_error = Types::Serialiser::is_error $value
-  
-  Returns false iff C<$value> is C<$Types::Serialiser::error>.
-  
-  =back
-  
-  =cut
-  
-  BEGIN {
-     # for historical reasons, and to avoid extra dependencies in JSON::PP,
-     # we alias *Types::Serialiser::Boolean with JSON::PP::Boolean.
-     package JSON::PP::Boolean;
-  
-     *Types::Serialiser::Boolean:: = *JSON::PP::Boolean::;
-  }
-  
-  {
-     # this must done before blessing to work around bugs
-     # in perl < 5.18 (it seems to be fixed in 5.18).
-     package Types::Serialiser::BooleanBase;
-  
-     use overload
-        "0+"     => sub { ${$_[0]} },
-        "++"     => sub { $_[0] = ${$_[0]} + 1 },
-        "--"     => sub { $_[0] = ${$_[0]} - 1 },
-        fallback => 1;
-  
-     @Types::Serialiser::Boolean::ISA = Types::Serialiser::BooleanBase::;
-  }
-  
-  our $true  = do { bless \(my $dummy = 1), Types::Serialiser::Boolean:: };
-  our $false = do { bless \(my $dummy = 0), Types::Serialiser::Boolean:: };
-  our $error = do { bless \(my $dummy    ), Types::Serialiser::Error::   };
-  
-  sub true  () { $true  }
-  sub false () { $false }
-  sub error () { $error }
-  
-  sub is_bool  ($) {           UNIVERSAL::isa $_[0], Types::Serialiser::Boolean:: }
-  sub is_true  ($) {  $_[0] && UNIVERSAL::isa $_[0], Types::Serialiser::Boolean:: }
-  sub is_false ($) { !$_[0] && UNIVERSAL::isa $_[0], Types::Serialiser::Boolean:: }
-  sub is_error ($) {           UNIVERSAL::isa $_[0], Types::Serialiser::Error::   }
-  
-  package Types::Serialiser::Error;
-  
-  sub error {
-     require Carp;
-     Carp::croak ("caught attempt to use the Types::Serialiser::error value");
-  };
-  
-  use overload
-     "0+"     => \&error,
-     "++"     => \&error,
-     "--"     => \&error,
-     fallback => 1;
-  
-  =head1 NOTES FOR XS USERS
-  
-  The recommended way to detect whether a scalar is one of these objects
-  is to check whether the stash is the C<Types::Serialiser::Boolean> or
-  C<Types::Serialiser::Error> stash, and then follow the scalar reference to
-  see if it's C<1> (true), C<0> (false) or C<undef> (error).
-  
-  While it is possible to use an isa test, directly comparing stash pointers
-  is faster and guaranteed to work.
-  
-  For historical reasons, the C<Types::Serialiser::Boolean> stash is
-  just an alias for C<JSON::PP::Boolean>. When printed, the classname
-  with usually be C<JSON::PP::Boolean>, but isa tests and stash pointer
-  comparison will normally work correctly (i.e. Types::Serialiser::true ISA
-  JSON::PP::Boolean, but also ISA Types::Serialiser::Boolean).
-  
-  =head1 A GENERIC OBJECT SERIALIATION PROTOCOL
-  
-  This section explains the object serialisation protocol used by
-  L<CBOR::XS>. It is meant to be generic enough to support any kind of
-  generic object serialiser.
-  
-  This protocol is called "the Types::Serialiser object serialisation
-  protocol".
-  
-  =head2 ENCODING
-  
-  When the encoder encounters an object that it cannot otherwise encode (for
-  example, L<CBOR::XS> can encode a few special types itself, and will first
-  attempt to use the special C<TO_CBOR> serialisation protocol), it will
-  look up the C<FREEZE> method on the object.
-  
-  Note that the C<FREEZE> method will normally be called I<during> encoding,
-  and I<MUST NOT> change the data structure that is being encoded in any
-  way, or it might cause memory corruption or worse.
-  
-  If it exists, it will call it with two arguments: the object to serialise,
-  and a constant string that indicates the name of the data model. For
-  example L<CBOR::XS> uses C<CBOR>, and the L<JSON> and L<JSON::XS> modules
-  (or any other JSON serialiser), would use C<JSON> as second argument.
-  
-  The C<FREEZE> method can then return zero or more values to identify the
-  object instance. The serialiser is then supposed to encode the class name
-  and all of these return values (which must be encodable in the format)
-  using the relevant form for Perl objects. In CBOR for example, there is a
-  registered tag number for encoded perl objects.
-  
-  The values that C<FREEZE> returns must be serialisable with the serialiser
-  that calls it. Therefore, it is recommended to use simple types such as
-  strings and numbers, and maybe array references and hashes (basically, the
-  JSON data model). You can always use a more complex format for a specific
-  data model by checking the second argument, the data model.
-  
-  The "data model" is not the same as the "data format" - the data model
-  indicates what types and kinds of return values can be returned from
-  C<FREEZE>. For example, in C<CBOR> it is permissible to return tagged CBOR
-  values, while JSON does not support these at all, so C<JSON> would be a
-  valid (but too limited) data model name for C<CBOR::XS>. similarly, a
-  serialising format that supports more or less the same data model as JSON
-  could use C<JSON> as data model without losing anything.
-  
-  =head2 DECODING
-  
-  When the decoder then encounters such an encoded perl object, it should
-  look up the C<THAW> method on the stored classname, and invoke it with the
-  classname, the constant string to identify the data model/data format, and
-  all the return values returned by C<FREEZE>.
-  
-  =head2 EXAMPLES
-  
-  See the C<OBJECT SERIALISATION> section in the L<CBOR::XS> manpage for
-  more details, an example implementation, and code examples.
-  
-  Here is an example C<FREEZE>/C<THAW> method pair:
-  
-     sub My::Object::FREEZE {
-        my ($self, $model) = @_;
-  
-        ($self->{type}, $self->{id}, $self->{variant})
-     }
-  
-     sub My::Object::THAW {
-        my ($class, $model, $type, $id, $variant) = @_;
-  
-        $class->new (type => $type, id => $id, variant => $variant)
-     }
-  
-  =head1 BUGS
-  
-  The use of L<overload> makes this module much heavier than it should be
-  (on my system, this module: 4kB RSS, overload: 260kB RSS).
-  
-  =head1 SEE ALSO
-  
-  Currently, L<JSON::XS> and L<CBOR::XS> use these types.
-  
-  =head1 AUTHOR
-  
-   Marc Lehmann <schmorp@schmorp.de>
-   http://home.schmorp.de/
-  
-  =cut
-  
-  1
-  
-TYPES_SERIALISER
-
-$fatpacked{"Types/Serialiser/Error.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'TYPES_SERIALISER_ERROR';
-  =head1 NAME
-  
-  Types::Serialiser::Error - dummy module for Types::Serialiser
-  
-  =head1 SYNOPSIS
-  
-   # do not "use" yourself
-  
-  =head1 DESCRIPTION
-  
-  This module exists only to provide overload resolution for Storable and
-  similar modules that assume that class name equals module name. See
-  L<Types::Serialiser> for more info about this class.
-  
-  =cut
-  
-  use Types::Serialiser ();
-  
-  =head1 AUTHOR
-  
-   Marc Lehmann <schmorp@schmorp.de>
-   http://home.schmorp.de/
-  
-  =cut
-  
-  1
-  
-TYPES_SERIALISER_ERROR
-
-$fatpacked{"x86_64-linux-gnu-thread-multi/common/sense.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'X86_64-LINUX-GNU-THREAD-MULTI_COMMON_SENSE';
-  package common::sense;
-  
-  our $VERSION = 3.74;
-  
-  # overload should be included
-  
-  sub import {
-     local $^W; # work around perl 5.16 spewing out warnings for next statement
-     # use warnings
-     ${^WARNING_BITS} ^= ${^WARNING_BITS} ^ "\x0c\x3f\x33\x00\x0f\xf0\x0f\xc0\xf0\xfc\x33\x00\x00\x00\xc0\x00\x00";
-     # use strict, use utf8; use feature;
-     $^H |= 0x1c820fc0;
-     @^H{qw(feature_evalbytes feature_switch feature_unicode feature___SUB__ feature_state feature_fc feature_say)} = (1) x 7;
-  }
-  
-  1
-X86_64-LINUX-GNU-THREAD-MULTI_COMMON_SENSE
-
 s/^  //mg for values %fatpacked;
 
 my $class = 'FatPacked::'.(0+\%fatpacked);
@@ -12181,6 +8594,7 @@ foreach my $dir (@directories) {
             my $next_path = $source_dir->child($next_dir);
             $next_path->mkpath();
 
+            print "Copy $next -> $next_path\n";
             $next->copy($next_path);
         },
         { 'recurse' => 1 },
@@ -12190,6 +8604,7 @@ foreach my $dir (@directories) {
 # cpanfile must be there so "cpanm" would work on the app
 foreach my $node ( @additional_files, 'cpanfile' ) {
     my $file = path($node);
+    print "Copy $file -> $source_dir\n";
     $file->copy( $source_dir->child($file) );
 }
 
@@ -12216,5 +8631,7 @@ my $seacan = App::Seacan->new(
 $seacan->run;
 
 print "Finished!\n";
-system( 'tar', '--create', '--gzip', '--exclude-vcs', "--directory=$top_dest_dir",
+my @cmd = ( 'tar', '--create', '--gzip', '--exclude-vcs', "--directory=$top_dest_dir",
     '--file=' . path('pakket.tar.gz')->absolute, '.', );
+print join(" ", @cmd, "\n");
+system(@cmd);
