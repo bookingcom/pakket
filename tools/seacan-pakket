@@ -85,6 +85,7 @@ foreach my $dir (@directories) {
             my $next_path = $source_dir->child($next_dir);
             $next_path->mkpath();
 
+            print "Copy $next -> $next_path\n";
             $next->copy($next_path);
         },
         { 'recurse' => 1 },
@@ -94,6 +95,7 @@ foreach my $dir (@directories) {
 # cpanfile must be there so "cpanm" would work on the app
 foreach my $node ( @additional_files, 'cpanfile' ) {
     my $file = path($node);
+    print "Copy $file -> $source_dir\n";
     $file->copy( $source_dir->child($file) );
 }
 
@@ -120,5 +122,7 @@ my $seacan = App::Seacan->new(
 $seacan->run;
 
 print "Finished!\n";
-system( 'tar', '--create', '--gzip', '--exclude-vcs', "--directory=$top_dest_dir",
+my @cmd = ( 'tar', '--create', '--gzip', '--exclude-vcs', "--directory=$top_dest_dir",
     '--file=' . path('pakket.tar.gz')->absolute, '.', );
+print join(" ", @cmd, "\n");
+system(@cmd);
