@@ -79,7 +79,6 @@ sub opt_spec {
         [
             'verbose|v+',
             'verbose output (can be provided multiple times)',
-            { 'default' => 1 },
         ],
     );
 }

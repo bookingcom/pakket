@@ -89,7 +89,7 @@ sub build_logger {
     my $logger = Log::Dispatch->new(
         'outputs' => [
             $class->_build_logger($file),
-            $class->_cli_logger( $verbose // 1 ),
+            $class->_cli_logger( $verbose // 0 ),
         ],
     );
 
@@ -139,6 +139,7 @@ sub _cli_logger {
     my ( $class, $verbose ) = @_;
 
     $verbose ||= 0;
+    $verbose += +DEBUG_INFO_LEVEL;
 
     my $screen_level =
         $verbose >= +DEBUG_LOG_LEVEL    ? 'debug'  : # log 2
