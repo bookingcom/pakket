@@ -70,7 +70,7 @@ sub opt_spec {
         [ 'is-local=s@',  'do not use upstream sources (i.e. CPAN) for given packages' ],
         [ 'requires-only', 'do not set recommended/suggested dependencies' ],
         [ 'no-bootstrap',  'skip bootstrapping phase (toolchain packages)' ],
-        [ 'source-archive=s', 'archve with sources (optional, only for native)' ],
+        [ 'source-archive=s', 'archive with sources (optional, only for native)' ],
     );
 }
 

@@ -1,5 +1,5 @@
 package Pakket::Scaffolder::Perl::CPANfile;
-# ABSTRACT: Scffolding Perl cpanfile reader
+# ABSTRACT: Scaffolding Perl cpanfile reader
 
 use Moose;
 use MooseX::StrictConstructor;
