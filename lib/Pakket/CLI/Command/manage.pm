@@ -253,7 +253,8 @@ sub _validate_args_add {
     } elsif ( $self->{'opt'}{'custom_spec'} ) {
         @{ $self->{'args'} }
             and $self->usage_error( "You can't have both a 'package' and 'custom_spec'\n" );
-        $self->{'custom_spec'} = decode_json(path($self->{'opt'}{'custom_spec'})->slurp_utf8);
+        my $json = JSON::MaybeXS->new(relaxed => 1);
+        $self->{'custom_spec'} = $json->decode(path($self->{'opt'}{'custom_spec'})->slurp_utf8);
     } else {
         $self->_read_set_package_str;
     }
