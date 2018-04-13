@@ -76,9 +76,15 @@ has 'source_archive' => (
     'isa'       => 'Maybe[Str]',
 );
 
+has 'custom_spec' => (
+    'is'        => 'ro',
+    'isa'       => 'Maybe[Str]',
+);
+
 sub _build_category {
     my $self = shift;
     $self->{'cpanfile'} and return 'perl';
+    $self->{'custom_spec'} and return 'perl';
     return $self->package->category;
 }
 
@@ -312,6 +318,8 @@ sub _gen_scaffolder_perl {
 
     if ( $self->cpanfile ) {
         $params{'cpanfile'} = $self->cpanfile;
+    } elsif ( $self->custom_spec ) {
+        $params{'custom_spec'} = $self->custom_spec;
     } else {
         $params{'module'} = $self->package;
     }
