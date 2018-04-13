@@ -78,13 +78,13 @@ has 'source_archive' => (
 
 has 'custom_spec' => (
     'is'        => 'ro',
-    'isa'       => 'Maybe[Str]',
+    'isa'       => 'Maybe[HashRef]',
 );
 
 sub _build_category {
     my $self = shift;
     $self->{'cpanfile'} and return 'perl';
-    $self->{'custom_spec'} and return 'perl';
+    $self->{'custom_spec'} and return $self->{'custom_spec'}{Package}{category};
     return $self->package->category;
 }
 

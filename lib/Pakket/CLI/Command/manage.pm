@@ -8,6 +8,7 @@ use Path::Tiny qw< path  >;
 use Ref::Util  qw< is_arrayref is_coderef >;
 use Log::Any   qw< $log >; # to log
 use Log::Any::Adapter;     # to set the logger
+use JSON::MaybeXS qw< decode_json >;
 
 use Pakket::CLI '-command';
 use Pakket::Log;
@@ -240,17 +241,19 @@ sub _validate_args_add {
     my $self = shift;
 
     my $cpanfile = $self->{'opt'}{'cpanfile'};
-    my $custom_spec = $self->{'opt'}{'custom_spec'};
     my $additional_phase = $self->{'opt'}{'additional_phase'};
 
     $self->{'file_02packages'} = $self->{'opt'}{'cpan_02packages'};
     $self->{'source_archive'}  = $self->{'opt'}{'source_archive'};
 
-    if ( $cpanfile || $custom_spec) {
+    if ( $cpanfile ) {
         @{ $self->{'args'} }
-            and $self->usage_error( "You can't have both a 'package' and one of 'cpanfile', 'custom_spec'\n" );
-        $self->{'cpanfile'} = $cpanfile if $cpanfile;
-        $self->{'custom_spec'} = $custom_spec if $custom_spec;
+            and $self->usage_error( "You can't have both a 'package' and a 'cpanfile'\n" );
+        $self->{'cpanfile'} = $cpanfile;
+    } elsif ( $self->{'opt'}{'custom_spec'} ) {
+        @{ $self->{'args'} }
+            and $self->usage_error( "You can't have both a 'package' and 'custom_spec'\n" );
+        $self->{'custom_spec'} = decode_json(path($self->{'opt'}{'custom_spec'})->slurp_utf8);
     } else {
         $self->_read_set_package_str;
     }

@@ -168,10 +168,9 @@ sub BUILDARGS {
 
     my $module   = delete $args{'module'};
     my $cpanfile = delete $args{'cpanfile'};
-    my $custom_spec = delete $args{'custom_spec'};
 
     Carp::croak("Please provide either 'module' or 'cpanfile' or 'custom_spec'")
-        unless $module or $cpanfile or $custom_spec;
+        unless $module or $cpanfile or $args{'custom_spec'};
 
     if ( $module ) {
         my $version = $module->version
@@ -186,15 +185,13 @@ sub BUILDARGS {
                 ( phase   => $phase   )x!! defined $phase,
                 ( type    => $type    )x!! defined $type,
             )->prereq_specs;
-    } elsif ( $custom_spec ) {
-      my $spec = decode_json( path($custom_spec)->slurp_utf8 );
-      my $package = $spec->{Package};
-      $args{'custom_spec'} = $spec;
-      $args{'modules'} =
-        Pakket::Scaffolder::Perl::Module->new(
-          'name'    => $package->{name},
-          'version' => $package->{version} . ":" . $package->{release},
-        )->prereq_specs;
+    } elsif ( $args{'custom_spec'} ) {
+        my $package = $args{'custom_spec'}{Package};
+        $args{'modules'} =
+            Pakket::Scaffolder::Perl::Module->new(
+                'name'    => $package->{name},
+                'version' => $package->{version} . ":" . $package->{release},
+            )->prereq_specs;
     } else {
         $args{'modules'} =
             Pakket::Scaffolder::Perl::CPANfile->new(
@@ -267,14 +264,7 @@ sub scaffold_package {
 
     my $release_info = $self->get_release_info_for_package( $package_name, $requirements );
 
-    my $package_spec = $self->{custom_spec} // {
-        'Package' => {
-            'category' => 'perl',
-            'name'     => $package_name,
-            'version'  => $release_info->{'version'},
-            'release'  => $release_info->{'release'} // 1,
-        },
-    };
+    my $package_spec = $self->get_spec_for_package( $package_name, $requirements, $release_info );
 
     my $package = Pakket::Package->new_from_spec($package_spec);
 
@@ -829,6 +819,28 @@ sub get_source_archive_path {
     }
     $log->debug("Can't find archive in:\n", join("\n", @possible_paths));
     return 0;
+}
+
+sub get_spec_for_package {
+    my ($self, $package_name, $requirements, $release_info) = @_;
+
+    my $package_spec = {
+        'Package' => {
+            'category' => 'perl',
+            'name'     => $package_name,
+            'version'  => $release_info->{'version'},
+            'release'  => $release_info->{'release'} // 1,
+        },
+    };
+
+    if ( $self->{custom_spec} ) {
+        my $package = $self->{custom_spec}{Package};
+        if ( $package->{name} eq $package_name and $package->{version} eq $release_info->{'version'} ) {
+            $package_spec = $self->{custom_spec};
+        }
+    }
+
+    return $package_spec;
 }
 
 __PACKAGE__->meta->make_immutable;
