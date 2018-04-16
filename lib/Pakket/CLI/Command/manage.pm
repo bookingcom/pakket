@@ -26,6 +26,7 @@ use constant {
         add-package
         remove-package
         show-package
+        show-spec
         remove-parcel
         add-deps
         remove-deps
@@ -141,6 +142,7 @@ sub execute {
         'list-sources'   => sub { $manager->list_ids('source'); },
         'list-parcels'   => sub { $manager->list_ids('parcel'); },
         'show-package'   => sub { $manager->show_package_config; },
+        'show-spec'      => sub { $manager->show_spec; },
         'list-deps'      => sub { $manager->show_package_deps; },
     );
 
@@ -174,6 +176,7 @@ sub _validate_repos {
         'list-specs'     => [ 'spec'   ],
         'list-parcels'   => [ 'parcel' ],
         'list-sources'   => [ 'source' ],
+        'show-spec'      => [ 'spec' ],
     );
 
     my $config  = $self->{'config'};
@@ -216,6 +219,7 @@ sub _validate_arg_command {
     $command eq 'remove-parcel'  and $self->_validate_args_remove_parcel;
     $command eq 'list-deps'      and $self->_validate_args_show_deps; # FIXME: Rename method
     $command eq 'show-package'   and $self->_validate_args_show;      # FIXME: Rename method
+    $command eq 'show-spec'      and $self->_validate_args_show_spec;
 
     $command eq 'add-deps' || $command eq 'remove-deps'
        and $self->_validate_args_dependency;
@@ -301,6 +305,12 @@ sub _validate_args_dependency {
 sub _validate_args_show {
     my $self = shift;
     $self->_read_set_package_str;
+}
+
+sub _validate_args_show_spec {
+    my $self = shift;
+    $self->_read_set_package_str;
+    $self->{'gen_phases'} = [qw< configure runtime >];
 }
 
 sub _validate_args_show_deps {

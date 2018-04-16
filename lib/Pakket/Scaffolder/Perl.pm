@@ -294,7 +294,7 @@ sub add_source_for_package {
         return;
     }
 
-    my $download_url = $self->rewrite_download_url( $release_info->{'download_url'} );
+    my $download_url = $self->rewrite_download_url( $release_info->{'download_url'}, $package );
 
     if ( $self->_has_cache_dir ) {
         my $from_file;
@@ -326,7 +326,12 @@ sub add_source_for_package {
     my $source_file = path( $self->download_dir,
                             ( $download_url =~ s{^.+/}{}r ) );
     $log->debugf("Downloading sources for %s (%s)", $package_name, $download_url);
-    $self->ua->mirror( $download_url, $source_file );
+
+    my $result = $self->ua->mirror( $download_url, $source_file );
+    if ( !$result->{success} ) {
+        Carp::croak( "Can't download sources for ", $package_name );
+    }
+
     $self->upload_source_archive( $package, $source_file );
 }
 
@@ -339,9 +344,29 @@ sub add_spec_for_package {
     }
     $log->debugf("Creating spec for %s", $package->full_name);
 
+    my @dependencies_to_scaffold = $self->process_dependencies($package, $release_info, $spec);
+
+    if ( ! $self->no_deps ) {
+        $log->debugf( 'Scaffolding dependencies of %s', $package->full_name );
+        for my $dep (@dependencies_to_scaffold) {
+            $self->scaffold_package($dep->{'package_name'}, $dep->{'requirements'} );
+        }
+    }
+
+    $self->merge_pakket_json_into_spec($package, $spec);
+
+    # We had a partial Package object
+    # So now we have to recreate that package object
+    # based on the full specs (including prereqs)
+    $package = Pakket::Package->new_from_spec($spec);
+
+    $self->spec_repo->store_package_spec($package);
+}
+
+sub process_dependencies {
+    my ($self, $package, $release_info, $spec) = @_;
 
     my @dependencies_to_scaffold;
-
     for my $phase ( @{ $self->phases } ) {  # phases: configure, develop, runtime, test
         $spec->{'Prereqs'}{'perl'}{$phase} = +{};
 
@@ -382,21 +407,7 @@ sub add_spec_for_package {
         }
     }
 
-    if ( ! $self->no_deps ) {
-        $log->debugf( 'Scaffolding dependencies of %s', $package->full_name );
-        for my $dep (@dependencies_to_scaffold) {
-            $self->scaffold_package($dep->{'package_name'}, $dep->{'requirements'} );
-        }
-    }
-
-    $self->merge_pakket_json_into_spec($package, $spec);
-
-    # We had a partial Package object
-    # So now we have to recreate that package object
-    # based on the full specs (including prereqs)
-    $package = Pakket::Package->new_from_spec($spec);
-
-    $self->spec_repo->store_package_spec($package);
+    return @dependencies_to_scaffold;
 }
 
 sub skip_module {
@@ -687,7 +698,8 @@ sub get_all_releases_for_distribution {
 }
 
 sub rewrite_download_url {
-    my ( $self, $download_url ) = @_;
+    my ( $self, $download_url, $package ) = @_;
+    return $package->{source} if $package->{source};
     my $rewrite = $self->config->{'perl'}{'metacpan'}{'rewrite_download_url'};
     return $download_url unless is_hashref($rewrite);
     my ( $from, $to ) = @{$rewrite}{qw< from to >};
@@ -841,6 +853,22 @@ sub get_spec_for_package {
     }
 
     return $package_spec;
+}
+
+sub prepare_spec {
+    my ($self) = @_;
+
+    my $requirements = $self->modules->{runtime}{requires};
+    my ($package_name) = keys %{ $requirements };
+
+    my $release_info = $self->get_release_info_for_package($package_name, $requirements);
+    my $spec = $self->get_spec_for_package($package_name, $requirements, $release_info);
+    $spec->{Package}{source} = $release_info->{download_url};
+    my $package = Pakket::Package->new_from_spec($spec);
+    $self->process_dependencies($package, $release_info, $spec);
+    $package = Pakket::Package->new_from_spec($spec);
+
+    return $package->spec;
 }
 
 __PACKAGE__->meta->make_immutable;

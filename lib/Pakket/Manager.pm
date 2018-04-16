@@ -9,6 +9,7 @@ use Safe::Isa;
 use Pakket::Log;
 use Pakket::Scaffolder::Native;
 use Pakket::Scaffolder::Perl;
+use Pakket::Utils               qw< encode_json_pretty >;
 
 has 'config' => (
     'is'        => 'ro',
@@ -217,6 +218,20 @@ sub show_package_deps {
 
         push @queue, @deps;
     }
+}
+
+sub show_spec {
+    my $self = shift;
+    my $repo = $self->_get_repo('spec');
+
+    my $spec = {};
+    if ($repo->has_object($self->package->id)) {
+        $spec = $repo->retrieve_package_spec($self->package);
+    } else {
+        $spec = $self->_get_scaffolder->prepare_spec;
+    }
+
+    print encode_json_pretty($spec);
 }
 
 sub add_package {
