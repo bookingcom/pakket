@@ -28,6 +28,17 @@ sub setup {
     foreach my $repo_config ( @{ $config->{'repositories'} } ) {
         Pakket::Web::Repo->create($repo_config);
     }
+
+    get '/info' => sub {
+        my @repositories =  map { { 'type' => $_->{'type'},
+                                    'path' => $_->{'path'} } }
+                                @{ $config->{'repositories'} };
+        return encode_json({
+                'version' => $Pakket::Web::App::VERSION,
+                'repositories' => [@repositories],
+                });
+    };
+
 }
 
 1;
