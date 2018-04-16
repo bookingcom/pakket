@@ -86,6 +86,8 @@ sub create {
             };
         };
 
+        return if ($args->{'read_only'});
+
         prefix '/store' => sub {
             # There is no body to check, because the body is JSON content
             # So we manually decode and check
