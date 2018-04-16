@@ -290,7 +290,7 @@ sub add_source_for_package {
         return;
     }
 
-    my $download_url = $self->rewrite_download_url( $release_info->{'download_url'} );
+    my $download_url = $self->rewrite_download_url( $release_info->{'download_url'}, $package );
 
     if ( $self->_has_cache_dir ) {
         my $from_file;
@@ -683,7 +683,8 @@ sub get_all_releases_for_distribution {
 }
 
 sub rewrite_download_url {
-    my ( $self, $download_url ) = @_;
+    my ( $self, $download_url, $package ) = @_;
+    return $package->{source} if $package->{source};
     my $rewrite = $self->config->{'perl'}{'metacpan'}{'rewrite_download_url'};
     return $download_url unless is_hashref($rewrite);
     my ( $from, $to ) = @{$rewrite}{qw< from to >};

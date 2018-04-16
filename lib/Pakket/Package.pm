@@ -16,6 +16,11 @@ has [ qw< name category version release > ] => (
     'required' => 1,
 );
 
+has 'source' => (
+    'is'       => 'ro',
+    'isa'      => 'Maybe[Str]',
+);
+
 has 'is_bootstrap' => (
     'is'      => 'ro',
     'isa'     => 'Bool',
@@ -93,7 +98,7 @@ sub phase_prereqs {
 sub spec {
     my $self = shift;
 
-    return +{
+    my $result = {
         'Package' => {
             # This is so we don't see is_bootstrap in spec
             # if not required -- SX
@@ -106,6 +111,9 @@ sub spec {
 
         map +( $_ => $self->$_ ), qw<build_opts bundle_opts>,
     };
+    $result->{Package}{source} = $self->{source} if $self->{source};
+
+    return $result;
 }
 
 sub new_from_spec {
