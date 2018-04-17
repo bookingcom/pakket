@@ -86,52 +86,52 @@ sub create {
             };
         };
 
-        return if ($args->{'read_only'});
+        if (!$args->{'read_only'}) {
+            prefix '/store' => sub {
+                # There is no body to check, because the body is JSON content
+                # So we manually decode and check
+                post '/content' => sub {
+                    my $data    = decode_json( request->body );
+                    my $id      = $data->{'id'};
+                    my $content = $data->{'content'};
 
-        prefix '/store' => sub {
-            # There is no body to check, because the body is JSON content
-            # So we manually decode and check
-            post '/content' => sub {
-                my $data    = decode_json( request->body );
-                my $id      = $data->{'id'};
-                my $content = $data->{'content'};
+                    defined && length
+                        or send_error( 'Bad input', 400 )
+                        for $id, $content;
 
-                defined && length
-                    or send_error( 'Bad input', 400 )
-                    for $id, $content;
+                    $repo->store_content( $id, $content );
+                    return encode_json( { 'success' => 1 } );
+                };
 
-                $repo->store_content( $id, $content );
-                return encode_json( { 'success' => 1 } );
+                post '/location' => with_types [
+                    [ 'query', 'id', 'Str',  'MissingID' ],
+                ] => sub {
+                    my $id   = query_parameters->get('id');
+                    my $file = Path::Tiny->tempfile;
+                    $file->spew_raw( request->body );
+                    $repo->store_location( $id, $file );
+                    return encode_json( { 'success' => 1 } );
+                };
             };
 
-            post '/location' => with_types [
-                [ 'query', 'id', 'Str',  'MissingID' ],
-            ] => sub {
-                my $id   = query_parameters->get('id');
-                my $file = Path::Tiny->tempfile;
-                $file->spew_raw( request->body );
-                $repo->store_location( $id, $file );
-                return encode_json( { 'success' => 1 } );
-            };
-        };
+            prefix '/remove' => sub {
+                get '/location' => with_types [
+                    [ 'query', 'id', 'Str',  'MissingID' ],
+                ] => sub {
+                    my $id = query_parameters->get('id');
+                    $repo->remove_location( $id );
+                    return encode_json( { 'success' => 1 } );
+                };
 
-        prefix '/remove' => sub {
-            get '/location' => with_types [
-                [ 'query', 'id', 'Str',  'MissingID' ],
-            ] => sub {
-                my $id = query_parameters->get('id');
-                $repo->remove_location( $id );
-                return encode_json( { 'success' => 1 } );
+                get '/content' => with_types [
+                    [ 'query', 'id', 'Str',  'MissingID' ],
+                ] => sub {
+                    my $id = query_parameters->get('id');
+                    $repo->remove_content( $id );
+                    return encode_json( { 'success' => 1 } );
+                };
             };
-
-            get '/content' => with_types [
-                [ 'query', 'id', 'Str',  'MissingID' ],
-            ] => sub {
-                my $id = query_parameters->get('id');
-                $repo->remove_content( $id );
-                return encode_json( { 'success' => 1 } );
-            };
-        };
+        }
     };
 }
 
