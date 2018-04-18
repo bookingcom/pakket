@@ -190,7 +190,7 @@ sub BUILDARGS {
         $args{'modules'} =
             Pakket::Scaffolder::Perl::Module->new(
                 'name'    => $package->{name},
-                'version' => $package->{version} . ":" . $package->{release},
+                'version' => '== ' . $package->{version} . ":" . $package->{release},
             )->prereq_specs;
     } else {
         $args{'modules'} =
