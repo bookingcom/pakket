@@ -315,7 +315,7 @@ sub add_source_for_package {
         }
     }
 
-    if ( $self->is_local->{$package_name} ) {
+    if ( $self->is_local->{$package_name} and !$self->{custom_spec}{Package}{source} ) {
         Carp::croak( "IMPOSSIBLE: Can't find archive with source for %s", $package_name );
     }
 
@@ -368,7 +368,7 @@ sub process_dependencies {
 
     my @dependencies_to_scaffold;
     for my $phase ( @{ $self->phases } ) {  # phases: configure, develop, runtime, test
-        $spec->{'Prereqs'}{'perl'}{$phase} = +{};
+        $spec->{'Prereqs'}{'perl'}{$phase} //= +{};
 
         # CPAN requirement is a list of modules and their versions.
         # Pakket internally, in spec, keeps list of packages and their versions.
@@ -601,12 +601,31 @@ sub get_release_info_local {
     };
 }
 
+sub get_release_info_custom {
+    my ( $self, $package_name, $requirements ) = @_;
+
+    my $full_ver = $requirements->{$package_name} =~ s/^[=\ ]+//r;
+    my ($ver, $release) = split(/:/, $full_ver);
+
+    return +{
+        'distribution' => $package_name,
+        'version'      => $ver,
+        'release'      => $release,
+        'prereqs'      => $self->{custom_spec}{Prereqs},
+    };
+}
+
 sub get_release_info_for_package {
     my ( $self, $package_name, $requirements ) = @_;
 
     # if is_local is set - generate info without upstream data
     if ( $self->is_local->{$package_name} ) {
         return $self->get_release_info_local( $package_name, $requirements );
+    }
+
+    # if custom spec is provided - use it
+    if ( $self->{custom_spec} ) {
+        return $self->get_release_info_custom( $package_name, $requirements );
     }
 
     # try the latest
