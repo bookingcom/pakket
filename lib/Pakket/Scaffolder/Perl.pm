@@ -15,6 +15,7 @@ use Path::Tiny          qw< path >;
 use Types::Path::Tiny   qw< Path  >;
 use Log::Any            qw< $log >;
 
+use Pakket::Downloader::ByUrl;
 use Pakket::Package;
 use Pakket::Types;
 use Pakket::Utils::Perl qw< should_skip_core_module >;
@@ -185,8 +186,8 @@ sub BUILDARGS {
                 ( phase   => $phase   )x!! defined $phase,
                 ( type    => $type    )x!! defined $type,
             )->prereq_specs;
-    } elsif ( $args{'custom_spec'} ) {
-        my $package = $args{'custom_spec'}{Package};
+    } elsif ( $args{custom_spec} ) {
+        my $package = (values %{$args{custom_spec}})[0]->{Package};
         $args{'modules'} =
             Pakket::Scaffolder::Perl::Module->new(
                 'name'    => $package->{name},
@@ -262,7 +263,9 @@ sub scaffold_package {
         return;
     }
 
-    my $release_info = $self->get_release_info_for_package( $package_name, $requirements );
+    my $release_info = $self->get_release_info_for_package($package_name, $requirements);
+    my $sources = $self->fetch_source_for_package( $package_name, $requirements, $release_info );
+    $self->update_release_info( $package_name, $release_info, $sources );
 
     my $package_spec = $self->get_spec_for_package( $package_name, $requirements, $release_info );
 
@@ -273,7 +276,7 @@ sub scaffold_package {
     $self->set_depth( $self->depth + 1 );
 
     # Source
-    $self->add_source_for_package($package, $release_info);
+    $self->add_source_for_package($package, $release_info, $sources);
 
     # Spec
     $self->add_spec_for_package($package, $release_info, $package_spec);
@@ -282,57 +285,61 @@ sub scaffold_package {
     $self->set_depth( $self->depth - 1 );
 }
 
+sub get_release_info_for_package {
+    my ($self, $package_name, $requirements) = @_;
 
-sub add_source_for_package {
-    my ($self, $package, $release_info) = @_;
-    my $package_name = $package->name;
+    my $full_ver = $requirements->{$package_name} =~ s/^[=\ ]+//r;
+    my ($ver, $release) = split(/:/, $full_ver);
 
-    # check if we already have the source in the repo
-    if ( $self->source_repo->has_object( $package->id ) ) {
-        $log->debugf("Package %s already exists in source repo (skipping)",
-                        $package->full_name);
-        return;
+    # if is_local is set - generate info without upstream data
+    if ( $self->is_local->{$package_name} ) {
+        my $from_file = $self->get_source_archive_path($package_name, $ver, $release);
+        return {
+            'distribution' => $package_name,
+            'version'      => $ver,
+            'release'      => $release,
+            'download_url' => 'file://' . $from_file->absolute,
+        };
     }
 
-    my $download_url = $self->rewrite_download_url( $release_info->{'download_url'}, $package );
-
-    if ( $self->_has_cache_dir ) {
-        my $from_file;
-        if ($download_url) {
-            my $name_ver = $download_url =~ s{^.+/}{}r;
-            $from_file = path($self->cache_dir, $name_ver);
-            $from_file->exists or $from_file = undef;
-        } else {
-            $from_file = $self->get_source_archive_path($package_name,
-                    $release_info->{'version'}, $release_info->{'release'});
-        }
-        if ( $from_file ) {
-            $log->debugf( 'Found source for %s in %s',
-                            $package_name, $from_file->stringify);
-
-            $self->upload_source_archive( $package, $from_file );
-            return;
+    # if custom spec is provided - use it
+    if (my $pk = $self->{custom_spec}{$package_name}) {
+        if ($pk->{Package}{source}) {
+            return {
+                'distribution' => $package_name,
+                'version'      => $pk->{Package}{version},
+                'release'      => $pk->{Package}{release},
+                'download_url' => $pk->{Package}{source},
+            };
         }
     }
 
-    if ( $self->is_local->{$package_name} and !$self->{custom_spec}{Package}{source} ) {
-        Carp::croak( "IMPOSSIBLE: Can't find archive with source for %s", $package_name );
-    }
+    return $self->get_release_info_cpan( $package_name, $requirements );
+}
 
+sub fetch_source_for_package {
+    my ($self, $package_name, $requirements, $release_info) = @_;
+
+    my $download_url = $self->rewrite_download_url($release_info->{'download_url'});
     if ( !$download_url ) {
         Carp::croak( "Don't have download_url for %s", $package_name );
     }
 
-    my $source_file = path( $self->download_dir,
-                            ( $download_url =~ s{^.+/}{}r ) );
-    $log->debugf("Downloading sources for %s (%s)", $package_name, $download_url);
+    my $download = Pakket::Downloader::ByUrl::create($package_name, $download_url);
+    return $download->to_dir;
+}
 
-    my $result = $self->ua->mirror( $download_url, $source_file );
-    if ( !$result->{success} ) {
-        Carp::croak( "Can't download sources for ", $package_name );
+sub add_source_for_package {
+    my ($self, $package, $release_info, $sources) = @_;
+    my $package_name = $package->name;
+
+    # check if we already have the source in the repo
+    if ( $self->source_repo->has_object( $package->id ) ) {
+        $log->debugf("Package %s already exists in source repo (skipping)", $package->full_name);
+        return;
     }
 
-    $self->upload_source_archive( $package, $source_file );
+    $self->upload_sources( $package, $sources );
 }
 
 sub add_spec_for_package {
@@ -477,14 +484,20 @@ sub is_package_in_spec_repo {
     return 0; # spec has package, but version is not compatible
 }
 
+sub upload_sources {
+    my ( $self, $package, $dir ) = @_;
+
+    $log->debugf("Uploading %s into source repo from %s", $package->name, $dir);
+    $self->source_repo->store_package_source($package, $dir);
+}
+
 sub upload_source_archive {
     my ( $self, $package, $file ) = @_;
 
     my $target = Path::Tiny->tempdir();
     my $dir    = $self->unpack( $target, $file );
 
-    $log->debugf("Uploading %s into source repo from %s", $package->name, $dir);
-    $self->source_repo->store_package_source($package, $dir);
+    upload_sources($package, $target);
 }
 
 sub get_dist_name {
@@ -567,66 +580,25 @@ sub get_dist_name {
     return $dist_name;
 }
 
-sub get_release_info_local {
-    my ( $self, $package_name, $requirements ) = @_;
+sub update_release_info {
+    my ( $self, $package_name, $release_info, $sources ) = @_;
 
-    my $full_ver = $requirements->{$package_name} =~ s/^[=\ ]+//r;
-    my ($ver, $release) = split(/:/, $full_ver);
-    my $prereqs;
-    my $from_file = $self->get_source_archive_path($package_name, $ver, $release);
-    if ( $from_file ) {
-        my $target = Path::Tiny->tempdir();
-        my $dir    = $self->unpack( $target, $from_file );
-        $self->load_pakket_json($dir);
-        if ( !$self->no_deps and
-             ( $dir->child('META.json')->is_file or $dir->child('META.yml')->is_file )
-        ) {
-            my $file = $dir->child('META.json')->is_file
-                ? $dir->child('META.json')
-                : $dir->child('META.yml');
+    if ( $self->is_local->{$package_name} or $self->custom_spec->{$package_name}) {
+        my $prereqs;
+        $self->load_pakket_json($sources);
+        if (!$self->no_deps and ($sources->child('META.json')->is_file or $sources->child('META.yml')->is_file)) {
+            my $file = $sources->child('META.json')->is_file ? $sources->child('META.json') : $sources->child('META.yml');
             my $meta = CPAN::Meta->load_file( $file );
             $prereqs = $meta->effective_prereqs->as_string_hash;
+            $release_info->{prereqs} = $prereqs;
         } else {
-            $log->warn("Can't find META.json or META.yml in $from_file");
+            $log->warn("Can't find META.json or META.yml in sources");
         }
-    } else {
-        Carp::croak("Can't find source file for package $package_name");
     }
-
-    return +{
-        'distribution' => $package_name,
-        'version'      => $ver,
-        'release'      => $release,
-        'prereqs'      => $prereqs,
-    };
 }
 
-sub get_release_info_custom {
+sub get_release_info_cpan {
     my ( $self, $package_name, $requirements ) = @_;
-
-    my $full_ver = $requirements->{$package_name} =~ s/^[=\ ]+//r;
-    my ($ver, $release) = split(/:/, $full_ver);
-
-    return +{
-        'distribution' => $package_name,
-        'version'      => $ver,
-        'release'      => $release,
-        'prereqs'      => $self->{custom_spec}{Prereqs},
-    };
-}
-
-sub get_release_info_for_package {
-    my ( $self, $package_name, $requirements ) = @_;
-
-    # if is_local is set - generate info without upstream data
-    if ( $self->is_local->{$package_name} ) {
-        return $self->get_release_info_local( $package_name, $requirements );
-    }
-
-    # if custom spec is provided - use it
-    if ( $self->{custom_spec} ) {
-        return $self->get_release_info_custom( $package_name, $requirements );
-    }
 
     # try the latest
     my $latest = $self->get_latest_release_info_for_distribution( $package_name );
@@ -717,8 +689,7 @@ sub get_all_releases_for_distribution {
 }
 
 sub rewrite_download_url {
-    my ( $self, $download_url, $package ) = @_;
-    return $package->{source} if $package->{source};
+    my ( $self, $download_url ) = @_;
     my $rewrite = $self->config->{'perl'}{'metacpan'}{'rewrite_download_url'};
     return $download_url unless is_hashref($rewrite);
     my ( $from, $to ) = @{$rewrite}{qw< from to >};
@@ -848,7 +819,7 @@ sub get_source_archive_path {
             return $path;
         }
     }
-    $log->debug("Can't find archive in:\n", join("\n", @possible_paths));
+    Carp::croak("Can't find archive in:\n", join("\n", @possible_paths));
     return 0;
 }
 
@@ -864,11 +835,8 @@ sub get_spec_for_package {
         },
     };
 
-    if ( $self->{custom_spec} ) {
-        my $package = $self->{custom_spec}{Package};
-        if ( $package->{name} eq $package_name and $package->{version} eq $release_info->{'version'} ) {
-            $package_spec = $self->{custom_spec};
-        }
+    if ( $self->{custom_spec}{$package_name} ) {
+        $package_spec = $self->{custom_spec}{$package_name};
     }
 
     return $package_spec;

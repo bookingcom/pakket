@@ -334,7 +334,8 @@ sub _gen_scaffolder_perl {
     if ( $self->cpanfile ) {
         $params{'cpanfile'} = $self->cpanfile;
     } elsif ( $self->custom_spec ) {
-        $params{'custom_spec'} = $self->custom_spec;
+        my $name = $self->{custom_spec}{Package}{name};
+        $params{custom_spec}{$name} = $self->custom_spec;
     } else {
         $params{'module'} = $self->package;
     }
