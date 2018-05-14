@@ -18,6 +18,11 @@ my %repo_types = (
     'parcel' => sub { return Pakket::Repository::Parcel->new(@_); },
 );
 
+sub get_repo {
+  my ( $class, $repo_type, $repo_backend ) = @_;
+  return $repo_types{$repo_type}->( 'backend' => $repo_backend );
+}
+
 sub create {
     my ( $class, $args ) = @_;
 
@@ -25,7 +30,7 @@ sub create {
     my $repo_path    = $args->{'path'}    or croak(q{Missing 'path'});
     my $repo_backend = $args->{'backend'} or croak(q{Missing 'backend'});
 
-    my $repo = $repo_types{$repo_type}->( 'backend' => $repo_backend );
+    my $repo = $class->get_repo( $repo_type, $repo_backend );
 
     prefix $repo_path => sub {
         get '/info' => sub {
