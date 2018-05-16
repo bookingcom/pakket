@@ -60,7 +60,10 @@ sub retrieve_package_file {
     $Archive::Extract::PREFER_BIN = 1;
 
     my $arch = Archive::Extract->new('archive'=>$file->stringify, 'type'=>'tgz');
-    $arch->extract('to' => $dir);
+
+    unless ($arch->extract('to' => $dir)) {
+        Carp::croak($log->criticalf("[%s] Unable to extract %s to %s", $!, $file, $dir));
+    }
 
     return $dir;
 }
