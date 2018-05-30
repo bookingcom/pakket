@@ -266,6 +266,7 @@ sub scaffold_package {
     my $release_info = $self->get_release_info_for_package($package_name, $requirements);
     my $sources = $self->fetch_source_for_package( $package_name, $requirements, $release_info );
     $self->update_release_info( $package_name, $release_info, $sources );
+    $self->apply_patches($package_name, $release_info, $sources);
 
     my $package_spec = $self->get_spec_for_package( $package_name, $requirements, $release_info );
 
@@ -283,6 +284,21 @@ sub scaffold_package {
 
     $log->infof( '%sDone: %s', $self->spaces, $package->full_name );
     $self->set_depth( $self->depth - 1 );
+}
+
+sub apply_patches {
+    my ($self, $package_name, $release_info, $sources) = @_;
+
+    if (my $pk = $self->{custom_spec}{$package_name}) {
+        foreach my $patch (@{$pk->{patch}}) {
+            unless ($patch =~ m/\//) {
+                $patch = path($pk->{path}, "patch/$package_name", $patch)->absolute;
+            }
+            my $cmd = "patch -p1 -sN -i $patch -d " . $sources->absolute;
+            my $ecode = system($cmd);
+            Carp::croak("Unable to apply patch '$cmd'") if $ecode;
+        }
+    }
 }
 
 sub get_release_info_for_package {
@@ -310,6 +326,7 @@ sub get_release_info_for_package {
                 'version'      => $pk->{Package}{version},
                 'release'      => $pk->{Package}{release},
                 'download_url' => $pk->{Package}{source},
+                'patch'        => $pk->{patch},
             };
         }
     }
