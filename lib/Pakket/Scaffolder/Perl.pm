@@ -20,22 +20,23 @@ use Pakket::Package;
 use Pakket::Types;
 use Pakket::Utils::Perl qw< should_skip_core_module >;
 use Pakket::Constants   qw< PAKKET_PACKAGE_SPEC >;
-use Pakket::Scaffolder::Perl::Module;
 use Pakket::Scaffolder::Perl::CPANfile;
 
 with qw<
     Pakket::Role::HasConfig
     Pakket::Role::HasSpecRepo
     Pakket::Role::HasSourceRepo
+    Pakket::Role::CanApplyPatch
     Pakket::Role::Perl::BootstrapModules
     Pakket::Scaffolder::Perl::Role::Borked
     Pakket::Scaffolder::Role::Backend
     Pakket::Scaffolder::Role::Terminal
 >;
 
-use constant {
-    'ARCHIVE_DIR_TEMPLATE' => 'ARCHIVE-XXXXXX',
-};
+has 'package' => (
+    'is' => 'ro',
+    'isa' => 'Pakket::PackageQuery',
+);
 
 has 'metacpan_api' => (
     'is'      => 'ro',
@@ -50,22 +51,9 @@ has 'phases' => (
     'required' => 1,
 );
 
-has 'processed_packages' => (
-    'is'      => 'ro',
-    'isa'     => 'HashRef',
-    'default' => sub { return +{} },
-);
-
 has 'modules' => (
     'is'  => 'ro',
     'isa' => 'HashRef',
-);
-
-has 'download_dir' => (
-    'is'      => 'ro',
-    'isa'     => Path,
-    'lazy'    => 1,
-    'builder' => '_build_download_dir',
 );
 
 has 'cache_dir' => (
@@ -124,95 +112,43 @@ has 'dist_name' => (
     'default' => sub { +{} },
 );
 
-has 'custom_spec' => (
+has 'meta_spec' => (
     'is'  => 'ro',
     'isa' => 'HashRef',
 );
 
-sub _build_metacpan_api {
-    my $self = shift;
-    return $ENV{'PAKKET_METACPAN_API'}
-        || $self->config->{'perl'}{'metacpan_api'}
-        || 'https://fastapi.metacpan.org';
-}
-
-sub _build_download_dir {
-    my $self = shift;
-    return Path::Tiny->tempdir( 'CLEANUP' => 1 );
-}
-
-sub _build_cpan_02packages {
-    my $self = shift;
-    my ( $dir, $file );
-
-    if ( $self->file_02packages ) {
-        $file = path( $self->file_02packages );
-        $log->infof( "Using 02packages file: %s", $self->file_02packages );
-
-    } else {
-        $dir  = Path::Tiny->tempdir;
-        $file = path( $dir, '02packages.details.txt' );
-        $log->infof( "Downloading 02packages" );
-        $self->ua->mirror( 'https://cpan.metacpan.org/modules/02packages.details.txt', $file );
-    }
-
-    return Parse::CPAN::Packages::Fast->new($file);
-}
-
-sub _build_versioner {
-    return Pakket::Versioning->new( 'type' => 'Perl' );
-}
-
-sub BUILDARGS {
-    my ( $class, @args ) = @_;
-    my %args = @args == 1 ? %{ $args[0] } : @args;
-
-    my $module   = delete $args{'module'};
-    my $cpanfile = delete $args{'cpanfile'};
-
-    Carp::croak("Please provide either 'module' or 'cpanfile' or 'custom_spec'")
-        unless $module or $cpanfile or $args{'custom_spec'};
-
-    if ( $module ) {
-        my $version = $module->version
-                        ? "== " . $module->version  # exact version
-                        : ">= 0";                   # latest version
-
-        my ( $phase, $type ) = delete @args{qw< phase type >};
-        $args{'modules'} =
-            Pakket::Scaffolder::Perl::Module->new(
-                'name'    => $module->name,
-                'version' => $version . ":" . $module->release,
-                ( phase   => $phase   )x!! defined $phase,
-                ( type    => $type    )x!! defined $type,
-            )->prereq_specs;
-    } elsif ( $args{custom_spec} ) {
-        my $package = (values %{$args{custom_spec}})[0]->{Package};
-        $args{'modules'} =
-            Pakket::Scaffolder::Perl::Module->new(
-                'name'    => $package->{name},
-                'version' => '== ' . $package->{version} . ":" . $package->{release},
-            )->prereq_specs;
-    } else {
-        $args{'modules'} =
-            Pakket::Scaffolder::Perl::CPANfile->new(
-                'cpanfile' => $cpanfile
-            )->prereq_specs;
-    }
-
-    return \%args;
-}
-
 sub run {
-    my $self = shift;
+    my ($self) = @_;
     my %failed;
 
-    # Bootstrap toolchain
+    return if $self->_is_package_in_spec_repo($self->{package});
+
+    $self->_bootstrap_toolchain;
+    $self->_scaffold_package($self->package);
+    $self->_scaffold_dependencies($self->package, \%failed);
+
+    my $errors = keys %failed;
+    if ($errors) {
+        for my $f ( sort keys %failed ) {
+            $log->errorf( "[FAILED] %s: %s", $f, $failed{$f} );
+        }
+    }
+    return $errors;
+}
+
+sub _bootstrap_toolchain {
+    my ($self) = @_;
+
     if ( !$self->no_bootstrap and !$self->no_deps ) {
         for my $package ( @{ $self->perl_bootstrap_modules } ) {
             $log->debugf( 'Bootstrapping toolchain: %s', $package );
             eval {
-                $self->scaffold_package( $package, { $package => "0" } );
+                Pakket::Scaffolder::Perl->new(
+                    config  => $self->{config},
+                    package => Pakket::PackageQuery->new_from_string('perl/' . $package),
+                    phases  => $self->{phases},
+                    no_bootstrap => 1,
+                )->run;
                 1;
             } or do {
                 my $err = $@ || 'zombie error';
@@ -220,135 +156,149 @@ sub run {
             };
         }
     }
+}
 
-    # the rest
+sub _scaffold_package {
+    my ($self, $package) = @_;
+
+    my $release_info = $self->_get_release_info_for_package($package);
+    my $sources = $self->_fetch_source_for_package($package, $release_info);
+
+    # we need to update release_info if sources are not got from cpan
+    $self->_update_release_info($package, $release_info, $sources);
+    $self->_merge_release_info($package, $release_info);
+
+    $self->apply_patches($package, $sources);
+
+    $log->infof('Working on %s', $package->full_name);
+    $self->_add_spec_for_package($package);
+    $self->_add_source_for_package($package, $sources);
+    $log->infof('Done: %s', $package->full_name);
+}
+
+sub _merge_release_info {
+    my ($self, $package, $release_info) = @_;
+
+    $self->_filter_dependecies($package, $release_info->{prereqs});
+    $package->{distribution} = $release_info->{distribution} if $release_info->{distribution};
+    $package->{source} = $release_info->{download_url} if $release_info->{download_url};
+    $package->{version} = $release_info->{version} if $release_info->{version};
+}
+
+sub _filter_dependecies {
+    my ($self, $package, $prereqs) = @_;
+    
+    return unless $prereqs;
+    for my $phase ( @{ $self->phases } ) { # phases: configure, develop, runtime, test
+        for my $type ( @{ $self->types } ) { # type: requires, recommends
+            my $dependency = $prereqs->{$phase}{$type};
+            next unless is_hashref($dependency);
+
+            for my $module ( sort keys %{ $dependency } ) {
+                next if ($self->_skip_module($module));
+
+                my $distribution = $self->_get_distribution($module);
+                if (exists $self->known_incorrect_dependencies->{$package->name}{$distribution}) {
+                    $log->debugf("skipping %s (known 'bad' dependency for %s)", $distribution, $package->name );
+                    next;
+                } else {
+                    $log->debugf("Found module $module in distribution $distribution");
+                    next if $package->{prereqs}{perl}{$phase}{$distribution};
+                    $package->{prereqs}{perl}{$phase}{$distribution} = { version => ( $dependency->{$module} || 0 ) };
+                }
+            }
+        }
+    }
+}
+
+sub _scaffold_dependencies {
+    my ($self, $package, $failed) = @_;
+
+    return if ($self->no_deps);
+
+    $log->debugf("Scaffold dependencies for %s", $package->full_name);
     for my $phase ( @{ $self->phases } ) {
-        for my $type ( @{ $self->types } ) {
-            next unless is_hashref( $self->modules->{ $phase }{ $type } );
+        my $dependency = $package->{prereqs}{perl}{$phase};
+        next unless is_hashref($dependency);
 
-            my $requirements = $self->modules->{$phase}{$type};
-
-            for my $package ( sort keys %{ $requirements } ) {
-                eval {
-                    $self->scaffold_package( $package, $requirements );
-                    1;
-                } or do {
-                    my $err = $@ || 'zombie error';
-                    $failed{$package} = $err;
-                };
-            }
-        }
-    }
-
-    my $errors = keys %failed;
-    if ($errors) {
-        for my $f ( sort keys %failed ) {
-            $log->errorf( "[FAILED] %s: %s", $f, $failed{$f} );
-        }
-    } else {
-        $log->info( 'Done' );
-    }
-    return $errors;
-}
-
-sub scaffold_package {
-    my ( $self, $package_name, $requirements ) = @_;
-
-    if ( $self->processed_packages->{ $package_name }++ ) {
-        $log->debugf("Skipping $package_name, already processed");
-        return;
-    }
-
-    if ( $self->is_package_in_spec_repo($package_name, $requirements) ) {
-        return;
-    }
-
-    my $release_info = $self->get_release_info_for_package($package_name, $requirements);
-    my $sources = $self->fetch_source_for_package( $package_name, $requirements, $release_info );
-    $self->update_release_info( $package_name, $release_info, $sources );
-    $self->apply_patches($package_name, $release_info, $sources);
-
-    my $package_spec = $self->get_spec_for_package( $package_name, $requirements, $release_info );
-
-    my $package = Pakket::Package->new_from_spec($package_spec);
-
-    $log->debug( '----------------------------------------------' );
-    $log->infof( '%sWorking on %s', $self->spaces, $package->full_name );
-    $self->set_depth( $self->depth + 1 );
-
-    # Source
-    $self->add_source_for_package($package, $release_info, $sources);
-
-    # Spec
-    $self->add_spec_for_package($package, $release_info, $package_spec);
-
-    $log->infof( '%sDone: %s', $self->spaces, $package->full_name );
-    $self->set_depth( $self->depth - 1 );
-}
-
-sub apply_patches {
-    my ($self, $package_name, $release_info, $sources) = @_;
-
-    if (my $pk = $self->{custom_spec}{$package_name}) {
-        foreach my $patch (@{$pk->{patch}}) {
-            unless ($patch =~ m/\//) {
-                $patch = path($pk->{path}, "patch/$package_name", $patch)->absolute;
-            }
-            my $cmd = "patch -p1 -sN -i $patch -d " . $sources->absolute;
-            my $ecode = system($cmd);
-            Carp::croak("Unable to apply patch '$cmd'") if $ecode;
+        for my $module ( sort keys %{ $dependency } ) {
+            eval {
+                Pakket::Scaffolder::Perl->new(
+                    config       => $self->config,
+                    package      => Pakket::PackageQuery->new_from_string("perl/$module=" . $dependency->{$module}{version}),
+                    phases       => $self->phases,
+                    dist_name    => $self->dist_name,
+                    no_bootstrap => 1,
+                )->run;
+                1;
+            } or do {
+                my $err = $@ || 'zombie error';
+                $failed->{$module} = $err;
+            };
         }
     }
 }
 
-sub get_release_info_for_package {
-    my ($self, $package_name, $requirements) = @_;
+sub _is_package_in_spec_repo {
+    my ($self, $package) = @_;
 
-    my $full_ver = $requirements->{$package_name} =~ s/^[=\ ]+//r;
-    my ($ver, $release) = split(/:/, $full_ver);
+    my @versions = map { $_ =~ PAKKET_PACKAGE_SPEC(); "$3:$4" }
+        @{ $self->spec_repo->all_object_ids_by_name($package->name, 'perl') };
+
+    return 0 unless @versions; # there are no packages
+
+    if ($self->versioner->is_satisfying($package->version.':'.$package->release, @versions)) {
+        $log->debugf("Skipping %s, already have satisfying version: %s", $package->full_name, join(", ", @versions));
+        return 1;
+    }
+
+    return 0; # spec has package, but version is not compatible
+}
+
+sub _get_release_info_for_package {
+    my ($self, $package) = @_;
 
     # if is_local is set - generate info without upstream data
-    if ( $self->is_local->{$package_name} ) {
-        my $from_file = $self->get_source_archive_path($package_name, $ver, $release);
+    if ( $self->is_local->{$package->name} ) {
+        my $from_file = $self->_get_source_archive_path($package->name, $package->version, $package->release);
         return {
-            'distribution' => $package_name,
-            'version'      => $ver,
-            'release'      => $release,
+            'distribution' => $package->name,
             'download_url' => 'file://' . $from_file->absolute,
         };
     }
 
-    # if custom spec is provided - use it
-    if (my $pk = $self->{custom_spec}{$package_name}) {
-        if ($pk->{Package}{source}) {
-            return {
-                'distribution' => $package_name,
-                'version'      => $pk->{Package}{version},
-                'release'      => $pk->{Package}{release},
-                'download_url' => $pk->{Package}{source},
-                'patch'        => $pk->{patch},
-            };
-        }
-    }
+    # if source already set from meta
+    return {
+        'distribution' => $package->name,
+        'download_url' => $package->source,
+    } if $package->source && $package->source ne 'cpan';
 
-    return $self->get_release_info_cpan( $package_name, $requirements );
+    # check cpan for release info
+    return $self->_get_release_info_cpan($package);
 }
 
-sub fetch_source_for_package {
-    my ($self, $package_name, $requirements, $release_info) = @_;
+sub _fetch_source_for_package {
+    my ($self, $package, $release_info) = @_;
 
-    my $download_url = $self->rewrite_download_url($release_info->{'download_url'});
+    my $download_url = $self->_rewrite_download_url($release_info->{download_url});
     if ( !$download_url ) {
-        Carp::croak( "Don't have download_url for %s", $package_name );
+        Carp::croak( "Don't have download_url for %s", $package->name );
     }
 
-    my $download = Pakket::Downloader::ByUrl::create($package_name, $download_url);
+    my $download = Pakket::Downloader::ByUrl::create($package->name, $download_url);
     return $download->to_dir;
 }
 
-sub add_source_for_package {
-    my ($self, $package, $release_info, $sources) = @_;
-    my $package_name = $package->name;
+sub _rewrite_download_url {
+    my ($self, $download_url) = @_;
+    my $rewrite = $self->config->{'perl'}{'metacpan'}{'rewrite_download_url'};
+    return $download_url unless is_hashref($rewrite);
+    my ( $from, $to ) = @{$rewrite}{qw< from to >};
+    return ( $download_url =~ s/$from/$to/r );
+}
+
+sub _add_source_for_package {
+    my ($self, $package, $sources) = @_;
 
     # check if we already have the source in the repo
     if ( $self->source_repo->has_object( $package->id ) ) {
@@ -356,173 +306,52 @@ sub add_source_for_package {
         return;
     }
 
-    $self->upload_sources( $package, $sources );
+    $self->_upload_sources($package, $sources);
 }
 
-sub add_spec_for_package {
-    my ($self, $package, $release_info, $spec) = @_;
+sub _add_spec_for_package {
+    my ($self, $package) = @_;
+
     if ( $self->spec_repo->has_object( $package->id ) ) {
-        $log->debugf("Package %s already exists in spec repo (skipping)",
-                        $package->full_name);
+        $log->debugf("Package %s already exists in spec repo (skipping)", $package->full_name);
         return;
     }
+
     $log->debugf("Creating spec for %s", $package->full_name);
 
-    my @dependencies_to_scaffold = $self->process_dependencies($package, $release_info, $spec);
-
-    if ( ! $self->no_deps ) {
-        $log->debugf( 'Scaffolding dependencies of %s', $package->full_name );
-        for my $dep (@dependencies_to_scaffold) {
-            $self->scaffold_package($dep->{'package_name'}, $dep->{'requirements'} );
-        }
-    }
-
-    $self->merge_pakket_json_into_spec($package, $spec);
-
-    # We had a partial Package object
-    # So now we have to recreate that package object
-    # based on the full specs (including prereqs)
-    $package = Pakket::Package->new_from_spec($spec);
-
-    $self->spec_repo->store_package_spec($package);
+    # we had PackageQuery in $package now convert it to Package
+    my $final_package = Pakket::Package->new(%{$self->package});
+    $self->spec_repo->store_package_spec($final_package);
 }
 
-sub process_dependencies {
-    my ($self, $package, $release_info, $spec) = @_;
+sub _skip_module {
+    my ($self, $module) = @_;
 
-    my @dependencies_to_scaffold;
-    for my $phase ( @{ $self->phases } ) {  # phases: configure, develop, runtime, test
-        $spec->{'Prereqs'}{'perl'}{$phase} //= +{};
-
-        # CPAN requirement is a list of modules and their versions.
-        # Pakket internally, in spec, keeps list of packages and their versions.
-        # It is possible that few different modules from CPAN requirement are in one distribution.
-        # We will gather distribution names and merge requirements of different modules of one distribution.
-        my $spec_req = CPAN::Meta::Requirements->new;
-
-        for my $dep_type ( @{ $self->types } ) {  # dep_type: requires, recommends
-            next unless is_hashref( $release_info->{'prereqs'}->{ $phase }{ $dep_type } );
-            my $dep_requirements = $release_info->{'prereqs'}{$phase}{$dep_type};
-
-            for my $module ( keys %{ $release_info->{'prereqs'}->{ $phase }{ $dep_type } } ) {
-                next if $self->skip_module($module);
-
-                my $package_name = $self->get_dist_name($module);
-                $log->debugf( "Found module $module in distribution $package_name" );
-
-                if ( exists $self->known_incorrect_dependencies->{ $package->name }{ $package_name } ) {
-                    $log->debugf( "%sskipping %s (known 'bad' dependency for %s)",
-                                  $self->spaces, $package_name, $package->name );
-                    next;
-                }
-
-                # TODO: find out correct way to translate module version to package version
-                $spec_req->add_string_requirement( $package_name,
-                            $dep_requirements->{$module} );
-            }
-        }
-
-        my $spec_req_h = $spec_req->as_string_hash();
-        for my $package_name ( keys %{ $spec_req_h } ) {
-            push @dependencies_to_scaffold,
-                { 'package_name' => $package_name, 'requirements' => $spec_req_h };
-            $spec->{'Prereqs'}{'perl'}{$phase}->{ $package_name } =
-                +{ 'version' => ( $spec_req_h->{ $package_name } || 0 ) };
-        }
-    }
-
-    return @dependencies_to_scaffold;
-}
-
-sub skip_module {
-    my ( $self, $module_name ) = @_;
-
-    if ( should_skip_core_module($module_name) ) {
-        $log->debugf( "%sSkipping %s (core module, not dual-life)", $self->spaces, $module_name );
+    if (should_skip_core_module($module)) {
+        $log->debugf("%sSkipping %s (core module, not dual-life)", $self->spaces, $module);
         return 1;
     }
 
-    if ( exists $self->known_modules_to_skip->{ $module_name } ) {
-        $log->debugf( "%sSkipping %s (known 'bad' module for configuration)", $self->spaces, $module_name );
+    if (exists $self->known_modules_to_skip->{$module}) {
+        $log->debugf("%sSkipping %s (known 'bad' module for configuration)", $self->spaces, $module);
         return 1;
     }
 
     return 0;
 }
 
-sub unpack {
-    my ( $self, $target, $file ) = @_;
-
-    my $archive = Archive::Any->new($file);
-
-    if ( $archive->is_naughty ) {
-        Carp::croak( $log->critical("Suspicious module ($file)") );
-    }
-
-    $archive->extract($target);
-
-    # Determine if this is a directory in and of itself
-    # or whether it's just a bunch of files
-    # (This is what Archive::Any refers to as "impolite")
-    # It has to be done manually, because the list of files
-    # from an archive might return an empty directory listing
-    # or none, which confuses us
-    my @files = $target->children();
-    if ( @files == 1 && $files[0]->is_dir ) {
-        # Polite
-        return $files[0];
-    }
-
-    # Is impolite, meaning it's just a bunch of files
-    # (or a single file, but still)
-    return $target;
-}
-
-sub is_package_in_spec_repo {
-    my ( $self, $package_name, $requirements ) = @_;
-
-    my @versions = map { $_ =~ PAKKET_PACKAGE_SPEC(); "$3:$4" }
-        @{ $self->spec_repo->all_object_ids_by_name($package_name, 'perl') };
-
-    return 0 unless @versions; # there are no packages
-
-    if (!exists $requirements->{$package_name}) {
-        $log->debugf("Skipping %s, already have version: %s",
-                        $package_name, join(", ", @versions));
-        return 1;
-    }
-
-    if ($self->versioner->is_satisfying($requirements->{$package_name}, @versions)) {
-        $log->debugf("Skipping %s, already have satisfying version: %s",
-                        $package_name, join(", ", @versions));
-        return 1;
-    }
-
-    return 0; # spec has package, but version is not compatible
-}
-
-sub upload_sources {
-    my ( $self, $package, $dir ) = @_;
+sub _upload_sources {
+    my ($self, $package, $dir) = @_;
 
     $log->debugf("Uploading %s into source repo from %s", $package->name, $dir);
     $self->source_repo->store_package_source($package, $dir);
 }
 
-sub upload_source_archive {
-    my ( $self, $package, $file ) = @_;
-
-    my $target = Path::Tiny->tempdir();
-    my $dir    = $self->unpack( $target, $file );
-
-    upload_sources($package, $target);
-}
-
-sub get_dist_name {
-    my ( $self, $module_name ) = @_;
+sub _get_distribution {
+    my ($self, $module_name) = @_;
 
     # check if we've already seen it
-    exists $self->dist_name->{$module_name}
-        and return $self->dist_name->{$module_name};
+    exists $self->dist_name->{$module_name} and return $self->dist_name->{$module_name};
 
     my $dist_name;
 
@@ -578,7 +407,7 @@ sub get_dist_name {
             my $url = $self->metacpan_api . '/release';
             $log->debug("Requesting information about distribution $dist_name ($url)");
             my $res = $self->ua->post( $url,
-                                       +{ 'content' => $self->get_is_dist_name_query($dist_name) }
+                                       +{ 'content' => $self->_get_is_dist_name_query($dist_name) }
                                    );
             $res->{'status'} == 200 or Carp::croak();
 
@@ -597,15 +426,15 @@ sub get_dist_name {
     return $dist_name;
 }
 
-sub update_release_info {
-    my ( $self, $package_name, $release_info, $sources ) = @_;
+sub _update_release_info {
+    my ($self, $package, $release_info, $sources) = @_;
 
-    if ( $self->is_local->{$package_name} or $self->custom_spec->{$package_name}) {
+    if ( $self->is_local->{$package->name} or $package->source) {
         my $prereqs;
-        $self->load_pakket_json($sources);
+        $self->_load_pakket_json($sources);
         if (!$self->no_deps and ($sources->child('META.json')->is_file or $sources->child('META.yml')->is_file)) {
             my $file = $sources->child('META.json')->is_file ? $sources->child('META.json') : $sources->child('META.yml');
-            my $meta = CPAN::Meta->load_file( $file );
+            my $meta = CPAN::Meta->load_file($file);
             $prereqs = $meta->effective_prereqs->as_string_hash;
             $release_info->{prereqs} = $prereqs;
         } else {
@@ -614,17 +443,17 @@ sub update_release_info {
     }
 }
 
-sub get_release_info_cpan {
-    my ( $self, $package_name, $requirements ) = @_;
+sub _get_release_info_cpan {
+    my ($self, $package) = @_;
 
     # try the latest
-    my $latest = $self->get_latest_release_info_for_distribution( $package_name );
-    if ( $latest->{'version'} && defined $latest->{'download_url'}) {
-        if ($self->versioner->is_satisfying($requirements->{$package_name}, $latest->{'version'})) {
+    my $latest = $self->_get_latest_release_info_for_distribution($package->name);
+    if ($latest->{version} && defined $latest->{download_url}) {
+        if ($self->versioner->is_satisfying($package->version.':'.$package->release, $latest->{version})) {
             return $latest;
         }
         $log->debugf("Latest version of %s is %s. Doesn't satisfy requirements. Checking other old versions.",
-                        $package_name, $latest->{'version'});
+                        $package->name, $latest->{version});
     }
 
     # else: fetch all release versions for this distribution
@@ -632,7 +461,7 @@ sub get_release_info_cpan {
     my $version;
     my $download_url;
 
-    my $all_dist_releases = $self->get_all_releases_for_distribution($package_name);
+    my $all_dist_releases = $self->_get_all_releases_for_distribution($package->name);
 
     # get the matching version according to the spec
 
@@ -644,46 +473,43 @@ sub get_release_info_cpan {
             1;
         } or do {
             my $err = $@ || 'zombie error';
-            $log->debugf( '[VERSION ERROR] distribution: %s, version: %s, error: %s',
-                          $package_name, $v, $err );
+            $log->debugf( '[VERSION ERROR] distribution: %s, version: %s, error: %s', $package->name, $v, $err );
         };
     }
 
     @valid_versions = sort { version->parse($b) <=> version->parse($a) } @valid_versions;
 
     for my $v ( @valid_versions ) {
-        if ($self->versioner->is_satisfying($requirements->{$package_name}, $v)) {
+        if ($self->versioner->is_satisfying($package->version.':'.$package->release, $v)) {
             $version         = $v;
             $release_prereqs = $all_dist_releases->{$v}{'prereqs'} || {};
-            $download_url    =
-                $self->rewrite_download_url( $all_dist_releases->{$v}{'download_url'} );
+            $download_url    = $self->_rewrite_download_url( $all_dist_releases->{$v}{'download_url'} );
             last;
         }
     }
 
-    $version = $self->known_incorrect_version_fixes->{ $package_name } // $version;
+    $version = $self->known_incorrect_version_fixes->{ $package->name } // $version;
 
     if (!$version) {
-        Carp::croak("Cannot find a suitable version for $package_name requirements: "
-                        . $requirements->{$package_name}
+        Carp::croak("Cannot find a suitable version for " . $package->full_name
                         . ", available: " . join(', ', @valid_versions));
     }
 
     return +{
-        'distribution' => $package_name,
+        'distribution' => $package->name,
         'version'      => $version,
         'prereqs'      => $release_prereqs,
         'download_url' => $download_url,
     };
 }
 
-sub get_all_releases_for_distribution {
+sub _get_all_releases_for_distribution {
     my ( $self, $distribution_name ) = @_;
 
     my $url = $self->metacpan_api . "/release";
     $log->debugf("Requesting release info for all old versions of $distribution_name ($url)");
     my $res = $self->ua->post( $url,
-            +{ content => $self->get_release_query($distribution_name) });
+            +{ content => $self->_get_release_query($distribution_name) });
     if ($res->{'status'} != 200) {
         Carp::croak("Can't find any release for $distribution_name from $url, Status: "
                 . $res->{'status'} . ", Reason: " . $res->{'reason'} );
@@ -705,15 +531,7 @@ sub get_all_releases_for_distribution {
     return \%all_releases;
 }
 
-sub rewrite_download_url {
-    my ( $self, $download_url ) = @_;
-    my $rewrite = $self->config->{'perl'}{'metacpan'}{'rewrite_download_url'};
-    return $download_url unless is_hashref($rewrite);
-    my ( $from, $to ) = @{$rewrite}{qw< from to >};
-    return ( $download_url =~ s/$from/$to/r );
-}
-
-sub get_latest_release_info_for_distribution {
+sub _get_latest_release_info_for_distribution {
     my ( $self, $package_name ) = @_;
 
     my $url = $self->metacpan_api . "/release/$package_name";
@@ -736,7 +554,7 @@ sub get_latest_release_info_for_distribution {
         };
 }
 
-sub get_is_dist_name_query {
+sub _get_is_dist_name_query {
     my ( $self, $name ) = @_;
 
     return encode_json(
@@ -754,7 +572,7 @@ sub get_is_dist_name_query {
     );
 }
 
-sub get_release_query {
+sub _get_release_query {
     my ( $self, $dist_name ) = @_;
 
     return encode_json(
@@ -777,7 +595,7 @@ sub get_release_query {
 # parsing Pakket.json
 # Packet.json should be in root directory of package, near META.json
 # It keeps some settings which we are missing in META.json.
-sub load_pakket_json {
+sub _load_pakket_json {
     my ($self, $dir) = @_;
     my $pakket_json = $dir->child('Pakket.json');
 
@@ -798,32 +616,7 @@ sub load_pakket_json {
     return $data;
 }
 
-sub merge_pakket_json_into_spec {
-    my ($self, $package, $spec) = @_;
-
-    my $src_dir = $self->source_repo->retrieve_package_source($package);
-
-    my $pakket_json = $self->load_pakket_json($src_dir);
-
-    if ($pakket_json->{'prereqs'}) {
-        # package type: perl, native
-        for my $type (keys %{$pakket_json->{'prereqs'}}) {
-            # phase: runtime, configure
-            for my $phase (keys %{$pakket_json->{'prereqs'}{$type}}) {
-                for my $module (keys %{$pakket_json->{'prereqs'}{$type}{$phase}}) {
-                    $spec->{'Prereqs'}{$type}{$phase}{$module}{'version'} =
-                            $pakket_json->{'prereqs'}{$type}{$phase}{$module};
-                }
-            }
-        }
-    }
-
-    if ($pakket_json->{'build_opts'}) {
-        $spec->{'build_opts'} =  $pakket_json->{'build_opts'};
-    }
-}
-
-sub get_source_archive_path {
+sub _get_source_archive_path {
     my ($self, $name, $ver, $rel) = @_;
     $rel //= 1;
     my @possible_paths = (
@@ -840,42 +633,42 @@ sub get_source_archive_path {
     return 0;
 }
 
-sub get_spec_for_package {
-    my ($self, $package_name, $requirements, $release_info) = @_;
-
-    my $package_spec = {
-        'Package' => {
-            'category' => 'perl',
-            'name'     => $package_name,
-            'version'  => $release_info->{'version'},
-            'release'  => $release_info->{'release'} // 1,
-        },
-    };
-
-    if ( $self->{custom_spec}{$package_name} ) {
-        $package_spec = $self->{custom_spec}{$package_name};
-    }
-
-    return $package_spec;
+sub _build_metacpan_api {
+    my $self = shift;
+    return $ENV{'PAKKET_METACPAN_API'}
+        || $self->config->{'perl'}{'metacpan_api'}
+        || 'https://fastapi.metacpan.org';
 }
 
-sub prepare_spec {
-    my ($self) = @_;
+sub _build_download_dir {
+    my $self = shift;
+    return Path::Tiny->tempdir( 'CLEANUP' => 1 );
+}
 
-    my $requirements = $self->modules->{runtime}{requires};
-    my ($package_name) = keys %{ $requirements };
+sub _build_cpan_02packages {
+    my $self = shift;
+    my ( $dir, $file );
 
-    my $release_info = $self->get_release_info_for_package($package_name, $requirements);
-    my $spec = $self->get_spec_for_package($package_name, $requirements, $release_info);
-    $spec->{Package}{source} = $release_info->{download_url};
-    my $package = Pakket::Package->new_from_spec($spec);
-    $self->process_dependencies($package, $release_info, $spec);
-    $package = Pakket::Package->new_from_spec($spec);
+    if ( $self->file_02packages ) {
+        $file = path( $self->file_02packages );
+        $log->infof( "Using 02packages file: %s", $self->file_02packages );
 
-    return $package->spec;
+    } else {
+        $dir  = Path::Tiny->tempdir;
+        $file = path( $dir, '02packages.details.txt' );
+        $log->infof( "Downloading 02packages" );
+        $self->ua->mirror( 'https://cpan.metacpan.org/modules/02packages.details.txt', $file );
+    }
+
+    return Parse::CPAN::Packages::Fast->new($file);
+}
+
+sub _build_versioner {
+    return Pakket::Versioning->new( 'type' => 'Perl' );
 }
 
 __PACKAGE__->meta->make_immutable;
 no Moose;
 1;
+
 __END__

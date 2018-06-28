@@ -16,9 +16,14 @@ has [ qw< name category version release > ] => (
     'required' => 1,
 );
 
-has 'source' => (
+has [qw<source distribution path>] => (
     'is'       => 'ro',
     'isa'      => 'Maybe[Str]',
+);
+
+has 'patch' => (
+    'is'      => 'ro',
+    'isa'     => 'Maybe[ArrayRef]',
 );
 
 has 'is_bootstrap' => (
@@ -36,7 +41,7 @@ has [qw<build_opts bundle_opts>] => (
 has 'prereqs' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'default' => sub { return +{} },
+    'default' => sub { +{} },
 );
 
 # FIXME: GH #73 will make this more reasonable
@@ -61,14 +66,14 @@ has 'runtime_prereqs' => (
     'builder' => '_build_runtime_prereqs',
 );
 
-sub BUILDARGS {
-    my ( $class, %args ) = @_;
-    if ($args{'category'} eq 'perl') {
-        my $ver = version->new($args{'version'});
+sub BUILD {
+    my $self = shift;
+
+    if ($self->category eq 'perl') {
+        my $ver = version->new($self->version);
         if ($ver->is_qv) {$ver = version->new($ver->normal)};
-        $args{'version'} = $ver->stringify();
+        $self->{version} = $ver->stringify();
     }
-    return \%args;
 }
 
 sub _build_configure_prereqs {

@@ -40,7 +40,7 @@ sub to_file {
 sub to_dir {
     my ($self) = @_;
 
-    $log->debugf( "Downloaging and extracting from %s", $self->url );
+    $log->debugf( "Downloaging and extracting from %s to %s", $self->url,  $self->tempdir->absolute);
     return $self->download_to_dir;
 }
 
@@ -85,7 +85,7 @@ sub _unpack {
         Carp::croak( $log->critical("Suspicious ($file)") );
     }
 
-    my $dir = Path::Tiny->tempdir( 'CLEANUP' => 1 );
+    my $dir = $self->tempdir;
     $archive->extract($dir);
 
     # Determine if this is a directory in and of itself

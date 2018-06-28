@@ -1,4 +1,8 @@
 #!/usr/bin/env perl
+
+use warnings;
+use strict;
+
 use Pakket::CLI;
 # ABSTRACT: The Pakket meta packaging application
 # PODNAME: pakket
