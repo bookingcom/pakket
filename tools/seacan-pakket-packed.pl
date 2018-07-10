@@ -185,6 +185,8 @@ $fatpacked{"App/Seacan.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_
       $launcher_path->spew_utf8(
           "#!/bin/bash\n",
           'CURRDIR=$(dirname $(readlink -f $0))' . "\n",
+          "PERL5LIB_ORIG=\$PERL5LIB\n",
+          "export PERL5LIB_ORIG\n",
           "PERL5LIB=\$CURRDIR/../local/lib/perl5:\$CURRDIR/../app/$app_name/lib\n",
           "export PERL5LIB\n",
   

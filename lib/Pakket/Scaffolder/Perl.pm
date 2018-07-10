@@ -27,6 +27,7 @@ with qw<
     Pakket::Role::HasSpecRepo
     Pakket::Role::HasSourceRepo
     Pakket::Role::CanApplyPatch
+    Pakket::Role::CanProcessDzil
     Pakket::Role::Perl::BootstrapModules
     Pakket::Scaffolder::Perl::Role::Borked
     Pakket::Scaffolder::Role::Backend
@@ -164,11 +165,12 @@ sub _scaffold_package {
     my $release_info = $self->_get_release_info_for_package($package);
     my $sources = $self->_fetch_source_for_package($package, $release_info);
 
+    $self->apply_patches($package, $sources);
+    $sources = $self->process_dist_ini($package, $sources);
+
     # we need to update release_info if sources are not got from cpan
     $self->_update_release_info($package, $release_info, $sources);
     $self->_merge_release_info($package, $release_info);
-
-    $self->apply_patches($package, $sources);
 
     $log->infof('Working on %s', $package->full_name);
     $self->_add_spec_for_package($package);
