@@ -46,7 +46,7 @@
       }
       // getting OS metadata from first perl version prop
       if (strIsPerlVersion(key)){
-        OSmetadata = Object.keys(data[0][1][key]).sort();
+        OSmetadata = Object.keys(data[0][1][key]).sort((a,b) => a - b);
       }
     });
 
@@ -178,3 +178,5 @@
   });
 
 })();
+
+// vim:ft=javascript
