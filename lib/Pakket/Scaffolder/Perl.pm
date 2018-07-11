@@ -183,6 +183,12 @@ sub _merge_release_info {
     $package->{distribution} = $release_info->{distribution} if $release_info->{distribution};
     $package->{source} = $release_info->{download_url} if $release_info->{download_url};
     $package->{version} = $release_info->{version} if $release_info->{version};
+
+    if ($package->category eq 'perl') {
+        my $ver = version->new($package->version);
+        if ($ver->is_qv) {$ver = version->new($ver->normal)};
+        $package->{version} = $ver->stringify();
+    }
 }
 
 sub _filter_dependecies {
