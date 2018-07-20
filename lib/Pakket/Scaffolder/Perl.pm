@@ -314,6 +314,9 @@ sub _add_source_for_package {
         return;
     }
 
+    #remove .git dir if it exists in sources
+    $sources->child('.git')->remove_tree;
+
     $self->_upload_sources($package, $sources);
 }
 

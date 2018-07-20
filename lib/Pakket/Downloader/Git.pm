@@ -57,7 +57,6 @@ sub download_to_dir {
     my $repo = Git::Wrapper->new($self->tempdir->absolute);
     $repo->clone($self->url, $self->tempdir->absolute);
     $repo->checkout(qw/--force --no-track -B pakket/, $self->commit) if $self->commit;
-    system('rm -rf ' . $self->tempdir->absolute . '/.git');
 
     return $self->tempdir->absolute;
 }
