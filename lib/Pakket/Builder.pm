@@ -111,7 +111,7 @@ has 'bootstrapping' => (
     'default' => sub {1},
 );
 
-has 'requirements' => (
+has [qw< requirements overwrite >] => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
     'default' => sub { +{} },
@@ -308,7 +308,7 @@ sub run_build {
 
     my $installer = $self->installer;
 
-    if ( !$skip_prereqs && !$bootstrap_prereqs ) {
+    if ((!$skip_prereqs && !$bootstrap_prereqs) && (($self->{overwrite}{name} // '') ne $package->{name})) {
         my $installer_cache = $self->installer_cache;
         my $bootstrap_cache = {
             %{ $self->installer_cache },

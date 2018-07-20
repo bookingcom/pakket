@@ -31,6 +31,7 @@ sub opt_spec {
         [ 'verbose|v+',      'verbose output (can be provided multiple times)' ],
         [ 'log-file=s',      'Log file (default: build.log)' ],
         [ 'ignore-failures', 'Continue even if some builds fail' ],
+        [ 'overwrite',       'overwrite artifacts even if they are already exist' ],
     );
 }
 
@@ -124,7 +125,8 @@ sub execute {
     my ( $self, $opt ) = @_;
 
     my $builder = Pakket::Builder->new(
-        'config' => $opt->{'config'},
+        'config'    => $opt->{'config'},
+        'overwrite' => $opt->{overwrite} ? {name => $self->{queries}[0]{name}} : +{},
 
         # Maybe we have it, maybe we don't
         map( +(

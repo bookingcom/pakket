@@ -9,7 +9,7 @@ use Log::Any     qw< $log >;
 sub process_dist_ini {
     my ($self, $package, $sources) = @_;
 
-    return $sources if $sources->child('META.json')->exists;
+    return $sources if $sources->child('META.json')->exists || $sources->child('META.yml')->exists;
     return $sources unless $sources->child('dist.ini')->exists;
 
     my $dir = Path::Tiny->tempdir( 'CLEANUP' => 1 );

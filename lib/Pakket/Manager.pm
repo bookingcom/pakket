@@ -49,7 +49,7 @@ has 'file_02packages' => (
     'isa'       => 'Maybe[Str]',
 );
 
-has 'no_deps' => (
+has [qw< no_deps overwrite >] => (
     'is'        => 'ro',
     'isa'       => 'Bool',
     'default'   => 0,
@@ -323,6 +323,7 @@ sub _gen_scaffolder_perl {
         'config'   => $self->config,
         'phases'   => $self->phases,
         'no_deps'  => $self->no_deps,
+        'overwrite' => $self->overwrite,
         'is_local' => $self->is_local,
         ( 'types'  => ['requires'] )x!! $self->requires_only,
     );

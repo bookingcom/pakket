@@ -83,7 +83,7 @@ has 'versioner' => (
     'builder' => '_build_versioner',
 );
 
-has 'no_deps' => (
+has [qw< no_deps overwrite >] => (
     'is'      => 'ro',
     'isa'     => 'Bool',
     'default' => 0,
@@ -122,7 +122,7 @@ sub run {
     my ($self) = @_;
     my %failed;
 
-    return if $self->_is_package_in_spec_repo($self->{package});
+    return if $self->_is_package_in_spec_repo($self->{package}) and !$self->overwrite;
 
     $self->_bootstrap_toolchain;
     $self->_scaffold_package($self->package);
@@ -166,7 +166,7 @@ sub _scaffold_package {
     my $sources = $self->_fetch_source_for_package($package, $release_info);
 
     $self->apply_patches($package, $sources);
-    $sources = $self->process_dist_ini($package, $sources);
+    $sources = $self->process_dist_ini($package, $sources) unless $package->source eq 'cpan';
 
     # we need to update release_info if sources are not got from cpan
     $self->_update_release_info($package, $release_info, $sources);
@@ -309,7 +309,7 @@ sub _add_source_for_package {
     my ($self, $package, $sources) = @_;
 
     # check if we already have the source in the repo
-    if ( $self->source_repo->has_object( $package->id ) ) {
+    if ($self->source_repo->has_object($package->id) and !$self->overwrite) {
         $log->debugf("Package %s already exists in source repo (skipping)", $package->full_name);
         return;
     }
@@ -320,7 +320,7 @@ sub _add_source_for_package {
 sub _add_spec_for_package {
     my ($self, $package) = @_;
 
-    if ( $self->spec_repo->has_object( $package->id ) ) {
+    if ($self->spec_repo->has_object($package->id) and !$self->overwrite) {
         $log->debugf("Package %s already exists in spec repo (skipping)", $package->full_name);
         return;
     }

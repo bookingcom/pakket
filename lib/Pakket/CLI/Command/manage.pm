@@ -74,7 +74,8 @@ sub opt_spec {
         [ 'requires-only', 'do not set recommended/suggested dependencies' ],
         [ 'no-bootstrap',  'skip bootstrapping phase (toolchain packages)' ],
         [ 'source-archive=s', 'archive with sources (optional, only for native)' ],
-        [ 'meta=s', 'meta info to create customized specs (optional)' ],
+        [ 'meta=s',        'meta info to create customized specs (optional)' ],
+        [ 'overwrite',     'overwrite artifacts even if they are already exist' ],
     );
 }
 
@@ -115,6 +116,7 @@ sub execute {
         no_bootstrap    => $self->{'opt'}{'no_bootstrap'},
         is_local        => $is_local,
         meta_spec       => $self->{meta_spec},
+        overwrite       => $self->{'opt'}{'overwrite'},
     );
 
     my %actions = (
