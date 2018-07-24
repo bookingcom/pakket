@@ -4,10 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <title>perl pakkets build status</title>
-  <link rel="stylesheet" href="/css/styles.css" />
+  <link rel="stylesheet" href="/css/styles.css?v=1" />
 </head>
 <body>
   <h2 class="hidden">perl pakket build status</h2>
+  <div class="pakket-uwsgi-version">v. <span id="pakket-uwsgi-version">x.x</span></div>
   <div class="hidden options-panel">
     <input type="checkbox" name="only-problematic" id="only-problematic" value="1" />
     <label for="only-problematic">Show only problematic</label>
@@ -19,6 +20,6 @@
     </tbody>
   </table>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="/js/app.js"></script>
+  <script src="/js/app.js?v=1"></script>
 </body>
 </html>
