@@ -20,6 +20,9 @@ tbody td {
   width: 150px;
   padding: 5px;
 }
+.hidden {
+  visibility: hidden;
+}
 .name {
   background: transparent;
   text-align: left;
@@ -34,8 +37,12 @@ tbody td {
   font-size: 0.9em;
   margin-bottom: 20px;
 }
-.hidden {
-  visibility: hidden;
+.pakket-uwsgi-version {
+  position: absolute;
+  right: 35px;
+  top: 35px;
+  color: gray;
+  display: none;
 }
 .version {
   background: transparent;
