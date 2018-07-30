@@ -46,6 +46,10 @@ sub _determine_config {
         $config->{'install_dir'} = $opt->{'to'};
     }
 
+    if ( $opt->{'no_atomic'} ) {
+        $config->{'atomic'} = 0;
+    }
+
     if ( !$config->{'install_dir'} ) {
         $self->usage_error(
             "Missing where to install\n"
@@ -91,6 +95,7 @@ sub opt_spec {
             'from=s',
             'directory to install the packages from',
         ],
+        [ 'no-atomic',      "don't use atomic operations" ],
         [ 'input-file=s',   'install everything listed in this file' ],
         [ 'config|c=s',     'configuration file' ],
         [ 'log-file=s',     'log file' ],
@@ -116,6 +121,7 @@ sub validate_args {
     $opt->{'packages'}   = $self->_determine_packages( $opt, $args );
 
     $opt->{'config'}{'env'}{'cli'} = 1;
+    $opt->{'config'}{'atomic'} //= 1;
 }
 
 sub execute {
@@ -138,6 +144,7 @@ sub _create_installer {
 
     return Pakket::Installer->new(
         'config'          => $opt->{'config'},
+        'atomic'          => $opt->{'config'}{'atomic'},
         'pakket_dir'      => $opt->{'config'}{'install_dir'},
         'force'           => $opt->{'force'},
         'ignore_failures' => $opt->{'ignore_failures'},
