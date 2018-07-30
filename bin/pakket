@@ -7,4 +7,5 @@ use Pakket::CLI;
 # ABSTRACT: The Pakket meta packaging application
 # PODNAME: pakket
 
-Pakket::CLI->run;
+exit(Pakket::CLI->run // 0);
+
