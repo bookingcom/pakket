@@ -12,6 +12,7 @@ use Log::Any              qw< $log >;
 use JSON::MaybeXS         qw< decode_json >;
 use Archive::Any;
 use English               qw< -no_match_vars >;
+use Errno                 qw< :POSIX >;
 
 use Pakket::Repository::Parcel;
 use Pakket::Package;
@@ -81,7 +82,7 @@ sub install {
     @packages or return;
 
     if (!$self->check_packages_in_parcel_repo(\@packages)) {
-        return 1;
+        return ENOENT;
     }
 
     my $installer_cache = {};
