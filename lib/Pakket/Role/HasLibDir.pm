@@ -48,6 +48,11 @@ has 'lock' => (
     'is'      => 'rw',
 );
 
+has 'atomic' => (
+    'is'      => 'ro',
+    'default' => 1,
+);
+
 sub _build_libraries_dir {
     my $self = shift;
 
@@ -62,13 +67,24 @@ sub _build_libraries_dir {
 sub _build_active_dir {
     my $self = shift;
 
-    return $self->libraries_dir->child('active');
+    my $active_dir = $self->libraries_dir->child('active');
+
+    if (!$self->atomic && !$active_dir->exists) {
+        $active_dir->mkpath;
+    }
+
+    return $active_dir;
 }
 
 sub _build_work_dir {
     my $self = shift;
 
     $self->lock_lib_directory();
+
+    if (!$self->atomic) {
+        $log->debugf( 'Atomic mode disabled: using %s as working directory', $self->active_dir );
+        return $self->active_dir;
+    }
 
     my $template = sprintf("%s/work_%s_%s_XXXXX", $self->libraries_dir, $PID, time());
     my $work_dir = Path::Tiny->tempdir($template, TMPDIR => 0, CLEANUP => 1);
@@ -93,6 +109,11 @@ sub _build_work_dir {
 
 sub activate_work_dir {
     my $self     = shift;
+    if (!$self->atomic) {
+        $log->debug( "Atomic mode disabled: skipping activation of work dir" );
+        return;
+    }
+
     my $work_dir = $self->work_dir;
 
     # The only way to make a symlink point somewhere else in an atomic way is
@@ -150,6 +171,11 @@ sub activate_work_dir {
 
 sub remove_old_libraries {
     my ($self, $work_dir) = @_;
+
+    if (!$self->atomic) {
+        $log->debug( "Atomic mode disabled: skipping removal of old libraries" );
+        return;
+    }
 
     my @dirs = grep +( $_->basename ne 'active' && $_ ne $work_dir && $_->is_dir ),
         $self->libraries_dir->children;
