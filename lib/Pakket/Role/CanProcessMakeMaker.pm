@@ -18,8 +18,10 @@ sub process_makefile_pl {
     $DB::single=1;
     {
         local $CWD = $sources->absolute;
-        $self->_exec('perl -f Makefile.PL');
-        $self->_exec('make dist DISTVNAME=new_dist');
+        my $path =$ENV{PATH_ORIG} // $ENV{PATH} // '';
+        my $lib  =$ENV{PERL5LIB_ORIG} // $ENV{PERL5LIB} // '';
+        $self->_exec("PATH=$path PERL5LIB=$lib perl -f Makefile.PL");
+        $self->_exec("PATH=$path PERL5LIB=$lib make dist DISTVNAME=new_dist");
         my $download = Pakket::Downloader::ByUrl::create($package->name, 'file://new_dist.tar.gz');
         return $download->to_dir;
     }

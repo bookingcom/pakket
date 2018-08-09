@@ -16,8 +16,9 @@ sub process_dist_ini {
     my $dir = Path::Tiny->tempdir( 'CLEANUP' => 1 );
     {
         local $CWD = $sources->absolute;
-        my $lib =$ENV{PERL5LIB_ORIG} // '';
-        my $cmd = "PERL5LIB=$lib dzil build --no-tgz --in=$dir";
+        my $path =$ENV{PATH_ORIG} // $ENV{PATH} // '';
+        my $lib  =$ENV{PERL5LIB_ORIG} // $ENV{PERL5LIB} // '';
+        my $cmd = "PATH=$path PERL5LIB=$lib dzil build --no-tgz --in=$dir";
         my $ecode = system($cmd);
         Carp::croak("Unable to run '$cmd'") if $ecode;
     }
