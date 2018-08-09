@@ -28,6 +28,7 @@ with qw<
     Pakket::Role::HasSourceRepo
     Pakket::Role::CanApplyPatch
     Pakket::Role::CanProcessDzil
+    Pakket::Role::CanProcessMakeMaker
     Pakket::Role::Perl::BootstrapModules
     Pakket::Scaffolder::Perl::Role::Borked
     Pakket::Scaffolder::Role::Backend
@@ -167,6 +168,7 @@ sub _scaffold_package {
 
     $self->apply_patches($package, $sources);
     $sources = $self->process_dist_ini($package, $sources) unless $package->source eq 'cpan';
+    $sources = $self->process_makefile_pl($package, $sources) unless $package->source eq 'cpan';
 
     # we need to update release_info if sources are not got from cpan
     $self->_update_release_info($package, $release_info, $sources);

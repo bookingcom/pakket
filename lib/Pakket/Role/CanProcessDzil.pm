@@ -12,6 +12,7 @@ sub process_dist_ini {
     return $sources if $sources->child('META.json')->exists || $sources->child('META.yml')->exists;
     return $sources unless $sources->child('dist.ini')->exists;
 
+    $log->debugf("Processing sources with 'dzil build'");
     my $dir = Path::Tiny->tempdir( 'CLEANUP' => 1 );
     {
         local $CWD = $sources->absolute;
