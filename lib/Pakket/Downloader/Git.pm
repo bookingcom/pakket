@@ -18,9 +18,15 @@ has 'commit' => (
     isa      => 'Str',
 );
 
+has 'folder' => (
+    is       => 'ro',
+    isa      => 'Str',
+);
+
 sub BUILD {
     my ($self) = @_;
 
+    ($self->{url}, $self->{folder}) = split(';f=', $self->url);
     ($self->{url}, $self->{commit}) = split('#', $self->url);
     $self->{url} =~ s|^git://||;
     $self->{url} =~ s|^git[+-]||;
@@ -58,7 +64,13 @@ sub download_to_dir {
     $repo->clone($self->url, $self->tempdir->absolute);
     $repo->checkout(qw/--force --no-track -B pakket/, $self->commit) if $self->commit;
 
-    return $self->tempdir->absolute;
+    if ($self->folder) {
+        my $local_folder = Path::Tiny->tempdir( 'CLEANUP' => 1 );
+        File::Copy::Recursive::dircopy($self->tempdir->child($self->folder), $local_folder);
+        return $local_folder->absolute;
+    } else {
+        return $self->tempdir->absolute;
+    }
 }
 
 __PACKAGE__->meta->make_immutable;
