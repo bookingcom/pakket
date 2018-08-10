@@ -4,6 +4,20 @@
   const CSS_CLASS_PAKKET_MISSING = 'missing';
   const CSS_CLASS_PAKKET_LATEST = 'latest';
   const CSS_CLASS_PAKKET_NOT_LATEST = 'not-latest';
+  const FLAG_GET_ONLY_BROKEN = 'broken=1';
+  const RENDER_ONLY_BROKEN = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;
+  const urlPieces = location.href.split('s=');
+  const $onlyBrokenEl = $('#only-problematic');
+  const $searchEl = $('#s_pakket');
+
+  // changing 'only broken' checkbox ASAP
+  if (RENDER_ONLY_BROKEN) {
+    $onlyBrokenEl.attr('checked', 'checked');
+  }
+  // same thing with query string
+  if (urlPieces.length === 2) {
+    $searchEl.attr('value', urlPieces[1]);
+  }
 
   // actual rendering packages call
   renderPackages();
@@ -58,7 +72,7 @@
       }
       // getting OS metadata from first perl version prop
       if (strIsPerlVersion(key)){
-        OSmetadata = Object.keys(data[0][1][key]).sort((a,b) => a - b);
+        OSmetadata = Object.keys(data[0][1][key]).sort();
       }
     });
 
@@ -128,6 +142,25 @@
   function strIsPerlVersion(str) {
     return !isNaN(parseInt(str));
   }
+
+  // GET query creator
+  function composeGetQuery() {
+    const search = $searchEl.val().toLowerCase();
+    const params = [];
+    if ($onlyBrokenEl.is(':checked')) {
+      params.push(FLAG_GET_ONLY_BROKEN);
+    }
+    if (search.length) {
+      params.push(`s=${search}`);
+    }
+    let getQuery = '/status';
+    params.forEach((param, index) => {
+      const separator = index === 0 ? '?' : '&';
+      getQuery += `${separator}${param}`;
+    });
+    return getQuery;
+  }
+
   // Pakket table column renderer
   function columnRenderer(config) {
     const renderQueue = [];
@@ -155,10 +188,11 @@
     // figuring out if pakket is problematic + reflecting in <tr> css class
     problematicPakket = !!renderQueue.filter(val => val === '-').length;
     const latestVersion = config.versions_all[config.versions_all.length - 1];
-    return `<tr ${config.version !== latestVersion ? 'style="display: none;"' : ''}
+    return `<tr ${config.version !== latestVersion && !RENDER_ONLY_BROKEN ? 'style="display: none;"' : ''}
       id="pak--${config.name.replace(/[\/\.\:]/g,'')}-${config.version.replace(/[\/\.\:]/g,'')}"
       class="${problematicPakket ? CSS_CLASS_PAKKET_BAD : CSS_CLASS_PAKKET_FINE}
-            ${config.version === latestVersion ? CSS_CLASS_PAKKET_LATEST : CSS_CLASS_PAKKET_NOT_LATEST}">${tableRow}</tr>`;
+            ${config.version === latestVersion ? CSS_CLASS_PAKKET_LATEST : CSS_CLASS_PAKKET_NOT_LATEST}"
+      style="${!problematicPakket && RENDER_ONLY_BROKEN ? 'display: none;' : ''}">${tableRow}</tr>`;
   }
 
   $('#tbody').on('change', '.version select', function(e){
@@ -176,16 +210,39 @@
     $(`#pak--${pakketName}-${value.replace(/[\/\.\:]/g,'')}`).show();
   });
 
-  $('#only-problematic').on('change', function(){
+  $onlyBrokenEl.on('change', function(){
     // as we have grouping now - we need to show mandatory
     // broken pakkets initially
     $(`.${CSS_CLASS_PAKKET_BAD}`).show();
     if ($(this).is(':checked')) {
       $(`.${CSS_CLASS_PAKKET_FINE}`).hide();
+      // reflecting change in URL
+      window.history.pushState('', '', composeGetQuery());
     } else {
       $(`.${CSS_CLASS_PAKKET_FINE}`).show();
       // and hiding not latest versions
       $(`.${CSS_CLASS_PAKKET_NOT_LATEST}`).hide();
+      // reflecting change in URL
+      window.history.replaceState('', '', composeGetQuery());
+    }
+  });
+
+  $searchEl.on('input', function(){
+    window.history.pushState('', '', composeGetQuery());
+    const search = $searchEl.val().toLowerCase();
+    // $onlyBrokenEl.triggerHandler('change');
+    // let's just loop through visible items and filter them by name
+    $('#tbody').find('tr').each(function(){
+      const $el = $(this);
+      if ($el.prop('id').toLowerCase().indexOf(search) === -1) {
+        $el.hide();
+      } else {
+        $el.show();
+      }
+    });
+    // postprocessing
+    if ($onlyBrokenEl.is(':checked')) {
+      $(`.${CSS_CLASS_PAKKET_FINE}`).hide();
     }
   });
 
