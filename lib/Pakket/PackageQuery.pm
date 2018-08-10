@@ -48,6 +48,11 @@ has 'prereqs' => (
     'isa'     => 'Maybe[HashRef]',
 );
 
+has 'skip' => (
+    'is'      => 'ro',
+    'isa'     => 'Maybe[HashRef]',
+);
+
 has 'is_bootstrap' => (
     'is'      => 'ro',
     'isa'     => 'Bool',
@@ -87,6 +92,7 @@ sub new_from_meta {
 
     $params->{patch} = $meta_spec->{patch} if $meta_spec->{patch};
     $params->{path}  = $meta_spec->{path}  if $meta_spec->{path};
+    $params->{skip}  = $meta_spec->{skip}  if $meta_spec->{skip};
 
     my $prereqs = _convert_requires($meta_spec);
     $params->{prereqs} = $prereqs if $prereqs;

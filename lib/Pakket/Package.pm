@@ -26,6 +26,11 @@ has 'patch' => (
     'isa'     => 'Maybe[ArrayRef]',
 );
 
+has 'skip' => (
+    'is'      => 'ro',
+    'isa'     => 'Maybe[HashRef]',
+);
+
 has 'is_bootstrap' => (
     'is'      => 'ro',
     'isa'     => 'Bool',

@@ -15,7 +15,6 @@ sub process_makefile_pl {
     return $sources unless $sources->child('Makefile.PL')->exists;
 
     $log->debugf("Processing sources with 'make dist'");
-    $DB::single=1;
     {
         local $CWD = $sources->absolute;
         my $path =$ENV{PATH_ORIG} // $ENV{PATH} // '';

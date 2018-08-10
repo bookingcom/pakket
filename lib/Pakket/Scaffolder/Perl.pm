@@ -167,8 +167,13 @@ sub _scaffold_package {
     my $sources = $self->_fetch_source_for_package($package, $release_info);
 
     $self->apply_patches($package, $sources);
-    $sources = $self->process_dist_ini($package, $sources) unless $package->source eq 'cpan';
-    $sources = $self->process_makefile_pl($package, $sources) unless $package->source eq 'cpan';
+
+    if (!$package->{skip}{dzil}) {
+        $sources = $self->process_dist_ini($package, $sources) unless $package->source eq 'cpan';
+    }
+    if (!$package->{skip}{dist}) {
+        $sources = $self->process_makefile_pl($package, $sources) unless $package->source eq 'cpan';
+    }
 
     # we need to update release_info if sources are not got from cpan
     $self->_update_release_info($package, $release_info, $sources);
