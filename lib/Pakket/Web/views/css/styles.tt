@@ -23,6 +23,9 @@ tbody td {
 .hidden {
   visibility: hidden;
 }
+.missing {
+  background: #ff6;
+}
 .name {
   background: transparent;
   text-align: left;
@@ -30,8 +33,15 @@ tbody td {
   width: 300px;
   font-weight: normal;
 }
-.missing {
-  background: #ff6;
+.no-selectboxes .version select {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none; 
+  border: none;
+  outline-style: none;
+  font-size: 1em;
+  background: #fff;
+  color: #000;
 }
 .options-panel {
   font-size: 0.9em;

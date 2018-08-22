@@ -4,15 +4,18 @@
   const CSS_CLASS_PAKKET_MISSING = 'missing';
   const CSS_CLASS_PAKKET_LATEST = 'latest';
   const CSS_CLASS_PAKKET_NOT_LATEST = 'not-latest';
+  const CSS_CLASS_NO_SELECTBOXES = 'no-selectboxes';
   const FLAG_GET_ONLY_BROKEN = 'broken=1';
   const RENDER_ONLY_BROKEN = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;
   const urlPieces = location.href.split('s=');
   const $onlyBrokenEl = $('#only-problematic');
   const $searchEl = $('#s_pakket');
+  const $tbodyEl = $('#tbody');
 
   // changing 'only broken' checkbox ASAP
   if (RENDER_ONLY_BROKEN) {
     $onlyBrokenEl.attr('checked', 'checked');
+    $tbodyEl.addClass(CSS_CLASS_NO_SELECTBOXES);
   }
   // same thing with query string
   if (urlPieces.length === 2) {
@@ -133,8 +136,8 @@
     });
 
     // required on re-render
-    $('#tbody').empty();
-    $('#tbody').append(`${tableBody}`);
+    $tbodyEl.empty();
+    $tbodyEl.append(`${tableBody}`);
   }
 
   // helper functions
@@ -171,7 +174,7 @@
       versionsUI += `<option value="${version}" ${(version === config.version) ? 'selected' : ''}>${version}</option>`;
     });
     let tableRow = `<td class="name">${config.name}</td>
-      <td class="version">${(versionsArr.length === 1 ? versionsArr[0] : ('<select data-name="' + config.name.replace(/[\/\.\:]/g,'') + '">' + versionsUI + '</select>'))}</td>`;
+      <td class="version">${(versionsArr.length === 1 ? versionsArr[0] : ('<select ' + (RENDER_ONLY_BROKEN ? 'disabled ' : '')  +'data-name="' + config.name.replace(/[\/\.\:]/g,'') + '">' + versionsUI + '</select>'))}</td>`;
     config.order.forEach((column) => {
       if (strIsPerlVersion(column)){
         config.os_meta.forEach((os) => {
@@ -195,7 +198,31 @@
       style="${!problematicPakket && RENDER_ONLY_BROKEN ? 'display: none;' : ''}">${tableRow}</tr>`;
   }
 
-  $('#tbody').on('change', '.version select', function(e){
+  // search helper
+  function search() {
+    window.history.pushState('', '', composeGetQuery());
+    const search = $searchEl.val().toLowerCase();
+    if (search.length) {
+      $tbodyEl.addClass(CSS_CLASS_NO_SELECTBOXES);
+    } else {
+      $tbodyEl.removeClass(CSS_CLASS_NO_SELECTBOXES);
+    }
+    // let's just loop through visible items and filter them by name
+    $tbodyEl.find('tr').each(function(){
+      const $el = $(this);
+      if ($el.prop('id').toLowerCase().indexOf(search) === -1) {
+        $el.hide();
+      } else {
+        $el.show();
+      }
+    });
+    // postprocessing
+    if ($onlyBrokenEl.is(':checked')) {
+      $(`.${CSS_CLASS_PAKKET_FINE}`).hide();
+    }
+  }
+
+  $tbodyEl.on('change', '.version select', function(e){
     const $target = $(e.target);
     const value = $target.val();
     const pakketName = $target.data('name');
@@ -215,10 +242,16 @@
     // broken pakkets initially
     $(`.${CSS_CLASS_PAKKET_BAD}`).show();
     if ($(this).is(':checked')) {
+      // prevent select box to be usable
+      $tbodyEl.addClass(CSS_CLASS_NO_SELECTBOXES);
+      $tbodyEl.find('.version select').attr('disabled', 'disabled');
       $(`.${CSS_CLASS_PAKKET_FINE}`).hide();
       // reflecting change in URL
       window.history.pushState('', '', composeGetQuery());
     } else {
+      // making selects usable again
+      $tbodyEl.removeClass(CSS_CLASS_NO_SELECTBOXES);
+      $tbodyEl.find('.version select').removeAttr('disabled');
       $(`.${CSS_CLASS_PAKKET_FINE}`).show();
       // and hiding not latest versions
       $(`.${CSS_CLASS_PAKKET_NOT_LATEST}`).hide();
@@ -227,23 +260,12 @@
     }
   });
 
+  // search DOM handler
+  let timeout;
   $searchEl.on('input', function(){
-    window.history.pushState('', '', composeGetQuery());
-    const search = $searchEl.val().toLowerCase();
-    // $onlyBrokenEl.triggerHandler('change');
-    // let's just loop through visible items and filter them by name
-    $('#tbody').find('tr').each(function(){
-      const $el = $(this);
-      if ($el.prop('id').toLowerCase().indexOf(search) === -1) {
-        $el.hide();
-      } else {
-        $el.show();
-      }
-    });
-    // postprocessing
-    if ($onlyBrokenEl.is(':checked')) {
-      $(`.${CSS_CLASS_PAKKET_FINE}`).hide();
-    }
+    const TIMEOUT = 200;
+    if ((new Date().getTime() - timeout) < TIMEOUT) clearTimeout(timeout);
+    timeout = setTimeout(search, TIMEOUT);
   });
 
 })();
