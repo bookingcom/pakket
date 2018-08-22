@@ -63,7 +63,7 @@
   function _renderUI(data) {
     // taking pakket #1 and getting columns metadata from it
     const keys = Object.keys(data[0][1]);
-    const desiredOrder = ['spec', 'source', '5.24.0', '5.24.3', '5.26.2'];
+    const desiredOrder = ['spec', 'source'];
     let finalOrder = desiredOrder;
     let OSmetadata;
     keys.forEach((key) => {
