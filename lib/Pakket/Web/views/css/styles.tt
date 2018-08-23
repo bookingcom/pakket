@@ -33,16 +33,6 @@ tbody td {
   width: 300px;
   font-weight: normal;
 }
-.no-selectboxes .version select {
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none; 
-  border: none;
-  outline-style: none;
-  font-size: 1em;
-  background: #fff;
-  color: #000;
-}
 .options-panel {
   font-size: 0.9em;
   margin-bottom: 20px;

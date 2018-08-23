@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width">
   <title>perl pakkets build status</title>
-  <link rel="stylesheet" href="/css/styles.css?v=4" />
+  <link rel="stylesheet" href="/css/styles.css?v=5" />
 </head>
 <body>
   <h2 class="hidden">perl pakket build status <input type="text" placeholder="filter by name" name="s_pakket" class="s" id="s_pakket" /></h2>
@@ -20,6 +20,6 @@
     </tbody>
   </table>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="/js/app.js?v=2"></script>
+  <script src="/js/app.js?v=3"></script>
 </body>
 </html>
