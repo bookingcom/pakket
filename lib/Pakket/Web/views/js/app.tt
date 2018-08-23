@@ -4,18 +4,22 @@
   const CSS_CLASS_PAKKET_MISSING = 'missing';
   const CSS_CLASS_PAKKET_LATEST = 'latest';
   const CSS_CLASS_PAKKET_NOT_LATEST = 'not-latest';
-  const CSS_CLASS_NO_SELECTBOXES = 'no-selectboxes';
   const FLAG_GET_ONLY_BROKEN = 'broken=1';
   const RENDER_ONLY_BROKEN = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;
+  // extendable via the payload
+  const desiredColumnsOrder = ['spec', 'source'];
   const urlPieces = location.href.split('s=');
   const $onlyBrokenEl = $('#only-problematic');
   const $searchEl = $('#s_pakket');
   const $tbodyEl = $('#tbody');
+  let OSmetadata;
+  // parcels list we fetch from localSorage / BE once
+  // and do all further manipulations
+  let parcels;
 
   // changing 'only broken' checkbox ASAP
   if (RENDER_ONLY_BROKEN) {
     $onlyBrokenEl.attr('checked', 'checked');
-    $tbodyEl.addClass(CSS_CLASS_NO_SELECTBOXES);
   }
   // same thing with query string
   if (urlPieces.length === 2) {
@@ -27,90 +31,111 @@
   fetchVersion();
 
   function renderPackages() {
+
     const URL_FETCH_PAKKETS = '/all_packages';
     const localStorageKey = 'pakkets';
     // first checking if data is available at localStorage
     let pakketsInLocalStorage = localStorage.getItem(localStorageKey);
     if (pakketsInLocalStorage) {
       _renderUI(JSON.parse(pakketsInLocalStorage));
-      // updating cache if required
-      $.ajax(URL_FETCH_PAKKETS).done(function(data) {
-        const cachedPakketObject = JSON.stringify(data);
-        if (pakketsInLocalStorage !== cachedPakketObject) {
-          localStorage.setItem(localStorageKey, cachedPakketObject);
-          // re-rendering UI
-          _renderUI(data);
-        }
-      });
-    } else {
-      // doing a plain ajax call
-      $.ajax(URL_FETCH_PAKKETS).done(function(data) {
-        _renderUI(data);
-        // and cache data to localstorage
-        localStorage.setItem(localStorageKey, JSON.stringify(data));
-      });
     }
-  };
+
+    // updating cache if required
+    $.ajax(URL_FETCH_PAKKETS).done(function(data) {
+      const cachedPakketObject = JSON.stringify(data);
+      if (pakketsInLocalStorage !== cachedPakketObject) {
+        localStorage.setItem(localStorageKey, cachedPakketObject);
+        // re-rendering UI
+        _renderUI(data);
+      }
+    });
+
+  }
 
   function fetchVersion() {
-    $.ajax('/info').done(function(data) {
+
+    const URL_FETCH_VERSION = '/info';
+    const localStorageKey = 'pakket-version';
+    // first checking if data is available at localStorage
+    let pakketVersion = localStorage.getItem(localStorageKey);
+    if (pakketVersion) {
+      _renderVersion(pakketVersion);
+    }
+
+    // updating cache if required
+    $.ajax(URL_FETCH_VERSION).done(function(data) {
       if (!data.version) return;
-      $('#pakket-uwsgi-version').text(String(data.version));
-      $('.pakket-uwsgi-version').show();
+      const version = String(data.version);
+      if (version !== pakketVersion) {
+        localStorage.setItem(localStorageKey, version);
+        // re-rendering UI
+        _renderVersion(version);
+      }
     });
+
   }
 
   /*
    * Helper functions
    **/
-  function _renderUI(data) {
-    // taking pakket #1 and getting columns metadata from it
-    const keys = Object.keys(data[0][1]);
-    const desiredOrder = ['spec', 'source'];
-    let finalOrder = desiredOrder;
-    let OSmetadata;
-    keys.forEach((key) => {
-      if (desiredOrder.indexOf(key) === -1) {
-        finalOrder.push(key);
-      }
-      // getting OS metadata from first perl version prop
-      if (strIsPerlVersion(key)){
-        OSmetadata = Object.keys(data[0][1][key]).sort();
-      }
-    });
 
-    let tableHead = '<tr>';
-    tableHead += '<td class="name" rowspan="2" colspan="2">module name</td>';
-    desiredOrder.forEach((column) => {
-      // calculating colspan and rowspan
-      let colspan = 1;
-      let rowspan = 1;
-      if (strIsPerlVersion(column)){
-        colspan = 2;
-      } else {
-        rowspan = 2;
-      }
-      tableHead += `<td colspan="${colspan}" rowspan="${rowspan}">${column}</td>`;
-    });
-    tableHead += '</tr><tr>';
-    desiredOrder.forEach((column) => {
-      if (!strIsPerlVersion(column)) return;
-      OSmetadata.forEach((os) => {
-        tableHead += `<td>${os}</td>`;
+  function _renderVersion(version) {
+    $('#pakket-uwsgi-version').text(version);
+    $('.pakket-uwsgi-version').show();
+  }
+
+  function _renderTableBody() {
+    // by default rendering whole list of parcels
+    let payload = parcels;
+    const onlyBroken = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;;
+    let searchQuery = $searchEl.val();
+    searchQuery = searchQuery ? searchQuery.trim() : '';
+    searchQuery = searchQuery.toLowerCase();
+    searchQuery = searchQuery.replace(/::/g,'-');
+
+    // filtering out only broken if it's a case
+    if (onlyBroken) {
+      payload = [];
+      parcels.forEach((pakket) => {
+        // skipping pakket based on flag onlyBroken
+        let isBroken = false;
+        Object.values(pakket[1]).forEach((value) => {
+          if (typeof value !== 'object') {
+            if (value === 0) {
+              isBroken = true;
+              return;
+            }
+          } else {
+            if (Object.values(value).filter(val => val === 0) > 0) {
+              isBroken = true;
+            }
+          }
+        });
+
+        if (isBroken) {
+          payload.push(pakket);
+        }
       });
-    });
-    tableHead += '</tr>';
-    // showing page title
-    $('.hidden').removeClass('hidden');
-    // required on re-render
-    $('#thead').empty();
-    $('#thead').append(tableHead);
+    }
+
+    // filtering by name
+    if (searchQuery.length) {
+      // cloning payload
+      const lookup = payload.slice();
+      payload = [];
+      lookup.forEach((pakket) => {
+        if (pakket[0].toLowerCase().indexOf(searchQuery) > -1) {
+          payload.push(pakket);
+        }
+      });
+    }
 
     // calculating and rendering body
     let tableBody = '';
     const pakketsMap = new Map();
+
     // calculating pakketsMap - no rendering yet
-    data.forEach((pakket) => {
+    payload.forEach((pakket) => {
       const nameFull = pakket[0];
       const namePieces = nameFull.split('=');
       const nameShort = namePieces[0];
@@ -123,12 +148,12 @@
       pakketsMap.set(nameShort, mapVersions);
     });
     // actual rendering to a string
-    data.forEach((pakket) => {
+    payload.forEach((pakket) => {
       const namePieces = pakket[0].split('=');
       tableBody += columnRenderer({
         name: namePieces[0],
         version: namePieces[1],
-        order: desiredOrder,
+        order: desiredColumnsOrder,
         os_meta: OSmetadata,
         data: pakket,
         versions_all: pakketsMap.get(namePieces[0])
@@ -138,6 +163,53 @@
     // required on re-render
     $tbodyEl.empty();
     $tbodyEl.append(`${tableBody}`);
+  }
+
+  function _renderUI(data) {
+    // taking pakket #1 and getting columns metadata from it
+    const keys = Object.keys(data[0][1]);
+    let finalOrder = desiredColumnsOrder;
+    keys.forEach((key) => {
+      if (desiredColumnsOrder.indexOf(key) === -1) {
+        finalOrder.push(key);
+      }
+      // getting OS metadata from first perl version prop
+      if (strIsPerlVersion(key)){
+        OSmetadata = Object.keys(data[0][1][key]).sort();
+      }
+    });
+
+    let tableHead = '<tr>';
+    tableHead += '<td class="name" rowspan="2" colspan="2">module name</td>';
+    desiredColumnsOrder.forEach((column) => {
+      // calculating colspan and rowspan
+      let colspan = 1;
+      let rowspan = 1;
+      if (strIsPerlVersion(column)){
+        colspan = 2;
+      } else {
+        rowspan = 2;
+      }
+      tableHead += `<td colspan="${colspan}" rowspan="${rowspan}">${column}</td>`;
+    });
+    tableHead += '</tr><tr>';
+    desiredColumnsOrder.forEach((column) => {
+      if (!strIsPerlVersion(column)) return;
+      OSmetadata.forEach((os) => {
+        tableHead += `<td>${os}</td>`;
+      });
+    });
+    tableHead += '</tr>';
+    // showing page title
+    $('.hidden').removeClass('hidden');
+    // required on re-render
+    $('#thead').empty();
+    $('#thead').append(tableHead);
+
+    // making payload available globally
+    parcels = data;
+    _renderTableBody();
+
   }
 
   // helper functions
@@ -174,7 +246,7 @@
       versionsUI += `<option value="${version}" ${(version === config.version) ? 'selected' : ''}>${version}</option>`;
     });
     let tableRow = `<td class="name">${config.name}</td>
-      <td class="version">${(versionsArr.length === 1 ? versionsArr[0] : ('<select ' + (RENDER_ONLY_BROKEN ? 'disabled ' : '')  +'data-name="' + config.name.replace(/[\/\.\:]/g,'') + '">' + versionsUI + '</select>'))}</td>`;
+      <td class="version">${(versionsArr.length === 1 ? versionsArr[0] : ('<select data-name="' + config.name.replace(/[\/\.\:]/g,'') + '">' + versionsUI + '</select>'))}</td>`;
     config.order.forEach((column) => {
       if (strIsPerlVersion(column)){
         config.os_meta.forEach((os) => {
@@ -191,35 +263,17 @@
     // figuring out if pakket is problematic + reflecting in <tr> css class
     problematicPakket = !!renderQueue.filter(val => val === '-').length;
     const latestVersion = config.versions_all[config.versions_all.length - 1];
-    return `<tr ${config.version !== latestVersion && !RENDER_ONLY_BROKEN ? 'style="display: none;"' : ''}
+    return `<tr ${config.version !== latestVersion ? 'style="display: none;"' : ''}
       id="pak--${config.name.replace(/[\/\.\:]/g,'')}-${config.version.replace(/[\/\.\:]/g,'')}"
       class="${problematicPakket ? CSS_CLASS_PAKKET_BAD : CSS_CLASS_PAKKET_FINE}
-            ${config.version === latestVersion ? CSS_CLASS_PAKKET_LATEST : CSS_CLASS_PAKKET_NOT_LATEST}"
-      style="${!problematicPakket && RENDER_ONLY_BROKEN ? 'display: none;' : ''}">${tableRow}</tr>`;
+            ${config.version === latestVersion ? CSS_CLASS_PAKKET_LATEST : CSS_CLASS_PAKKET_NOT_LATEST}">${tableRow}</tr>`;
   }
 
   // search helper
   function search() {
     window.history.pushState('', '', composeGetQuery());
     const search = $searchEl.val().toLowerCase();
-    if (search.length) {
-      $tbodyEl.addClass(CSS_CLASS_NO_SELECTBOXES);
-    } else {
-      $tbodyEl.removeClass(CSS_CLASS_NO_SELECTBOXES);
-    }
-    // let's just loop through visible items and filter them by name
-    $tbodyEl.find('tr').each(function(){
-      const $el = $(this);
-      if ($el.prop('id').toLowerCase().indexOf(search) === -1) {
-        $el.hide();
-      } else {
-        $el.show();
-      }
-    });
-    // postprocessing
-    if ($onlyBrokenEl.is(':checked')) {
-      $(`.${CSS_CLASS_PAKKET_FINE}`).hide();
-    }
+    _renderTableBody();
   }
 
   $tbodyEl.on('change', '.version select', function(e){
@@ -238,26 +292,14 @@
   });
 
   $onlyBrokenEl.on('change', function(){
-    // as we have grouping now - we need to show mandatory
-    // broken pakkets initially
-    $(`.${CSS_CLASS_PAKKET_BAD}`).show();
     if ($(this).is(':checked')) {
-      // prevent select box to be usable
-      $tbodyEl.addClass(CSS_CLASS_NO_SELECTBOXES);
-      $tbodyEl.find('.version select').attr('disabled', 'disabled');
-      $(`.${CSS_CLASS_PAKKET_FINE}`).hide();
       // reflecting change in URL
       window.history.pushState('', '', composeGetQuery());
     } else {
-      // making selects usable again
-      $tbodyEl.removeClass(CSS_CLASS_NO_SELECTBOXES);
-      $tbodyEl.find('.version select').removeAttr('disabled');
-      $(`.${CSS_CLASS_PAKKET_FINE}`).show();
-      // and hiding not latest versions
-      $(`.${CSS_CLASS_PAKKET_NOT_LATEST}`).hide();
       // reflecting change in URL
       window.history.replaceState('', '', composeGetQuery());
     }
+    _renderTableBody();
   });
 
   // search DOM handler
