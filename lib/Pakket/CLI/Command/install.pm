@@ -12,6 +12,7 @@ use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
 use Log::Any          qw< $log >;
 use Log::Any::Adapter;
 use Path::Tiny        qw< path >;
+use Digest::SHA       qw< sha1_hex >;
 
 sub abstract    { 'Install a package' }
 sub description { 'Install a package' }
@@ -67,6 +68,13 @@ sub _determine_packages {
         = defined $opt->{'input_file'}
         ? path( $opt->{'input_file'} )->lines_utf8( { 'chomp' => 1 } )
         : @{$args};
+
+    @package_strs = sort @package_strs;
+
+    if ($opt->{'config'}{'allow_rollback'} && (30 < 0 + @package_strs)) {
+        $opt->{rollback_tag} = sha1_hex(@package_strs);
+        $log->debugf("rollback_tag %s is generated for requested %s packages", $opt->{rollback_tag}, 0 + @package_strs);
+    }
 
     my @packages;
     foreach my $package_str (@package_strs) {
@@ -132,7 +140,6 @@ sub execute {
         return $installer->show_installed();
     }
 
-    $log->debug("----------------------------------------------------------------");
     $log->debug("pakket ".join(" ", @ARGV));
 
     my $installer = _create_installer($opt);
@@ -148,6 +155,10 @@ sub _create_installer {
         'pakket_dir'      => $opt->{'config'}{'install_dir'},
         'force'           => $opt->{'force'},
         'ignore_failures' => $opt->{'ignore_failures'},
+        'rollback_tag'    => $opt->{'rollback_tag'} // '',
+        'use_hardlinks'   => $opt->{'config'}{'use_hardlinks'} // 0,
+        'allow_rollback'  => $opt->{'config'}{'allow_rollback'} // 0,
+        'keep_rollbacks'  => $opt->{'config'}{'keep_rollbacks'} // 1,
     );
 }
 

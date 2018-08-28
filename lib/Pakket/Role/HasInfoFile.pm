@@ -49,6 +49,24 @@ sub add_package_in_info_file {
     $self->save_info_file( $dir, $install_data );
 }
 
+sub set_rollback_tag {
+    my ( $self, $dir, $tag ) = @_;
+
+    my $install_data = $self->load_info_file($dir);
+
+    $install_data->{rollback_tag} = $tag;
+
+    $self->save_info_file( $dir, $install_data );
+}
+
+sub get_rollback_tag {
+    my ( $self, $dir ) = @_;
+
+    my $install_data = $self->load_info_file($dir);
+
+    return $install_data->{rollback_tag} // '';
+}
+
 sub load_info_file {
     my ($self, $dir) = @_;
 

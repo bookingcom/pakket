@@ -4,14 +4,15 @@ package Pakket::Role::HasLibDir;
 
 use Moose::Role;
 
-use Carp qw< croak >;
-use Path::Tiny qw< path  >;
-use Types::Path::Tiny qw< Path  >;
+use Carp                  qw< croak >;
+use Path::Tiny            qw< path  >;
+use Types::Path::Tiny     qw< Path  >;
 use File::Copy::Recursive qw< dircopy >;
 use File::Lockfile;
-use Time::HiRes qw< time >;
-use Log::Any qw< $log >;
-use English qw< -no_match_vars >;
+use Time::HiRes           qw< time >;
+use Log::Any              qw< $log >;
+use English               qw< -no_match_vars >;
+use Errno                 qw< :POSIX >;
 
 has 'pakket_dir' => (
     'is'       => 'ro',
@@ -53,6 +54,22 @@ has 'atomic' => (
     'default' => 1,
 );
 
+has [ qw< use_hardlinks allow_rollback > ] => (
+    'is'      => 'ro',
+    'default' => 0,
+);
+
+has 'rollback_tag' => (
+    'is'       => 'ro',
+    'isa'      => 'Str',
+    'default'  => '',
+);
+
+has 'keep_rollbacks' => (
+    'is'      => 'ro',
+    'default' => 1,
+);
+
 sub _build_libraries_dir {
     my $self = shift;
 
@@ -86,6 +103,16 @@ sub _build_work_dir {
         return $self->active_dir;
     }
 
+    my $work_dir = undef;
+    $work_dir = eval { $self->_create_and_fill_workdir($self->rollback_tag, 1) } if $self->use_hardlinks;
+    $work_dir //= $self->_create_and_fill_workdir($self->rollback_tag);
+
+    return $work_dir;
+}
+
+sub _create_and_fill_workdir {
+    my ($self, $tag, $use_hardlinks) = @_;
+
     my $template = sprintf("%s/work_%s_%s_XXXXX", $self->libraries_dir, $PID, time());
     my $work_dir = Path::Tiny->tempdir($template, TMPDIR => 0, CLEANUP => 1);
 
@@ -100,21 +127,42 @@ sub _build_work_dir {
             croak( $log->critical("$self->active_dir is not a symlink") );
         };
 
-        dircopy( $self->libraries_dir->child($orig_work_dir), $work_dir );
+        my $source = $self->libraries_dir->child($orig_work_dir);
+        my $dest = $work_dir;
+        if ($use_hardlinks) {
+            my $cmd = "cp -al '$source'/* '$dest' && rm -f '$dest'/info.json && cp -af '$source'/info.json '$dest'";
+            my $ecode = system($cmd);
+
+            if ($ecode) {
+                $log->warn("error: $ecode. Unable to prepare workdir with hardlinks $dest");
+                die;
+            }
+            1;
+        } else {
+            dircopy($source, $dest);
+        }
     }
     $log->debugf( 'Created new working directory %s', $work_dir );
 
     return $work_dir;
 }
 
-sub activate_work_dir {
-    my $self     = shift;
+sub activate_dir {
+    my ($self, $dir) = @_;
+
     if (!$self->atomic) {
-        $log->debug( "Atomic mode disabled: skipping activation of work dir" );
+        $log->debug( "Atomic mode disabled: skipping activation of dir" );
         return;
     }
 
-    my $work_dir = $self->work_dir;
+    if ($self->active_dir->exists && -l $self->active_dir) {
+        my $link = readlink $self->active_dir;
+
+        if ($self->libraries_dir->child($link) eq $dir) {
+            $log->debugf('Directory %s is already active', $dir);
+            return EEXIST;
+        }
+    }
 
     # The only way to make a symlink point somewhere else in an atomic way is
     # to create a new symlink pointing to the target, and then rename it to the
@@ -126,10 +174,7 @@ sub activate_work_dir {
     #
     # So, we just create a file name that looks like 'active_P_T.tmp', where P
     # is the pid and T is the current time.
-    my $active_temp
-        = $self->libraries_dir->child(
-        sprintf( 'active_%s_%s.tmp', $PID, time() ),
-        );
+    my $active_temp = $self->libraries_dir->child(sprintf('active_%s_%s.tmp', $PID, time()));
 
     if ( $active_temp->exists ) {
         # Huh? why does this temporary pathname exist? Try to delete it...
@@ -141,20 +186,16 @@ sub activate_work_dir {
     }
 
     # Need to set proper permissions before we move the work directory
-    $work_dir->chmod('0755');
+    $dir->chmod('0755');
 
     my $work_final = $self->libraries_dir->child( time() );
-    $log->debugf( 'Moving work directory %s to its final place %s', $work_dir, $work_final );
-    $work_dir->move($work_final)
+    $log->debugf( 'Moving work directory %s to its final place %s', $dir, $work_final );
+    $dir->move($work_final)
         or croak( $log->error(
             'Could not move work_dir to its final place'
         ) );
 
-    # Unfortunately, if we die in the next call the work_dir will not be
-    # removed, because we already changed its name so no cleanup will happen.
-
-    $log->debugf( 'Setting temporary active symlink to new work directory %s',
-        $work_final );
+    $log->debugf( 'Setting temporary active symlink to new work directory %s', $work_final );
     symlink( $work_final->basename, $active_temp )
         or croak( $log->error(
             'Could not activate new installation (temporary symlink create failed)'
@@ -167,6 +208,20 @@ sub activate_work_dir {
         ) );
 
     $self->remove_old_libraries($work_final);
+    return 0;
+}
+
+sub activate_work_dir {
+    my $self     = shift;
+
+    if (!$self->atomic) {
+        $log->debug( "Atomic mode disabled: skipping activation of work dir" );
+        return;
+    }
+
+    my $work_dir = $self->work_dir;
+
+    $self->activate_dir($work_dir);
 }
 
 sub remove_old_libraries {
@@ -177,10 +232,13 @@ sub remove_old_libraries {
         return;
     }
 
-    my @dirs = grep +( $_->basename ne 'active' && $_ ne $work_dir && $_->is_dir ),
-        $self->libraries_dir->children;
+    my @dirs = grep {
+        $_->basename ne 'active' && $_ ne $work_dir && $_->is_dir
+    } $self->libraries_dir->children;
 
+    my $num_dirs = @dirs;
     foreach my $dir (@dirs) {
+        $num_dirs-- < $self->keep_rollbacks and last;
         $log->debug("Removing old directory: $dir");
         path($dir)->remove_tree( { 'safe' => 0 } );
     }
