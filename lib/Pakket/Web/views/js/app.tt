@@ -106,7 +106,7 @@
               return;
             }
           } else {
-            if (Object.values(value).filter(val => val === 0) > 0) {
+            if (Object.values(value).filter(val => val === 0).length > 0) {
               isBroken = true;
             }
           }
