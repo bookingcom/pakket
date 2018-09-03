@@ -185,7 +185,7 @@ sub delete_package {
     $log->debugf( "Deleting package %s/%s",
         $package->{category}, $package->{name} );
 
-    for my $file ( @{ $info->{files} } ) {
+    for my $file ( sort @{ $info->{files} // [] } ) {
         delete $info_file->{installed_files}{$file};
         my ($file_name) = $file =~ /\w+\/(.+)/;
         my $path = $self->work_dir->child($file_name);
@@ -195,12 +195,11 @@ sub delete_package {
 
         # remove parent dirs while there are no children
         my $parent = $path->parent;
-        while ( !( 0 + $parent->children ) ) {
-            $log->debugf( "Deleting directory %s", $parent );
+        while ($parent->exists && (0 + $parent->children) == 0) {
+            $log->debugf("Deleting dir  %s", $parent);
             rmdir $parent;
             $parent = $parent->parent;
         }
-
     }
     return;
 }

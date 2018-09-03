@@ -68,6 +68,22 @@ sub install {
         return;
     }
 
+    if ($self->allow_rollback && $self->rollback_tag) {
+        my $tags = $self->get_rollback_tags();
+
+        if (exists $tags->{$self->rollback_tag}) {
+            $log->debugf("Found dir %s with rollback_tag %s", $tags->{$self->rollback_tag}, $self->rollback_tag);
+            my $result = $self->activate_dir($tags->{$self->rollback_tag});
+            if ($result && $result == EEXIST) {
+                log_success( 'All packages already installed in active library with tag: ' . $self->rollback_tag );
+            } else {
+                log_success( 'Finished rollback to tag: ' . $self->rollback_tag );
+                log_success( 'Packages installed: ' . join ', ', map $_->full_name, @packages );
+            }
+            return 0;
+        }
+    }
+
     @packages = $self->set_latest_version_for_undefined(@packages);
 
     foreach (@packages) { $self->requirements->{$_->short_name} = $_ };
@@ -101,6 +117,7 @@ sub install {
         };
     }
 
+    $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
     $self->activate_work_dir;
 
     $log->infof(
@@ -388,6 +405,22 @@ sub check_packages_in_parcel_repo {
         }
     }
     return $rs;
+}
+
+sub get_rollback_tags {
+    my ($self) = @_;
+
+    my @dirs = grep {
+        $_->basename ne 'active' && $_->is_dir
+    } $self->libraries_dir->children;
+
+    my $result = {};
+    foreach my $dir (@dirs) {
+        next unless my $tag = $self->get_rollback_tag($dir);
+        $result->{$tag} = $dir;
+    }
+
+    return $result;
 }
 
 __PACKAGE__->meta->make_immutable;

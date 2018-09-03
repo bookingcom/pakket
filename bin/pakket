@@ -8,4 +8,3 @@ use Pakket::CLI;
 # PODNAME: pakket
 
 exit(Pakket::CLI->run // 0);
-
