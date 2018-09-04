@@ -38,7 +38,7 @@ has 'patch' => (
     'isa'     => 'Maybe[ArrayRef]',
 );
 
-has [qw<build_opts bundle_opts>] => (
+has [qw<manage build_opts bundle_opts>] => (
     'is'      => 'ro',
     'isa'     => 'Maybe[HashRef]',
 );
@@ -90,9 +90,10 @@ sub new_from_meta {
 
     my $params = { %$meta_spec{qw<category name version release source>} };
 
-    $params->{patch} = $meta_spec->{patch} if $meta_spec->{patch};
-    $params->{path}  = $meta_spec->{path}  if $meta_spec->{path};
-    $params->{skip}  = $meta_spec->{skip}  if $meta_spec->{skip};
+    $params->{patch}  = $meta_spec->{patch}  if $meta_spec->{patch};
+    $params->{path}   = $meta_spec->{path}   if $meta_spec->{path};
+    $params->{skip}   = $meta_spec->{skip}   if $meta_spec->{skip};
+    $params->{manage} = $meta_spec->{manage} if $meta_spec->{manage};
 
     my $prereqs = _convert_requires($meta_spec);
     $params->{prereqs} = $prereqs if $prereqs;

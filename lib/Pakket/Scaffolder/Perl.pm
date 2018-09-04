@@ -168,11 +168,20 @@ sub _scaffold_package {
 
     $self->apply_patches($package, $sources);
 
-    if (!$package->{skip}{dzil}) {
-        $sources = $self->process_dist_ini($package, $sources) unless $package->source eq 'cpan';
-    }
-    if (!$package->{skip}{dist}) {
-        $sources = $self->process_makefile_pl($package, $sources) unless $package->source eq 'cpan';
+    {
+        local %ENV = %ENV; # keep all env changes locally
+        if ($package->{manage}{env}) {
+            foreach my $key (keys %{$package->{manage}{env}}) {
+                $ENV{$key} = $package->{manage}{env}{$key};
+            }
+        }
+
+        if (!$package->{skip}{dzil}) {
+            $sources = $self->process_dist_ini($package, $sources) unless $package->source eq 'cpan';
+        }
+        if (!$package->{skip}{dist}) {
+            $sources = $self->process_makefile_pl($package, $sources) unless $package->source eq 'cpan';
+        }
     }
 
     # we need to update release_info if sources are not got from cpan

@@ -26,7 +26,7 @@ has 'patch' => (
     'isa'     => 'Maybe[ArrayRef]',
 );
 
-has 'skip' => (
+has [qw<skip manage>] => (
     'is'      => 'ro',
     'isa'     => 'Maybe[HashRef]',
 );

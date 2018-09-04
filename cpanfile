@@ -36,7 +36,7 @@ requires 'Time::Format';
 requires 'version', '>= 0.77';
 requires 'Archive::Tar::Wrapper';
 requires 'Digest::SHA';
-requires 'YAML::Tiny';
+requires 'YAML';
 requires 'Config::Any';
 
 requires 'Log::Dispatch::Screen::Gentoo';

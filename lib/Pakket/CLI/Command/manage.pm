@@ -9,7 +9,7 @@ use Ref::Util  qw< is_arrayref is_coderef >;
 use Log::Any   qw< $log >; # to log
 use Log::Any::Adapter;     # to set the logger
 use JSON::MaybeXS qw< decode_json >;
-use YAML::Tiny;
+use YAML;
 
 use Pakket::CLI '-command';
 use Pakket::Log;
@@ -338,7 +338,8 @@ sub _read_meta_spec {
     my $self = shift;
 
     my $content = path($self->{opt}{meta})->slurp_utf8;
-    $self->{meta_spec} = YAML::Tiny->read_string($content)->[0];
+    $self->{meta_spec} = Load($content);
+    $self->{meta_spec}{source} = join("", @{$self->{meta_spec}{source}}) if ref($self->{meta_spec}{source}) eq 'ARRAY';
     $self->{meta_spec}{path} = path($self->{opt}{meta})->parent->stringify;
     $self->{meta_spec}{source} = $self->{source_archive} if $self->{source_archive};
     $self->{package} = Pakket::PackageQuery->new_from_meta($self->{meta_spec});
