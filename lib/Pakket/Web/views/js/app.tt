@@ -7,7 +7,7 @@
   const FLAG_GET_ONLY_BROKEN = 'broken=1';
   const RENDER_ONLY_BROKEN = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;
   // extendable via the payload
-  const desiredColumnsOrder = ['spec', 'source'];
+  let desiredColumnsOrder = ['spec', 'source'];
   const urlPieces = location.href.split('s=');
   const $onlyBrokenEl = $('#only-problematic');
   const $searchEl = $('#s_pakket');
@@ -168,16 +168,17 @@
   function _renderUI(data) {
     // taking pakket #1 and getting columns metadata from it
     const keys = Object.keys(data[0][1]);
-    let finalOrder = desiredColumnsOrder;
+    let perlVersions = [];
     keys.forEach((key) => {
       if (desiredColumnsOrder.indexOf(key) === -1) {
-        finalOrder.push(key);
+        perlVersions.push(key);
       }
       // getting OS metadata from first perl version prop
       if (strIsPerlVersion(key)){
         OSmetadata = Object.keys(data[0][1][key]).sort();
       }
     });
+    desiredColumnsOrder = desiredColumnsOrder.concat(perlVersions.sort());
 
     let tableHead = '<tr>';
     tableHead += '<td class="name" rowspan="2" colspan="2">module name</td>';
@@ -186,7 +187,9 @@
       let colspan = 1;
       let rowspan = 1;
       if (strIsPerlVersion(column)){
-        colspan = 2;
+        // making sure we display as many OSes under certain perl version
+        // as BE gives us in output
+        colspan = OSmetadata.length;
       } else {
         rowspan = 2;
       }
