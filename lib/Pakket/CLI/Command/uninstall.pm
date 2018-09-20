@@ -100,6 +100,8 @@ sub execute {
         'pakket_dir'           => $opt->{'config'}{'install_dir'},
         'packages'             => $opt->{'packages'},
         'without_dependencies' => $opt->{'without_dependencies'},
+        'use_hardlinks'        => $opt->{'config'}{'use_hardlinks'} // 0,
+        'keep_rollbacks'       => $opt->{'config'}{'keep_rollbacks'} // 1,
     );
 
     my @packages_for_uninstall

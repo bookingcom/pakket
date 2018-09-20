@@ -57,6 +57,7 @@ sub uninstall {
     }
 
     $self->save_info_file( $self->work_dir, $info_file );
+    $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
     $self->activate_work_dir;
 
     $log->infof(
