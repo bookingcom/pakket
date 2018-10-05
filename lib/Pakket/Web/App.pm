@@ -35,6 +35,15 @@ sub setup {
         push @repos, {'repo_config' => $repo_config, 'repo' => $repo};
     }
 
+    # status page handler
+    sub status_page {
+      set content_type => 'text/html';
+      set auto_page => 1;
+      my $dirname = dirname(__FILE__);
+      set views => path($dirname, 'views');
+      template 'status';
+    }
+
     get '/info' => sub {
         set content_type => 'application/json';
         my @repositories =  map { { 'type' => $_->{'type'},
@@ -77,13 +86,9 @@ sub setup {
         return encode_json(\@sorted_output);
     };
 
-    get '/status' => sub {
-        set content_type => 'text/html';
-        set auto_page => 1;
-        my $dirname = dirname(__FILE__);
-        set views => path($dirname, 'views');
-        template 'status';
-    };
+    # status page is accessible via / and /status
+    get '/' => \&status_page;
+    get '/status' => \&status_page;
 
     # manually defining static resources
     # TODO: change extension, use some sort of auto-detection
