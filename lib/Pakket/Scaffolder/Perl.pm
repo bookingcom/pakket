@@ -176,6 +176,11 @@ sub _scaffold_package {
             }
         }
 
+        foreach my $cmd (@{ $package->{pre_manage} }) {
+            my $ecode = system($cmd);
+            Carp::croak("Unable to run '$cmd'") if $ecode;
+        }
+
         if (!$package->{skip}{dzil}) {
             $sources = $self->process_dist_ini($package, $sources) unless $package->source eq 'cpan';
         }

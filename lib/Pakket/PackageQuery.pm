@@ -28,12 +28,12 @@ has 'release' => (
     'default' => sub { PAKKET_DEFAULT_RELEASE() },
 );
 
-has [qw< distribution source url summary path >] => (
+has [qw<distribution source url summary path>] => (
     'is'       => 'ro',
     'isa'      => 'Maybe[Str]',
 );
 
-has 'patch' => (
+has [qw<patch pre_manage>] => (
     'is'      => 'ro',
     'isa'     => 'Maybe[ArrayRef]',
 );
@@ -90,10 +90,11 @@ sub new_from_meta {
 
     my $params = { %$meta_spec{qw<category name version release source>} };
 
-    $params->{patch}  = $meta_spec->{patch}  if $meta_spec->{patch};
-    $params->{path}   = $meta_spec->{path}   if $meta_spec->{path};
-    $params->{skip}   = $meta_spec->{skip}   if $meta_spec->{skip};
-    $params->{manage} = $meta_spec->{manage} if $meta_spec->{manage};
+    $params->{patch}      = $meta_spec->{patch}        if $meta_spec->{patch};
+    $params->{path}       = $meta_spec->{path}         if $meta_spec->{path};
+    $params->{skip}       = $meta_spec->{skip}         if $meta_spec->{skip};
+    $params->{manage}     = $meta_spec->{manage}       if $meta_spec->{manage};
+    $params->{pre_manage} = $meta_spec->{'pre-manage'} if $meta_spec->{'pre-manage'};
 
     my $prereqs = _convert_requires($meta_spec);
     $params->{prereqs} = $prereqs if $prereqs;

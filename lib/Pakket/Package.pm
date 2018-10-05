@@ -21,7 +21,7 @@ has [qw<source distribution path>] => (
     'isa'      => 'Maybe[Str]',
 );
 
-has 'patch' => (
+has [qw<patch pre_manage>] => (
     'is'      => 'ro',
     'isa'     => 'Maybe[ArrayRef]',
 );
