@@ -12,6 +12,7 @@ use Log::Any qw< $log >;
 use Pakket::Log qw< log_success log_fail >;
 
 with qw<
+    Pakket::Role::CanUninstallPackage
     Pakket::Role::HasInfoFile
     Pakket::Role::HasLibDir
 >;
@@ -53,7 +54,7 @@ sub uninstall {
     }
 
     foreach my $package (@packages_for_uninstall) {
-        $self->delete_package( $info_file, $package );
+        $self->uninstall_package( $info_file, $package );
     }
 
     $self->save_info_file( $self->work_dir, $info_file );
@@ -177,32 +178,6 @@ sub get_packages_available_for_uninstall {
         }
     }
     return @packages_for_uninstall;
-}
-
-sub delete_package {
-    my ( $self, $info_file, $package ) = @_;
-    my $info = delete $info_file->{installed_packages}{ $package->{category} }
-        { $package->{name} };
-    $log->debugf( "Deleting package %s/%s",
-        $package->{category}, $package->{name} );
-
-    for my $file ( sort @{ $info->{files} // [] } ) {
-        delete $info_file->{installed_files}{$file};
-        my ($file_name) = $file =~ /\w+\/(.+)/;
-        my $path = $self->work_dir->child($file_name);
-        $log->debugf( "Deleting file %s", $path );
-        $path->exists and !$path->remove
-            and $log->error("Could not remove $path: $!");
-
-        # remove parent dirs while there are no children
-        my $parent = $path->parent;
-        while ($parent->exists && (0 + $parent->children) == 0) {
-            $log->debugf("Deleting dir  %s", $parent);
-            rmdir $parent;
-            $parent = $parent->parent;
-        }
-    }
-    return;
 }
 
 __PACKAGE__->meta->make_immutable;

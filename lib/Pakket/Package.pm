@@ -33,20 +33,17 @@ has [qw<skip manage>] => (
 
 has 'is_bootstrap' => (
     'is'      => 'ro',
-    'isa'     => 'Bool',
-    'default' => sub {0},
+    'isa'     => 'Maybe[Bool]',
 );
 
 has [qw<build_opts bundle_opts>] => (
     'is'      => 'ro',
-    'isa'     => 'HashRef',
-    'default' => sub { +{} },
+    'isa'     => 'Maybe[HashRef]',
 );
 
 has 'prereqs' => (
     'is'      => 'ro',
-    'isa'     => 'HashRef',
-    'default' => sub { +{} },
+    'isa'     => 'Maybe[HashRef]',
 );
 
 # FIXME: GH #73 will make this more reasonable

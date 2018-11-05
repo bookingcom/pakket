@@ -9,7 +9,7 @@ use Pakket::Utils qw< encode_json_pretty >;
 use Pakket::Constants qw<PAKKET_INFO_FILE>;
 use Pakket::Package;
 
-sub add_package_in_info_file {
+sub add_package_to_info_file {
     my ( $self, $parcel_dir, $dir, $package, $opts ) = @_;
 
     my $install_data = $self->load_info_file($dir);
@@ -37,7 +37,7 @@ sub add_package_in_info_file {
     $install_data->{'installed_packages'}{$cat}{$name} = {
         'version'   => $package->version,
         'release'   => $package->release,
-        'files'     => [ keys %files ],
+        'files'     => [ sort keys %files ],
         'as_prereq' => $opts->{'as_prereq'} ? 1 : 0,
         'prereqs'   => $package->prereqs,
     };
@@ -93,7 +93,7 @@ sub load_installed_packages {
 
     my $install_data = $self->load_info_file($dir);
     my $packages = $install_data->{'installed_packages'};
-    my %packages = ();
+    my %result = ();
     for my $category (keys %$packages) {
         for my $name (keys %{$packages->{$category}}) {
             my $p = $packages->{$category}{$name};
@@ -103,10 +103,10 @@ sub load_installed_packages {
                                 'version'  => $p->{'version'},
                                 'release'  => $p->{'release'},
                             );
-            $packages{$package->full_name} = 1;
+            $result{$package->short_name} = $package;
         }
     }
-    return \%packages;
+    return \%result;
 }
 
 no Moose::Role;

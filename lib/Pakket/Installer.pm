@@ -26,6 +26,7 @@ use Pakket::Constants qw<
 >;
 
 with qw<
+    Pakket::Role::CanUninstallPackage
     Pakket::Role::HasConfig
     Pakket::Role::HasParcelRepo
     Pakket::Role::HasInfoFile
@@ -90,11 +91,7 @@ sub install {
 
     $self->installed_packages($self->load_installed_packages($self->active_dir));
 
-    if ( $self->force ) {
-        $self->remove_packages_from_list_of_already_installed(@packages);
-    }
-
-    @packages = $self->drop_installed_packages(@packages);
+    @packages = $self->_filter_packages(@packages);
     @packages or return;
 
     if (!$self->check_packages_in_parcel_repo(\@packages)) {
@@ -125,8 +122,7 @@ sub install {
         scalar keys %{$installer_cache}, $self->pakket_dir,
     );
 
-    log_success( 'Finished installing: ' . join ', ',
-        map $_->full_name, @packages );
+    log_success( 'Finished installing: ' . join ', ', map $_->full_name, @packages );
 
     return;
 }
@@ -195,9 +191,18 @@ sub install_package {
         }
     }
 
+
+    # uninstall previous version of the package
+    my $package_to_update = $self->_package_to_upgrade($package);
+    if ($package_to_update) {
+        my $info_file = $self->load_info_file($dir);
+        $self->uninstall_package($info_file, $package_to_update);
+        $self->save_info_file($dir, $info_file);
+    }
+
     copy_package_to_install_dir($full_parcel_dir, $dir);
 
-    $self->add_package_in_info_file( $parcel_dir, $dir, $full_package, $opts );
+    $self->add_package_to_info_file( $parcel_dir, $dir, $full_package, $opts );
 
     log_success( sprintf 'Delivering parcel %s', $full_package->full_name );
 
@@ -226,7 +231,7 @@ sub install_prereq {
 
         my ( $version, $release ) = @{$ver_rel};
 
-        $package = Pakket::PackageQuery->new(
+        $package = Pakket::Package->new(
                 'category' => $category,
                 'name'     => $name,
                 'version'  => $version,
@@ -255,11 +260,27 @@ sub copy_package_to_install_dir {
     }
 }
 
+sub _package_to_upgrade {
+    my ($self, $package) = @_;
+
+    my $installed_package = $self->installed_packages->{$package->short_name};
+    if ($installed_package) {
+        if ($installed_package && $installed_package->full_name eq $package->full_name) {
+            $log->infof('%s is going to be reinstalled', $installed_package->full_name);
+        } else {
+            $log->infof('%s is going to be upgraded to %s', $installed_package->full_name, $package->full_name);
+        }
+        return $installed_package;
+    }
+    return undef;
+}
+
 sub is_installed {
     my ($self, $installer_cache, $package) = @_;
 
-    if ($self->installed_packages->{$package->full_name}) {
-        $log->infof( '%s already installed', $package->full_name );
+    my $installed_package = $self->installed_packages->{$package->short_name};
+    if ($installed_package && $installed_package->full_name eq $package->full_name) {
+        $log->debugf('%s already installed', $package->full_name);
         return 1;
     }
 
@@ -331,45 +352,45 @@ sub pre_install_checks {
 }
 
 sub show_installed {
-    my $self = shift;
-    my $installed_packages = $self->load_installed_packages($self->active_dir);
-    print join("\n", sort keys %{$installed_packages} ) . "\n";
+    my ($self) = @_;
+
+    my @installed_packages = map {
+        $_->full_name
+    } values %{$self->load_installed_packages($self->active_dir)};
+
+    print join("\n", sort @installed_packages ) . "\n";
     return 0;
 }
 
-sub drop_installed_packages {
-    my $self = shift;
-    my @packages = @_;
-    my @out;
+sub _filter_packages {
+    my ($self, @packages) = @_;
+
+    my @result;
     for my $package (@packages) {
-        if (!$self->installed_packages->{$package->full_name}) {
-            push @out, $package;
+        my $installed_package = $self->installed_packages->{$package->short_name};
+        if ($installed_package) {
+            if ($installed_package->full_name ne $package->full_name) {
+                push @result, $package;
+            } elsif ($self->force) {
+                $log->infof('%s already installed, but enabled --force, reinstalling it', $package->full_name);
+                push @result, $package;
+            }
+        } else {
+            push @result, $package;
         }
     }
-    if (!@out) {
+    if (!@result) {
         if (0+@packages == 1) {
             $log->infof('%s already installed', $packages[0]->full_name);
         } else {
             $log->infof('All packages are already installed');
         }
     }
-    return @out;
-}
-
-sub remove_packages_from_list_of_already_installed {
-    my $self = shift;
-    my @packages = @_;
-    for my $package (@packages) {
-        if ($self->installed_packages->{$package->full_name}) {
-            $log->infof('%s already installed, but enabled --force, reinstalling it', $package->full_name);
-            delete $self->installed_packages->{$package->full_name};
-        }
-    }
+    return @result;
 }
 
 sub set_latest_version_for_undefined {
-    my $self      = shift;
-    my @packages  = @_;
+    my ($self, @packages) = @_;
 
     my @output;
     for my $package (@packages) {
@@ -485,7 +506,7 @@ See L<Pakket::Role::HasLibDir>.
 
 See L<Pakket::Role::HasLibDir>.
 
-=head2 add_package_in_info_file
+=head2 add_package_to_info_file
 
 See L<Pakket::Role::HasInfoFile>.
 
@@ -545,10 +566,6 @@ Perform all the checks for the installation phase.
 =head2 show_installed()
 
 Display all the installed packages. This is helpful for debugging.
-
-=head2 drop_installed_packages(@packages)
-
-Removes installed packages from a list of given packages.
 
 =head2 run_command
 
