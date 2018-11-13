@@ -121,7 +121,7 @@ sub _build_logger {
         'mode'      => '>>',
         'callbacks' => [ sub {
             my %data = @_;
-            my $localtime = gettimeofday;
+            my $localtime = gettimeofday + 0.0001; # weird mitigation of bug https://rt.cpan.org/Public/Bug/Display.html?id=95447
             return sprintf '[%s] %s: %s', $time{'yyyy-mm-dd hh:mm:ss.mmm', $localtime}, $data{'level'}, $data{'message'};
         } ],
     ];
