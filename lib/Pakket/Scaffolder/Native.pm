@@ -22,59 +22,49 @@ has 'package' => (
 );
 
 sub run {
-    my $self = shift;
+    my ($self) = @_;
 
-    if ( $self->spec_repo->has_object( $self->package->id ) ) {
-        $log->debugf("Package %s already exists", $self->package->full_name);
-        return;
-    }
+    return if $self->is_package_in_spec_repo($self->{package}) and !$self->overwrite;
 
-    $log->infof('Working on %s', $self->package->full_name);
-
-    # Source
-    $self->add_source();
-
-    # Spec
-    $self->add_spec();
-
-    $log->infof('Done: %s', $self->package->full_name);
-
-    return 0;
+    return $self->_scaffold_package($self->package);
 }
 
-sub add_source {
-    my $self = shift;
+sub _scaffold_package {
+    my ($self, $package) = @_;
 
-    if ($self->source_repo->has_object($self->package->id)) {
-        $log->debugf("Package %s already exists in source repo (skipping)",
-                        $self->package->full_name);
-        return;
+    my $sources = $self->_fetch_source_for_package($package);
+
+    $self->apply_patches($package, $sources);
+
+    {
+        local %ENV = %ENV; # keep all env changes locally
+        if ($package->{manage}{env}) {
+            foreach my $key (keys %{$package->{manage}{env}}) {
+                $ENV{$key} = $package->{manage}{env}{$key};
+            }
+        }
+
+        foreach my $cmd (@{ $package->{pre_manage} }) {
+            my $ecode = system($cmd);
+            Carp::croak("Unable to run '$cmd'") if $ecode;
+        }
     }
 
-    if (!$self->{package}{source}) {
-        Carp::croak("Please specify --source-archive=<sources_file_name>");
-    }
-
-    my $download = Pakket::Downloader::ByUrl::create($self->{package}{name}, $self->{package}{source});
-    my $dir      = $download->to_dir;
-    $self->apply_patches($self->package, $dir);
-
-    $log->debugf("Uploading %s into source repo from %s", $self->package->full_name, $dir);
-    $self->source_repo->store_package_source($self->package, $dir);
+    $log->infof('Working on %s', $package->full_name);
+    $self->add_spec_for_package($package);
+    $self->add_source_for_package($package, $sources);
+    $log->infof('Done: %s', $package->full_name);
 }
 
-sub add_spec {
-    my $self = shift;
+sub _fetch_source_for_package {
+    my ($self, $package) = @_;
 
-    $log->debugf("Creating spec for %s", $self->package->full_name);
-
-    # we had PackageQuery in $package now convert it to Package
-    my $package = Pakket::Package->new(%{$self->package});
-
-    $self->spec_repo->store_package_spec($package);
+    my $download = Pakket::Downloader::ByUrl::create($package->name, $package->source);
+    return $download->to_dir;
 }
 
 __PACKAGE__->meta->make_immutable;
+
 no Moose;
 
 1;

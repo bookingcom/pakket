@@ -3,6 +3,7 @@ package Pakket::Role::HasSourceRepo;
 
 use Moose::Role;
 use Pakket::Repository::Source;
+use Log::Any              qw< $log >;
 
 has 'source_repo' => (
     'is'      => 'ro',
@@ -27,6 +28,21 @@ has 'source_repo_backend' => (
         return $self->config->{'repositories'}{'source'};
     },
 );
+
+sub add_source_for_package {
+    my ($self, $package, $sources) = @_;
+
+    # check if we already have the source in the repo
+    if ($self->source_repo->has_object($package->id) and !$self->overwrite) {
+        $log->debugf("Package %s already exists in source repo (skipping)", $package->full_name);
+        return;
+    }
+
+    #remove .git dir if it exists in sources
+    $sources->child('.git')->remove_tree;
+
+    $self->_upload_sources($package, $sources);
+}
 
 no Moose::Role;
 

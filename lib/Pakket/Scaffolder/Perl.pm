@@ -114,16 +114,11 @@ has 'dist_name' => (
     'default' => sub { +{} },
 );
 
-has 'meta_spec' => (
-    'is'  => 'ro',
-    'isa' => 'HashRef',
-);
-
 sub run {
     my ($self) = @_;
     my %failed;
 
-    return if $self->_is_package_in_spec_repo($self->{package}) and !$self->overwrite;
+    return if $self->is_package_in_spec_repo($self->{package}) and !$self->overwrite;
 
     $self->_bootstrap_toolchain;
     $self->_scaffold_package($self->package);
@@ -194,8 +189,8 @@ sub _scaffold_package {
     $self->_merge_release_info($package, $release_info);
 
     $log->infof('Working on %s', $package->full_name);
-    $self->_add_spec_for_package($package);
-    $self->_add_source_for_package($package, $sources);
+    $self->add_spec_for_package($package);
+    $self->add_source_for_package($package, $sources);
     $log->infof('Done: %s', $package->full_name);
 }
 
@@ -268,22 +263,6 @@ sub _scaffold_dependencies {
     }
 }
 
-sub _is_package_in_spec_repo {
-    my ($self, $package) = @_;
-
-    my @versions = map { $_ =~ PAKKET_PACKAGE_SPEC(); "$3:$4" }
-        @{ $self->spec_repo->all_object_ids_by_name($package->name, 'perl') };
-
-    return 0 unless @versions; # there are no packages
-
-    if ($self->versioner->is_satisfying($package->version.':'.$package->release, @versions)) {
-        $log->debugf("Skipping %s, already have satisfying version: %s", $package->full_name, join(", ", @versions));
-        return 1;
-    }
-
-    return 0; # spec has package, but version is not compatible
-}
-
 sub _get_release_info_for_package {
     my ($self, $package) = @_;
 
@@ -324,36 +303,6 @@ sub _rewrite_download_url {
     return $download_url unless is_hashref($rewrite);
     my ( $from, $to ) = @{$rewrite}{qw< from to >};
     return ( $download_url =~ s/$from/$to/r );
-}
-
-sub _add_source_for_package {
-    my ($self, $package, $sources) = @_;
-
-    # check if we already have the source in the repo
-    if ($self->source_repo->has_object($package->id) and !$self->overwrite) {
-        $log->debugf("Package %s already exists in source repo (skipping)", $package->full_name);
-        return;
-    }
-
-    #remove .git dir if it exists in sources
-    $sources->child('.git')->remove_tree;
-
-    $self->_upload_sources($package, $sources);
-}
-
-sub _add_spec_for_package {
-    my ($self, $package) = @_;
-
-    if ($self->spec_repo->has_object($package->id) and !$self->overwrite) {
-        $log->debugf("Package %s already exists in spec repo (skipping)", $package->full_name);
-        return;
-    }
-
-    $log->debugf("Creating spec for %s", $package->full_name);
-
-    # we had PackageQuery in $package now convert it to Package
-    my $final_package = Pakket::Package->new(%{$self->package});
-    $self->spec_repo->store_package_spec($final_package);
 }
 
 sub _skip_module {
@@ -481,7 +430,7 @@ sub _get_release_info_cpan {
     # try the latest
     my $latest = $self->_get_latest_release_info_for_distribution($package->name);
     if ($latest->{version} && defined $latest->{download_url}) {
-        if ($self->versioner->is_satisfying($package->version.':'.$package->release, $latest->{version})) {
+        if ($self->versioner->is_satisfying($package->version, $latest->{version})) {
             return $latest;
         }
         $log->debugf("Latest version of %s is %s. Doesn't satisfy requirements. Checking other old versions.",
@@ -512,7 +461,7 @@ sub _get_release_info_cpan {
     @valid_versions = sort { version->parse($b) <=> version->parse($a) } @valid_versions;
 
     for my $v ( @valid_versions ) {
-        if ($self->versioner->is_satisfying($package->version.':'.$package->release, $v)) {
+        if ($self->versioner->is_satisfying($package->version, $v)) {
             $version         = $v;
             $release_prereqs = $all_dist_releases->{$v}{'prereqs'} || {};
             $download_url    = $self->_rewrite_download_url( $all_dist_releases->{$v}{'download_url'} );
