@@ -39,6 +39,7 @@ has 'is_bootstrap' => (
 has [qw<build_opts bundle_opts>] => (
     'is'      => 'ro',
     'isa'     => 'Maybe[HashRef]',
+    'default' => sub { {} },
 );
 
 has 'prereqs' => (

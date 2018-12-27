@@ -100,14 +100,8 @@ sub new_from_meta {
     $params->{prereqs} = $prereqs if $prereqs;
 
     my $build_opts = _convert_build_options($meta_spec);
-    foreach my $cmd (@{$meta_spec->{'pre-build'}}) {
-        my @cmd_split = split(/\s/, $cmd);
-        push(@{$build_opts->{pre_build}}, \@cmd_split);
-    }
-    foreach my $cmd (@{$meta_spec->{'post-build'}}) {
-        my @cmd_split = split(/\s/, $cmd);
-        push(@{$build_opts->{post_build}}, \@cmd_split);
-    }
+    $build_opts->{'pre-build'}  = $meta_spec->{'pre-build'}  if $meta_spec->{'pre-build'};
+    $build_opts->{'post-build'} = $meta_spec->{'post-build'} if $meta_spec->{'post-build'};
     $params->{build_opts} = $build_opts if $build_opts;
 
     return $class->new($params);

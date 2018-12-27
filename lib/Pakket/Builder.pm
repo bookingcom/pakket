@@ -426,6 +426,14 @@ sub run_build {
             }
         }
 
+        if ( $package->build_opts->{'pre-build'} ) {
+            foreach my $cmd ( @{ $package->build_opts->{'pre-build'} } ) {
+                $log->debugf("Executing '$cmd'");
+                my $ecode = system($cmd);
+                Carp::croak("Unable to run '$cmd'") if $ecode;
+            }
+        }
+
         $builder->build_package(
             $package->name,
             $package_dst_dir,
@@ -443,6 +451,14 @@ sub run_build {
                     $cmd_set,
                     {'env' => \%env_vars},
                 );
+            }
+        }
+
+        if ( $package->build_opts->{'post-build'} ) {
+            foreach my $cmd ( @{ $package->build_opts->{'post-build'} } ) {
+                $log->debugf("Executing '$cmd'");
+                my $ecode = system($cmd);
+                Carp::croak("Unable to run '$cmd'") if $ecode;
             }
         }
     } else {
