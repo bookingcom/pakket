@@ -10,6 +10,7 @@ use Log::Any   qw< $log >;
 use Term::GentooFunctions qw< ebegin eend >;
 use Time::HiRes qw< gettimeofday >;
 use Time::Format qw< %time >;
+use Try::Tiny;
 use JSON::MaybeXS qw< encode_json >;
 
 use constant {
@@ -121,8 +122,13 @@ sub _build_logger {
         'mode'      => '>>',
         'callbacks' => [ sub {
             my %data = @_;
-            my $localtime = gettimeofday + 0.0001; # weird mitigation of bug https://rt.cpan.org/Public/Bug/Display.html?id=95447
-            return sprintf '[%s] %s: %s', $time{'yyyy-mm-dd hh:mm:ss.mmm', $localtime}, $data{'level'}, $data{'message'};
+            my $localtime = gettimeofday;
+            my $timestr = try {
+                $time{'yyyy-mm-dd hh:mm:ss.mmm', $localtime};
+            } catch {
+                $time{'yyyy-mm-dd hh:mm:ss.mmm', int($localtime)};
+            };
+            return sprintf '[%s] %s: %s', $timestr, $data{'level'}, $data{'message'};
         } ],
     ];
 }
