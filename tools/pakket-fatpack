@@ -1,0 +1,4 @@
+#!/usr/bin/bash
+
+fatpack pack bin/pakket > tools/pakket-light
+chmod a+x tools/pakket-light

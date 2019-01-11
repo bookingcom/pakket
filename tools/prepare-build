@@ -1,0 +1,6 @@
+#!/usr/bin/bash
+
+cpanm -n --installdeps ./tools/build
+cpanm -n --installdeps .
+
+dzil authordeps --missing | cpanm -n

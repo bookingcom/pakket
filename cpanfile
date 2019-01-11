@@ -60,4 +60,5 @@ requires 'Types::DBI';
 on 'test' => sub {
     requires 'Test::Perl::Critic::Progressive';
     requires 'Test::Vars';
+    requires 'Module::Faker';
 };

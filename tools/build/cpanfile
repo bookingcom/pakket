@@ -1,0 +1,6 @@
+requires 'App::FatPacker';
+requires 'App::Seacan';
+requires 'App::perlbrew';
+requires 'Archive::Tar::Wrapper';
+requires 'Dist::Zilla';
+requires 'IPC::Run3';
