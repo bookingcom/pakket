@@ -19,9 +19,9 @@ use Pakket::Constants qw<
 
 sub _coerce_backend_from_str {
     my $uri = shift;
-    $uri = lc($uri);
 
     my ($scheme) = $uri =~ m{^ ( [a-zA-Z0-9_]+ ) :// }xms;
+    $scheme = lc($scheme);
     $scheme = "http" if ($scheme eq "https");
     my $class    = "Pakket::Repository::Backend::$scheme";
 
