@@ -79,6 +79,7 @@ sub execute {
     );
 
     $log->info("Done. Please add $shellfile to your bashrc.");
+    return;
 }
 
 1;

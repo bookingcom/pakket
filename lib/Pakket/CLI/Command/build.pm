@@ -150,6 +150,8 @@ sub execute {
             $log->warnf('Failed to build %s, skipping.', $query->full_name );
         };
     }
+
+    return;
 }
 
 1;
