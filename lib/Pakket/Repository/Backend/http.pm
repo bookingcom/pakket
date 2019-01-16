@@ -13,6 +13,7 @@ use Types::Path::Tiny qw< Path >;
 use HTTP::Tiny;
 use Regexp::Common    qw< URI >;
 use Pakket::Utils     qw< encode_json_canonical >;
+use Time::HiRes       qw< usleep >;
 
 use constant { 'HTTP_DEFAULT_PORT' => 80 };
 
@@ -177,11 +178,22 @@ sub store_location {
 }
 
 sub retrieve_location {
-    my ( $self, $id ) = @_;
+    my ( $self, $id, $retries ) = @_;
+    $retries //= 3;
     my $url      = '/retrieve/location?id=' . uri_escape($id);
     my $full_url = $self->base_url . $url;
     my $response = $self->http_client->get($full_url);
-    $response->{'success'} or return;
+    if (!$response->{'success'}) {
+        if ($response->{status} == 599 && $retries > 0) {
+            usleep 300;
+            return $self->retrieve_location($id, $retries - 1);
+        }
+        if ($response->{status} == 404) {
+            return;
+        }
+
+        croak( $log->criticalf( 'Could not retrieve parcel %s: %s', $id, $response->{content} ) );
+    }
     my $content  = $response->{'content'};
     my $location = Path::Tiny->tempfile( "$$-" . ( 'X' x 10 ) );
     $location->touch;
