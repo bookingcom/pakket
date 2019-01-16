@@ -17,10 +17,6 @@ use Time::HiRes       qw< usleep >;
 
 use constant { 'HTTP_DEFAULT_PORT' => 80 };
 
-with qw<
-    Pakket::Role::Repository::Backend
->;
-
 has 'scheme' => (
     'is'      => 'ro',
     'isa'     => 'Str',
@@ -57,6 +53,17 @@ has 'http_client' => (
     'isa'     => 'HTTP::Tiny',
     'default' => sub { HTTP::Tiny->new },
 );
+
+has 'all_object_ids' => (
+    'is'      => 'ro',
+    'lazy'    => 1,
+    'clearer' => 'clear_all_object_ids',
+    'builder' => '_build_all_object_ids',
+);
+
+with qw<
+    Pakket::Role::Repository::Backend
+>;
 
 sub new_from_uri {
     my ( $class, $uri ) = @_;
@@ -105,7 +112,7 @@ sub _build_base_url {
     );
 }
 
-sub all_object_ids {
+sub _build_all_object_ids {
     my $self     = shift;
     my $url      = '/all_object_ids';
     my $full_url = $self->base_url . $url;
