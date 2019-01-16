@@ -7,7 +7,7 @@ use Carp                  qw< croak >;
 use Path::Tiny            qw< path  >;
 use Types::Path::Tiny     qw< Path  >;
 use File::Copy::Recursive qw< dircopy >;
-use Time::HiRes           qw< time >;
+use Time::HiRes           qw< time usleep >;
 use Log::Any              qw< $log >;
 use JSON::MaybeXS         qw< decode_json >;
 use Archive::Any;
@@ -23,6 +23,7 @@ use Pakket::Utils     qw< is_writeable >;
 use Pakket::Constants qw<
     PARCEL_METADATA_FILE
     PARCEL_FILES_DIR
+    PAKKET_PACKAGE_SPEC
 >;
 
 with qw<
@@ -32,6 +33,7 @@ with qw<
     Pakket::Role::HasInfoFile
     Pakket::Role::HasLibDir
     Pakket::Role::RunCommand
+    Pakket::Role::ParallelInstaller
 >;
 
 has 'force' => (
@@ -98,20 +100,37 @@ sub install {
         return ENOENT;
     }
 
-    my $installer_cache = {};
+    if ( !is_writeable($self->work_dir) ) {
+        croak(
+            $log->criticalf( "Can't write to your installation directory (%s)", $self->work_dir )
+        );
+    }
 
-    foreach my $package (@packages) {
-        eval {
-            $self->install_package(
-                $package,
-                $self->work_dir,
-                { 'cache' => $installer_cache }
-            );
-            1;
-        } or do {
-            $self->ignore_failures or die $@;
-            $log->warnf( 'Failed to install %s, skipping', $package->full_name);
-        };
+    my $installed_packages;
+
+    if ($self->is_parallel) {
+        $installed_packages = $self->install_packages_parallel(
+            \@packages,
+        );
+    }
+    else {
+        my $installer_cache = {};
+
+        foreach my $package (@packages) {
+            eval {
+                $self->install_package(
+                    $package,
+                    $self->work_dir,
+                    { 'cache' => $installer_cache }
+                );
+                1;
+            } or do {
+                $self->ignore_failures or die $@;
+                $log->warnf( 'Failed to install %s, skipping', $package->full_name);
+            };
+        }
+
+        $installed_packages = keys %{$installer_cache}
     }
 
     $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
@@ -119,7 +138,7 @@ sub install {
 
     $log->infof(
         "Finished installing %d packages into '%s'",
-        scalar keys %{$installer_cache}, $self->pakket_dir->stringify,
+        $installed_packages, $self->pakket_dir->stringify,
     );
 
     log_success( 'Finished installing: ' . join ', ', map $_->full_name, @packages );
@@ -210,8 +229,117 @@ sub install_package {
     return;
 }
 
-sub install_prereq {
-    my ($self, $category, $name, $prereq_data, $dir, $opts) = @_;
+sub install_packages_parallel {
+    my ( $self, $packages ) = @_;
+    my $dir = $self->work_dir;
+    my $dc_dir = $self->data_consumer_dir;
+
+    $self->_push_to_data_consumer($_->full_name) for @$packages;
+
+    $self->spawn;
+
+    do {
+        $self->data_consumer->consume(sub {
+            my ($consumer,$other_spec,$fh,$file) = @_;
+            my $file_contents = <$fh>;
+            if (!$file_contents) {
+                $log->infof("Another worker got hold of the lock for %s first -- skipping",
+                    $file);
+                return $consumer->leave;
+            }
+
+            my $package_str = substr $file_contents, 1;
+
+            my ( $pkg_cat, $pkg_name, $pkg_version, $pkg_release ) =
+                $package_str =~ PAKKET_PACKAGE_SPEC();
+
+            my $package = Pakket::Package->new(
+                'category' => $pkg_cat,
+                'name'     => $pkg_name,
+                'version'  => $pkg_version // 0,
+                'release'  => $pkg_release // 0,
+            );
+
+            pre_install_checks( $dir, $package, {} );
+
+            $log->debugf( "About to install %s (into $dir)", $package->full_name );
+
+            $self->is_installed({}, $package)
+               and return;
+
+            my $parcel_dir
+                = $self->parcel_repo->retrieve_package_parcel($package);
+
+            my $full_parcel_dir = $parcel_dir->child( PARCEL_FILES_DIR() );
+
+            # Get the spec and create a new Package object
+            # This one will have the dependencies as well
+            my $spec_file    = $full_parcel_dir->child( PARCEL_METADATA_FILE() );
+            my $spec         = decode_json $spec_file->slurp_utf8;
+            my $full_package = Pakket::Package->new_from_spec($spec);
+
+            my $prereqs = $full_package->prereqs;
+            foreach my $prereq_category ( keys %{$prereqs} ) {
+                my $runtime_prereqs = $prereqs->{$prereq_category}{'runtime'};
+
+                foreach my $prereq_name ( keys %{$runtime_prereqs} ) {
+                    my $prereq_data = $runtime_prereqs->{$prereq_name};
+
+                    my $p = $self->get_prereq( $prereq_category, $prereq_name, $prereq_data );
+                    $self->_push_to_data_consumer( $p->full_name, { as_prereq => 1 } );
+                }
+            }
+            $parcel_dir->move($dc_dir->child('to_install' => $file));
+
+            log_success( sprintf 'Delivering parcel %s', $full_package->full_name );
+        });
+
+        # It's actually faster to not hammer the filesystem checking for new
+        # stuff. $consumer->consume will continue until `unprocessed` is empty,
+        # so it's useful to wait a bit (100ms) to wait for new items to be added.
+        usleep 100;
+    }
+    while (    $dc_dir->child('working')->children()
+            || $dc_dir->child('unprocessed')->children() );
+
+    $self->wait_all_children;
+
+    my $info_file = $self->load_info_file($dir);
+    my $installed_packages = 0;
+    $dc_dir->child('processed')->visit(sub {
+        my ($file, $state) = @_;
+        read $file->filehandle, my $as_prereq, 1
+            or croak( $log->criticalf( "Couldn't read %s", $file->absolute ) );
+        $as_prereq =~ /^(0|1)$/
+            or croak( $log->criticalf( "Unexpected contents on %s: %s", $file->absolute, $file->slurp ) );
+
+        $installed_packages++;
+
+        my $parcel_dir = $dc_dir->child(to_install => $file->basename);
+        my $full_parcel_dir = $parcel_dir->child( PARCEL_FILES_DIR() );
+        copy_package_to_install_dir($full_parcel_dir, $dir);
+
+        my $spec_file = $full_parcel_dir->child( PARCEL_METADATA_FILE() );
+        my $spec      = decode_json $spec_file->slurp_utf8;
+        my $package   = Pakket::Package->new_from_spec($spec);
+
+        # uninstall previous version of the package
+        my $package_to_update = $self->_package_to_upgrade($package);
+        if ($package_to_update) {
+            $self->uninstall_package($info_file, $package_to_update);
+        }
+
+        $self->add_package_to_info_file( $parcel_dir, $info_file, $package, { as_prereq => $as_prereq } );
+    });
+    $self->save_info_file($dir, $info_file);
+
+    $dc_dir->remove_tree({safe => 0});
+
+    return $installed_packages;
+}
+
+sub get_prereq {
+    my ($self, $category, $name, $prereq_data) = @_;
     my $package;
     if (exists $self->requirements->{"$category/$name"}) {
         $package = $self->requirements->{"$category/$name"};
@@ -239,6 +367,13 @@ sub install_prereq {
                 'release'  => $release,
                 );
     }
+
+    return $package;
+}
+
+sub install_prereq {
+    my ($self, $category, $name, $prereq_data, $dir, $opts) = @_;
+    my $package = $self->get_prereq($category, $name, $prereq_data);
 
     $self->install_package(
         $package, $dir,
@@ -342,12 +477,6 @@ sub pre_install_checks {
             'You are trying to install a bootstrap version of %s.'
           . ' Please rebuild this package from scratch.',
             $package->full_name,
-        ) );
-    }
-
-    if ( !is_writeable($dir) ) {
-        croak( $log->critical(
-            "Can't write to your installation directory ($dir)",
         ) );
     }
 }

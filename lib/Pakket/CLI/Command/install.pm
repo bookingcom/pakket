@@ -47,6 +47,10 @@ sub _determine_config {
         $config->{'install_dir'} = $opt->{'to'};
     }
 
+    if ( $opt->{'jobs'} ) {
+        $config->{'jobs'} = $opt->{'jobs'};
+    }
+
     if ( $opt->{'no_atomic'} ) {
         $config->{'atomic'} = 0;
     }
@@ -110,6 +114,7 @@ sub opt_spec {
         [ 'show-installed', 'print list of installed packages' ],
         [ 'ignore-failures', 'Continue even if some installs fail' ],
         [ 'force|f',        'force reinstall if package exists' ],
+        [ 'jobs|j=i',         'number of workers to run in parallel' ],
         [
             'verbose|v+',
             'verbose output (can be provided multiple times)',
@@ -159,6 +164,7 @@ sub _create_installer {
         'use_hardlinks'   => $opt->{'config'}{'use_hardlinks'} // 0,
         'allow_rollback'  => $opt->{'config'}{'allow_rollback'} // 0,
         'keep_rollbacks'  => $opt->{'config'}{'keep_rollbacks'} // 1,
+        'jobs'            => $opt->{'config'}{'jobs'},
     );
 }
 
