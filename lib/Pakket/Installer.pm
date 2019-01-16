@@ -119,7 +119,7 @@ sub install {
 
     $log->infof(
         "Finished installing %d packages into '%s'",
-        scalar keys %{$installer_cache}, $self->pakket_dir,
+        scalar keys %{$installer_cache}, $self->pakket_dir->stringify,
     );
 
     log_success( 'Finished installing: ' . join ', ', map $_->full_name, @packages );

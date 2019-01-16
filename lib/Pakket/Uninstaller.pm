@@ -64,7 +64,7 @@ sub uninstall {
     $log->infof(
         "Finished uninstalling %d packages from %s",
         0 + @packages_for_uninstall,
-        $self->pakket_dir
+        $self->pakket_dir->stringify
     );
 
     log_success(
