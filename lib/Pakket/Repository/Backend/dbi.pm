@@ -45,6 +45,14 @@ sub all_object_ids {
     return \@all_object_ids;
 }
 
+sub all_object_ids_by_name {
+    my ($self, $name, $category) = @_;
+
+    croak($log->criticalf('Could not get remote all_object_ids_by_name: not implemented yet'));
+
+    return '';
+}
+
 sub _prepare_statement {
     my ( $self, $sql ) = @_;
     my $stmt = $self->dbh->prepare($sql);
@@ -146,6 +154,19 @@ sub retrieve_content {
     }
 
     return $all_content->[0];
+}
+
+sub remove_location {
+    my ( $self, $id ) = @_;
+
+    croak($log->criticalf('Could not get remote all_object_ids_by_name: not implemented yet'));
+
+    return 1;
+}
+
+sub remove_content {
+    my ( $self, $id ) = @_;
+    return $self->remove_location($id);
 }
 
 __PACKAGE__->meta->make_immutable;
