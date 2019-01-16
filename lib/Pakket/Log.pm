@@ -88,12 +88,16 @@ sub arg_default_logger {
 
 sub build_logger {
     my ( $class, $verbose, $file ) = @_;
+
+    my $outputs = [
+        $class->_cli_logger( $verbose // 0 ),
+        $class->_syslog_logger(),
+    ];
+
+    push(@{ $outputs }, $class->_build_logger($file)) if -w $file;
+
     my $logger = Log::Dispatch->new(
-        'outputs' => [
-            $class->_build_logger($file),
-            $class->_cli_logger( $verbose // 0 ),
-            $class->_syslog_logger(),
-        ],
+        'outputs' => $outputs,
     );
 
     return $logger;
