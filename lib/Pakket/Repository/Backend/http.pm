@@ -183,8 +183,10 @@ sub retrieve_location {
     my $response = $self->http_client->get($full_url);
     $response->{'success'} or return;
     my $content  = $response->{'content'};
-    my $location = Path::Tiny->tempfile;
-    $location->spew( { 'binmode' => ':raw' }, $content );
+    my $location = Path::Tiny->tempfile( "$$-" . ( 'X' x 10 ) );
+    $location->touch;
+    $location->append( { 'binmode' => ':raw' }, $content );
+
     return $location;
 }
 

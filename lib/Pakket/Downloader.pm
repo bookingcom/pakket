@@ -46,7 +46,7 @@ sub to_dir {
 
 sub _default_tempdir {
     my ($self) = @_;
-    return Path::Tiny->tempdir( 'CLEANUP' => 1 );
+    return Path::Tiny->tempdir( 'CLEANUP' => 1, TEMPLATE => "$$-" . ('X' x 10) );
 }
 
 sub _pack {
