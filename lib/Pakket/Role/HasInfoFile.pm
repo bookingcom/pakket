@@ -10,9 +10,7 @@ use Pakket::Constants qw<PAKKET_INFO_FILE>;
 use Pakket::Package;
 
 sub add_package_to_info_file {
-    my ( $self, $parcel_dir, $dir, $package, $opts ) = @_;
-
-    my $install_data = $self->load_info_file($dir);
+    my ( $self, $parcel_dir, $install_data, $package, $opts ) = @_;
 
     my %files;
 
@@ -45,8 +43,6 @@ sub add_package_to_info_file {
     foreach my $file ( keys %files ) {
         $install_data->{'installed_files'}{$file} = $files{$file};
     }
-
-    $self->save_info_file( $dir, $install_data );
 }
 
 sub set_rollback_tag {

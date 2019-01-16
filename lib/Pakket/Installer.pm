@@ -191,18 +191,19 @@ sub install_package {
         }
     }
 
+    my $info_file = $self->load_info_file($dir);
 
     # uninstall previous version of the package
     my $package_to_update = $self->_package_to_upgrade($package);
     if ($package_to_update) {
-        my $info_file = $self->load_info_file($dir);
         $self->uninstall_package($info_file, $package_to_update);
-        $self->save_info_file($dir, $info_file);
     }
 
     copy_package_to_install_dir($full_parcel_dir, $dir);
 
-    $self->add_package_to_info_file( $parcel_dir, $dir, $full_package, $opts );
+    $self->add_package_to_info_file( $parcel_dir, $info_file, $full_package, $opts );
+
+    $self->save_info_file($dir, $info_file);
 
     log_success( sprintf 'Delivering parcel %s', $full_package->full_name );
 
