@@ -14,6 +14,8 @@ use Archive::Any;
 use English               qw< -no_match_vars >;
 use Errno                 qw< :POSIX >;
 
+use File::Copy::Recursive qw< dirmove >;
+
 use Pakket::Repository::Parcel;
 use Pakket::Package;
 use Pakket::PackageQuery;
@@ -289,7 +291,8 @@ sub install_packages_parallel {
                     $self->_push_to_data_consumer( $p->full_name, { as_prereq => 1 } );
                 }
             }
-            $parcel_dir->move($dc_dir->child('to_install' => $file));
+            dirmove( $parcel_dir, $dc_dir->child( 'to_install' => $file ) )
+                or die $!;
 
             log_success( sprintf 'Delivering parcel %s', $full_package->full_name );
         });
