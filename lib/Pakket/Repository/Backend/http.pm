@@ -13,12 +13,9 @@ use Types::Path::Tiny qw< Path >;
 use HTTP::Tiny;
 use Regexp::Common    qw< URI >;
 use Pakket::Utils     qw< encode_json_canonical >;
+use Time::HiRes       qw< usleep >;
 
 use constant { 'HTTP_DEFAULT_PORT' => 80 };
-
-with qw<
-    Pakket::Role::Repository::Backend
->;
 
 has 'scheme' => (
     'is'      => 'ro',
@@ -56,6 +53,17 @@ has 'http_client' => (
     'isa'     => 'HTTP::Tiny',
     'default' => sub { HTTP::Tiny->new },
 );
+
+has 'all_object_ids' => (
+    'is'      => 'ro',
+    'lazy'    => 1,
+    'clearer' => 'clear_all_object_ids',
+    'builder' => '_build_all_object_ids',
+);
+
+with qw<
+    Pakket::Role::Repository::Backend
+>;
 
 sub new_from_uri {
     my ( $class, $uri ) = @_;
@@ -104,7 +112,7 @@ sub _build_base_url {
     );
 }
 
-sub all_object_ids {
+sub _build_all_object_ids {
     my $self     = shift;
     my $url      = '/all_object_ids';
     my $full_url = $self->base_url . $url;
@@ -177,14 +185,27 @@ sub store_location {
 }
 
 sub retrieve_location {
-    my ( $self, $id ) = @_;
+    my ( $self, $id, $retries ) = @_;
+    $retries //= 3;
     my $url      = '/retrieve/location?id=' . uri_escape($id);
     my $full_url = $self->base_url . $url;
     my $response = $self->http_client->get($full_url);
-    $response->{'success'} or return;
+    if (!$response->{'success'}) {
+        if ($response->{status} == 599 && $retries > 0) {
+            usleep 300;
+            return $self->retrieve_location($id, $retries - 1);
+        }
+        if ($response->{status} == 404) {
+            return;
+        }
+
+        croak( $log->criticalf( 'Could not retrieve parcel %s: %s', $id, $response->{content} ) );
+    }
     my $content  = $response->{'content'};
-    my $location = Path::Tiny->tempfile;
-    $location->spew( { 'binmode' => ':raw' }, $content );
+    my $location = Path::Tiny->tempfile( "$$-" . ( 'X' x 10 ) );
+    $location->touch;
+    $location->append( { 'binmode' => ':raw' }, $content );
+
     return $location;
 }
 

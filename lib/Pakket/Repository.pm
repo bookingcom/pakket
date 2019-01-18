@@ -51,7 +51,7 @@ sub retrieve_package_file {
         ) );
     }
 
-    my $dir = Path::Tiny->tempdir( 'CLEANUP' => 1 );
+    my $dir = Path::Tiny->tempdir( 'CLEANUP' => 1, TEMPLATE => "$$-" . ('X' x 10) );
 
     # Prefer system 'tar' instead of 'in perl' archive extractor,
     # because 'tar' memory consumption is very low,
