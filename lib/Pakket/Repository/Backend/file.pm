@@ -77,7 +77,7 @@ sub new_from_uri {
 sub BUILD {
     my $self = shift;
     if (!$self->directory->exists) {
-        croak( $log->criticalf("Directory %s doesn't exist", $self->directory));
+        croak( $log->criticalf("Directory %s doesn't exist", $self->directory->stringify));
     }
 }
 

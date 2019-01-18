@@ -43,7 +43,7 @@ has 'files' => (
                 $files{$path}
                     and croak $log->criticalf(
                     'Multiple extensions for same config file name: %s and %s',
-                    $files{$path}, $file
+                    $files{$path}, "$file"
                     );
 
                 $files{$path} = $file;

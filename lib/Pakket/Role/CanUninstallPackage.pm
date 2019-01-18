@@ -16,13 +16,13 @@ sub uninstall_package {
         my ($file_name) = $file =~ /\w+\/(.+)/;
         my $path = $self->work_dir->child($file_name);
 
-        $log->debugf( "Deleting file %s", $path );
+        $log->debugf( "Deleting file %s", "$path" );
         $path->exists and !$path->remove and $log->error("Could not remove $path: $!");
 
         # remove parent dirs while there are no children
         my $parent = $path->parent;
         while ($parent->exists && (0 + $parent->children) == 0) {
-            $log->debugf("Deleting dir  %s", $parent);
+            $log->debugf("Deleting dir %s", "$parent");
             rmdir $parent;
             $parent = $parent->parent;
         }

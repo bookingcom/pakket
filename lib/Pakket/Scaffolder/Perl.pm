@@ -324,7 +324,7 @@ sub _skip_module {
 sub _upload_sources {
     my ($self, $package, $dir) = @_;
 
-    $log->debugf("Uploading %s into source repo from %s", $package->name, $dir);
+    $log->debugf("Uploading %s into source repo from %s", $package->name, "$dir");
     $self->source_repo->store_package_source($package, $dir);
 }
 
@@ -632,7 +632,7 @@ sub _build_cpan_02packages {
 
     if ( $self->file_02packages ) {
         $file = path( $self->file_02packages );
-        $log->infof( "Using 02packages file: %s", $self->file_02packages );
+        $log->infof( "Using 02packages file: %s", $self->file_02packages->stringify );
 
     } else {
         $dir  = Path::Tiny->tempdir;

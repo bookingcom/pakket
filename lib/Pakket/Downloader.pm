@@ -40,7 +40,7 @@ sub to_file {
 sub to_dir {
     my ($self) = @_;
 
-    $log->debugf( "Downloaging and extracting from %s to %s", $self->url,  $self->tempdir->absolute);
+    $log->debugf( "Downloaging and extracting from %s to %s", $self->url,  $self->tempdir->absolute->stringify);
     return $self->download_to_dir;
 }
 

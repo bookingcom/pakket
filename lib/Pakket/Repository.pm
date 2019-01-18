@@ -62,7 +62,7 @@ sub retrieve_package_file {
     my $arch = Archive::Extract->new('archive'=>$file->stringify, 'type'=>'tgz');
 
     unless ($arch->extract('to' => $dir)) {
-        Carp::croak($log->criticalf("[%s] Unable to extract %s to %s", $!, $file, $dir));
+        Carp::croak($log->criticalf("[%s] Unable to extract %s to %s", $!, "$file", "$dir"));
     }
 
     return $dir;
@@ -154,7 +154,7 @@ sub freeze_location {
         );
     } else {
         Carp::croak(
-            $log->criticalf( "Unknown location type: %s", $orig_path ) );
+            $log->criticalf( "Unknown location type: %s", "$orig_path" ) );
     }
 
     @files = map {$_->relative($base_path)->stringify} @files;

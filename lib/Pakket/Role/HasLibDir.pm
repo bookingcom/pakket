@@ -99,7 +99,7 @@ sub _build_work_dir {
     $self->lock_lib_directory();
 
     if (!$self->atomic) {
-        $log->debugf( 'Atomic mode disabled: using %s as working directory', $self->active_dir );
+        $log->debugf( 'Atomic mode disabled: using %s as working directory', $self->active_dir->stringify );
         return $self->active_dir;
     }
 
@@ -142,7 +142,7 @@ sub _create_and_fill_workdir {
             dircopy($source, $dest);
         }
     }
-    $log->debugf( 'Created new working directory %s', $work_dir );
+    $log->debugf( 'Created new working directory %s', "$work_dir" );
 
     return $work_dir;
 }
@@ -189,19 +189,19 @@ sub activate_dir {
     $dir->chmod('0755');
 
     my $work_final = $self->libraries_dir->child( time() );
-    $log->debugf( 'Moving work directory %s to its final place %s', $dir, $work_final );
+    $log->debugf( 'Moving work directory %s to its final place %s', "$dir", "$work_final" );
     $dir->move($work_final)
         or croak( $log->error(
             'Could not move work_dir to its final place'
         ) );
 
-    $log->debugf( 'Setting temporary active symlink to new work directory %s', $work_final );
+    $log->debugf( 'Setting temporary active symlink to new work directory %s', "$work_final" );
     symlink( $work_final->basename, $active_temp )
         or croak( $log->error(
             'Could not activate new installation (temporary symlink create failed)'
         ) );
 
-    $log->debugf( 'Moving symlink %s to its final place %s', $active_temp, $self->active_dir );
+    $log->debugf( 'Moving symlink %s to its final place %s', "$active_temp", $self->active_dir->stringify );
     $active_temp->move($self->active_dir)
         or croak( $log->error(
             'Could not atomically activate new installation (symlink rename failed)'
