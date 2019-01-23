@@ -6,6 +6,7 @@ requires 'Archive::Tar::Wrapper';
 requires 'CPAN::DistnameInfo';
 requires 'CPAN::Meta::Requirements', '>= 2.140';
 requires 'Config::Any';
+requires 'Data::Consumer::Dir';
 requires 'Digest::SHA';
 requires 'File::Basename';
 requires 'File::Copy::Recursive';
