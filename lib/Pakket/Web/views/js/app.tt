@@ -12,7 +12,7 @@
   const $onlyBrokenEl = $('#only-problematic');
   const $searchEl = $('#s_pakket');
   const $tbodyEl = $('#tbody');
-  let OSmetadata;
+  const columnInfo = {};
   // parcels list we fetch from localSorage / BE once
   // and do all further manipulations
   let parcels;
@@ -154,7 +154,6 @@
         name: namePieces[0],
         version: namePieces[1],
         order: desiredColumnsOrder,
-        os_meta: OSmetadata,
         data: pakket,
         versions_all: pakketsMap.get(namePieces[0])
       });
@@ -168,17 +167,17 @@
   function _renderUI(data) {
     // taking pakket #1 and getting columns metadata from it
     const keys = Object.keys(data[0][1]);
-    let perlVersions = [];
     keys.forEach((key) => {
       if (desiredColumnsOrder.indexOf(key) === -1) {
-        perlVersions.push(key);
+        columnInfo[key] = [];
       }
       // getting OS metadata from first perl version prop
       if (strIsPerlVersion(key)){
-        OSmetadata = Object.keys(data[0][1][key]).sort();
+        columnInfo[key] = Object.keys(data[0][1][key]).sort();
       }
     });
-    desiredColumnsOrder = desiredColumnsOrder.concat(perlVersions.sort());
+
+    desiredColumnsOrder = desiredColumnsOrder.concat(Object.keys(columnInfo).sort());
 
     let tableHead = '<tr>';
     tableHead += '<td class="name" rowspan="2" colspan="2">module name</td>';
@@ -189,7 +188,7 @@
       if (strIsPerlVersion(column)){
         // making sure we display as many OSes under certain perl version
         // as BE gives us in output
-        colspan = OSmetadata.length;
+        colspan = columnInfo[column].length;
       } else {
         rowspan = 2;
       }
@@ -198,7 +197,7 @@
     tableHead += '</tr><tr>';
     desiredColumnsOrder.forEach((column) => {
       if (!strIsPerlVersion(column)) return;
-      OSmetadata.forEach((os) => {
+      columnInfo[column].forEach((os) => {
         tableHead += `<td>${os}</td>`;
       });
     });
@@ -252,7 +251,7 @@
       <td class="version">${(versionsArr.length === 1 ? versionsArr[0] : ('<select data-name="' + config.name.replace(/[\/\.\:]/g,'') + '">' + versionsUI + '</select>'))}</td>`;
     config.order.forEach((column) => {
       if (strIsPerlVersion(column)){
-        config.os_meta.forEach((os) => {
+        columnInfo[column].forEach((os) => {
           renderQueue.push(config.data[1][column][os] ? '+' : '-');
         });
       } else {
