@@ -49,14 +49,16 @@ requires 'Unicode::UTF8';
 
 # For the HTTP backend
 requires 'HTTP::Tiny';
+requires 'IO::Socket::SSL';
+requires 'Net::SSLeay';
 
 # For the web service
 requires 'Dancer2';
 requires 'Dancer2::Plugin::ParamTypes';
 
 # Only for the DBI backend
-requires 'DBI';
-requires 'Types::DBI';
+#requires 'DBI';
+#requires 'Types::DBI';
 
 on 'test' => sub {
     requires 'Test::Perl::Critic::Progressive';
