@@ -242,7 +242,7 @@ sub install_packages_parallel {
 
     do {
         $self->data_consumer->consume(sub {
-            my ($consumer,$other_spec,$fh,$file) = @_;
+            my ($consumer, $other_spec, $fh, $file) = @_;
             my $file_contents = <$fh>;
             if (!$file_contents) {
                 $log->infof("Another worker got hold of the lock for %s first -- skipping",
@@ -319,20 +319,22 @@ sub install_packages_parallel {
         $installed_packages++;
 
         my $parcel_dir = $dc_dir->child(to_install => $file->basename);
-        my $full_parcel_dir = $parcel_dir->child( PARCEL_FILES_DIR() );
-        copy_package_to_install_dir($full_parcel_dir, $dir);
+        if ($parcel_dir->exists) {
+            my $full_parcel_dir = $parcel_dir->child( PARCEL_FILES_DIR() );
+            copy_package_to_install_dir($full_parcel_dir, $dir);
 
-        my $spec_file = $full_parcel_dir->child( PARCEL_METADATA_FILE() );
-        my $spec      = decode_json $spec_file->slurp_utf8;
-        my $package   = Pakket::Package->new_from_spec($spec);
+            my $spec_file = $full_parcel_dir->child( PARCEL_METADATA_FILE() );
+            my $spec      = decode_json $spec_file->slurp_utf8;
+            my $package   = Pakket::Package->new_from_spec($spec);
 
-        # uninstall previous version of the package
-        my $package_to_update = $self->_package_to_upgrade($package);
-        if ($package_to_update) {
-            $self->uninstall_package($info_file, $package_to_update);
+            # uninstall previous version of the package
+            my $package_to_update = $self->_package_to_upgrade($package);
+            if ($package_to_update) {
+                $self->uninstall_package($info_file, $package_to_update);
+            }
+
+            $self->add_package_to_info_file( $parcel_dir, $info_file, $package, { as_prereq => $as_prereq } );
         }
-
-        $self->add_package_to_info_file( $parcel_dir, $info_file, $package, { as_prereq => $as_prereq } );
     });
     $self->save_info_file($dir, $info_file);
 
