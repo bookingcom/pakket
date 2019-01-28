@@ -7,12 +7,13 @@
   const FLAG_GET_ONLY_BROKEN = 'broken=1';
   const RENDER_ONLY_BROKEN = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;
   // extendable via the payload
-  let desiredColumnsOrder = ['spec', 'source'];
+  const COLUMNS_MANDATORY = ['spec', 'source'];
+  let desiredColumnsOrder = COLUMNS_MANDATORY;
   const urlPieces = location.href.split('s=');
   const $onlyBrokenEl = $('#only-problematic');
   const $searchEl = $('#s_pakket');
   const $tbodyEl = $('#tbody');
-  const columnInfo = {};
+  let columnInfo = {};
   // parcels list we fetch from localSorage / BE once
   // and do all further manipulations
   let parcels;
@@ -165,6 +166,12 @@
   }
 
   function _renderUI(data) {
+
+    // re-creating columnInfo
+    columnInfo = {};
+    // same regarding desiredColumnsOrder
+    desiredColumnsOrder = COLUMNS_MANDATORY;
+
     // taking pakket #1 and getting columns metadata from it
     const keys = Object.keys(data[0][1]);
     keys.forEach((key) => {
