@@ -21,6 +21,12 @@ has 'package' => (
     'required' => 1,
 );
 
+has [qw< overwrite >] => (
+    'is'      => 'ro',
+    'isa'     => 'Bool',
+    'default' => 0,
+);
+
 sub run {
     my ($self) = @_;
 
@@ -54,6 +60,8 @@ sub _scaffold_package {
     $self->add_spec_for_package($package);
     $self->add_source_for_package($package, $sources);
     $log->infof('Done: %s', $package->full_name);
+
+    return 0;
 }
 
 sub _fetch_source_for_package {

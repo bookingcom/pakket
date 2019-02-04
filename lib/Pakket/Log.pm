@@ -94,7 +94,7 @@ sub build_logger {
         $class->_syslog_logger(),
     ];
 
-    push(@{ $outputs }, $class->_build_logger($file)) if -w $file;
+    push(@{ $outputs }, $class->_build_logger($file)) if $file && -w $file;
 
     my $logger = Log::Dispatch->new(
         'outputs' => $outputs,

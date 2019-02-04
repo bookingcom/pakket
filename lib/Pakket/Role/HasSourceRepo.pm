@@ -44,6 +44,13 @@ sub add_source_for_package {
     $self->_upload_sources($package, $sources);
 }
 
+sub _upload_sources {
+    my ($self, $package, $dir) = @_;
+
+    $log->debugf("Uploading %s into source repo from %s", $package->name, "$dir");
+    $self->source_repo->store_package_source($package, $dir);
+}
+
 no Moose::Role;
 
 1;

@@ -426,11 +426,23 @@ sub run_build {
             }
         }
 
-        if ( $package->build_opts->{'pre-build'} ) {
-            foreach my $cmd ( @{ $package->build_opts->{'pre-build'} } ) {
-                $log->debugf("Executing '$cmd'");
-                my $ecode = system($cmd);
-                Carp::croak("Unable to run '$cmd'") if $ecode;
+        {
+            local %ENV = %ENV; # keep all env changes locally
+            $ENV{'PACKAGE_SOURCE_DIR'} = $package_src_dir;
+            $ENV{'PACKAGE_DST_DIR'} = $package_dst_dir;
+            $ENV{'PACKAGE_BUILD_DIR'} = $main_build_dir;
+            if ($package->build_opts->{env}) {
+                foreach my $key (keys %{$package->build_opts->{env}}) {
+                    $ENV{$key} = $package->build_opts->{env}{$key};
+                }
+            }
+
+            if ($package->build_opts->{'pre-build'} ) {
+                foreach my $cmd ( @{ $package->build_opts->{'pre-build'} } ) {
+                    $log->debugf("Executing '$cmd'");
+                    my $ecode = system($cmd);
+                    Carp::croak("Unable to run '$cmd'") if $ecode;
+                }
             }
         }
 

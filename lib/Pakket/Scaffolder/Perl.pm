@@ -321,13 +321,6 @@ sub _skip_module {
     return 0;
 }
 
-sub _upload_sources {
-    my ($self, $package, $dir) = @_;
-
-    $log->debugf("Uploading %s into source repo from %s", $package->name, "$dir");
-    $self->source_repo->store_package_source($package, $dir);
-}
-
 sub _get_distribution {
     my ($self, $module_name) = @_;
 

@@ -1,6 +1,10 @@
 #!/usr/bin/bash
 
+echo "Installing build dependecies..."
 cpanm -n --installdeps ./tools/build
+
+echo "Installing runtime dependecies..."
 cpanm -n --installdeps .
 
+echo "Installing dzil dependecies..."
 dzil authordeps --missing | cpanm -n

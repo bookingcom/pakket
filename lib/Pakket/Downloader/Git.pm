@@ -66,6 +66,7 @@ sub download_to_dir {
 
     if ($self->folder) {
         my $local_folder = Path::Tiny->tempdir( 'CLEANUP' => 1 );
+        $File::Copy::Recursive::CopyLink = 0;
         File::Copy::Recursive::dircopy($self->tempdir->child($self->folder), $local_folder);
         return $local_folder->absolute;
     } else {

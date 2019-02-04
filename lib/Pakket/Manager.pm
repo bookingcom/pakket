@@ -352,6 +352,7 @@ sub _gen_scaffolder_native {
     my %params = (
         'package' => $self->package,
         'config'  => $self->config,
+        'overwrite' => $self->overwrite,
     );
 
     return Pakket::Scaffolder::Native->new(%params);
