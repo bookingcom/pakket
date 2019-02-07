@@ -379,52 +379,23 @@ sub run_build {
     }
 
     $bootstrap_prereqs and return; # done building prereqs
-    my $package_src_dir
-        = $self->source_repo->retrieve_package_source($package);
-
-    $log->debug('Copying package files');
-
-    my $env_vars_spec = $package->build_opts->{'env_vars'};
-    # FIXME: This shouldn't just be configure flags
-    # we should allow the builder to have access to a general
-    # metadata chunk which *might* include configure flags
-    my %env_vars = generate_env_vars( $top_build_dir, $main_build_dir, $env_vars_spec );
-    %env_vars = ( %ENV, %env_vars );
-    my $configure_flags = $self->get_configure_flags(
-        $package->build_opts->{'configure_flags'},
-        \%env_vars,
-    );
-
-    my $build_flags = $self->get_configure_flags(
-        $package->build_opts->{'build_flags'},
-        \%env_vars,
-    );
 
     if ( my $builder = $self->builders->{ $package->category } ) {
+        my $package_src_dir = $self->source_repo->retrieve_package_source($package);
+
         my $package_dst_dir = $top_build_dir->child(
             'src',
             $package->category,
             $package_src_dir->basename,
         );
 
-
+        $log->debug('Copying package files');
         dircopy( $package_src_dir, $package_dst_dir );
 
         # during coping, dircopy() resets mtime to current time,
         # which breaks 'make' for some native libraries
         # we have to keep original mtime for files from tar archive
         fix_timestamps($package_src_dir, $package_dst_dir);
-
-        if ( $package->build_opts->{'pre_build'} ) {
-            foreach my $cmd_set ( @{ $package->build_opts->{'pre_build'} } ) {
-                $cmd_set = $self->get_configure_flags($cmd_set, \%env_vars);
-                $self->run_command(
-                    $package_src_dir,
-                    $cmd_set,
-                    {'env' => \%env_vars},
-                );
-            }
-        }
 
         {
             local %ENV = %ENV; # keep all env changes locally
@@ -444,33 +415,60 @@ sub run_build {
                     Carp::croak("Unable to run '$cmd'") if $ecode;
                 }
             }
-        }
 
-        $builder->build_package(
-            $package->name,
-            $package_dst_dir,
-            $main_build_dir,
-            $configure_flags,
-            $build_flags,
-            $env_vars_spec,
-        );
+            my $env_vars_spec = $package->build_opts->{'env_vars'};
+            # FIXME: This shouldn't just be configure flags
+            # we should allow the builder to have access to a general
+            # metadata chunk which *might* include configure flags
+            my %env_vars = generate_env_vars( $top_build_dir, $main_build_dir, $env_vars_spec );
+            %env_vars = ( %ENV, %env_vars );
+            my $configure_flags = $self->get_configure_flags(
+                $package->build_opts->{'configure_flags'},
+                \%env_vars,
+            );
 
-        if ( $package->build_opts->{'post_build'} ) {
-            foreach my $cmd_set ( @{ $package->build_opts->{'post_build'} } ) {
-                $cmd_set = $self->get_configure_flags($cmd_set, \%env_vars);
-                $self->run_command(
-                    $package_src_dir,
-                    $cmd_set,
-                    {'env' => \%env_vars},
-                );
+            my $build_flags = $self->get_configure_flags(
+                $package->build_opts->{'build_flags'},
+                \%env_vars,
+            );
+
+            if ( $package->build_opts->{'pre_build'} ) {
+                foreach my $cmd_set ( @{ $package->build_opts->{'pre_build'} } ) {
+                    $cmd_set = $self->get_configure_flags($cmd_set, \%env_vars);
+                    $self->run_command(
+                        $package_src_dir,
+                        $cmd_set,
+                        {'env' => \%env_vars},
+                    );
+                }
             }
-        }
 
-        if ( $package->build_opts->{'post-build'} ) {
-            foreach my $cmd ( @{ $package->build_opts->{'post-build'} } ) {
-                $log->debugf("Executing '$cmd'");
-                my $ecode = system($cmd);
-                Carp::croak("Unable to run '$cmd'") if $ecode;
+            $builder->build_package(
+                $package->name,
+                $package_dst_dir,
+                $main_build_dir,
+                $configure_flags,
+                $build_flags,
+                $env_vars_spec,
+            );
+
+            if ( $package->build_opts->{'post_build'} ) {
+                foreach my $cmd_set ( @{ $package->build_opts->{'post_build'} } ) {
+                    $cmd_set = $self->get_configure_flags($cmd_set, \%env_vars);
+                    $self->run_command(
+                        $package_src_dir,
+                        $cmd_set,
+                        {'env' => \%env_vars},
+                    );
+                }
+            }
+
+            if ( $package->build_opts->{'post-build'} ) {
+                foreach my $cmd ( @{ $package->build_opts->{'post-build'} } ) {
+                    $log->debugf("Executing '$cmd'");
+                    my $ecode = system($cmd);
+                    Carp::croak("Unable to run '$cmd'") if $ecode;
+                }
             }
         }
     } else {
