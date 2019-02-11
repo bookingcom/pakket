@@ -33,14 +33,14 @@ has 'tempdir' => (
 sub to_file {
     my ($self) = @_;
 
-    $log->debugf( "Downloaging file from %s", $self->url );
+    $log->debugf( "Downloading file from %s", $self->url );
     return $self->download_to_file;
 }
 
 sub to_dir {
     my ($self) = @_;
 
-    $log->debugf( "Downloaging and extracting from %s to %s", $self->url,  $self->tempdir->absolute->stringify);
+    $log->debugf( "Downloading and extracting from %s to %s", $self->url,  $self->tempdir->absolute->stringify);
     return $self->download_to_dir;
 }
 

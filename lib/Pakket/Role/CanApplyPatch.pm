@@ -16,7 +16,7 @@ sub apply_patches {
             $patch = path($package->{path}, '../patch/'.$package->name, $patch)->absolute;
         }
         $log->debugf('Patching with ' . $patch);
-        my $cmd = "patch -p1 -sN -i $patch -d " . $sources->absolute;
+        my $cmd = "patch --no-backup-if-mismatch -p1 -sN -i $patch -d " . $sources->absolute;
         my $ecode = system($cmd);
         Carp::croak("Unable to apply patch '$cmd'") if $ecode;
     }
