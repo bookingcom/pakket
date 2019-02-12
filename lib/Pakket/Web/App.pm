@@ -18,6 +18,13 @@ use constant {
 # propagated into endpoints every time
 set content_type => 'application/json';
 
+sub status_page {
+    set content_type => 'text/html';
+    set auto_page    => 1;
+    set views        => path( dirname(__FILE__), 'views' );
+    template 'status';
+}
+
 sub setup {
     my ( $class, $config_file ) = @_;
 
@@ -36,14 +43,6 @@ sub setup {
     }
 
     # status page handler
-    sub status_page {
-      set content_type => 'text/html';
-      set auto_page => 1;
-      my $dirname = dirname(__FILE__);
-      set views => path($dirname, 'views');
-      template 'status';
-    }
-
     get '/info' => sub {
         set content_type => 'application/json';
         my @repositories =  map { { 'type' => $_->{'type'},
