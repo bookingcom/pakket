@@ -6,7 +6,7 @@ requires 'Archive::Tar::Wrapper';
 requires 'CPAN::DistnameInfo';
 requires 'CPAN::Meta::Requirements', '>= 2.140';
 requires 'Config::Any';
-requires 'Data::Consumer::Dir';
+requires 'Data::Consumer';
 requires 'Digest::SHA';
 requires 'File::Basename';
 requires 'File::Copy::Recursive';
@@ -56,12 +56,30 @@ requires 'Net::SSLeay';
 requires 'Dancer2';
 requires 'Dancer2::Plugin::ParamTypes';
 
-# Only for the DBI backend
-#requires 'DBI';
-#requires 'Types::DBI';
-
 on 'test' => sub {
-    requires 'Test::Perl::Critic::Progressive';
-    requires 'Test::Vars';
-    requires 'Module::Faker';
+	requires 'Module::Faker';
+	requires 'Perl::Critic::Bangs';
+	requires 'Perl::Critic::Freenode';
+	requires 'Perl::Critic::Itch';
+	requires 'Perl::Critic::Lax';
+	requires 'Perl::Critic::Moose';
+	requires 'Perl::Critic::Policy::BuiltinFunctions::ProhibitDeleteOnArrays';
+	requires 'Perl::Critic::Policy::BuiltinFunctions::ProhibitReturnOr';
+	requires 'Perl::Critic::Policy::HTTPCookies';
+	requires 'Perl::Critic::Policy::Moo::ProhibitMakeImmutable';
+	requires 'Perl::Critic::Policy::Perlsecret';
+	requires 'Perl::Critic::Policy::TryTiny::RequireBlockTermination';
+	requires 'Perl::Critic::Policy::TryTiny::RequireUse';
+	requires 'Perl::Critic::Policy::ValuesAndExpressions::PreventSQLInjection';
+	requires 'Perl::Critic::Policy::Variables::ProhibitUselessInitialization';
+	requires 'Perl::Critic::StricterSubs';
+	requires 'Perl::Critic::Tics';
+	requires 'Test::Perl::Critic::Progressive';
+	requires 'Test::Pod';
+	requires 'Test::Vars';
+
+	# Only for the DBI backend (while DBI backend is not finished and not used I've moved it to test sectioni
+	# to disable it's default including in pakket package)
+	requires 'DBI';
+	requires 'Types::DBI';
 };
