@@ -196,6 +196,8 @@ installed.
 - Sawyer X
 - Mickey Nasriachi
 - Gonzalo Diethelm
+- Andrei Grechkin
+- Eugene Chernenko
 
 # COPYRIGHT AND LICENSE
 
