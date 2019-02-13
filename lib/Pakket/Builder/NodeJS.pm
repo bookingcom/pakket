@@ -13,13 +13,13 @@ use Pakket::Utils qw< generate_env_vars >;
 with qw<Pakket::Role::Builder>;
 
 sub build_package {
-    my ( $self, $package, $build_dir, $prefix ) = @_;
+    my ( $self, $package, $build_dir, $top_pkg_dir, $prefix, $use_prefix ) = @_;
 
     $log->info("Building NodeJS module: $package");
 
     my $opts = {
         'env' => {
-            generate_env_vars($prefix),
+            generate_env_vars($build_dir, $top_pkg_dir, $prefix, $use_prefix),
         },
     };
 

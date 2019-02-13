@@ -46,7 +46,7 @@ sub _scaffold_package {
         local %ENV = %ENV; # keep all env changes locally
         if ($package->{manage}{env}) {
             foreach my $key (keys %{$package->{manage}{env}}) {
-                $ENV{$key} = $package->{manage}{env}{$key};
+                local $ENV{$key} = $package->{manage}{env}{$key};
             }
         }
 

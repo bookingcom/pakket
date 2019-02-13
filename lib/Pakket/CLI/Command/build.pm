@@ -32,6 +32,8 @@ sub opt_spec {
         [ 'log-file=s',      'Log file (default: build.log)' ],
         [ 'ignore-failures', 'Continue even if some builds fail' ],
         [ 'overwrite',       'overwrite artifacts even if they are already exist' ],
+        [ 'prefix=s',        'custom prefix used during build' ],
+        [ 'use-prefix',      'use prefix to install all dependencies' ],
     );
 }
 
@@ -133,7 +135,7 @@ sub execute {
             defined $opt->{$_}
                 ? ( $_ => $opt->{$_} )
                 : ()
-        ), qw< build_dir keep_build_dir > ),
+        ), qw< build_dir keep_build_dir prefix use_prefix> ),
     );
 
     if ( ! $opt->{'ignore_failures'} ) {

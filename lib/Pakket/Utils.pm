@@ -28,17 +28,16 @@ sub is_writeable {
 }
 
 sub generate_env_vars {
-    my ( $build_dir, $prefix, $opts, $manual_env_vars ) = @_;
-    my $lib_path       = generate_lib_path($prefix);
-    my $bin_path       = generate_bin_path($prefix);
-    my $pkgconfig_path = generate_pkgconfig_path($prefix);
+    my ($build_dir, $top_pkg_dir, $prefix, $use_prefix, $opts, $manual_env_vars) = @_;
+    my $pkg_dir = $top_pkg_dir->child($prefix);
 
     my $inc = $opts->{'inc'} || '';
     $manual_env_vars //= {};
 
     my @perl5lib = (
-        $prefix->child(qw<lib perl5>)->absolute->stringify,
-        $inc,
+        $pkg_dir->child(qw<lib perl5>)->absolute->stringify,
+        ($prefix->child(qw<lib perl5>)->absolute->stringify)x!! $use_prefix,
+        $inc ||(),
         $build_dir,
     );
 
@@ -53,62 +52,72 @@ sub generate_env_vars {
         'PERL_MM_OPT'               => '',
     );
 
+    my $lib_path       = generate_lib_path($pkg_dir, $prefix, $use_prefix);
     return (
-        'CPATH'           => generate_cpath($prefix),
-        'PKG_CONFIG_PATH' => $pkgconfig_path,
+        'CPATH'           => generate_cpath($pkg_dir, $prefix, $use_prefix),
+        'PKG_CONFIG_PATH' => generate_pkgconfig_path($pkg_dir, $prefix, $use_prefix),
         'LD_LIBRARY_PATH' => $lib_path,
         'LIBRARY_PATH'    => $lib_path,
-        'PATH'            => $bin_path,
+        'PATH'            => generate_bin_path($pkg_dir, $prefix, $use_prefix),
         %perl_opts,
         %{$manual_env_vars},
     );
 }
 
 sub generate_cpath {
-    my $prefix = shift;
-    my $cpath = '';
+    my ($pkg_dir, $prefix, $use_prefix) = @_;
 
-    my $include_dir = $prefix->child('include');
-    if ( $include_dir->exists ) {
-        my @paths = ( $include_dir->stringify );
-        push @paths,  map { $_->stringify } grep { $_->is_dir } $include_dir->children();
-        $cpath = join(":", @paths);
+    my @paths = ();
+    my @incpaths = $pkg_dir->child('include');
+    if ($use_prefix) {
+        push(@incpaths, $prefix->child('include'));
     }
-
-    return $cpath;
+    foreach my $path (@incpaths) {
+        if ( $path->exists ) {
+            push(@paths, $path->absolute->stringify);
+            push @paths,  map { $_->absolute->stringify } grep { $_->is_dir } $path->children();
+        }
+    }
+    return join(":", @paths);
 }
 
 sub generate_lib_path {
-    my $prefix = shift;
+    my ($pkg_dir, $prefix, $use_prefix) = @_;
 
-    my $lib_path = $prefix->child('lib')->absolute->stringify;
-    if ( defined( my $env_library_path = $ENV{'LD_LIBRARY_PATH'} ) ) {
-        $lib_path .= ":$env_library_path";
+    my @paths = ($pkg_dir->child('lib')->absolute->stringify);
+    if ($use_prefix) {
+        push(@paths, $prefix->child('lib')->absolute->stringify);
     }
-
-    return $lib_path;
+    if ( defined( my $env_library_path = $ENV{'LD_LIBRARY_PATH'} ) ) {
+        push(@paths, $env_library_path);
+    }
+    return join(':', @paths);
 }
 
 sub generate_bin_path {
-    my $prefix = shift;
+    my ($pkg_dir, $prefix, $use_prefix) = @_;
 
-    my $bin_path = $prefix->child('bin')->absolute->stringify;
-    if ( defined( my $env_bin_path = $ENV{'PATH'} ) ) {
-        $bin_path .= ":$env_bin_path";
+    my @paths = ($pkg_dir->child('bin')->absolute->stringify);
+    if ($use_prefix) {
+        push(@paths, $prefix->child('bin')->absolute->stringify);
     }
-
-    return $bin_path;
+    if ( defined( my $env_bin_path = $ENV{'PATH'} ) ) {
+        push(@paths, $env_bin_path);
+    }
+    return join(':', @paths);
 }
 
 sub generate_pkgconfig_path {
-    my $prefix = shift;
+    my ($pkg_dir, $prefix, $use_prefix) = @_;
 
-    my $pkgconfig_path = $prefix->child('lib/pkgconfig')->absolute->stringify;
-    if ( defined( my $env_pkgconfig_path = $ENV{'PKG_CONFIG_PATH'} ) ) {
-        $pkgconfig_path .= ":$env_pkgconfig_path";
+    my @paths = ($pkg_dir->child('lib/pkgconfig')->absolute->stringify);
+    if ($use_prefix) {
+        push(@paths, $prefix->child('lib/pkgconfig')->absolute->stringify);
     }
-
-    return $pkgconfig_path;
+    if ( defined( my $env_pkgconfig_path = $ENV{'PKG_CONFIG_PATH'} ) ) {
+        push(@paths, $env_pkgconfig_path);
+    }
+    return join(':', @paths);
 }
 
 sub canonical_package_name {

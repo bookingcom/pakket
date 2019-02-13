@@ -11,7 +11,7 @@ use Pakket::Builder::Native::Makefile;
 with qw<Pakket::Role::Builder>;
 
 sub build_package {
-    my ( $self, $package, $build_dir, $prefix, $flags ) = @_;
+    my ( $self, $package, $build_dir, $top_pkg_dir, $prefix, $use_prefix, $flags ) = @_;
 
     if (   $build_dir->child('configure')->exists
         || $build_dir->child('config')->exists
@@ -19,7 +19,7 @@ sub build_package {
         || $build_dir->child('cmake')->exists )
     {
         my $builder = Pakket::Builder::Native::Makefile->new();
-        $builder->build_package( $package, $build_dir, $prefix, $flags );
+        $builder->build_package( $package, $build_dir, $top_pkg_dir, $prefix, $use_prefix, $flags );
     } else {
         croak( $log->critical(
             "Cannot build native package '$package', no '[Cc]onfigure' or 'config'.") );

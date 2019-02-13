@@ -76,7 +76,7 @@ sub read_config {
         foreach my $filename ( keys %{$config_chunk} ) {
             my %config_part = %{ $config_chunk->{$filename} };
             @cfg{ keys(%config_part) } = values %config_part;
-            $log->info("Using config file $filename");
+            $log->debug("Using config file $filename");
         }
     }
 

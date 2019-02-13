@@ -23,7 +23,7 @@ use Pakket::Builder::Native;
 use Pakket::Utils qw< generate_env_vars >;
 
 use constant {
-    'BUILD_DIR_TEMPLATE' => 'BUILD-XXXXXX',
+    'BUILD_DIR_TEMPLATE' => 'pakket-build-XXXXXX',
 };
 
 with qw<
@@ -35,7 +35,7 @@ with qw<
     Pakket::Role::RunCommand
 >;
 
-has 'build_dir' => (
+has 'top_pkg_dir' => (
     'is'      => 'ro',
     'isa'     => Path,
     'coerce'  => 1,
@@ -46,6 +46,18 @@ has 'build_dir' => (
             'CLEANUP' => 0,
         );
     },
+);
+
+has 'prefix' => (
+    'is'      => 'ro',
+    'isa'     => 'Str',
+    'default' => sub {'/tmp/pakket/'},
+);
+
+has 'use_prefix' => (
+    'is'      => 'ro',
+    'isa'     => 'Bool',
+    'default' => sub {0},
 );
 
 has 'keep_build_dir' => (
@@ -93,7 +105,7 @@ has 'installer' => (
         my $self = shift;
 
         return Pakket::Installer->new(
-            'pakket_dir'  => $self->build_dir,
+            'pakket_dir'  => $self->top_pkg_dir,
             'parcel_repo' => $self->parcel_repo,
         );
     },
@@ -145,15 +157,15 @@ sub build {
 
 sub DEMOLISH {
     my $self      = shift;
-    my $build_dir = $self->build_dir;
+    my $top_pkg_dir = $self->top_pkg_dir;
 
     if ( !$self->keep_build_dir ) {
-        $log->debug("Removing build dir $build_dir");
+        $log->debug("Removing build dir $top_pkg_dir");
 
         # "safe" is false because it might hit files which it does not have
         # proper permissions to delete (example: ZMQ::Constants.3pm)
         # which means it won't be able to remove the directory
-        $build_dir->remove_tree( { 'safe' => 0 } );
+        $top_pkg_dir->remove_tree( { 'safe' => 0 } );
     }
 
     return;
@@ -162,10 +174,8 @@ sub DEMOLISH {
 sub _setup_build_dir {
     my $self = shift;
 
-    $log->debugf( 'Creating build dir %s', $self->build_dir->stringify );
-    my $prefix_dir = $self->build_dir->child('main');
-
-    $prefix_dir->is_dir or $prefix_dir->mkpath;
+    $log->debugf( 'Creating pkg dir %s', $self->top_pkg_dir->stringify );
+    $self->top_pkg_dir;
 
     return;
 }
@@ -303,8 +313,8 @@ sub run_build {
         'is_bootstrap' => !!$skip_prereqs,
     } );
 
-    my $top_build_dir  = $self->build_dir;
-    my $main_build_dir = $top_build_dir->child('main');
+    my $top_pkg_dir = $self->top_pkg_dir;
+    my $pkg_dir = $top_pkg_dir->child($self->prefix);
 
     my $installer = $self->installer;
 
@@ -320,7 +330,7 @@ sub run_build {
 
         my $successfully_installed = $installer->try_to_install_package(
             $package,
-            $main_build_dir,
+            $self->use_prefix ? path($self->prefix) : $pkg_dir,
             {
                 'cache'        => ( $self->bootstrapping ? $installer_cache : $bootstrap_cache ),
                 'skip_prereqs' => $skip_prereqs,
@@ -330,7 +340,7 @@ sub run_build {
         if ($successfully_installed) {
 
             # snapshot_build_dir
-            $self->snapshot_build_dir( $package, $main_build_dir->absolute, 0 );
+            $self->snapshot_build_dir( $package, $pkg_dir->absolute, 0 );
 
             $log->infof( '%s Installed %s', '|...' x $level, $query->full_name );
 
@@ -383,28 +393,19 @@ sub run_build {
     if ( my $builder = $self->builders->{ $package->category } ) {
         my $package_src_dir = $self->source_repo->retrieve_package_source($package);
 
-        my $package_dst_dir = $top_build_dir->child(
-            'src',
-            $package->category,
-            $package_src_dir->basename,
-        );
-
-        $log->debug('Copying package files');
-        dircopy( $package_src_dir, $package_dst_dir );
-
-        # during coping, dircopy() resets mtime to current time,
-        # which breaks 'make' for some native libraries
-        # we have to keep original mtime for files from tar archive
-        fix_timestamps($package_src_dir, $package_dst_dir);
-
         {
             local %ENV = %ENV; # keep all env changes locally
-            $ENV{'PACKAGE_SOURCE_DIR'} = $package_src_dir;
-            $ENV{'PACKAGE_DST_DIR'} = $package_dst_dir;
-            $ENV{'PACKAGE_BUILD_DIR'} = $main_build_dir;
+            local $ENV{'PACKAGE_PREFIX'} = $self->prefix;
+            local $ENV{'PACKAGE_SRC_DIR'} = $package_src_dir;
+            local $ENV{'PACKAGE_TOP_PKG_DIR'} = $top_pkg_dir;
+            local $ENV{'PACKAGE_PKG_DIR'} = $pkg_dir;
+            $log->debug("Src dir: '$package_src_dir'");
+            $log->debug("Top pkg dir: '$top_pkg_dir'");
+            $log->debug("Pkg dir: '$pkg_dir'");
+
             if ($package->build_opts->{env}) {
                 foreach my $key (keys %{$package->build_opts->{env}}) {
-                    $ENV{$key} = $package->build_opts->{env}{$key};
+                    local $ENV{$key} = $package->build_opts->{env}{$key};
                 }
             }
 
@@ -420,7 +421,7 @@ sub run_build {
             # FIXME: This shouldn't just be configure flags
             # we should allow the builder to have access to a general
             # metadata chunk which *might* include configure flags
-            my %env_vars = generate_env_vars( $top_build_dir, $main_build_dir, $env_vars_spec );
+            my %env_vars = generate_env_vars($package_src_dir, $top_pkg_dir, path($self->prefix), $self->use_prefix, $env_vars_spec);
             %env_vars = ( %ENV, %env_vars );
             my $configure_flags = $self->get_configure_flags(
                 $package->build_opts->{'configure_flags'},
@@ -445,8 +446,10 @@ sub run_build {
 
             $builder->build_package(
                 $package->name,
-                $package_dst_dir,
-                $main_build_dir,
+                $package_src_dir,
+                $top_pkg_dir,
+                path($self->prefix),
+                $self->use_prefix,
                 $configure_flags,
                 $build_flags,
                 $env_vars_spec,
@@ -479,12 +482,12 @@ sub run_build {
     }
 
     my $package_files = $self->snapshot_build_dir(
-        $package, $main_build_dir,
+        $package, $pkg_dir,
     );
 
     $log->infof( '%s Bundling %s', '|...' x $level, $package->full_name );
     $self->bundler->bundle(
-        $main_build_dir->absolute,
+        $pkg_dir->absolute,
         $package,
         $package_files,
     );
@@ -536,7 +539,7 @@ sub _recursive_build_phase {
 }
 
 sub snapshot_build_dir {
-    my ( $self, $package, $main_build_dir, $error_out ) = @_;
+    my ( $self, $package, $pkg_dir, $error_out ) = @_;
     $error_out //= 1;
 
     $log->debug('Scanning directory.');
@@ -548,7 +551,7 @@ sub snapshot_build_dir {
     # perhaps rsync(1) should be used to deploy the package files
     # (because then we want *all* content)
     # (only if unpacking it directly into the directory fails)
-    my $package_files = $self->retrieve_new_files($main_build_dir);
+    my $package_files = $self->retrieve_new_files($pkg_dir);
 
     if ($error_out) {
         keys %{$package_files}
@@ -697,7 +700,7 @@ A boolean indiciating if we want to bootstrap.
 
 Default: B<1>.
 
-=head2 build_dir
+=head2 top_pkg_dir
 
 The directory in which we build the packages.
 

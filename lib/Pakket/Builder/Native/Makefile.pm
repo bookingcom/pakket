@@ -12,13 +12,13 @@ use Pakket::Utils qw< generate_env_vars >;
 with qw<Pakket::Role::Builder>;
 
 sub build_package {
-    my ( $self, $package, $build_dir, $prefix, $flags ) = @_;
+    my ( $self, $package, $build_dir, $top_pkg_dir, $prefix, $use_prefix, $flags ) = @_;
 
     $log->info("Building native package '$package'");
 
     my $opts = {
         'env' => {
-            generate_env_vars($build_dir, $prefix),
+            generate_env_vars($build_dir, $top_pkg_dir, $prefix, $use_prefix),
         },
     };
 
@@ -54,7 +54,7 @@ sub build_package {
         [ $build_dir, ['make'], $opts, ],
 
         # install
-        [ $build_dir, [ 'make', 'install' ], $opts, ],
+        [ $build_dir, [ 'make', 'install', "DESTDIR=$top_pkg_dir" ], $opts, ],
     );
 
     my $success = $self->run_command_sequence(@seq);

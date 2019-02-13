@@ -23,10 +23,9 @@ has '+exclude_packages' => (
 );
 
 sub build_package {
-    my ( $self, $package, $build_dir, $prefix, $config_flags, $build_flags, $env_vars ) = @_;
+    my ( $self, $package, $build_dir, $top_pkg_dir, $prefix, $use_prefix, $config_flags, $build_flags, $env_vars ) = @_;
 
     $log->info("Building Perl module: $package");
-
 
     # FIXME: run_command will not return output, so we do this for now
     my $inc;
@@ -35,7 +34,7 @@ sub build_package {
         chomp( $inc = `perl -e'print join ":",\@INC'` );
     }
 
-    my %env = generate_env_vars( $build_dir, $prefix, { 'inc' => $inc }, $env_vars);
+    my %env = generate_env_vars($build_dir, $top_pkg_dir, $prefix, $use_prefix, { 'inc' => $inc }, $env_vars);
 
     # By default ExtUtils::Install checks if a file wasn't changed then skip it
     # which breaks Builder::snapshot_build_dir().
@@ -49,8 +48,6 @@ sub build_package {
     foreach my $env_var ( keys %env ) {
         $log->trace( 'export ' . join '=', $env_var, $env{$env_var} );
     }
-
-    my $install_base = $prefix->absolute;
 
     # taken from cpanminus
     my %should_use_mm = map +( "perl/$_" => 1 ),
@@ -72,7 +69,7 @@ sub build_package {
 
         # If you have Module::Build, we can use it!
         if ($has_module_build) {
-            @seq = $self->_build_pl_cmds( $build_dir, $install_base, $config_flags, $build_flags, $opts );
+            @seq = $self->_build_pl_cmds( $build_dir, $top_pkg_dir, $prefix, $use_prefix, $config_flags, $build_flags, $opts );
         } else {
             $log->warn(
                 'Defined Build.PL but can\'t load Module::Build. Will try Makefile.PL',
@@ -81,7 +78,7 @@ sub build_package {
     }
 
     if ($has_makefile_pl && !@seq) {
-        @seq = $self->_makefile_pl_cmds( $build_dir, $install_base, $config_flags, $build_flags, $opts );
+        @seq = $self->_makefile_pl_cmds( $build_dir, $top_pkg_dir, $prefix, $use_prefix, $config_flags, $build_flags, $opts );
     }
 
     @seq or Carp::croak('Could not find an installer (Makefile.PL/Build.PL)');
@@ -98,13 +95,13 @@ sub build_package {
 }
 
 sub _build_pl_cmds {
-    my ( $self, $build_dir, $install_base, $config_flags, $build_flags, $opts ) = @_;
+    my ( $self, $build_dir, $top_pkg_dir, $prefix, $use_prefix, $config_flags, $build_flags, $opts ) = @_;
     return (
 
         # configure
         [
             $build_dir,
-            [ 'perl', '-f', 'Build.PL', '--install_base', $install_base, @{$config_flags} ],
+            [ 'perl', '-f', 'Build.PL', '--install_base', $prefix, @{$config_flags} ],
             $opts,
         ],
 
@@ -112,18 +109,18 @@ sub _build_pl_cmds {
         [ $build_dir, [ 'perl', '-f', './Build', @{$build_flags} ], $opts ],
 
         # install
-        [ $build_dir, [ 'perl', '-f', './Build', 'install' ], $opts ],
+        [ $build_dir, [ 'perl', '-f', './Build', 'install', '--destdir', "$top_pkg_dir" ], $opts ],
     );
 }
 
 sub _makefile_pl_cmds {
-    my ( $self, $build_dir, $install_base, $config_flags, $build_flags, $opts ) = @_;
+    my ( $self, $build_dir, $top_pkg_dir, $prefix, $use_prefix, $config_flags, $build_flags, $opts ) = @_;
     return (
 
         # configure
         [
             $build_dir,
-            [ 'perl', '-f', 'Makefile.PL', "INSTALL_BASE=$install_base", @{$config_flags} ],
+            [ 'perl', '-f', 'Makefile.PL', 'NO_PACKLIST=1', "INSTALL_BASE=$prefix", @{$config_flags} ],
             $opts,
         ],
 
@@ -131,7 +128,7 @@ sub _makefile_pl_cmds {
         [ $build_dir, ['make', @{$build_flags}], $opts ],
 
         # install
-        [ $build_dir, [ 'make', 'install' ], $opts ],
+        [ $build_dir, [ 'make', 'install', "DESTDIR=$top_pkg_dir" ], $opts, ],
     );
 }
 
