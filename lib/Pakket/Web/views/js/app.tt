@@ -8,6 +8,7 @@
   const RENDER_ONLY_BROKEN = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;
   // extendable via the payload
   const COLUMNS_MANDATORY = ['spec', 'source'];
+  const DISPLAY_GITLAB_LINKS = window.location.hostname.indexOf('.booking.com') > -1 ? true : false;
   let desiredColumnsOrder = COLUMNS_MANDATORY;
   const urlPieces = location.href.split('s=');
   const $onlyBrokenEl = $('#only-problematic');
@@ -254,7 +255,12 @@
     versionsArr.forEach((version) => {
       versionsUI += `<option value="${version}" ${(version === config.version) ? 'selected' : ''}>${version}</option>`;
     });
-    let tableRow = `<td class="name">${config.name}</td>
+    let name = config.name;
+    if (DISPLAY_GITLAB_LINKS) {
+      name = `<a target="_blank" title="${name}" 
+        href="https://gitlab.booking.com/packaging/pakket/meta/blob/master/${name}.yaml">${name}</a>`;
+    }
+    let tableRow = `<td class="name">${name}</td>
       <td class="version">${(versionsArr.length === 1 ? versionsArr[0] : ('<select data-name="' + config.name.replace(/[\/\.\:]/g,'') + '">' + versionsUI + '</select>'))}</td>`;
     config.order.forEach((column) => {
       if (strIsPerlVersion(column)){
