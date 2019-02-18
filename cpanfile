@@ -52,6 +52,9 @@ requires 'HTTP::Tiny';
 requires 'IO::Socket::SSL';
 requires 'Net::SSLeay';
 
+# For the S3 backend
+requires 'Net::Amazon::S3';
+
 # For the web service
 requires 'Dancer2';
 requires 'Dancer2::Plugin::ParamTypes';

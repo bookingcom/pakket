@@ -176,11 +176,11 @@ sub _scaffold_package {
             Carp::croak("Unable to run '$cmd'") if $ecode;
         }
 
-        if (!$package->{skip}{dzil}) {
-            $sources = $self->process_dist_ini($package, $sources) unless $package->source eq 'cpan';
+        if (!$package->{skip}{dzil} && ($package->source && $package->source ne 'cpan')) {
+            $sources = $self->process_dist_ini($package, $sources);
         }
-        if (!$package->{skip}{dist}) {
-            $sources = $self->process_makefile_pl($package, $sources) unless $package->source eq 'cpan';
+        if (!$package->{skip}{dist} && ($package->source && $package->source ne 'cpan')) {
+            $sources = $self->process_makefile_pl($package, $sources);
         }
     }
 
