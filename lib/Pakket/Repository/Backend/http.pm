@@ -327,7 +327,7 @@ Default: B<https>.
 
 =head2 host
 
-Hostname or IP string to use.    
+Hostname or IP string to use.
 
 This is a required parameter.
 
@@ -385,7 +385,7 @@ is made as a C<x-www-form-urlencoded> request.
 The request is guarded by a check that will report this error, making
 the return value is useless.
 
-=head2 retrieve_location 
+=head2 retrieve_location
 
     my $path = $backend->retrieve_location('perl/Path::Tiny=0.100:1');
 

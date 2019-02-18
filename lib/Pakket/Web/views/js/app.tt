@@ -257,7 +257,7 @@
     });
     let name = config.name;
     if (DISPLAY_GITLAB_LINKS) {
-      name = `<a target="_blank" title="${name}" 
+      name = `<a target="_blank" title="${name}"
         href="https://gitlab.booking.com/packaging/pakket/meta/blob/master/${name}.yaml">${name}</a>`;
     }
     let tableRow = `<td class="name">${name}</td>

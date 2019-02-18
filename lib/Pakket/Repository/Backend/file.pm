@@ -313,7 +313,7 @@ under its new name to the directory.
 
 It will return the file path.
 
-=head2 retrieve_location 
+=head2 retrieve_location
 
     my $path = $backend->retrieve_location('perl/Path::Tiny=0.100:1');
 

@@ -74,6 +74,8 @@ with qw<
 sub BUILD {
     my ($self) = @_;
 
+    $log->debugf("Initializing S3 repository backend: %s/%s", $self->host, $self->bucket);
+
     # check that repo exists just access bucket
 }
 
