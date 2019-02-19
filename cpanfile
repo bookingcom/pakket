@@ -54,6 +54,7 @@ requires 'Net::SSLeay';
 
 # For the S3 backend
 requires 'Net::Amazon::S3';
+requires 'LWP::Protocol::https';
 
 # For the web service
 requires 'Dancer2';
