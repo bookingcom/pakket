@@ -555,9 +555,9 @@ sub check_packages_in_parcel_repo {
     my %all = map {$_=>1} @{$self->parcel_repo->all_object_ids()};
     my $rs = 1;
     for my $package ( @{$packages} ) {
-        if (!$all{$package->id}) {
-            $log->error(sprintf('Package %s doesn\'t exist in parcel repo', $package->id));
-           $rs = 0;
+        if (!$all{$package->id} && !$self->parcel_repo->has_object($package->id)) {
+            $log->errorf('Package %s doesn\'t exist in parcel repo', $package->id);
+            $rs = 0;
         }
     }
     return $rs;

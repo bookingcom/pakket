@@ -63,7 +63,7 @@ has 'aws_secret_access_key' => (
 has 'all_object_ids' => (
    'is'      => 'ro',
    'lazy'    => 1,
-   'clearer' => 'clear_all_object_ids',
+   'clearer' => 1,
    'builder' => '_build_all_object_ids',
 );
 
@@ -102,12 +102,13 @@ sub _build_index {
 
     my %index;
     my $stream = $self->s3_bucket->list;
-    until ($stream->is_done) {
+    while (!$stream->is_done) {
         foreach my $object ($stream->items) {
             my ($key) = split(m|$self->{file_extension}$|xms, $object->key);
             $index{$key} = $object;
         }
     }
+    $log->debugf("Index of '%s' is initialized, found: %d items", $self->s3_bucket->name, scalar %index);
     return \%index;
 }
 
@@ -126,6 +127,7 @@ sub all_object_ids_by_name {
     my ($self, $name, $category) = @_;
 
     my @all_object_ids = try {
+        ## no critic qw(Perl::Critic::Policy::RegularExpressions::ProhibitCaptureWithoutTest)
         grep { $_ =~ PAKKET_PACKAGE_SPEC(); $1 eq $category and $2 eq $name } keys %{ $self->index };
     } catch {
         croak($log->criticalf('Could not get remote all_object_ids, reason: %s', $_));
@@ -141,6 +143,7 @@ sub has_object {
     my $object = $self->s3_bucket->object('key' => $id . $self->file_extension);
     if ($object->exists) {
         $self->index->{$id} = $object;
+        return 1;
     }
 
     return 0;
@@ -185,6 +188,7 @@ sub retrieve_location {
     my ($self, $id, $retries) = @_;
 
     my $location = try {
+        ## no critic qw(Perl::Critic::Policy::ValuesAndExpressions::ProhibitMagicNumbers)
         my $tmp_file = Path::Tiny->tempfile("pakket-" . ('X' x 10));
         $self->index->{$id}->get_filename($tmp_file->absolute->stringify);
         $tmp_file;
