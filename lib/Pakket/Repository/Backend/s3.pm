@@ -1,6 +1,10 @@
 package Pakket::Repository::Backend::s3;
 # ABSTRACT: A remote S3-compatible backend repository
 
+use strict;
+use warnings;
+use diagnostics;
+
 use Moose;
 use MooseX::StrictConstructor;
 
@@ -12,6 +16,7 @@ use Net::Amazon::S3::Client;
 use Net::Amazon::S3::Client::Object;
 use Path::Tiny        qw< path >;
 use Try::Tiny;
+use Time::HiRes       qw< gettimeofday >;
 
 use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
 
@@ -39,7 +44,14 @@ has 'index' => (
     'is'       => 'ro',
     'isa'      => 'HashRef',
     'lazy'     => 1,
+    'clearer'  => 'clear_index',
     'builder'  => '_build_index',
+);
+
+has 'last_index_update_time' => (
+    'is'       => 'ro',
+    'isa'      => 'Num',
+    'default'  => sub {gettimeofday()},
 );
 
 has 'file_extension' => (
@@ -60,16 +72,11 @@ has 'aws_secret_access_key' => (
     'default' => sub {$ENV{'AWS_SECRET_ACCESS_KEY'}},
 );
 
-has 'all_object_ids' => (
-   'is'      => 'ro',
-   'lazy'    => 1,
-   'clearer' => 1,
-   'builder' => '_build_all_object_ids',
-);
-
 with qw<
     Pakket::Role::Repository::Backend
 >;
+
+use constant { 'index_update_interval' => 60 * 5 };
 
 sub BUILD {
     my ($self) = @_;
@@ -108,11 +115,12 @@ sub _build_index {
             $index{$key} = $object;
         }
     }
+    $self->{'last_index_update_time'} = gettimeofday();
     $log->debugf("Index of '%s' is initialized, found: %d items", $self->s3_bucket->name, scalar %index);
     return \%index;
 }
 
-sub _build_all_object_ids {
+sub _get_all_object_ids {
     my ($self) = @_;
 
     my @all_object_ids = try {
@@ -120,7 +128,20 @@ sub _build_all_object_ids {
     } catch {
         croak($log->criticalf('Could not get remote all_object_ids, reason: %s', $_));
     };
+
     return \@all_object_ids;
+}
+
+sub all_object_ids {
+    my ($self) = @_;
+
+    # clear index if it is older then index_update_interval
+    if ($self->last_index_update_time < gettimeofday() - index_update_interval() ) {
+        $log->debugf(q|Clear index for '%s'|, $self->s3_bucket->name);
+        $self->clear_index();
+    }
+
+    return $self->_get_all_object_ids();
 }
 
 sub all_object_ids_by_name {
