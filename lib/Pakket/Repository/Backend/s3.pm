@@ -93,7 +93,7 @@ sub _build_s3_client {
         'host'                  => $self->host,
         'aws_access_key_id'     => $self->aws_access_key_id,
         'aws_secret_access_key' => $self->aws_secret_access_key,
-        'retry'                 => 1,
+        'retry'                 => 3,
     );
 
     return Net::Amazon::S3::Client->new('s3' => $s3);
