@@ -95,7 +95,7 @@ $fatpacked{"App/Seacan.pm"} = '#line '.(1+__LINE__).' "'.__FILE__."\"\n".<<'APP_
   
       $ENV{PERLBREW_ROOT} = $perlbrew_root_path;
   
-      system("curl -L https://install.perlbrew.pl | bash") == 0 or die $!;
+      system("curl -L https://raw.githubusercontent.com/gugod/App-perlbrew/master/perlbrew-install | bash") == 0 or die $!;
       my $perlbrew_command = path($perlbrew_root_path, "bin", "perlbrew");
   
       my @perl_install_cmd = (
