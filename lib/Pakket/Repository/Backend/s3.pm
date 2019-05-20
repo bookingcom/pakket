@@ -3,7 +3,6 @@ package Pakket::Repository::Backend::s3;
 
 use strict;
 use warnings;
-use diagnostics;
 
 use Moose;
 use MooseX::StrictConstructor;
