@@ -144,7 +144,7 @@ sub execute {
         my $installer = _create_installer($opt);
         return $installer->show_installed();
     }
-
+ 
     $log->debug("pakket ".join(" ", @ARGV));
 
     my $installer = _create_installer($opt);

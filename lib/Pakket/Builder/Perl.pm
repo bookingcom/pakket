@@ -110,6 +110,9 @@ sub _build_pl_cmds {
 
         # install
         [ $build_dir, [ 'perl', '-f', './Build', 'install', '--destdir', "$top_pkg_dir" ], $opts ],
+
+        # cleanup man pages
+        [ $build_dir, ["rm", "-r", "$top_pkg_dir/$prefix/man"]],
     );
 }
 
@@ -129,6 +132,9 @@ sub _makefile_pl_cmds {
 
         # install
         [ $build_dir, [ 'make', 'install', "DESTDIR=$top_pkg_dir" ], $opts, ],
+
+        # cleanup man pages
+        [ $build_dir, ["rm", "-r", "$top_pkg_dir/$prefix/man"]],
     );
 }
 
