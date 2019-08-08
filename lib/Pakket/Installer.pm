@@ -413,14 +413,14 @@ sub _package_to_upgrade {
         }
         return $installed_package;
     }
-    return undef;
+    return;
 }
 
 sub is_installed {
     my ($self, $installer_cache, $package) = @_;
 
     my $installed_package = $self->installed_packages->{$package->short_name};
-    if ($installed_package && $installed_package->full_name eq $package->full_name) {
+    if (!$self->force && $installed_package && $installed_package->full_name eq $package->full_name) {
         $log->debugf('%s already installed', $package->full_name);
         return 1;
     }
