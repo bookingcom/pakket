@@ -3,23 +3,22 @@ package Pakket::Installer;
 
 use Moose;
 use MooseX::StrictConstructor;
-use Carp                  qw< croak >;
-use Path::Tiny            qw< path  >;
-use Types::Path::Tiny     qw< Path  >;
-use File::Copy::Recursive qw< dircopy >;
-use Time::HiRes           qw< time usleep >;
-use Log::Any              qw< $log >;
-use JSON::MaybeXS         qw< decode_json >;
 use Archive::Any;
+use Carp                  qw< croak >;
 use English               qw< -no_match_vars >;
 use Errno                 qw< :POSIX >;
+use File::Copy::Recursive qw< dircopy dirmove >;
+use JSON::MaybeXS         qw< decode_json >;
+use Log::Any              qw< $log >;
+use Path::Tiny            qw< path >;
+use Time::HiRes           qw< time usleep >;
+use Types::Path::Tiny     qw< Path >;
 
-use File::Copy::Recursive qw< dirmove >;
 
 use Pakket::Repository::Parcel;
 use Pakket::Package;
 use Pakket::PackageQuery;
-use Pakket::Log       qw< log_success log_fail >;
+use Pakket::Log       qw< log_success log_fail log_raw >;
 use Pakket::Types     qw< PakketRepositoryBackend >;
 use Pakket::Utils     qw< is_writeable >;
 use Pakket::Constants qw<
@@ -39,6 +38,12 @@ with qw<
 >;
 
 has 'force' => (
+    'is'      => 'ro',
+    'isa'     => 'Bool',
+    'default' => sub {0},
+);
+
+has 'silent' => (
     'is'      => 'ro',
     'isa'     => 'Bool',
     'default' => sub {0},
@@ -66,11 +71,11 @@ has 'installed_packages' => (
 );
 
 sub install {
-    my ( $self, @packages ) = @_;
+    my ( $self, @pack_list ) = @_;
 
-    if ( !@packages ) {
+    if (!@pack_list) {
         $log->notice('Did not receive any parcels to deliver');
-        return;
+        return EINVAL;
     }
 
     if ($self->allow_rollback && $self->rollback_tag) {
@@ -83,56 +88,48 @@ sub install {
                 log_success( 'All packages already installed in active library with tag: ' . $self->rollback_tag );
             } else {
                 log_success( 'Finished rollback to tag: ' . $self->rollback_tag );
-                log_success( 'Packages installed: ' . join ', ', map $_->full_name, @packages );
+                log_success( 'Packages installed: ' . join ', ', map $_->full_name, @pack_list );
             }
             return 0;
         }
     }
 
-    @packages = $self->set_latest_version_for_undefined(@packages);
+    my $packages = $self->_preprocess_packages_list(@pack_list);
+    @{ $packages } or return 0;
 
-    foreach (@packages) { $self->requirements->{$_->short_name} = $_ };
-
-    $self->installed_packages($self->load_installed_packages($self->active_dir));
-
-    @packages = $self->_filter_packages(@packages);
-    @packages or return;
-
-    if (!$self->check_packages_in_parcel_repo(\@packages)) {
+    if (!$self->check_packages_in_parcel_repo($packages)) {
         return ENOENT;
     }
 
     if ( !is_writeable($self->work_dir) ) {
-        croak(
-            $log->criticalf( "Can't write to your installation directory (%s)", $self->work_dir )
-        );
+        croak($log->criticalf("Can't write to your installation directory (%s)", $self->work_dir));
     }
 
     my $installed_packages;
 
     if ($self->is_parallel) {
         $installed_packages = $self->install_packages_parallel(
-            \@packages,
+            $packages,
         );
     }
     else {
         my $installer_cache = {};
 
-        foreach my $package (@packages) {
+        foreach my $package (@{ $packages }) {
             eval {
                 $self->install_package(
                     $package,
                     $self->work_dir,
-                    { 'cache' => $installer_cache }
+                    { 'cache' => $installer_cache },
                 );
                 1;
             } or do {
-                $self->ignore_failures or die $@;
+                $self->ignore_failures or croak($@);
                 $log->warnf( 'Failed to install %s, skipping', $package->full_name);
             };
         }
 
-        $installed_packages = keys %{$installer_cache}
+        $installed_packages = keys %{$installer_cache};
     }
 
     $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
@@ -143,9 +140,28 @@ sub install {
         $installed_packages, $self->pakket_dir->stringify,
     );
 
-    log_success( 'Finished installing: ' . join ', ', map $_->full_name, @packages );
+    log_success( 'Finished installing: ' . join ', ', map $_->full_name, @{ $packages });
 
-    return;
+    return 0;
+}
+
+sub dry_run {
+    my ($self, @pack_list) = @_;
+
+    if (!@pack_list) {
+        $log->notice('Did not receive any parcels to check');
+        return EINVAL;
+    }
+
+    $self->{'silent'} = 1;
+
+    my $packages = $self->_preprocess_packages_list(@pack_list);
+    @{ $packages } or return 0;
+
+    foreach my $package (@{ $packages }) {
+        log_raw($package->full_name);
+    }
+    return E2BIG;
 }
 
 sub try_to_install_package {
@@ -236,7 +252,7 @@ sub install_packages_parallel {
     my $dir = $self->work_dir;
     my $dc_dir = $self->data_consumer_dir;
 
-    $self->_push_to_data_consumer($_->full_name) for @$packages;
+    $self->_push_to_data_consumer($_->full_name) for @{ $packages };
 
     $self->spawn;
 
@@ -507,14 +523,14 @@ sub _filter_packages {
             if ($installed_package->full_name ne $package->full_name) {
                 push @result, $package;
             } elsif ($self->force) {
-                $log->infof('%s already installed, but enabled --force, reinstalling it', $package->full_name);
+                $self->silent or $log->infof('%s already installed, but enabled --force, reinstalling it', $package->full_name);
                 push @result, $package;
             }
         } else {
             push @result, $package;
         }
     }
-    if (!@result) {
+    if (!@result && !$self->silent) {
         if (0+@packages == 1) {
             $log->infof('%s already installed', $packages[0]->full_name);
         } else {
@@ -528,7 +544,7 @@ sub set_latest_version_for_undefined {
     my ($self, @packages) = @_;
 
     my @output;
-    for my $package (@packages) {
+    foreach my $package (@packages) {
         if ($package->version && $package->release) {
             push @output, $package;
         } else {
@@ -577,6 +593,22 @@ sub get_rollback_tags {
     }
 
     return $result;
+}
+
+sub _preprocess_packages_list {
+    my ($self, @packages) = @_;
+
+    @packages or return \@packages;
+
+    @packages = $self->set_latest_version_for_undefined(@packages);
+
+    foreach (@packages) { $self->requirements->{$_->short_name} = $_ }
+
+    $self->installed_packages($self->load_installed_packages($self->active_dir));
+
+    @packages = $self->_filter_packages(@packages);
+
+    return \@packages;
 }
 
 __PACKAGE__->meta->make_immutable;

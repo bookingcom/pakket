@@ -4,14 +4,14 @@ package Pakket::Log;
 use strict;
 use warnings;
 use parent 'Exporter';
+use JSON::MaybeXS         qw< encode_json >;
+use Log::Any              qw< $log >;
 use Log::Dispatch;
-use Path::Tiny qw< path >;
-use Log::Any   qw< $log >;
+use Path::Tiny            qw< path >;
 use Term::GentooFunctions qw< ebegin eend >;
-use Time::HiRes qw< gettimeofday >;
-use Time::Format qw< %time >;
+use Time::Format          qw< %time >;
+use Time::HiRes           qw< gettimeofday >;
 use Try::Tiny;
-use JSON::MaybeXS qw< encode_json >;
 
 use constant {
     'DEBUG_LOG_LEVEL'    => 3,
@@ -33,7 +33,7 @@ use constant {
 # 8  debug     debugging messages for development
 # 9  trace     copious tracing output
 
-our @EXPORT_OK = qw< log_success log_fail >; ## no critic qw(Modules::ProhibitAutomaticExportation)
+our @EXPORT_OK = qw< log_success log_fail log_raw >; # no critic qw(Modules::ProhibitAutomaticExportation)
 
 sub _extra_spaces {
     my $msg = shift;
@@ -41,14 +41,18 @@ sub _extra_spaces {
 }
 
 sub _log_to_outputs {
-    my ( $msg, $status ) = @_;
+    my ( $msg, $status, $raw ) = @_;
     my $status_output = $status ? ' [ ok ]' : ' [ !! ]';
     my @log_outputs   = $log->adapter->{'dispatcher'}->outputs;
 
     foreach my $output (@log_outputs) {
         if ( ref($output) =~ m{^Log::Dispatch::Screen}xms ) {
-            ebegin $msg;
-            eend 1;
+            if ($raw) {
+                print "$msg", "\n";
+            } else {
+                ebegin $msg;
+                eend 1;
+            }
             next;
         }
 
@@ -62,6 +66,11 @@ sub _log_to_outputs {
     }
 
     return $msg;
+}
+
+sub log_raw {
+    my $msg = shift;
+    return _log_to_outputs( $msg, 1 , 1);
 }
 
 sub log_success {
