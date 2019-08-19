@@ -165,6 +165,9 @@ sub _scaffold_package {
 
     {
         local %ENV = %ENV; # keep all env changes locally
+        local $ENV{'PACKAGE_SRC_DIR'} = $sources;
+        $log->debug("Src dir: '$sources'");
+
         if ($package->{manage}{env}) {
             foreach my $key (keys %{$package->{manage}{env}}) {
                 $ENV{$key} = $package->{manage}{env}{$key};
@@ -172,6 +175,7 @@ sub _scaffold_package {
         }
 
         foreach my $cmd (@{ $package->{pre_manage} }) {
+            $log->debugf("Executing '$cmd'");
             my $ecode = system($cmd);
             Carp::croak("Unable to run '$cmd'") if $ecode;
         }
