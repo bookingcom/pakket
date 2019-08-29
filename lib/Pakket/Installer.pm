@@ -78,7 +78,7 @@ sub install {
         return EINVAL;
     }
 
-    if ($self->allow_rollback && $self->rollback_tag) {
+    if (!$self->force && $self->allow_rollback && $self->rollback_tag) {
         my $tags = $self->get_rollback_tags();
 
         if (exists $tags->{$self->rollback_tag}) {
