@@ -7,11 +7,24 @@ use Path::Tiny qw< path >;
 use Pakket::Log;
 use Pakket::Repository::Backend::file;
 use Log::Any::Adapter;
+use Log::Dispatch;
 
 Log::Any::Adapter->set(
     'Dispatch',
-    'dispatcher' => Pakket::Log->arg_default_logger(),
+    'dispatcher' => arg_default_logger(),
 );
+
+sub arg_default_logger {
+    return $_[1] || Log::Dispatch->new(
+        'outputs' => [
+            [
+                'Screen',
+                'min_level' => 'notice',
+                'newline'   => 1,
+            ],
+        ],
+    );
+}
 
 sub generate_modules {
     my $fake_dist_dir = Path::Tiny->tempdir();

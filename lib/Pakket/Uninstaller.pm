@@ -9,7 +9,7 @@ use Path::Tiny qw< path  >;
 use Types::Path::Tiny qw< Path  >;
 use Log::Any qw< $log >;
 
-use Pakket::Log qw< log_success log_fail >;
+use Pakket::Log;
 
 with qw<
     Pakket::Role::CanUninstallPackage
@@ -61,18 +61,18 @@ sub uninstall {
     $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
     $self->activate_work_dir;
 
-    $log->infof(
-        "Finished uninstalling %d packages from %s",
-        0 + @packages_for_uninstall,
-        $self->pakket_dir->stringify
-    );
-
-    log_success(
+    $log->info(
         "Finished uninstalling:\n"
             . join( "\n",
             map { $_->{category} . "/" . $_->{name} }
                 @packages_for_uninstall )
     );
+    $log->noticef(
+        "Finished uninstalling %d packages from %s",
+        0 + @packages_for_uninstall,
+        $self->pakket_dir->stringify
+    );
+
 
     return;
 }

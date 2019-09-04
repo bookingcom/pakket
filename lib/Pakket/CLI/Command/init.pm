@@ -28,8 +28,8 @@ sub opt_spec {
 sub validate_args {
     my ( $self, $opt ) = @_;
 
-    my $logger = Pakket::Log->cli_logger(2); # verbosity
-    Log::Any::Adapter->set( 'Dispatch', dispatcher => $logger );
+    Log::Any::Adapter->set( 'Dispatch',
+        'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
 
     # global installation and pakket is already available
     if (  !$opt->{'repo_dir'}

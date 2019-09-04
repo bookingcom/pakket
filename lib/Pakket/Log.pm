@@ -1,29 +1,33 @@
 package Pakket::Log;
 # ABSTRACT: A logger for Pakket
 
+use 5.022;
 use strict;
 use warnings;
 use parent 'Exporter';
+use Carp;
+use IO::Interactive;
 use JSON::MaybeXS         qw< encode_json >;
 use Log::Any              qw< $log >;
 use Log::Dispatch;
 use Path::Tiny            qw< path >;
+use Sys::Syslog;
 use Term::GentooFunctions qw< ebegin eend >;
 use Time::Format          qw< %time >;
 use Time::HiRes           qw< gettimeofday >;
 use Try::Tiny;
 
 use constant {
-    'DEBUG_LOG_LEVEL'    => 3,
-    'DEBUG_INFO_LEVEL'   => 2,
-    'DEBUG_NOTICE_LEVEL' => 1,
+    'DEBUG_LOG_LEVEL'  => 3,
+    'INFO_LOG_LEVEL'   => 2,
+    'NOTICE_LOG_LEVEL' => 1,
 
     'TERM_SIZE_MAX'     => 80,
     'TERM_EXTRA_SPACES' => ( length(' * ') + length(' [ ok ]') ),
 };
 
 # Just so I remember it:
-# 1  fatal     system unusable, aborts program!
+# 1  emergency system unusable, aborts program!
 # 2  alert     failure in primary system
 # 3  critical  failure in backup system
 # 4  error     non-urgent program errors, a bug
@@ -33,86 +37,58 @@ use constant {
 # 8  debug     debugging messages for development
 # 9  trace     copious tracing output
 
-our @EXPORT_OK = qw< log_success log_fail log_raw >; # no critic qw(Modules::ProhibitAutomaticExportation)
+sub send_data {
+    my ($data, $started, $finished) = @_;
+    $data && $data->{'severity'} or return;
 
-sub _extra_spaces {
-    my $msg = shift;
-    return abs( TERM_SIZE_MAX() - ( length($msg) + TERM_EXTRA_SPACES() ) );
-}
+    $started && $finished and $data->{'took'} = $finished - $started;
 
-sub _log_to_outputs {
-    my ( $msg, $status, $raw ) = @_;
-    my $status_output = $status ? ' [ ok ]' : ' [ !! ]';
-    my @log_outputs   = $log->adapter->{'dispatcher'}->outputs;
-
-    foreach my $output (@log_outputs) {
-        if ( ref($output) =~ m{^Log::Dispatch::Screen}xms ) {
-            if ($raw) {
-                print "$msg", "\n";
-            } else {
-                ebegin $msg;
-                eend 1;
-            }
-            next;
-        }
-
-        my $level   = $status ? 'info' : 'error';
-        my $message = " * $msg" . ' ' x _extra_spaces($msg) . $status_output;
-
-        $output->log(
-            'level'   => $level,
-            'message' => $message,
-        );
-    }
-
-    return $msg;
-}
-
-sub log_raw {
-    my $msg = shift;
-    return _log_to_outputs( $msg, 1 , 1);
-}
-
-sub log_success {
-    my $msg = shift;
-    return _log_to_outputs( $msg, 1 );
-}
-
-sub log_fail {
-    my $msg = shift;
-    return _log_to_outputs( $msg, 0 );
-}
-
-sub arg_default_logger {
-    return $_[1] || Log::Dispatch->new(
-        'outputs' => [
-            [
-                'Screen',
-                'min_level' => 'notice',
-                'newline'   => 1,
-            ],
-        ],
-    );
+    openlog('pakket', 'ndelay,pid');
+    syslog($data->{'severity'}, encode_json($data));
+    closelog();
 }
 
 sub build_logger {
-    my ( $class, $verbose, $file ) = @_;
+    my ( $class, $verbosity, $file, $force_raw ) = @_;
 
-    my $outputs = [
-        $class->_cli_logger( $verbose // 0 ),
+    my @outputs = (
+        $class->_cli_logger($verbosity, $force_raw),
         $class->_syslog_logger(),
-    ];
-
-    push(@{ $outputs }, $class->_build_logger($file)) if $file && -w $file;
-
-    my $logger = Log::Dispatch->new(
-        'outputs' => $outputs,
     );
 
-    return $logger;
+    if ($file && -w $file) {
+        push(@outputs, $class->_file_logger($file));
+    }
+
+    return Log::Dispatch->new(
+        'outputs' => \@outputs,
+    );
 }
 
-sub _build_logger {
+sub _cli_logger {
+    my ( $class, $verbosity, $force_raw ) = @_;
+
+    return [
+        IO::Interactive::is_interactive() && !$force_raw ?  'Screen::Gentoo' : ('Screen', 'stderr' => 0),
+        'min_level' => $class->_verbosity_to_loglevel($verbosity),
+        'newline'   => 1,
+        'utf8'      => 1,
+    ];
+}
+
+sub _syslog_logger {
+    return [
+        'Syslog',
+        'min_level' => 'warning',
+        'ident'     => 'pakket',
+        'callbacks' => [ sub {
+            my %data = @_;
+            return encode_json(\%data);
+        } ],
+    ];
+}
+
+sub _file_logger {
     my ($class, $file) = @_;
 
     if (!$file) {
@@ -121,7 +97,7 @@ sub _build_logger {
             $dir->mkpath;
             1;
         } or do {
-            die "Can't create directory $dir : " . $!;
+            croak "Can't create directory $dir : " . $!;
         };
 
         $file = $dir->child("pakket.log")->stringify;
@@ -146,46 +122,24 @@ sub _build_logger {
     ];
 }
 
-sub cli_logger {
-    my ( $class, $verbose ) = @_;
+sub _verbosity_to_loglevel {
+    my ( $class, $verbosity ) = @_;
 
-    my $logger = Log::Dispatch->new(
-        'outputs' => [ $class->_cli_logger($verbose) ],
-    );
+    $verbosity ||= 0;
+    $verbosity += NOTICE_LOG_LEVEL(); # set this log level as default one
 
-    return $logger;
-}
-
-sub _cli_logger {
-    my ( $class, $verbose ) = @_;
-
-    $verbose ||= 0;
-    $verbose += +DEBUG_INFO_LEVEL;
-
-    my $screen_level =
-        $verbose >= +DEBUG_LOG_LEVEL    ? 'debug'  : # log 2
-        $verbose == +DEBUG_INFO_LEVEL   ? 'info'   : # log 1
-        $verbose == +DEBUG_NOTICE_LEVEL ? 'notice' : # log 0
-                                          'warning';
-    return [
-        'Screen::Gentoo',
-        'min_level' => $screen_level,
-        'newline'   => 1,
-        'utf8'      => 1,
-    ];
-}
-
-sub _syslog_logger {
-    return [
-        'Syslog',
-        'min_level' => 'warning',
-        'ident'     => 'pakket',
-        'callbacks' => [ sub {
-            my %data = @_;
-            $data{'name'} = 'pakket';
-            return encode_json(\%data);
-        } ],
-    ];
+    if ( $verbosity == DEBUG_LOG_LEVEL() ) {
+        return 'debug';
+    }
+    elsif ( $verbosity == INFO_LOG_LEVEL() ) {
+        return 'info';
+    }
+    elsif ( $verbosity == NOTICE_LOG_LEVEL() ) {
+        return 'notice';
+    }
+    else {
+        return 'warning';
+    }
 }
 
 1;

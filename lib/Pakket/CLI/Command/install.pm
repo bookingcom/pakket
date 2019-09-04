@@ -120,8 +120,11 @@ sub validate_args {
     $opt->{'config'} = $self->_determine_config($opt);
     my $log_file = $opt->{'log_file'} || $opt->{'config'}{'log_file'};
 
+    # for --dry-run always log raw
+    my $force_raw = $opt->{'dry_run'} ? 1 : 0;
+
     Log::Any::Adapter->set( 'Dispatch',
-        'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'}, $log_file ) );
+        'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'}, $log_file, $force_raw ) );
 
     $opt->{'packages'}   = $self->_determine_packages( $opt, $args );
 

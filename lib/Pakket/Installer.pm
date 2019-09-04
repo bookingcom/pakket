@@ -18,7 +18,7 @@ use Types::Path::Tiny     qw< Path >;
 use Pakket::Repository::Parcel;
 use Pakket::Package;
 use Pakket::PackageQuery;
-use Pakket::Log       qw< log_success log_fail log_raw >;
+use Pakket::Log;
 use Pakket::Types     qw< PakketRepositoryBackend >;
 use Pakket::Utils     qw< is_writeable >;
 use Pakket::Constants qw<
@@ -73,8 +73,28 @@ has 'installed_packages' => (
 sub install {
     my ( $self, @pack_list ) = @_;
 
+    my $_start = time();
+    my $result = $self->_do_install(@pack_list);
+
+    Pakket::Log::send_data(
+        {
+            'severity' => $result ? 'warning' : 'info',
+            'type'     => 'install',
+            'count'    => scalar @pack_list,
+            'is_force' => $self->force ? 1 : 0,
+            'result'   => int($result),
+        },
+        $_start, time(),
+    );
+
+    return $result;
+}
+
+sub _do_install {
+    my ( $self, @pack_list ) = @_;
+
     if (!@pack_list) {
-        $log->notice('Did not receive any parcels to deliver');
+        $log->warning('Did not receive any parcels to deliver');
         return EINVAL;
     }
 
@@ -85,10 +105,10 @@ sub install {
             $log->debugf("Found dir %s with rollback_tag %s", $tags->{$self->rollback_tag}, $self->rollback_tag);
             my $result = $self->activate_dir($tags->{$self->rollback_tag});
             if ($result && $result == EEXIST) {
-                log_success( 'All packages already installed in active library with tag: ' . $self->rollback_tag );
+                $log->info( 'All packages already installed in active library with tag: ' . $self->rollback_tag );
             } else {
-                log_success( 'Finished rollback to tag: ' . $self->rollback_tag );
-                log_success( 'Packages installed: ' . join ', ', map $_->full_name, @pack_list );
+                $log->info( 'Finished rollback to tag: ' . $self->rollback_tag );
+                $log->info( 'Packages installed: ' . join ', ', map $_->full_name, @pack_list );
             }
             return 0;
         }
@@ -97,9 +117,7 @@ sub install {
     my $packages = $self->_preprocess_packages_list(@pack_list);
     @{ $packages } or return 0;
 
-    if (!$self->check_packages_in_parcel_repo($packages)) {
-        return ENOENT;
-    }
+    $self->check_packages_in_parcel_repo($packages);
 
     if ( !is_writeable($self->work_dir) ) {
         croak($log->criticalf("Can't write to your installation directory (%s)", $self->work_dir));
@@ -135,12 +153,11 @@ sub install {
     $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
     $self->activate_work_dir;
 
-    $log->infof(
+    $log->info( 'Finished installing: ' . join ', ', map $_->full_name, @{ $packages });
+    $log->noticef(
         "Finished installing %d packages into '%s'",
         $installed_packages, $self->pakket_dir->stringify,
     );
-
-    log_success( 'Finished installing: ' . join ', ', map $_->full_name, @{ $packages });
 
     return 0;
 }
@@ -159,7 +176,7 @@ sub dry_run {
     @{ $packages } or return 0;
 
     foreach my $package (@{ $packages }) {
-        log_raw($package->full_name);
+        $log->info($package->full_name);
     }
     return E2BIG;
 }
@@ -242,7 +259,7 @@ sub install_package {
 
     $self->save_info_file($dir, $info_file);
 
-    log_success( sprintf 'Delivering parcel %s', $full_package->full_name );
+    $log->noticef( 'Delivering parcel %s', $full_package->full_name );
 
     return;
 }
@@ -304,13 +321,13 @@ sub install_packages_parallel {
                     my $prereq_data = $runtime_prereqs->{$prereq_name};
 
                     my $p = $self->get_prereq( $prereq_category, $prereq_name, $prereq_data );
-                    $self->_push_to_data_consumer( $p->full_name, { as_prereq => 1 } );
+                    $self->_push_to_data_consumer( $p->full_name, { 'as_prereq' => 1 } );
                 }
             }
             dirmove( $parcel_dir, $dc_dir->child( 'to_install' => $file ) )
-                or die $!;
+                or croak $!;
 
-            log_success( sprintf 'Delivering parcel %s', $full_package->full_name );
+            $log->infof( 'Delivering parcel %s', $full_package->full_name );
         });
 
         # It's actually faster to not hammer the filesystem checking for new
@@ -334,7 +351,7 @@ sub install_packages_parallel {
 
         $installed_packages++;
 
-        my $parcel_dir = $dc_dir->child(to_install => $file->basename);
+        my $parcel_dir = $dc_dir->child('to_install' => $file->basename);
         if ($parcel_dir->exists) {
             my $full_parcel_dir = $parcel_dir->child( PARCEL_FILES_DIR() );
             copy_package_to_install_dir($full_parcel_dir, $dir);
@@ -349,12 +366,12 @@ sub install_packages_parallel {
                 $self->uninstall_package($info_file, $package_to_update);
             }
 
-            $self->add_package_to_info_file( $parcel_dir, $info_file, $package, { as_prereq => $as_prereq } );
+            $self->add_package_to_info_file( $parcel_dir, $info_file, $package, { 'as_prereq' => $as_prereq } );
         }
     });
     $self->save_info_file($dir, $info_file);
 
-    $dc_dir->remove_tree({safe => 0});
+    $dc_dir->remove_tree({'safe' => 0});
 
     return $installed_packages;
 }
@@ -505,9 +522,7 @@ sub pre_install_checks {
 sub show_installed {
     my ($self) = @_;
 
-    my @installed_packages = map {
-        $_->full_name
-    } values %{$self->load_installed_packages($self->active_dir)};
+    my @installed_packages = map { $_->full_name } values %{$self->load_installed_packages($self->active_dir)};
 
     print join("\n", sort @installed_packages ) . "\n";
     return 0;
@@ -532,9 +547,9 @@ sub _filter_packages {
     }
     if (!@result && !$self->silent) {
         if (0+@packages == 1) {
-            $log->infof('%s already installed', $packages[0]->full_name);
+            $log->noticef('%s already installed', $packages[0]->full_name);
         } else {
-            $log->infof('All packages are already installed');
+            $log->notice('All packages are already installed');
         }
     }
     return @result;
@@ -569,14 +584,12 @@ sub set_latest_version_for_undefined {
 sub check_packages_in_parcel_repo {
     my ($self, $packages) = @_;
     my %all = map {$_=>1} @{$self->parcel_repo->all_object_ids()};
-    my $rs = 1;
     for my $package ( @{$packages} ) {
         if (!$all{$package->id} && !$self->parcel_repo->has_object($package->id)) {
-            $log->errorf('Package %s doesn\'t exist in parcel repo', $package->id);
-            $rs = 0;
+            local $! = ENOENT;
+            croak($log->criticalf('Package %s doesn\'t exist in parcel repo', $package->id));
         }
     }
-    return $rs;
 }
 
 sub get_rollback_tags {

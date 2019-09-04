@@ -11,7 +11,7 @@ use Types::Path::Tiny         qw< Path >;
 use Log::Any                  qw< $log >;
 use version 0.77;
 
-use Pakket::Log qw< log_success log_fail >;
+use Pakket::Log;
 use Pakket::Package;
 use Pakket::PackageQuery;
 use Pakket::Bundler;
@@ -146,7 +146,7 @@ sub build {
     if ( $self->bootstrapping ) {
         foreach my $category ( keys %categories ) {
             $self->bootstrap_build($category);
-            log_success('Bootstrapping');
+            $log->info('Bootstrapping');
         }
     }
 
@@ -493,7 +493,7 @@ sub run_build {
     );
 
     $log->infof( '%s Finished on %s', '|...' x $level, $query->full_name );
-    log_success( sprintf 'Building %s', $query->full_name );
+    $log->infof( 'Building %s', $query->full_name );
 
     return;
 }
