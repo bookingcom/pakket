@@ -1,9 +1,0 @@
-function build_all {
-	while read p; do
-		if  [[ "$p" =~ "^#.*" ]]; then
-			continue
-		fi
-		echo "$p"
-		bin/pakket build --prefix /usr/lib/pakket/5.28.1/libraries/active --use-prefix -vvv "$p" || break
-	done < all-specs
-}

@@ -1,7 +1,0 @@
-version: "3.7"
-services:
-  bash:
-    build: ./
-    command: /bin/bash
-    volumes:
-      - ./:/opt/pakket/app/pakket
