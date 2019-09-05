@@ -67,7 +67,7 @@ sub generate_env_vars {
 sub generate_cpath {
     my ($pkg_dir, $prefix, $use_prefix) = @_;
 
-    my @paths = ();
+    my @paths;
     my @incpaths = $pkg_dir->child('include');
     if ($use_prefix) {
         push(@incpaths, $prefix->child('include'));

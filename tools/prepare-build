@@ -5,6 +5,7 @@ cpanm -n --installdeps ./tools/build
 
 echo "Installing runtime dependecies..."
 cpanm -n --installdeps .
+cpanm -n https://github.com/gugod/Seacan/tarball/master
 
 echo "Installing dzil dependecies..."
 dzil authordeps --missing | cpanm -n

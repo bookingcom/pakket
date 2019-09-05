@@ -20,7 +20,7 @@ requires 'Getopt::Long::Descriptive';
 requires 'Git::Wrapper';
 requires 'IO::Prompt::Tiny';
 requires 'JSON::MaybeXS';
-requires 'Log::Any', '>= 0.05';
+requires 'Log::Any';
 requires 'Log::Any::Adapter::Dispatch', '>= 0.06';
 requires 'Log::Dispatch';
 requires 'MetaCPAN::Client';
@@ -52,6 +52,10 @@ requires 'HTTP::Tiny';
 requires 'IO::Socket::SSL';
 requires 'Net::SSLeay';
 
+# For the DBI backend
+requires 'DBI';
+requires 'Types::DBI';
+
 # For the S3 backend
 requires 'Net::Amazon::S3';
 requires 'LWP::Protocol::https';
@@ -59,31 +63,3 @@ requires 'LWP::Protocol::https';
 # For the web service
 requires 'Dancer2';
 requires 'Dancer2::Plugin::ParamTypes';
-
-on 'test' => sub {
-	requires 'Module::Faker';
-	requires 'Perl::Critic::Bangs';
-	requires 'Perl::Critic::Freenode';
-	requires 'Perl::Critic::Itch';
-	requires 'Perl::Critic::Lax';
-	requires 'Perl::Critic::Moose';
-	requires 'Perl::Critic::Policy::BuiltinFunctions::ProhibitDeleteOnArrays';
-	requires 'Perl::Critic::Policy::BuiltinFunctions::ProhibitReturnOr';
-	requires 'Perl::Critic::Policy::HTTPCookies';
-	requires 'Perl::Critic::Policy::Moo::ProhibitMakeImmutable';
-	requires 'Perl::Critic::Policy::Perlsecret';
-	requires 'Perl::Critic::Policy::TryTiny::RequireBlockTermination';
-	requires 'Perl::Critic::Policy::TryTiny::RequireUse';
-	requires 'Perl::Critic::Policy::ValuesAndExpressions::PreventSQLInjection';
-	requires 'Perl::Critic::Policy::Variables::ProhibitUselessInitialization';
-	requires 'Perl::Critic::StricterSubs';
-	requires 'Perl::Critic::Tics';
-	requires 'Test::Perl::Critic::Progressive';
-	requires 'Test::Pod';
-	requires 'Test::Vars';
-
-	# Only for the DBI backend (while DBI backend is not finished and not used I've moved it to test sectioni
-	# to disable it's default including in pakket package)
-	requires 'DBI';
-	requires 'Types::DBI';
-};

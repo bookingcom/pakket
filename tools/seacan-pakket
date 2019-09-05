@@ -7,38 +7,20 @@
 # ( cd .git/hooks && ln -s ../../tools/git-hooks/pre-commit )
 # XXX
 
+use 5.010;
 use strict;
 use warnings;
-use constant {
-    'DEFAULT_PERL_VERSION' => '5.22.2',
-};
+use diagnostics;
 
-use English    '-no_match_vars';
-use Path::Tiny qw<path tempdir>;
-use Getopt::Long qw<:config no_ignore_case>;
 use App::Seacan;
-use IPC::Open3 qw<open3>;
+use English      '-no_match_vars';
+use Getopt::Long qw<:config no_ignore_case>;
+use IPC::Open3   qw<open3>;
+use Path::Tiny   qw<path tempdir>;
 
-sub print_help {
-    my $error   = shift;
-    my $min_ver = DEFAULT_PERL_VERSION();
-
-    $error and print "[ERROR] $error\n\n";
-
-    print << "_END_HELP";
-$PROGRAM_NAME [--perl PERL_VER] --app-dir DIR
-
-Options:
-
---perl        Perl version (default: $min_ver)
---app-dir     Application directory (default: .)
---files       Additional files for inclusion
-              (Specify multiple times for each file)
-
-_END_HELP
-
-    exit 2;
-}
+use constant {
+    'DEFAULT_PERL_VERSION' => '5.28.1',
+};
 
 my $app_dir = path('.');
 Getopt::Long::GetOptions(
@@ -48,31 +30,19 @@ Getopt::Long::GetOptions(
     'help'      => \my $help,
 );
 
-$help and print_help();
+$help and _print_help();
 
--d $app_dir or print_help('--app-dir must point to a directory');
+-d $app_dir or _print_help('--app-dir must point to a directory');
 
-my $cores = 1;
-if ( $OSNAME =~ /linux/xms ) {
-    local $SIG{'CHLD'} = 'IGNORE';
-    my ( $writer, $reader, $err );
-    open3( $writer, $reader, $err, 'nproc' );
-    chomp( $cores = <$reader> );
-}
-
-if ( $cores > 1 ) {
-    $cores -= 1;
-}
-
-my @directories  = qw<bin lib>;
 my $top_src_dir  = tempdir( 'CLEANUP' => 1 );
 my $top_dest_dir = tempdir( 'CLEANUP' => 1 );
-my $dest_dir     = $top_dest_dir->child('pakket');
 my $source_dir   = $top_src_dir->child('pakket');
+my $dest_dir     = $top_dest_dir->child('pakket');
 
 $dest_dir->mkpath();
 $source_dir->mkpath();
 
+my @directories  = qw<bin lib>;
 foreach my $dir (@directories) {
     path($dir)->visit(
         sub {
@@ -85,7 +55,7 @@ foreach my $dir (@directories) {
             my $next_path = $source_dir->child($next_dir);
             $next_path->mkpath();
 
-            print "Copy $next -> $next_path\n";
+            say "Copy $next -> $next_path";
             $next->copy($next_path);
         },
         { 'recurse' => 1 },
@@ -95,7 +65,7 @@ foreach my $dir (@directories) {
 # cpanfile must be there so "cpanm" would work on the app
 foreach my $node ( @additional_files, 'cpanfile' ) {
     my $file = path($node);
-    print "Copy $file -> $source_dir\n";
+    say "Copy $file -> $source_dir";
     $file->copy( $source_dir->child($file) );
 }
 
@@ -114,15 +84,50 @@ my $seacan = App::Seacan->new(
                 'notest'          => 1,
                 'noman'           => 1,
                 'relocatable_INC' => 1,
-                'parallel'        => $cores,
+                'parallel'        => _detect_cores(),
         },
     },
 );
 
 $seacan->run;
+say "Seacan is finished";
 
-print "Finished!\n";
-my @cmd = ( 'tar', '--create', '--gzip', '--exclude-vcs', "--directory=$top_dest_dir",
-    '--file=' . path('pakket.tar.gz')->absolute, '.', );
-print join(" ", @cmd, "\n");
+say "Packing...";
+my @cmd = (
+    'tar', '--create', '--gzip', '--exclude-vcs', "--directory=$top_dest_dir",
+    '--file=' . path('pakket.tar.gz')->absolute, '.',
+);
+say join(" ", @cmd);
 system(@cmd);
+
+sub _print_help {
+    my $error   = shift;
+    my $min_ver = DEFAULT_PERL_VERSION();
+
+    $error and say "[ERROR] $error\n";
+
+    say << "_END_HELP";
+$PROGRAM_NAME [--perl PERL_VER] --app-dir DIR
+
+Options:
+
+--perl        Perl version (default: $min_ver)
+--app-dir     Application directory (default: .)
+--files       Additional files for inclusion
+              (Specify multiple times for each file)
+_END_HELP
+
+    exit 2;
+}
+
+sub _detect_cores {
+    my $cores = 1;
+    if ( $OSNAME =~ /linux/xms ) {
+        local $SIG{'CHLD'} = 'IGNORE';
+        my ( $writer, $reader, $err );
+        open3( $writer, $reader, $err, 'nproc' );
+        chomp( $cores = <$reader> );
+    }
+
+    return $cores;
+}
