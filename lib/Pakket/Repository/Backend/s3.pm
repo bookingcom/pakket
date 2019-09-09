@@ -80,7 +80,6 @@ use constant { 'index_update_interval' => 60 * 5 };
 sub BUILD {
     my ($self) = @_;
 
-    $log->debugf("Initializing S3 repository backend: %s/%s", $self->host, $self->bucket);
 
     # check that repo exists just access bucket
 }
@@ -88,6 +87,7 @@ sub BUILD {
 sub _build_s3_client {
     my ($self) = @_;
 
+    $log->debugf("Initializing S3 repository backend: %s/%s", $self->host, $self->bucket);
     my $s3 = Net::Amazon::S3->new(
         'host'                  => $self->host,
         'aws_access_key_id'     => $self->aws_access_key_id,

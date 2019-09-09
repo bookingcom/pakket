@@ -27,6 +27,10 @@ use Pakket::Constants qw<
     PAKKET_PACKAGE_SPEC
 >;
 
+use constant {
+    'SLEEP_TIME' => 100,
+};
+
 with qw<
     Pakket::Role::CanUninstallPackage
     Pakket::Role::HasConfig
@@ -117,8 +121,6 @@ sub _do_install {
     my $packages = $self->_preprocess_packages_list(@pack_list);
     @{ $packages } or return 0;
 
-    $self->check_packages_in_parcel_repo($packages);
-
     if ( !is_writeable($self->work_dir) ) {
         croak($log->criticalf("Can't write to your installation directory (%s)", $self->work_dir));
     }
@@ -126,12 +128,12 @@ sub _do_install {
     my $installed_packages;
 
     if ($self->is_parallel) {
-        $installed_packages = $self->install_packages_parallel(
-            $packages,
-        );
+        $installed_packages = $self->install_packages_parallel($packages);
     }
     else {
         my $installer_cache = {};
+
+        $self->check_packages_in_parcel_repo($packages);
 
         foreach my $package (@{ $packages }) {
             eval {
@@ -266,27 +268,30 @@ sub install_package {
 
 sub install_packages_parallel {
     my ( $self, $packages ) = @_;
+
     my $dir = $self->work_dir;
     my $dc_dir = $self->data_consumer_dir;
 
-    $self->_push_to_data_consumer($_->full_name) for @{ $packages };
+    $self->push_to_data_consumer($_->full_name) for @{ $packages };
 
     $self->spawn;
+
+    $self->check_packages_in_parcel_repo($packages);
 
     do {
         $self->data_consumer->consume(sub {
             my ($consumer, $other_spec, $fh, $file) = @_;
+            defined $fh or return;
+
             my $file_contents = <$fh>;
             if (!$file_contents) {
-                $log->infof("Another worker got hold of the lock for %s first -- skipping",
-                    $file);
+                $log->infof("Another worker got hold of the lock for %s first -- skipping", $file);
                 return $consumer->leave;
             }
 
             my $package_str = substr $file_contents, 1;
 
-            my ( $pkg_cat, $pkg_name, $pkg_version, $pkg_release ) =
-                $package_str =~ PAKKET_PACKAGE_SPEC();
+            my ( $pkg_cat, $pkg_name, $pkg_version, $pkg_release ) = $package_str =~ PAKKET_PACKAGE_SPEC();
 
             my $package = Pakket::Package->new(
                 'category' => $pkg_cat,
@@ -297,13 +302,12 @@ sub install_packages_parallel {
 
             pre_install_checks( $dir, $package, {} );
 
-            $log->debugf( "About to install %s (into $dir)", $package->full_name );
+            $log->debugf( "Fetching %s (into $dir)", $package->full_name );
 
             $self->is_installed({}, $package)
                and return;
 
-            my $parcel_dir
-                = $self->parcel_repo->retrieve_package_parcel($package);
+            my $parcel_dir = $self->parcel_repo->retrieve_package_parcel($package);
 
             my $full_parcel_dir = $parcel_dir->child( PARCEL_FILES_DIR() );
 
@@ -321,44 +325,44 @@ sub install_packages_parallel {
                     my $prereq_data = $runtime_prereqs->{$prereq_name};
 
                     my $p = $self->get_prereq( $prereq_category, $prereq_name, $prereq_data );
-                    $self->_push_to_data_consumer( $p->full_name, { 'as_prereq' => 1 } );
+                    if (not exists $self->installed_packages->{$p->short_name} ) {
+                        $self->push_to_data_consumer( $p->full_name, { 'as_prereq' => 1 } );
+                    }
                 }
             }
+
             dirmove( $parcel_dir, $dc_dir->child( 'to_install' => $file ) )
                 or croak $!;
-
-            $log->infof( 'Delivering parcel %s', $full_package->full_name );
         });
 
         # It's actually faster to not hammer the filesystem checking for new
         # stuff. $consumer->consume will continue until `unprocessed` is empty,
         # so it's useful to wait a bit (100ms) to wait for new items to be added.
-        usleep 100;
+        usleep SLEEP_TIME();
     }
-    while (    $dc_dir->child('working')->children()
-            || $dc_dir->child('unprocessed')->children() );
+    while ($dc_dir->child('working')->children() || $dc_dir->child('unprocessed')->children());
 
     $self->wait_all_children;
 
-    my $info_file = $self->load_info_file($dir);
     my $installed_packages = 0;
+
+    my $info_file = $self->load_info_file($dir);
     $dc_dir->child('processed')->visit(sub {
         my ($file, $state) = @_;
+
         read $file->filehandle, my $as_prereq, 1
             or croak( $log->criticalf( "Couldn't read %s", $file->absolute ) );
         $as_prereq =~ /^(0|1)$/
             or croak( $log->criticalf( "Unexpected contents on %s: %s", $file->absolute, $file->slurp ) );
 
-        $installed_packages++;
-
         my $parcel_dir = $dc_dir->child('to_install' => $file->basename);
         if ($parcel_dir->exists) {
             my $full_parcel_dir = $parcel_dir->child( PARCEL_FILES_DIR() );
-            copy_package_to_install_dir($full_parcel_dir, $dir);
 
             my $spec_file = $full_parcel_dir->child( PARCEL_METADATA_FILE() );
             my $spec      = decode_json $spec_file->slurp_utf8;
             my $package   = Pakket::Package->new_from_spec($spec);
+
 
             # uninstall previous version of the package
             my $package_to_update = $self->_package_to_upgrade($package);
@@ -366,7 +370,13 @@ sub install_packages_parallel {
                 $self->uninstall_package($info_file, $package_to_update);
             }
 
+            copy_package_to_install_dir($full_parcel_dir, $dir);
+
             $self->add_package_to_info_file( $parcel_dir, $info_file, $package, { 'as_prereq' => $as_prereq } );
+
+            $log->noticef( 'Delivering parcel %s', $package->full_name );
+
+            $installed_packages++;
         }
     });
     $self->save_info_file($dir, $info_file);

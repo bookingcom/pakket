@@ -128,7 +128,7 @@ sub _verbosity_to_loglevel {
     $verbosity ||= 0;
     $verbosity += NOTICE_LOG_LEVEL(); # set this log level as default one
 
-    if ( $verbosity == DEBUG_LOG_LEVEL() ) {
+    if ( $verbosity >= DEBUG_LOG_LEVEL() ) {
         return 'debug';
     }
     elsif ( $verbosity == INFO_LOG_LEVEL() ) {
