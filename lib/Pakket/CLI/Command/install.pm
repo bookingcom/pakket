@@ -47,7 +47,7 @@ sub _determine_config {
         $config->{'install_dir'} = $opt->{'to'};
     }
 
-    if ( $opt->{'jobs'} ) {
+    if ( defined $opt->{'jobs'} ) {
         $config->{'jobs'} = $opt->{'jobs'};
     }
 
@@ -130,6 +130,7 @@ sub validate_args {
 
     $opt->{'config'}{'env'}{'cli'} = 1;
     $opt->{'config'}{'atomic'} //= 1;
+    $opt->{'config'}{'jobs'} //= 1;
 }
 
 sub execute {

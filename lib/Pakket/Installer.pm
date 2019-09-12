@@ -3,6 +3,7 @@ package Pakket::Installer;
 
 use Moose;
 use MooseX::StrictConstructor;
+
 use Archive::Any;
 use Carp                  qw< croak >;
 use English               qw< -no_match_vars >;
@@ -94,76 +95,6 @@ sub install {
     return $result;
 }
 
-sub _do_install {
-    my ( $self, @pack_list ) = @_;
-
-    if (!@pack_list) {
-        $log->warning('Did not receive any parcels to deliver');
-        return EINVAL;
-    }
-
-    if (!$self->force && $self->allow_rollback && $self->rollback_tag) {
-        my $tags = $self->get_rollback_tags();
-
-        if (exists $tags->{$self->rollback_tag}) {
-            $log->debugf("Found dir %s with rollback_tag %s", $tags->{$self->rollback_tag}, $self->rollback_tag);
-            my $result = $self->activate_dir($tags->{$self->rollback_tag});
-            if ($result && $result == EEXIST) {
-                $log->info( 'All packages already installed in active library with tag: ' . $self->rollback_tag );
-            } else {
-                $log->info( 'Finished rollback to tag: ' . $self->rollback_tag );
-                $log->info( 'Packages installed: ' . join ', ', map $_->full_name, @pack_list );
-            }
-            return 0;
-        }
-    }
-
-    my $packages = $self->_preprocess_packages_list(@pack_list);
-    @{ $packages } or return 0;
-
-    if ( !is_writeable($self->work_dir) ) {
-        croak($log->criticalf("Can't write to your installation directory (%s)", $self->work_dir));
-    }
-
-    my $installed_packages;
-
-    if ($self->is_parallel) {
-        $installed_packages = $self->install_packages_parallel($packages);
-    }
-    else {
-        my $installer_cache = {};
-
-        $self->check_packages_in_parcel_repo($packages);
-
-        foreach my $package (@{ $packages }) {
-            eval {
-                $self->install_package(
-                    $package,
-                    $self->work_dir,
-                    { 'cache' => $installer_cache },
-                );
-                1;
-            } or do {
-                $self->ignore_failures or croak($@);
-                $log->warnf( 'Failed to install %s, skipping', $package->full_name);
-            };
-        }
-
-        $installed_packages = keys %{$installer_cache};
-    }
-
-    $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
-    $self->activate_work_dir;
-
-    $log->info( 'Finished installing: ' . join ', ', map $_->full_name, @{ $packages });
-    $log->noticef(
-        "Finished installing %d packages into '%s'",
-        $installed_packages, $self->pakket_dir->stringify,
-    );
-
-    return 0;
-}
-
 sub dry_run {
     my ($self, @pack_list) = @_;
 
@@ -181,6 +112,15 @@ sub dry_run {
         $log->info($package->full_name);
     }
     return E2BIG;
+}
+
+sub show_installed {
+    my ($self) = @_;
+
+    my @installed_packages = map { $_->full_name } values %{$self->load_installed_packages($self->active_dir)};
+
+    print join("\n", sort @installed_packages ) . "\n";
+    return 0;
 }
 
 sub try_to_install_package {
@@ -208,16 +148,17 @@ sub try_to_install_package {
 
 sub install_package {
     my ( $self, $package, $dir, $opts ) = @_;
+
     my $installer_cache = $opts->{'cache'};
 
-    pre_install_checks($dir, $package, $opts);
+    $self->_pre_install_checks($dir, $package, $opts);
 
     $log->debugf( "About to install %s (into $dir)", $package->full_name );
 
     $self->is_installed($installer_cache, $package)
         and return;
 
-    mark_as_installed($installer_cache, $package);
+    $self->_mark_as_installed($installer_cache, $package);
 
     my $parcel_dir
         = $self->parcel_repo->retrieve_package_parcel($package);
@@ -237,7 +178,7 @@ sub install_package {
         foreach my $prereq_name ( keys %{$runtime_prereqs} ) {
             my $prereq_data = $runtime_prereqs->{$prereq_name};
 
-            $self->install_prereq(
+            $self->_install_prereq(
                 $prereq_category,
                 $prereq_name,
                 $prereq_data,
@@ -255,7 +196,7 @@ sub install_package {
         $self->uninstall_package($info_file, $package_to_update);
     }
 
-    copy_package_to_install_dir($full_parcel_dir, $dir);
+    _copy_package_to_install_dir($full_parcel_dir, $dir);
 
     $self->add_package_to_info_file( $parcel_dir, $info_file, $full_package, $opts );
 
@@ -266,22 +207,101 @@ sub install_package {
     return;
 }
 
-sub install_packages_parallel {
+sub _do_install {
+    my ( $self, @pack_list ) = @_;
+
+    if (!@pack_list) {
+        $log->warning('Did not receive any parcels to deliver');
+        return EINVAL;
+    }
+
+    if (!$self->force && $self->allow_rollback && $self->rollback_tag) {
+        my $tags = $self->_get_rollback_tags();
+
+        if (exists $tags->{$self->rollback_tag}) {
+            $log->debugf("Found dir %s with rollback_tag %s", $tags->{$self->rollback_tag}, $self->rollback_tag);
+            my $result = $self->activate_dir($tags->{$self->rollback_tag});
+            if ($result && $result == EEXIST) {
+                $log->notice( 'All packages already installed in active library with tag: ' . $self->rollback_tag );
+            } else {
+                $log->debug( 'Packages installed: ' . join ', ', map $_->full_name, @pack_list );
+                $log->info( 'Finished activating library with tag: ' . $self->rollback_tag );
+            }
+            return 0;
+        }
+    }
+
+    if ( !is_writeable($self->work_dir) ) {
+        croak($log->criticalf("Can't write to your installation directory (%s)", $self->work_dir));
+    }
+
+    my $packages = $self->_preprocess_packages_list(@pack_list);
+    @{ $packages } or return 0;
+
+    $self->_check_packages_in_parcel_repo($packages);
+
+    $log->infof('Requested %s parcels', scalar @{ $packages });
+    my $installed_count = $self->is_parallel
+        ?  $self->_install_packages_parallel($packages)
+        :  $self->_install_packages_sequential($packages);
+
+    $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
+    $self->activate_work_dir;
+
+    $log->debug( 'Finished installing: ' . join ', ', map $_->full_name, @{ $packages });
+    $log->noticef( "Finished installing %d packages into '%s'", $installed_count, $self->pakket_dir->stringify);
+
+    return 0;
+}
+
+sub _install_packages_sequential {
     my ( $self, $packages ) = @_;
+
+    my $installer_cache = {};
+    foreach my $package (@{ $packages }) {
+        eval {
+            $self->install_package(
+                $package,
+                $self->work_dir,
+                { 'cache' => $installer_cache },
+            );
+            1;
+        } or do {
+            $self->ignore_failures or croak($@);
+            $log->warnf( 'Failed to install %s, skipping', $package->full_name);
+        };
+    }
+
+    return keys %{$installer_cache};
+}
+
+sub _install_packages_parallel {
+    my ( $self, $packages ) = @_;
+
+    $self->push_to_data_consumer($_->full_name) for @{ $packages };
+
+    $self->spawn();
+
+    $self->is_child and $self->reset_parcel_backend();
+
+    $self->_fetch_all_packages();
+
+    $self->wait_all_children();
+
+    my $installed_count = $self->_install_all_packages();
+
+    return $installed_count;
+}
+
+sub _fetch_all_packages {
+    my ($self) = @_;
 
     my $dir = $self->work_dir;
     my $dc_dir = $self->data_consumer_dir;
 
-    $self->push_to_data_consumer($_->full_name) for @{ $packages };
-
-    $self->spawn;
-
-    $self->check_packages_in_parcel_repo($packages);
-
-    do {
+    while ($dc_dir->child('unprocessed')->children()) {
         $self->data_consumer->consume(sub {
             my ($consumer, $other_spec, $fh, $file) = @_;
-            defined $fh or return;
 
             my $file_contents = <$fh>;
             if (!$file_contents) {
@@ -300,9 +320,9 @@ sub install_packages_parallel {
                 'release'  => $pkg_release // 0,
             );
 
-            pre_install_checks( $dir, $package, {} );
+            $self->_pre_install_checks( $dir, $package, {} );
 
-            $log->debugf( "Fetching %s (into $dir)", $package->full_name );
+            $log->infof( 'Fetching %s', $package->full_name );
 
             $self->is_installed({}, $package)
                and return;
@@ -324,7 +344,7 @@ sub install_packages_parallel {
                 foreach my $prereq_name ( keys %{$runtime_prereqs} ) {
                     my $prereq_data = $runtime_prereqs->{$prereq_name};
 
-                    my $p = $self->get_prereq( $prereq_category, $prereq_name, $prereq_data );
+                    my $p = $self->_get_prereq( $prereq_category, $prereq_name, $prereq_data );
                     if (not exists $self->installed_packages->{$p->short_name} ) {
                         $self->push_to_data_consumer( $p->full_name, { 'as_prereq' => 1 } );
                     }
@@ -340,11 +360,17 @@ sub install_packages_parallel {
         # so it's useful to wait a bit (100ms) to wait for new items to be added.
         usleep SLEEP_TIME();
     }
-    while ($dc_dir->child('working')->children() || $dc_dir->child('unprocessed')->children());
 
-    $self->wait_all_children;
+    return;
+}
 
-    my $installed_packages = 0;
+sub _install_all_packages {
+    my ($self) = @_;
+
+    my $installed_count = 0;
+
+    my $dir = $self->work_dir;
+    my $dc_dir = $self->data_consumer_dir;
 
     my $info_file = $self->load_info_file($dir);
     $dc_dir->child('processed')->visit(sub {
@@ -352,17 +378,18 @@ sub install_packages_parallel {
 
         read $file->filehandle, my $as_prereq, 1
             or croak( $log->criticalf( "Couldn't read %s", $file->absolute ) );
-        $as_prereq =~ /^(0|1)$/
+        $as_prereq eq '0' || $as_prereq eq '1'
             or croak( $log->criticalf( "Unexpected contents on %s: %s", $file->absolute, $file->slurp ) );
 
         my $parcel_dir = $dc_dir->child('to_install' => $file->basename);
         if ($parcel_dir->exists) {
             my $full_parcel_dir = $parcel_dir->child( PARCEL_FILES_DIR() );
 
+            # Get the spec and create a new Package object
+            # This one will have the dependencies as well
             my $spec_file = $full_parcel_dir->child( PARCEL_METADATA_FILE() );
             my $spec      = decode_json $spec_file->slurp_utf8;
             my $package   = Pakket::Package->new_from_spec($spec);
-
 
             # uninstall previous version of the package
             my $package_to_update = $self->_package_to_upgrade($package);
@@ -370,23 +397,23 @@ sub install_packages_parallel {
                 $self->uninstall_package($info_file, $package_to_update);
             }
 
-            copy_package_to_install_dir($full_parcel_dir, $dir);
+            _copy_package_to_install_dir($full_parcel_dir, $dir);
 
             $self->add_package_to_info_file( $parcel_dir, $info_file, $package, { 'as_prereq' => $as_prereq } );
 
             $log->noticef( 'Delivering parcel %s', $package->full_name );
 
-            $installed_packages++;
+            $installed_count++;
         }
     });
     $self->save_info_file($dir, $info_file);
 
     $dc_dir->remove_tree({'safe' => 0});
 
-    return $installed_packages;
+    return $installed_count;
 }
 
-sub get_prereq {
+sub _get_prereq {
     my ($self, $category, $name, $prereq_data) = @_;
     my $package;
     if (exists $self->requirements->{"$category/$name"}) {
@@ -419,9 +446,10 @@ sub get_prereq {
     return $package;
 }
 
-sub install_prereq {
+## no critic (Perl::Critic::Policy::Subroutines::ProhibitManyArgs)
+sub _install_prereq {
     my ($self, $category, $name, $prereq_data, $dir, $opts) = @_;
-    my $package = $self->get_prereq($category, $name, $prereq_data);
+    my $package = $self->_get_prereq($category, $name, $prereq_data);
 
     $self->install_package(
         $package, $dir,
@@ -429,8 +457,9 @@ sub install_prereq {
     );
 }
 
-sub copy_package_to_install_dir {
+sub _copy_package_to_install_dir {
     my ($full_parcel_dir, $dir) = @_;
+
     foreach my $item ( $full_parcel_dir->children ) {
         my $basename = $item->basename;
 
@@ -438,6 +467,7 @@ sub copy_package_to_install_dir {
             and next;
 
         my $target_dir = $dir->child($basename);
+        ## no critic (Perl::Critic::Policy::Variables::ProhibitPackageVars)
         local $File::Copy::Recursive::RMTrgFil = 1;
         dircopy($item, $target_dir)
             or croak($log->criticalf("Can't copy $item to $target_dir ($!)"));
@@ -504,8 +534,8 @@ sub is_installed {
     return 0;
 }
 
-sub mark_as_installed {
-    my ($installer_cache, $package) = @_;
+sub _mark_as_installed {
+    my ($self, $installer_cache, $package) = @_;
 
     my $pkg_cat  = $package->category;
     my $pkg_name = $package->name;
@@ -515,8 +545,8 @@ sub mark_as_installed {
     ];
 }
 
-sub pre_install_checks {
-    my ($dir, $package, $opts) = @_;
+sub _pre_install_checks {
+    my ($self, $dir, $package, $opts) = @_;
 
     # Are we in a regular (non-bootstrap) mode?
     # Are we using a bootstrap version of a package?
@@ -527,15 +557,6 @@ sub pre_install_checks {
             $package->full_name,
         ) );
     }
-}
-
-sub show_installed {
-    my ($self) = @_;
-
-    my @installed_packages = map { $_->full_name } values %{$self->load_installed_packages($self->active_dir)};
-
-    print join("\n", sort @installed_packages ) . "\n";
-    return 0;
 }
 
 sub _filter_packages {
@@ -565,7 +586,23 @@ sub _filter_packages {
     return @result;
 }
 
-sub set_latest_version_for_undefined {
+sub _preprocess_packages_list {
+    my ($self, @packages) = @_;
+
+    @packages or return \@packages;
+
+    @packages = $self->_set_latest_version_for_undefined(@packages);
+
+    foreach (@packages) { $self->requirements->{$_->short_name} = $_ }
+
+    $self->installed_packages($self->load_installed_packages($self->active_dir));
+
+    @packages = $self->_filter_packages(@packages);
+
+    return \@packages;
+}
+
+sub _set_latest_version_for_undefined {
     my ($self, @packages) = @_;
 
     my @output;
@@ -591,7 +628,7 @@ sub set_latest_version_for_undefined {
     return @output;
 }
 
-sub check_packages_in_parcel_repo {
+sub _check_packages_in_parcel_repo {
     my ($self, $packages) = @_;
     my %all = map {$_=>1} @{$self->parcel_repo->all_object_ids()};
     for my $package ( @{$packages} ) {
@@ -602,7 +639,7 @@ sub check_packages_in_parcel_repo {
     }
 }
 
-sub get_rollback_tags {
+sub _get_rollback_tags {
     my ($self) = @_;
 
     my @dirs = grep {
@@ -611,27 +648,12 @@ sub get_rollback_tags {
 
     my $result = {};
     foreach my $dir (@dirs) {
-        next unless my $tag = $self->get_rollback_tag($dir);
+        my $tag = $self->get_rollback_tag($dir);
+        $tag or next;
         $result->{$tag} = $dir;
     }
 
     return $result;
-}
-
-sub _preprocess_packages_list {
-    my ($self, @packages) = @_;
-
-    @packages or return \@packages;
-
-    @packages = $self->set_latest_version_for_undefined(@packages);
-
-    foreach (@packages) { $self->requirements->{$_->short_name} = $_ }
-
-    $self->installed_packages($self->load_installed_packages($self->active_dir));
-
-    @packages = $self->_filter_packages(@packages);
-
-    return \@packages;
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -730,12 +752,12 @@ packages.
 The guts of installing a package. This is used by C<install> and
 C<try_to_install_package>.
 
-=head2 install_prereq($category, $name, \%prereq_data, $dir, \%opts)
+=head2 _install_prereq($category, $name, \%prereq_data, $dir, \%opts)
 
 Takes a prereq from a package, finds the matching package and installs
 it.
 
-=head2 copy_package_to_install_dir($source_dir, $target_dir)
+=head2 _copy_package_to_install_dir($source_dir, $target_dir)
 
 Recursively copy all the package directories and files to the install
 directory.
@@ -745,11 +767,11 @@ directory.
 Check whether the package is already installed or not using our
 installer cache.
 
-=head2 mark_as_installed(\%installer_cache, $package)
+=head2 _mark_as_installed(\%installer_cache, $package)
 
 Add to cache as installed.
 
-=head2 pre_install_checks($dir, $package, \%opts)
+=head2 _pre_install_checks($dir, $package, \%opts)
 
 Perform all the checks for the installation phase.
 

@@ -8,6 +8,7 @@ has 'parcel_repo' => (
     'is'      => 'ro',
     'isa'     => 'Pakket::Repository::Parcel',
     'lazy'    => 1,
+    'clearer' => '_reset_parcel_repo',
     'default' => sub {
         my $self = shift;
 
@@ -22,11 +23,21 @@ has 'parcel_repo_backend' => (
     'isa'     => 'PakketRepositoryBackend',
     'lazy'    => 1,
     'coerce'  => 1,
+    'clearer' => '_reset_parcel_repo_backend',
     'default' => sub {
         my $self = shift;
         return $self->config->{'repositories'}{'parcel'};
     },
 );
+
+sub reset_parcel_backend {
+    my ($self) = @_;
+
+    $self->_reset_parcel_repo_backend();
+    $self->_reset_parcel_repo();
+
+    return;
+}
 
 no Moose::Role;
 
