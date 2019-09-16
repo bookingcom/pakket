@@ -80,7 +80,7 @@ sub spawn {
     my ($self) = @_;
 
     my $subprocs = $self->_subproc_count;
-    $log->infof('Spawning %s additional processes', $subprocs);
+    $subprocs and $log->infof('Spawning %s additional processes', $subprocs);
     for ( 1 .. $subprocs ) {
         my $child = fork;
         if ( not defined $child ) {

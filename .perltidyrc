@@ -1,8 +1,12 @@
+# perltidy
+
 # Good base-line
 # an alias for this:
 # -l=78 -i=4 -ci=4 -st -se -vt=2 -cti=0 -pt=1 -bt=1 -sbt=1 -bbt=1 -nsfs -nolq
 # -wbb="% + - * / x != == >= <= =~ !~ < > | & =
 #       **= += *= &= <<= &&= -= /= |= >>= ||= //= .= %= ^= x="
+
+--maximum-line-length=120
 
 # -pbp
 --perl-best-practices
@@ -10,6 +14,15 @@
 --nostandard-output
 
 # overriding some stuff there
+--continuation-indentation=4
+
+--brace-tightness=2
+--paren-tightness=2
+--square-bracket-tightness=2
+--block-brace-tightness=0
+
+--tight-secret-operators
+
 # -vt
 --vertical-tightness=0
 # -vtc
@@ -17,11 +30,7 @@
 # --outdent-long-quotes # ??
 
 # more stuff
---warning-output
---check-syntax
---perl-syntax-check-flags="-c"
-#--preserve-line-endings
---cuddled-else
+#--cuddled-else
 --minimum-space-to-comment=1
 --nooutdent-long-comments
-# --ignore-old-breakpoints # ??
+--warning-output

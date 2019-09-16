@@ -30,7 +30,7 @@ sub build_package {
     # FIXME: run_command will not return output, so we do this for now
     my $inc;
     {
-        local $ENV{'PERL5LIB'}; # don't let us affect the exec'ed process
+        local $ENV{'PERL5LIB'} = undef; # don't let us affect the exec'ed process
         chomp( $inc = `perl -e'print join ":",\@INC'` );
     }
 
@@ -112,7 +112,7 @@ sub _build_pl_cmds {
         [ $build_dir, [ 'perl', '-f', './Build', 'install', '--destdir', "$top_pkg_dir" ], $opts ],
 
         # cleanup man pages
-        [ $build_dir, ["rm", "-rf", "$top_pkg_dir/$prefix/man"]],
+        [ $build_dir, ['rm', '-rf', "$top_pkg_dir/$prefix/man"]],
     );
 }
 
@@ -134,7 +134,7 @@ sub _makefile_pl_cmds {
         [ $build_dir, [ 'make', 'install', "DESTDIR=$top_pkg_dir" ], $opts, ],
 
         # cleanup man pages
-        [ $build_dir, ["rm", "-rf", "$top_pkg_dir/$prefix/man"]],
+        [ $build_dir, ['rm', '-rf', "$top_pkg_dir/$prefix/man"]],
     );
 }
 

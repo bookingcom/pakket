@@ -26,7 +26,7 @@ sub download_to_dir {
     my ($self) = @_;
 
     my $file = $self->download_to_file();
-    return $self->_unpack($file);
+    return $self->decompress($file);
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -3,6 +3,7 @@ package Pakket::Downloader;
 
 use Moose;
 use MooseX::StrictConstructor;
+use Archive::Any;
 use Archive::Tar;
 use File::chdir;
 use Carp              qw< croak >;
@@ -11,45 +12,40 @@ use Types::Path::Tiny qw< Path >;
 use Log::Any          qw< $log >;
 
 has 'package_name' => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1,
+    'is'       => 'ro',
+    'isa'      => 'Str',
+    'required' => 1,
 );
 
 has 'url' => (
-    is       => 'ro',
-    isa      => 'Str',
-    required => 1,
+    'is'       => 'ro',
+    'isa'      => 'Str',
+    'required' => 1,
 );
 
 has 'tempdir' => (
-    is      => 'ro',
-    isa     => Path,
-    coerce  => 1,
-    lazy    => 1,
-    default => \&_default_tempdir,
+    'is'      => 'ro',
+    'isa'     => Path,
+    'coerce'  => 1,
+    'lazy'    => 1,
+    'default' => \&_default_tempdir,
 );
 
 sub to_file {
     my ($self) = @_;
 
-    $log->debugf( "Downloading file from %s", $self->url );
+    $log->debugf( 'Downloading file from %s', $self->url );
     return $self->download_to_file;
 }
 
 sub to_dir {
     my ($self) = @_;
 
-    $log->debugf( "Downloading and extracting from %s to %s", $self->url,  $self->tempdir->absolute->stringify);
+    $log->debugf( 'Downloading and extracting from %s to %s', $self->url,  $self->tempdir->absolute->stringify);
     return $self->download_to_dir;
 }
 
-sub _default_tempdir {
-    my ($self) = @_;
-    return Path::Tiny->tempdir( 'CLEANUP' => 1, TEMPLATE => "$$-" . ('X' x 10) );
-}
-
-sub _pack {
+sub compress {
     my ($self, $base_path) = @_;
 
     my @files;
@@ -77,12 +73,12 @@ sub _pack {
     return $file;
 }
 
-sub _unpack {
+sub decompress {
     my ( $self, $file ) = @_;
 
     my $archive = Archive::Any->new($file);
     if ( $archive->is_naughty ) {
-        Carp::croak( $log->critical("Suspicious ($file)") );
+        Carp::croak( $log->critical("Suspicious archive ($file)") );
     }
 
     my $dir = $self->tempdir;
@@ -109,7 +105,14 @@ sub _unpack {
     return $dir;
 }
 
+sub _default_tempdir {
+    my ($self) = @_;
+    return Path::Tiny->tempdir( 'CLEANUP' => 1, 'TEMPLATE' => "$$-" . ('X' x 10) );
+}
+
 __PACKAGE__->meta->make_immutable;
+
+no Moose;
 
 1;
 

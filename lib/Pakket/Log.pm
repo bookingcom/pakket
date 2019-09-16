@@ -49,15 +49,19 @@ sub send_data {
 }
 
 sub build_logger {
-    my ( $class, $verbosity, $file, $force_raw ) = @_;
+    my ( $class, $verbosity, $path, $force_raw ) = @_;
 
     my @outputs = (
         $class->_cli_logger($verbosity, $force_raw),
         $class->_syslog_logger(),
     );
 
-    if ($file && -w $file) {
-        push(@outputs, $class->_file_logger($file));
+    if ($path) {
+        my $file = path($path);
+        my $dir = $file->parent();
+        if (($file->exists && -w $file) || ($dir->exists && -w $dir)) {
+            push(@outputs, $class->_file_logger($file->stringify));
+        }
     }
 
     return Log::Dispatch->new(

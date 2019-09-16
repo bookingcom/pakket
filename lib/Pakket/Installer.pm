@@ -45,13 +45,13 @@ with qw<
 has 'force' => (
     'is'      => 'ro',
     'isa'     => 'Bool',
-    'default' => sub {0},
+    'default' => sub { 0 },
 );
 
 has 'silent' => (
     'is'      => 'ro',
     'isa'     => 'Bool',
-    'default' => sub {0},
+    'default' => sub { 0 },
 );
 
 has 'requirements' => (
@@ -63,7 +63,7 @@ has 'requirements' => (
 has 'ignore_failures' => (
     'is'      => 'ro',
     'isa'     => 'Bool',
-    'default' => sub {0},
+    'default' => sub { 0 },
 );
 
 has 'installed_packages' => (
@@ -76,20 +76,22 @@ has 'installed_packages' => (
 );
 
 sub install {
-    my ( $self, @pack_list ) = @_;
+    my ($self, @pack_list) = @_;
 
-    my $_start = time();
+    my $_start = time;
     my $result = $self->_do_install(@pack_list);
 
     Pakket::Log::send_data(
         {
             'severity' => $result ? 'warning' : 'info',
             'type'     => 'install',
+            'version'  => $Pakket::Package::VERSION,
             'count'    => scalar @pack_list,
             'is_force' => $self->force ? 1 : 0,
             'result'   => int($result),
         },
-        $_start, time(),
+        $_start,
+        time(),
     );
 
     return $result;
@@ -106,11 +108,12 @@ sub dry_run {
     $self->{'silent'} = 1;
 
     my $packages = $self->_preprocess_packages_list(@pack_list);
-    @{ $packages } or return 0;
+    @{$packages} or return 0;
 
-    foreach my $package (@{ $packages }) {
+    foreach my $package (@{$packages}) {
         $log->info($package->full_name);
     }
+
     return E2BIG;
 }
 
@@ -120,26 +123,27 @@ sub show_installed {
     my @installed_packages = map { $_->full_name } values %{$self->load_installed_packages($self->active_dir)};
 
     print join("\n", sort @installed_packages ) . "\n";
+
     return 0;
 }
 
 sub try_to_install_package {
-    my ( $self, $package, $dir, $opts ) = @_;
+    my ($self, $package, $dir, $opts) = @_;
 
-    $log->debugf( 'Trying to install %s', $package->full_name );
+    $log->debugf('Trying to install %s', $package->full_name);
 
     # First we check whether a package exists, because if not
     # we wil throw a silly critical warning about it
     # This can also speed stuff up, but maybe should be put into
     # "has_package" wrapper function... -- SX
-    $self->parcel_repo->has_object( $package->id )
+    $self->parcel_repo->has_object($package->id)
         or return;
 
     eval {
-        $self->install_package( $package, $dir, $opts );
+        $self->install_package($package, $dir, $opts);
         1;
     } or do {
-        $log->debugf( 'Could not install %s', $package->full_name );
+        $log->debugf('Could not install %s', $package->full_name);
         return;
     };
 
@@ -219,7 +223,7 @@ sub _do_install {
         my $tags = $self->_get_rollback_tags();
 
         if (exists $tags->{$self->rollback_tag}) {
-            $log->debugf("Found dir %s with rollback_tag %s", $tags->{$self->rollback_tag}, $self->rollback_tag);
+            $log->debugf('Found dir %s with rollback_tag %s', $tags->{$self->rollback_tag}, $self->rollback_tag);
             my $result = $self->activate_dir($tags->{$self->rollback_tag});
             if ($result && $result == EEXIST) {
                 $log->notice( 'All packages already installed in active library with tag: ' . $self->rollback_tag );
@@ -257,13 +261,13 @@ sub _do_install {
 sub _install_packages_sequential {
     my ( $self, $packages ) = @_;
 
-    my $installer_cache = {};
-    foreach my $package (@{ $packages }) {
+    my %installer_cache;
+    foreach my $package (@{$packages}) {
         eval {
             $self->install_package(
                 $package,
                 $self->work_dir,
-                { 'cache' => $installer_cache },
+                { 'cache' => \%installer_cache },
             );
             1;
         } or do {
@@ -272,13 +276,13 @@ sub _install_packages_sequential {
         };
     }
 
-    return keys %{$installer_cache};
+    return keys %installer_cache;
 }
 
 sub _install_packages_parallel {
-    my ( $self, $packages ) = @_;
+    my ($self, $packages) = @_;
 
-    $self->push_to_data_consumer($_->full_name) for @{ $packages };
+    $self->push_to_data_consumer($_->full_name) for @{$packages};
 
     $self->spawn();
 
@@ -305,7 +309,7 @@ sub _fetch_all_packages {
 
             my $file_contents = <$fh>;
             if (!$file_contents) {
-                $log->infof("Another worker got hold of the lock for %s first -- skipping", $file);
+                $log->infof('Another worker got hold of the lock for %s first -- skipping', $file);
                 return $consumer->leave;
             }
 
@@ -379,7 +383,7 @@ sub _install_all_packages {
         read $file->filehandle, my $as_prereq, 1
             or croak( $log->criticalf( "Couldn't read %s", $file->absolute ) );
         $as_prereq eq '0' || $as_prereq eq '1'
-            or croak( $log->criticalf( "Unexpected contents on %s: %s", $file->absolute, $file->slurp ) );
+            or croak( $log->criticalf( 'Unexpected contents on %s: %s', $file->absolute, $file->slurp ) );
 
         my $parcel_dir = $dc_dir->child('to_install' => $file->basename);
         if ($parcel_dir->exists) {
@@ -449,18 +453,15 @@ sub _get_prereq {
 ## no critic (Perl::Critic::Policy::Subroutines::ProhibitManyArgs)
 sub _install_prereq {
     my ($self, $category, $name, $prereq_data, $dir, $opts) = @_;
-    my $package = $self->_get_prereq($category, $name, $prereq_data);
 
-    $self->install_package(
-        $package, $dir,
-        { %{$opts}, 'as_prereq' => 1 },
-    );
+    my $package = $self->_get_prereq($category, $name, $prereq_data);
+    $self->install_package($package, $dir, {%{$opts}, 'as_prereq' => 1});
 }
 
 sub _copy_package_to_install_dir {
     my ($full_parcel_dir, $dir) = @_;
 
-    foreach my $item ( $full_parcel_dir->children ) {
+    foreach my $item ($full_parcel_dir->children) {
         my $basename = $item->basename;
 
         $basename eq PARCEL_METADATA_FILE()
@@ -509,7 +510,7 @@ sub is_installed {
         if ( $version ne $package->version ) {
             croak( $log->criticalf(
                 "%s=$version already installed. "
-              . "Cannot install new version: %s",
+              . 'Cannot install new version: %s',
               $package->short_name,
               $package->version,
             ) );
@@ -611,8 +612,8 @@ sub _set_latest_version_for_undefined {
             push @output, $package;
         } else {
             my $ver_condition = $package->version
-                ? "== " . $package->version
-                : ">= 0";
+                ? '== ' . $package->version
+                : '>= 0';
 
             my ($ver, $rel) = @{$self->parcel_repo->latest_version_release(
                                     $package->category, $package->name, $ver_condition)};
