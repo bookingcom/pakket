@@ -96,6 +96,9 @@ sub _build_active_dir {
 sub _build_work_dir {
     my $self = shift;
 
+    $self->pakket_dir->is_dir
+        or $self->pakket_dir->mkpath();
+
     $self->lock_lib_directory();
 
     if (!$self->atomic) {
@@ -103,7 +106,7 @@ sub _build_work_dir {
         return $self->active_dir;
     }
 
-    my $work_dir = undef;
+    my $work_dir;
     $work_dir = eval { $self->_create_and_fill_workdir($self->rollback_tag, 1) } if $self->use_hardlinks;
     $work_dir //= $self->_create_and_fill_workdir($self->rollback_tag);
 
