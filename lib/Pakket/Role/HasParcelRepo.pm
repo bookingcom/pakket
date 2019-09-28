@@ -1,6 +1,7 @@
 package Pakket::Role::HasParcelRepo;
 # ABSTRACT: Provide parcel repo support
 
+use v5.22;
 use Moose::Role;
 use Pakket::Repository::Parcel;
 

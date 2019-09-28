@@ -1,6 +1,7 @@
 package Pakket::Bundler;
 # ABSTRACT: Bundle pakket packages into a parcel file
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use JSON::MaybeXS;

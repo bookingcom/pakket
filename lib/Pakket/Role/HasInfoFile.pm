@@ -1,6 +1,7 @@
 package Pakket::Role::HasInfoFile;
 # ABSTRACT: Functions to work with 'info.json'
 
+use v5.22;
 use Moose::Role;
 
 use Log::Any qw< $log >;

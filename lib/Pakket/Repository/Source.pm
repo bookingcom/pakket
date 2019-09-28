@@ -1,6 +1,7 @@
 package Pakket::Repository::Source;
 # ABSTRACT: A source repository
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 

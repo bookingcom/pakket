@@ -1,6 +1,7 @@
 package Pakket::Scaffolder::Role::Terminal;
 # ABSTRACT: scaffolder: role for output handling
 
+use v5.22;
 use Moose::Role;
 
 has depth => (

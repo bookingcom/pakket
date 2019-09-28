@@ -1,6 +1,7 @@
 package Pakket::Installer;
 # ABSTRACT: Install pakket packages into an installation directory
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 

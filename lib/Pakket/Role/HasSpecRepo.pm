@@ -1,6 +1,7 @@
 package Pakket::Role::HasSpecRepo;
 # ABSTRACT: Provide spec repo support
 
+use v5.22;
 use Moose::Role;
 use Pakket::Repository::Spec;
 use Log::Any              qw< $log >;

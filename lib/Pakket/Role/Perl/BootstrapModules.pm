@@ -1,6 +1,7 @@
 package Pakket::Role::Perl::BootstrapModules;
 # ABSTRACT: role to provide Perl's list of bootstrap modules (distributions)
 
+use v5.22;
 use Moose::Role;
 
 # hardcoded list of packages we have to build first

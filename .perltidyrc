@@ -1,36 +1,41 @@
-# perltidy
+# vim: syntax=conf foldmethod=marker
+# man: perltidy
 
-# Good base-line
-# an alias for this:
-# -l=78 -i=4 -ci=4 -st -se -vt=2 -cti=0 -pt=1 -bt=1 -sbt=1 -bbt=1 -nsfs -nolq
-# -wbb="% + - * / x != == >= <= =~ !~ < > | & =
-#       **= += *= &= <<= &&= -= /= |= >>= ||= //= .= %= ^= x="
-
---maximum-line-length=120
-
-# -pbp
+# -pbp should be first
 --perl-best-practices
-# -nst
---nostandard-output
 
-# overriding some stuff there
---continuation-indentation=4
+--character-encoding="utf8"
 
---brace-tightness=2
---paren-tightness=2
---square-bracket-tightness=2
---block-brace-tightness=0
-
+--all-containers-tightness=2
+#--block-brace-tightness=0
 --tight-secret-operators
-
-# -vt
 --vertical-tightness=0
-# -vtc
 --vertical-tightness-closing=0
-# --outdent-long-quotes # ??
 
-# more stuff
+--continuation-indentation=4
 #--cuddled-else
---minimum-space-to-comment=1
---nooutdent-long-comments
+--default-tabsize=4
+--maximum-line-length=120
+--no-outdent-long-comments
+--no-outdent-long-quotes
+--no-standard-output
 --warning-output
+
+#--minimum-space-to-comment=4
+--fixed-position-side-comment=80
+--ignore-side-comment-lengths
+--hanging-side-comments
+--static-side-comments
+
+--closing-side-comments
+--closing-side-comment-interval=40
+--closing-side-comment-warnings
+
+--space-keyword-paren
+--no-space-for-semicolon
+#--break-at-old-comma-breakpoints
+
+--stack-opening-tokens
+--no-stack-opening-block-brace
+--no-stack-closing-tokens
+--no-stack-closing-block-brace

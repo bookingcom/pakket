@@ -1,6 +1,7 @@
 package Pakket::PackageQuery;
 # ABSTRACT: An object representing a query for a package
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 

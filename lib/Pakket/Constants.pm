@@ -1,6 +1,7 @@
 package Pakket::Constants; ## no critic (Subroutines::ProhibitExportingUndeclaredSubs)
 # ABSTRACT: Constants used in Pakket
 
+use v5.22;
 use strict;
 use warnings;
 use parent 'Exporter';

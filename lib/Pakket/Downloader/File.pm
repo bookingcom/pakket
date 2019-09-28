@@ -1,6 +1,7 @@
 package Pakket::Downloader::File;
 # ABSTRACT: Local downloader specialisation
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use Path::Tiny        qw< path >;

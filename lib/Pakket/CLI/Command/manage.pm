@@ -1,6 +1,7 @@
 package Pakket::CLI::Command::manage;
 # ABSTRACT: The pakket manage command
 
+use v5.22;
 use strict;
 use warnings;
 

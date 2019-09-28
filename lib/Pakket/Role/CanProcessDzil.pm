@@ -1,6 +1,7 @@
 package Pakket::Role::CanProcessDzil;
 # ABSTRACT: A role providing ability to process raw sourcess with dzil
 
+use v5.22;
 use Moose::Role;
 use File::chdir;
 use Path::Tiny   qw< path >;

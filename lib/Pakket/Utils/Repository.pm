@@ -1,6 +1,7 @@
 package Pakket::Utils::Repository;
 # ABSTRACT: Repository utility functions
 
+use v5.22;
 use strict;
 use warnings;
 use parent 'Exporter';

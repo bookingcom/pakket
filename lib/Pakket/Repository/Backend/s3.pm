@@ -1,6 +1,7 @@
 package Pakket::Repository::Backend::s3;
 # ABSTRACT: A remote S3-compatible backend repository
 
+use v5.22;
 use strict;
 use warnings;
 

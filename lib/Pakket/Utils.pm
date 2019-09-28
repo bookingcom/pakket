@@ -1,6 +1,8 @@
 package Pakket::Utils;
+
 # ABSTRACT: Utilities for Pakket
 
+use v5.22;
 use strict;
 use warnings;
 use version 0.77;
@@ -78,7 +80,7 @@ sub generate_cpath {
             push @paths,  map { $_->absolute->stringify } grep { $_->is_dir } $path->children();
         }
     }
-    return join(":", @paths);
+    return join(':', @paths);
 }
 
 sub generate_lib_path {

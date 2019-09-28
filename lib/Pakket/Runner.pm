@@ -1,6 +1,7 @@
 package Pakket::Runner;
 # ABSTRACT: Run Pakket-based applications
 
+use v5.22;
 use Moose;
 use Types::Path::Tiny qw< AbsPath >;
 

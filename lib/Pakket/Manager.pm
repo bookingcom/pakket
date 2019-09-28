@@ -1,6 +1,7 @@
 package Pakket::Manager;
 # ABSTRACT: Manage pakket packages and repos
 
+use v5.22;
 use Moose;
 use Log::Any qw< $log >;
 use Carp     qw< croak >;

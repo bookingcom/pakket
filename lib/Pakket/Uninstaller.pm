@@ -1,7 +1,7 @@
 package Pakket::Uninstaller;
-
 # ABSTRACT: Uninstall pakket packages
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use Carp qw< croak >;

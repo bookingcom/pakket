@@ -1,6 +1,7 @@
 package Pakket::CLI::Command::build;
 # ABSTRACT: Build a Pakket parcel
 
+use v5.22;
 use strict;
 use warnings;
 

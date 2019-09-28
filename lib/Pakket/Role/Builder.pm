@@ -1,7 +1,7 @@
 package Pakket::Role::Builder;
-
 # ABSTRACT: A role for all builders
 
+use v5.22;
 use Moose::Role;
 
 with qw< Pakket::Role::RunCommand >;

@@ -1,6 +1,7 @@
 package Pakket::Role::HasSourceRepo;
 # ABSTRACT: Provide source repo support
 
+use v5.22;
 use Moose::Role;
 use Pakket::Repository::Source;
 use Log::Any              qw< $log >;

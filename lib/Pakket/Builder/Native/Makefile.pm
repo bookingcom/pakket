@@ -1,6 +1,7 @@
 package Pakket::Builder::Native::Makefile;
 # ABSTRACT: Build Native Pakket packages that use Makefile
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use Carp qw< croak >;

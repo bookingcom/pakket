@@ -1,5 +1,6 @@
 package t::lib::Utils;
 
+use v5.22;
 use strict;
 use warnings;
 use Module::Faker;
@@ -50,6 +51,5 @@ sub config {
         },
     };
 }
-
 
 1;

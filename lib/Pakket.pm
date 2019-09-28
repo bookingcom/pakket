@@ -1,6 +1,8 @@
 package Pakket;
+
 # ABSTRACT: An Unopinionated Meta-Packaging System
 
+use v5.22;
 use strict;
 use warnings;
 
@@ -198,3 +200,5 @@ I<devel> or I<dev>), Pakket doesn't differentiate between those.
 Instead, a Pakket package contains everything created at install time
 for a built package, including the headers, if such would have been
 installed.
+
+=cut

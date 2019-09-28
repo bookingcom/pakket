@@ -1,6 +1,7 @@
 package Pakket::Utils::Perl;
 # ABSTRACT: Perl specific utilities for Pakket
 
+use v5.22;
 use strict;
 use warnings;
 use version 0.77;

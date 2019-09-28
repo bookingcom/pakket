@@ -1,6 +1,7 @@
 package Pakket::Role::CanProcessMakeMaker;
 # ABSTRACT: A role providing ability to process raw sourcess with MakeMaker
 
+use v5.22;
 use Moose::Role;
 
 use Carp;

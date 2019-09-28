@@ -1,6 +1,7 @@
 package Pakket::CLI::Command::run;
 # ABSTRACT: The pakket run command
 
+use v5.22;
 use strict;
 use warnings;
 use Pakket::CLI '-command';

@@ -1,6 +1,7 @@
 package Pakket::CLI::Command::serve;
 # ABSTRACT: Serve Pakket objects over HTTP
 
+use v5.22;
 use strict;
 use warnings;
 

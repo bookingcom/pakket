@@ -1,7 +1,7 @@
 package Pakket::Role::HasLibDir;
-
 # ABSTRACT: a Role to add lib directory functionality
 
+use v5.22;
 use Moose::Role;
 
 use Carp                  qw< croak >;

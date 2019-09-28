@@ -1,6 +1,7 @@
 package Pakket::Scaffolder::Perl::Role::Borked;
 # ABSTRACT: scaffolder: perl: known issues
 
+use v5.22;
 use Moose::Role;
 
 has 'known_incorrect_name_fixes' => (

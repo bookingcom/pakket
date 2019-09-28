@@ -1,7 +1,7 @@
 package Pakket::Log;
 # ABSTRACT: A logger for Pakket
 
-use 5.022;
+use v5.22;
 use strict;
 use warnings;
 use parent 'Exporter';

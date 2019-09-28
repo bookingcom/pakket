@@ -1,6 +1,7 @@
 package Pakket::Versioning::Perl;
 # ABSTRACT: A Perl-style versioning class
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use version 0.77;

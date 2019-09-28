@@ -1,6 +1,7 @@
 package Pakket::Role::BasicPackageAttrs;
 # ABSTRACT: Some helpers to print names nicely
 
+use v5.22;
 use Moose::Role;
 use Pakket::Utils qw< canonical_package_name >;
 

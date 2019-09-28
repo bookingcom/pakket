@@ -1,6 +1,7 @@
 package Pakket::Package;
 # ABSTRACT: An object representing a package
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use Pakket::Types;

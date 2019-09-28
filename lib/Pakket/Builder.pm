@@ -1,6 +1,7 @@
 package Pakket::Builder;
 # ABSTRACT: Build pakket packages
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use Carp                      qw< croak >;

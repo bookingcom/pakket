@@ -1,7 +1,7 @@
 package Pakket::CLI::Command::uninstall;
-
 # ABSTRACT: The pakket uninstall command
 
+use v5.22;
 use strict;
 use warnings;
 

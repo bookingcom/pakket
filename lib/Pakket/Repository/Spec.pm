@@ -1,6 +1,7 @@
 package Pakket::Repository::Spec;
 # ABSTRACT: A spec repository
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use Types::Path::Tiny qw< Path >;

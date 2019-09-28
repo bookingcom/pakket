@@ -1,6 +1,7 @@
 package Pakket::Types;
 # ABSTRACT: Type definitions for Pakket
 
+use v5.22;
 use strict;
 use warnings;
 
@@ -20,9 +21,9 @@ use Pakket::Constants qw<
 sub _coerce_backend_from_str {
     my $uri = shift;
 
-    my ($scheme) = $uri =~ m{^ ( [a-zA-Z0-9_]+ ) :// }xms;
+    my ($scheme) = $uri =~ m{^ ( \w+ ) :// }xms;
     $scheme = lc($scheme);
-    $scheme = "http" if ($scheme eq "https");
+    $scheme = 'http' if ($scheme eq 'https');
     my $class    = "Pakket::Repository::Backend::$scheme";
 
     eval { require_module($class); 1; } or do {

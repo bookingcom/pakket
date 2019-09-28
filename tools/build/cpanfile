@@ -2,6 +2,7 @@ requires 'App::FatPacker';
 requires 'App::perlbrew';
 requires 'Archive::Tar::Wrapper';
 requires 'Dist::Zilla';
+requires 'Dist::Zilla::App::Command::xtest';
 requires 'IPC::Run3';
 
 on 'test' => sub {
@@ -23,6 +24,7 @@ on 'test' => sub {
 	requires 'Perl::Critic::Pulp';
 	requires 'Perl::Critic::StricterSubs';
 	requires 'Perl::Critic::Tics';
+	requires 'Test::EOL';
 	requires 'Test::Perl::Critic::Progressive';
 	requires 'Test::Pod';
 	requires 'Test::Vars';

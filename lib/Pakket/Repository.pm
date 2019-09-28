@@ -1,6 +1,7 @@
 package Pakket::Repository;
 # ABSTRACT: Build in-memory representation of repo
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 
@@ -312,4 +313,3 @@ This method will call C<retrieve_location> on the backend.
 =head2 remove_location
 
 This method will call C<remove_location> on the backend.
-

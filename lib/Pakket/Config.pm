@@ -1,6 +1,7 @@
 package Pakket::Config;
 # ABSTRACT: Read and represent Pakket configurations
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use Config::Any;

@@ -3,6 +3,7 @@ package Pakket::Repository::Backend::dbi;
 
 # FIXME: Add methods: remove_location, remove_content
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 

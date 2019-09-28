@@ -1,6 +1,7 @@
 package Pakket::Requirement;
 # ABSTRACT: A Pakket requirement
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 

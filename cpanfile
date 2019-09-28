@@ -1,3 +1,6 @@
+# vim: syntax=conf foldmethod=marker
+# man: cpan
+
 requires 'Algorithm::Diff::Callback';
 requires 'App::Cmd';
 requires 'Archive::Any';

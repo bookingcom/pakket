@@ -1,6 +1,7 @@
 package Pakket::Downloader::ByUrl;
 # ABSTRACT: Downloader virtual constructor (construct correct Downloader implementation from url)
 
+use v5.22;
 use strict;
 use warnings;
 

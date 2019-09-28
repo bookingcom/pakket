@@ -1,10 +1,12 @@
 #!/usr/bin/env perl
 
+# ABSTRACT: The Pakket meta packaging application
+# PODNAME: pakket
+
+use v5.22;
 use warnings;
 use strict;
 
 use Pakket::CLI;
-# ABSTRACT: The Pakket meta packaging application
-# PODNAME: pakket
 
-exit(Pakket::CLI->run // 0);
+exit (Pakket::CLI->run // 0);

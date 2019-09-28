@@ -1,3 +1,6 @@
+#!/usr/bin/env perl
+
+use v5.22;
 use strict;
 use warnings;
 use Test::More 'tests' => 3;

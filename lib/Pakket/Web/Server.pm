@@ -1,6 +1,7 @@
 package Pakket::Web::Server;
 # ABSTRACT: Start a Pakket server
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 

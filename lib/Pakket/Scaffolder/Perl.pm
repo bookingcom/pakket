@@ -1,6 +1,7 @@
 package Pakket::Scaffolder::Perl;
 # ABSTRACT: Scffolding Perl distributions
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use version 0.77;

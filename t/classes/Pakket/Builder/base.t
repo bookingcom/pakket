@@ -1,3 +1,6 @@
+#!/usr/bin/env perl
+
+use v5.22;
 use strict;
 use warnings;
 use Test::More 'tests' => 3;
@@ -47,11 +50,11 @@ subtest 'Build simple module' => sub {
         ok( $archive->extract($fake_dist_dir), 'Extracted successfully' );
 
         # Import each one
-        my ($dir_name) = "$tarball" =~ s{ \.tar \.gz $}{}rxms;
+        my ($dir_name) = "$tarball" =~ s{ [.]tar [.]gz $}{}rxms;
         my $source_dir = path($dir_name);
         ok( $source_dir->is_dir, 'Got directory' );
 
-        my ($dist_name) = $source_dir->basename =~ s{ -0\.01 $}{}rxms;
+        my ($dist_name) = $source_dir->basename =~ s{ -0[.]01 $}{}rxms;
 
         $builder->source_repo->store_package_source(
             Pakket::Package->new(

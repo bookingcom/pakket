@@ -1,6 +1,7 @@
 package Pakket::Scaffolder::Perl::CPANfile;
 # ABSTRACT: Scaffolding Perl cpanfile reader
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use Module::CPANfile;

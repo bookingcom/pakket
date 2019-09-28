@@ -1,6 +1,7 @@
 package Pakket::Builder::Perl;
 # ABSTRACT: Build Perl Pakket packages
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use English    qw< -no_match_vars >;

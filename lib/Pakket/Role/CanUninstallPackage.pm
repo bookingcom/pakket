@@ -1,6 +1,7 @@
 package Pakket::Role::CanUninstallPackage;
 # ABSTRACT: A role providing package uninstall functionality
 
+use v5.22;
 use Moose::Role;
 use Path::Tiny   qw< path >;
 use Log::Any     qw< $log >;

@@ -1,6 +1,7 @@
 package Pakket::Role::ParallelInstaller;
 # ABSTRACT: Enables parallel installation
 
+use v5.22;
 use Moose::Role;
 
 use Carp        qw < croak >;

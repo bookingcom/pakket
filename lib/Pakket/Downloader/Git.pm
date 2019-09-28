@@ -1,6 +1,7 @@
 package Pakket::Downloader::Git;
 # ABSTRACT: Git downloader specialisation
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 

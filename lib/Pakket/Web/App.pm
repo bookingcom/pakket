@@ -1,6 +1,7 @@
 package Pakket::Web::App;
 # ABSTRACT: The Pakket web application
 
+use v5.22;
 use Dancer2 0.204001 'appname' => 'Pakket::Web'; # decode_json
 use Log::Any qw< $log >;
 use List::Util qw< first >;

@@ -1,6 +1,7 @@
 package Pakket::Role::RunCommand;
 # ABSTRACT: Role for running commands
 
+use v5.22;
 use Moose::Role;
 use System::Command;
 use Path::Tiny qw< path >;

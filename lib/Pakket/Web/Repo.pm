@@ -1,6 +1,7 @@
 package Pakket::Web::Repo;
 # ABSTRACT: A web repository app
 
+use v5.22;
 use Dancer2 'appname' => 'Pakket::Web';
 use Dancer2::Plugin::Pakket::ParamTypes;
 

@@ -1,7 +1,7 @@
 package Pakket::CLI::Command::init;
-
 # ABSTRACT: Initialize a pakket instance
 
+use v5.22;
 use strict;
 use warnings;
 use English '-no_match_vars';

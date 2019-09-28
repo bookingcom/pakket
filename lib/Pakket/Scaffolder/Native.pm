@@ -1,6 +1,7 @@
 package Pakket::Scaffolder::Native;
 # ABSTRACT: Scffolding Native distributions
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use Path::Tiny          qw< path >;

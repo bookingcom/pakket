@@ -1,6 +1,7 @@
 package Pakket::Builder::NodeJS;
 # ABSTRACT: Build Perl Pakket packages
 
+use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 use Carp       qw< croak >;
