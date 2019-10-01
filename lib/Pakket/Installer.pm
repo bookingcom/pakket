@@ -304,66 +304,69 @@ sub _fetch_all_packages {
     my $dir = $self->work_dir;
     my $dc_dir = $self->data_consumer_dir;
 
-    while ($dc_dir->child('unprocessed')->children()) {
-        $self->data_consumer->consume(sub {
-            my ($consumer, $other_spec, $fh, $file) = @_;
+    $self->data_consumer->consume(sub {
+        my ($consumer, $other_spec, $fh, $file) = @_;
 
-            my $file_contents = <$fh>;
-            if (!$file_contents) {
-                $log->infof('Another worker got hold of the lock for %s first -- skipping', $file);
-                return $consumer->leave;
-            }
+        my $file_contents = <$fh>;
+        if (!$file_contents) {
+            $log->infof('Another worker got hold of the lock for %s first -- skipping', $file);
+            return $consumer->leave;
+        }
 
-            my $package_str = substr $file_contents, 1;
+        my $package_str = substr $file_contents, 1;
 
-            my ( $pkg_cat, $pkg_name, $pkg_version, $pkg_release ) = $package_str =~ PAKKET_PACKAGE_SPEC();
+        my ( $pkg_cat, $pkg_name, $pkg_version, $pkg_release ) = $package_str =~ PAKKET_PACKAGE_SPEC();
 
-            my $package = Pakket::Package->new(
-                'category' => $pkg_cat,
-                'name'     => $pkg_name,
-                'version'  => $pkg_version // 0,
-                'release'  => $pkg_release // 0,
-            );
+        my $package = Pakket::Package->new(
+            'category' => $pkg_cat,
+            'name'     => $pkg_name,
+            'version'  => $pkg_version // 0,
+            'release'  => $pkg_release // 0,
+        );
 
-            $self->_pre_install_checks( $dir, $package, {} );
+        $self->_pre_install_checks( $dir, $package, {} );
 
-            $log->infof( 'Fetching %s', $package->full_name );
+        $log->infof( 'Fetching %s', $package->full_name );
 
-            $self->is_installed({}, $package)
-               and return;
+        $self->is_installed({}, $package)
+            and return;
 
-            my $parcel_dir = $self->parcel_repo->retrieve_package_parcel($package);
+        my $parcel_dir = $self->parcel_repo->retrieve_package_parcel($package);
 
-            my $full_parcel_dir = $parcel_dir->child( PARCEL_FILES_DIR() );
+        my $full_parcel_dir = $parcel_dir->child( PARCEL_FILES_DIR() );
 
-            # Get the spec and create a new Package object
-            # This one will have the dependencies as well
-            my $spec_file    = $full_parcel_dir->child( PARCEL_METADATA_FILE() );
-            my $spec         = decode_json $spec_file->slurp_utf8;
-            my $full_package = Pakket::Package->new_from_spec($spec);
+        # Get the spec and create a new Package object
+        # This one will have the dependencies as well
+        my $spec_file    = $full_parcel_dir->child( PARCEL_METADATA_FILE() );
+        my $spec         = decode_json $spec_file->slurp_utf8;
+        my $full_package = Pakket::Package->new_from_spec($spec);
 
-            my $prereqs = $full_package->prereqs;
-            foreach my $prereq_category ( keys %{$prereqs} ) {
-                my $runtime_prereqs = $prereqs->{$prereq_category}{'runtime'};
+        my $prereqs = $full_package->prereqs;
+        foreach my $prereq_category ( keys %{$prereqs} ) {
+            my $runtime_prereqs = $prereqs->{$prereq_category}{'runtime'};
 
-                foreach my $prereq_name ( keys %{$runtime_prereqs} ) {
-                    my $prereq_data = $runtime_prereqs->{$prereq_name};
+            foreach my $prereq_name ( keys %{$runtime_prereqs} ) {
+                my $prereq_data = $runtime_prereqs->{$prereq_name};
 
-                    my $p = $self->_get_prereq( $prereq_category, $prereq_name, $prereq_data );
-                    if (not exists $self->installed_packages->{$p->short_name} ) {
-                        $self->push_to_data_consumer( $p->full_name, { 'as_prereq' => 1 } );
-                    }
+                my $p = $self->_get_prereq( $prereq_category, $prereq_name, $prereq_data );
+                if (not exists $self->installed_packages->{$p->short_name} ) {
+                    $self->push_to_data_consumer( $p->full_name, { 'as_prereq' => 1 } );
                 }
             }
+        }
 
-            dirmove( $parcel_dir, $dc_dir->child( 'to_install' => $file ) )
-                or croak $!;
-        });
+        dirmove( $parcel_dir, $dc_dir->child( 'to_install' => $file ) )
+            or croak $!;
 
         # It's actually faster to not hammer the filesystem checking for new
         # stuff. $consumer->consume will continue until `unprocessed` is empty,
         # so it's useful to wait a bit (100ms) to wait for new items to be added.
         usleep SLEEP_TIME();
+    });
+
+    my $stats = $self->data_consumer->runstats();
+    if (!$self->ignore_failures && $stats->{'failed'}) {
+        croak($log->criticalf('Unable to fetch %d parcels', $stats->{'failed'}));
     }
 
     return;

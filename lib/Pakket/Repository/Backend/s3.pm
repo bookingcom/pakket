@@ -1,4 +1,4 @@
-package Pakket::Repository::Backend::s3;
+package Pakket::Repository::Backend::s3; ## no critic (NamingConventions::Capitalization)
 # ABSTRACT: A remote S3-compatible backend repository
 
 use v5.22;
@@ -76,19 +76,19 @@ with qw<
     Pakket::Role::Repository::Backend
 >;
 
-use constant { 'index_update_interval' => 60 * 5 };
+use constant {'index_update_interval' => 60 * 5};
 
 sub BUILD {
     my ($self) = @_;
 
-
     # check that repo exists just access bucket
+    return;
 }
 
 sub _build_s3_client {
     my ($self) = @_;
 
-    $log->debugf("Initializing S3 repository backend: %s/%s", $self->host, $self->bucket);
+    $log->debugf('Initializing S3 repository backend: %s/%s', $self->host, $self->bucket);
     my $s3 = Net::Amazon::S3->new(
         'host'                  => $self->host,
         'aws_access_key_id'     => $self->aws_access_key_id,
@@ -111,7 +111,7 @@ sub _build_index {
     my $stream = $self->s3_bucket->list;
     while (!$stream->is_done) {
         foreach my $object ($stream->items) {
-            my ($key) = split(m|$self->{file_extension}$|xms, $object->key);
+            my ($key) = split(m/$self->{file_extension}$/xms, $object->key);
             $index{$key} = $object;
         }
     }
@@ -132,14 +132,22 @@ sub _get_all_object_ids {
     return \@all_object_ids;
 }
 
-sub all_object_ids {
+sub _check_index_age {
     my ($self) = @_;
 
     # clear index if it is older then index_update_interval
-    if ($self->last_index_update_time < gettimeofday() - index_update_interval() ) {
-        $log->debugf(q|Clear index for '%s'|, $self->s3_bucket->name);
+    if ($self->last_index_update_time < gettimeofday() - index_update_interval()) {
+        $log->debugf('Clear index for "%s"', $self->s3_bucket->name);
         $self->clear_index();
     }
+
+    return;
+}
+
+sub all_object_ids {
+    my ($self) = @_;
+
+    $self->_check_index_age();
 
     return $self->_get_all_object_ids();
 }
@@ -148,8 +156,7 @@ sub all_object_ids_by_name {
     my ($self, $name, $category) = @_;
 
     my @all_object_ids = try {
-        ## no critic qw(Perl::Critic::Policy::RegularExpressions::ProhibitCaptureWithoutTest)
-        grep { $_ =~ PAKKET_PACKAGE_SPEC(); $1 eq $category and $2 eq $name } keys %{ $self->index };
+        grep {$_ =~ PAKKET_PACKAGE_SPEC(); $1 eq $category and $2 eq $name} keys %{$self->index}; ## no critic qw(Perl::Critic::Policy::RegularExpressions::ProhibitCaptureWithoutTest)
     } catch {
         croak($log->criticalf('Could not get remote all_object_ids, reason: %s', $_));
     };
@@ -208,9 +215,13 @@ sub retrieve_content {
 sub retrieve_location {
     my ($self, $id, $retries) = @_;
 
+    if (not defined $self->index->{$id}) {
+        $log->debugf('Index miss on retreive for "%s"', $id);
+        $self->_check_index_age();
+    }
+
     my $location = try {
-        ## no critic qw(Perl::Critic::Policy::ValuesAndExpressions::ProhibitMagicNumbers)
-        my $tmp_file = Path::Tiny->tempfile("pakket-" . ('X' x 10));
+        my $tmp_file = Path::Tiny->tempfile('pakket-' . ('X' x 10));           ## no critic qw(Perl::Critic::Policy::ValuesAndExpressions::ProhibitMagicNumbers)
         $self->index->{$id}->get_filename($tmp_file->absolute->stringify);
         $tmp_file;
     } catch {
@@ -233,6 +244,8 @@ sub store_content {
     } catch {
         croak($log->criticalf('Could not store content for id %s, reason: %s', $id, $_));
     };
+
+    return;
 }
 
 sub store_location {
@@ -248,6 +261,8 @@ sub store_location {
     } catch {
         croak($log->criticalf('Could not store location for id %s, reason: %s', $id, $_));
     };
+
+    return;
 }
 
 __PACKAGE__->meta->make_immutable;

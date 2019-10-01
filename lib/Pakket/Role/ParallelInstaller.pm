@@ -8,7 +8,7 @@ use Carp        qw < croak >;
 use Data::Consumer::Dir;
 use List::Util  qw< any min >;
 use Log::Any    qw< $log >;
-use POSIX       ":sys_wait_h";
+use POSIX       ':sys_wait_h';
 use Time::HiRes qw< time usleep >;
 
 use constant {
@@ -64,7 +64,7 @@ has 'data_consumer' => (
             'root'       => $self->data_consumer_dir,
             'create'     => 1,
             'open_mode'  => '+<',
-            'max_failed' => int !$self->ignore_failures,
+            'max_failed' => $self->ignore_failures ? 0 : 5,
         );
     },
 );
@@ -107,7 +107,7 @@ sub wait_all_children {
 
     my @children = @{ $self->_children };
     while (@children) {
-        @children = grep { waitpid( $_, WNOHANG ) == 0 } @children;
+        @children = grep { waitpid( $_, WNOHANG ) > 0 } @children;
         usleep(SLEEP_TIME());
     }
 
@@ -138,6 +138,8 @@ sub push_to_data_consumer {
 
     $dir->child( 'unprocessed' => $filename )->append( $as_prereq . $pkg );
     $self->{'_to_process'}++;
+
+    return;
 }
 
 sub _subproc_count {
