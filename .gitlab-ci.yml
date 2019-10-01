@@ -1,0 +1,12 @@
+stages:
+    - test
+
+test:
+    stage: test
+    tags:
+        - docker
+    image: $TEST_IMAGE
+    script:
+        - PERL5LIB=/lib/pakket/5.24.3/libraries/active/lib/perl5 /lib/pakket/5.24.3/libraries/active/bin/dzil authordeps --missing
+        - PERL5LIB=/lib/pakket/5.24.3/libraries/active/lib/perl5 /lib/pakket/5.24.3/libraries/active/bin/dzil test --all
+        - PERL5LIB=/lib/pakket/5.24.3/libraries/active/lib/perl5 /lib/pakket/5.24.3/libraries/active/bin/dzil xtest --all
