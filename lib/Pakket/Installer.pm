@@ -86,7 +86,7 @@ sub install {
         {
             'severity' => $result ? 'warning' : 'info',
             'type'     => 'install',
-            'version'  => $Pakket::Package::VERSION,
+            'version'  => "$Pakket::Package::VERSION",
             'count'    => scalar @pack_list,
             'is_force' => $self->force ? 1 : 0,
             'result'   => int($result),
