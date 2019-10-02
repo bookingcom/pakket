@@ -50,7 +50,7 @@ sub setup {
                                     'path' => $_->{'path'} } }
                                 @{ $config->{'repositories'} };
         return encode_json({
-                'version' => $Pakket::Web::App::VERSION,
+                'version' => "$Pakket::Web::App::VERSION",
                 'repositories' => [@repositories],
                 });
     };

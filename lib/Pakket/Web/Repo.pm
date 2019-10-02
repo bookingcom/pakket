@@ -31,7 +31,7 @@ sub create {
     prefix $repo_path => sub {
         get '/info' => sub {
             return encode_json({
-                'version' => $Pakket::Web::Repo::VERSION,
+                'version' => "$Pakket::Web::Repo::VERSION",
                 'objects' => scalar @{$repo->all_object_ids},
             });
         };
