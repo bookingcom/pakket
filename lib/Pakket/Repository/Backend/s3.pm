@@ -225,7 +225,7 @@ sub retrieve_location {
         $self->index->{$id}->get_filename($tmp_file->absolute->stringify);
         $tmp_file;
     } catch {
-        croak($log->criticalf('Could not retrieve location for id %s, reason: %s', $id, $_));
+        croak($log->criticalf('Could not retrieve location for id %s, version: %s, reason: %s', $id, "$Pakket::Repository::Backend::s3::VERSION", $_));
     };
 
     return $location;

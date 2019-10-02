@@ -293,6 +293,8 @@ sub _install_packages_parallel {
 
     $self->wait_all_children();
 
+    $self->_check_parcels_fetched();
+
     my $installed_count = $self->_install_all_packages();
 
     return $installed_count;
@@ -303,9 +305,15 @@ sub _fetch_all_packages {
 
     my $dir = $self->work_dir;
     my $dc_dir = $self->data_consumer_dir;
+    my $failure_dir = $self->data_consumer_dir->child('failed');
 
     $self->data_consumer->consume(sub {
         my ($consumer, $other_spec, $fh, $file) = @_;
+
+        if (!$self->ignore_failures && $failure_dir->children) {
+            $consumer->halt;
+            $log->critical('Halting job early, some parcels cannot be fetched');
+        }
 
         my $file_contents = <$fh>;
         if (!$file_contents) {
@@ -365,11 +373,21 @@ sub _fetch_all_packages {
     });
 
     my $stats = $self->data_consumer->runstats();
-    if (!$self->ignore_failures && $stats->{'failed'}) {
-        croak($log->criticalf('Unable to fetch %d parcels', $stats->{'failed'}));
-    }
+    return $stats->{'failed'};
+}
 
-    return;
+sub _check_parcels_fetched {
+    my ($self) = @_;
+
+    my $failure_dir = $self->data_consumer_dir->child('failed');
+    my @failed = $self->data_consumer_dir->child('failed')->children;
+    if (!$self->ignore_failures && @failed) {
+        foreach my $file (@failed) {
+            my $package_str = substr $file->slurp, 1;
+            $log->criticalf('Unable to fetch %s', $package_str);
+        }
+        croak($log->criticalf('Unable to fetch %d parcels', scalar @failed));
+    }
 }
 
 sub _install_all_packages {
