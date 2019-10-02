@@ -30,7 +30,7 @@ use Pakket::Constants qw<
 >;
 
 use constant {
-    'SLEEP_TIME' => 100,
+    'SLEEP_TIME_USEC' => 1_000,
 };
 
 with qw<
@@ -369,7 +369,7 @@ sub _fetch_all_packages {
         # It's actually faster to not hammer the filesystem checking for new
         # stuff. $consumer->consume will continue until `unprocessed` is empty,
         # so it's useful to wait a bit (100ms) to wait for new items to be added.
-        usleep SLEEP_TIME();
+        usleep SLEEP_TIME_USEC();
     });
 
     my $stats = $self->data_consumer->runstats();

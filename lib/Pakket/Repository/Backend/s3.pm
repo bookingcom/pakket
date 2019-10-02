@@ -24,6 +24,7 @@ has 's3' => (
     'is'       => 'ro',
     'isa'      => 'Net::Amazon::S3::Client',
     'lazy'     => 1,
+    'clearer'  => 'clear_client',
     'builder'  => '_build_s3_client',
 );
 
@@ -31,6 +32,7 @@ has 's3_bucket' => (
     'is'       => 'rw',
     'isa'      => 'Net::Amazon::S3::Client::Bucket',
     'lazy'     => 1,
+    'clearer'  => 'clear_bucket',
     'builder'  => '_build_s3_bucket',
 );
 
@@ -138,6 +140,7 @@ sub _check_index_age {
     # clear index if it is older then index_update_interval
     if ($self->last_index_update_time < gettimeofday() - index_update_interval()) {
         $log->debugf('Clear index for "%s"', $self->s3_bucket->name);
+        $self->clear_bucket();
         $self->clear_index();
     }
 

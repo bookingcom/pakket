@@ -14,7 +14,7 @@ use Time::HiRes qw< time usleep >;
 use constant {
     'MAX_SUBPROCESSES'        => 3,
     'PACKAGES_PER_SUBPROCESS' => 100,
-    'SLEEP_TIME'              => 100,
+    'SLEEP_TIME_USEC'         => 100_000,
     'NEXT_FORK_WAIT_SEC'      => 1,
     'TIME_SHIFT'              => 10_000,
 };
@@ -107,8 +107,8 @@ sub wait_all_children {
 
     my @children = @{ $self->_children };
     while (@children) {
-        @children = grep { waitpid( $_, WNOHANG ) > 0 } @children;
-        usleep(SLEEP_TIME());
+        @children = grep { 0 == waitpid( $_, WNOHANG ) } @children;
+        usleep(SLEEP_TIME_USEC());
     }
 
     return;
@@ -131,12 +131,11 @@ sub push_to_data_consumer {
 
     # if it's already in the queue, return
     my @dirs = grep -d, map { $dir->child($_) } qw(unprocessed working failed processed);
-    ## no critic (Perl::Critic::Policy::BuiltinFunctions::ProhibitBooleanGrep)
-    return if grep -e, map { $_->children(qr/\d{14}-\Q$pkg_esc\E$/ms) } @dirs;
+    return if grep -e, map { $_->children(qr/\d{14}-\Q$pkg_esc\E$/ms) } @dirs; ## no critic (Perl::Critic::Policy::BuiltinFunctions::ProhibitBooleanGrep)
 
     my $as_prereq = int !!$opts->{'as_prereq'};
 
-    $dir->child( 'unprocessed' => $filename )->append( $as_prereq . $pkg );
+    $dir->child( 'unprocessed' => $filename )->spew( $as_prereq . $pkg );
     $self->{'_to_process'}++;
 
     return;
