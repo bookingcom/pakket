@@ -1,0 +1,15 @@
+perl/Capture-Tiny=0.48:1
+perl/Digest-MD5=2.55:1
+perl/Digest=1.17:1
+perl/ExtUtils-CppGuess=0.20:1
+perl/ExtUtils-MakeMaker=7.38:1
+perl/ExtUtils-XSpp=0.18:1
+perl/File-Path=2.16:1
+perl/File-Temp=0.2309:1
+perl/MIME-Base64=3.15:1
+perl/Module-Build-WithXSpp=0.14:1
+perl/Module-Build=0.4229:1
+perl/Scalar-List-Utils=1.53:1
+perl/Test-Simple=1.302168:1
+perl/parent=0.237:1
+perl/version=0.9924:1
