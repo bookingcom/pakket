@@ -8,12 +8,12 @@
 
 --all-containers-tightness=2
 #--block-brace-tightness=0
---tight-secret-operators
+#--tight-secret-operators
 --vertical-tightness=0
 --vertical-tightness-closing=0
 
 --continuation-indentation=4
-#--cuddled-else
+--cuddled-else
 --default-tabsize=4
 --maximum-line-length=120
 --no-outdent-long-comments
@@ -33,7 +33,10 @@
 
 --space-keyword-paren
 --no-space-for-semicolon
+
 #--break-at-old-comma-breakpoints
+--comma-arrow-breakpoints=0
+#--maximum-fields-per-table=2
 
 --stack-opening-tokens
 --no-stack-opening-block-brace
