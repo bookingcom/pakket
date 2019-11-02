@@ -7,6 +7,6 @@ use v5.22;
 use warnings;
 use strict;
 
-use Pakket::CLI;
+use Pakket;
 
-exit (Pakket::CLI->run // 0);
+exit (Pakket->run // 0);

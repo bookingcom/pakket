@@ -1,4 +1,4 @@
-package Pakket::CLI::Command::manage;
+package Pakket::Command::Manage;
 # ABSTRACT: The pakket manage command
 
 use v5.22;
@@ -12,7 +12,7 @@ use Log::Any::Adapter;     # to set the logger
 use JSON::MaybeXS qw< decode_json >;
 use YAML;
 
-use Pakket::CLI '-command';
+use Pakket '-command';
 use Pakket::Log;
 use Pakket::Config;
 use Pakket::Manager;

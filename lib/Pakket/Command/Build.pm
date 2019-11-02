@@ -1,11 +1,11 @@
-package Pakket::CLI::Command::build;
+package Pakket::Command::Build;
 # ABSTRACT: Build a Pakket parcel
 
 use v5.22;
 use strict;
 use warnings;
 
-use Pakket::CLI '-command';
+use Pakket '-command';
 use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
 use Pakket::Config;
 use Pakket::Builder;

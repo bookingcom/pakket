@@ -1,11 +1,13 @@
-package Pakket::CLI::Command::init;
+package Pakket::Command::Init;
 # ABSTRACT: Initialize a pakket instance
 
 use v5.22;
 use strict;
 use warnings;
+
 use English '-no_match_vars';
-use Pakket::CLI '-command';
+
+use Pakket '-command';
 use Pakket::Log;
 use Pakket::Utils qw< is_writeable >;
 use Log::Any::Adapter;

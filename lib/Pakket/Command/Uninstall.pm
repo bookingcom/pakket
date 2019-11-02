@@ -1,4 +1,4 @@
-package Pakket::CLI::Command::uninstall;
+package Pakket::Command::Uninstall;
 # ABSTRACT: The pakket uninstall command
 
 use v5.22;
@@ -10,7 +10,7 @@ use Log::Any::Adapter;
 use IO::Prompt::Tiny qw< prompt >;
 use Path::Tiny qw< path >;
 
-use Pakket::CLI '-command';
+use Pakket '-command';
 use Pakket::Config;
 use Pakket::Uninstaller;
 use Pakket::Log;

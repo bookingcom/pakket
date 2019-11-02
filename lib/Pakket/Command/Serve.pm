@@ -1,4 +1,4 @@
-package Pakket::CLI::Command::serve;
+package Pakket::Command::Serve;
 # ABSTRACT: Serve Pakket objects over HTTP
 
 use v5.22;
@@ -8,7 +8,7 @@ use warnings;
 use Path::Tiny      qw< path >;
 use Log::Any::Adapter;
 
-use Pakket::CLI '-command';
+use Pakket '-command';
 use Pakket::Web::Server;
 use Pakket::Log;
 

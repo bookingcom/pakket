@@ -1,10 +1,11 @@
-package Pakket::CLI::Command::install;
+package Pakket::Command::Install;
 # ABSTRACT: Install a Pakket parcel
 
 use v5.22;
 use strict;
 use warnings;
-use Pakket::CLI '-command';
+
+use Pakket '-command';
 use Pakket::Installer;
 use Pakket::Config;
 use Pakket::Log;

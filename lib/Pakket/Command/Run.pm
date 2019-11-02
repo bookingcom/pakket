@@ -1,10 +1,11 @@
-package Pakket::CLI::Command::run;
+package Pakket::Command::Run;
 # ABSTRACT: The pakket run command
 
 use v5.22;
 use strict;
 use warnings;
-use Pakket::CLI '-command';
+
+use Pakket '-command';
 use Pakket::Runner;
 use Pakket::Log;
 use Log::Any::Adapter;
