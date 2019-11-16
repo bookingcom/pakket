@@ -10,6 +10,3 @@ perl/MIME-Base64=3.15
 perl/Module-Build-WithXSpp=0.14
 perl/Module-Build=0.4229
 perl/Scalar-List-Utils=1.53
-perl/Test-Simple=1.302168
-perl/parent=0.237
-perl/version=0.9924

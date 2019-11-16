@@ -66,3 +66,35 @@ requires 'LWP::Protocol::https';
 # For the web service
 requires 'Dancer2';
 requires 'Dancer2::Plugin::ParamTypes';
+
+on 'test' => sub {
+	requires 'Module::Faker';
+	requires 'MooseX::Test::Role';
+	requires 'Perl::Critic::Bangs';
+	requires 'Perl::Critic::Freenode';
+	requires 'Perl::Critic::Itch';
+	requires 'Perl::Critic::Lax';
+	requires 'Perl::Critic::Moose';
+	requires 'Perl::Critic::Policy::BuiltinFunctions::ProhibitDeleteOnArrays';
+	requires 'Perl::Critic::Policy::BuiltinFunctions::ProhibitReturnOr';
+	requires 'Perl::Critic::Policy::HTTPCookies';
+	requires 'Perl::Critic::Policy::Moo::ProhibitMakeImmutable';
+	requires 'Perl::Critic::Policy::Perlsecret';
+	requires 'Perl::Critic::Policy::TryTiny::RequireBlockTermination';
+	requires 'Perl::Critic::Policy::TryTiny::RequireUse';
+	requires 'Perl::Critic::Policy::ValuesAndExpressions::PreventSQLInjection';
+#	requires 'Perl::Critic::Policy::Variables::ProhibitUselessInitialization';
+	requires 'Perl::Critic::PetPeeves::JTRAMMELL';
+	requires 'Perl::Critic::Pulp';
+	requires 'Perl::Critic::StricterSubs';
+	requires 'Perl::Critic::Tics';
+	requires 'Test::EOL';
+	requires 'Test::Perl::Critic::Progressive';
+	requires 'Test::Pod';
+	requires 'Test::Vars';
+	requires 'Test2::Harness';
+	requires 'Test2::Mock';
+	requires 'Test2::Plugin::SpecDeclare';
+	requires 'Test2::Tools::Spec';
+	requires 'Test2::V0';
+};

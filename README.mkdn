@@ -132,7 +132,7 @@ can have a range of allowed versions for a package, for example.
 ### Spec files
 
 Similar to RPM spec files, Pakket has spec files. You can create them
-yourself or you can use the [generate](https://metacpan.org/pod/Pakket::CLI::Command::manage)
+yourself or you can use the [generate](https://metacpan.org/pod/Pakket%3A%3ACLI%3A%3ACommand%3A%3Amanage)
 command to create them for you.
 
 The basic spec file in Pakket contain a package's `category`,

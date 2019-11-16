@@ -2,6 +2,7 @@
 --extras=+q
 --recurse=yes
 --tag-relative=yes
+--exclude=.build
 --exclude=.git
 --exclude=docs
 --exclude=*.js

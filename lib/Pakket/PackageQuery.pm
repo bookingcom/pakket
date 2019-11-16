@@ -14,8 +14,6 @@ use Pakket::Constants qw<
 >;
 use Pakket::Types;
 
-with qw< Pakket::Role::BasicPackageAttrs >;
-
 has [qw< name category version >] => (
     'is'       => 'ro',
     'isa'      => 'Str',
@@ -58,6 +56,16 @@ has 'is_bootstrap' => (
     'is'      => 'ro',
     'isa'     => 'Bool',
     'default' => sub {0},
+);
+
+has 'as_prereq' => (
+    'is'      => 'ro',
+    'isa'     => 'Bool',
+    'default' => sub {0},
+);
+
+with qw(
+    Pakket::Role::BasicPackageAttrs
 );
 
 sub BUILD {

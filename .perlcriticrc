@@ -368,9 +368,12 @@ allow_in_main_unless_in_subroutine = 1
 [InputOutput::ProhibitBacktickOperators]
 only_in_void_context = 1
 
+[Subroutines::ProhibitManyArgs]
+max_arguments = 6
+
 # Can we change this to exclude single sentence regexes?
 [RegularExpressions::RequireExtendedFormatting]
-minimum_regex_length_to_complain_about = 20
+minimum_regex_length_to_complain_about = 50
 # strict means: regexes that only contain whitespace and word characters
 strict = 0
 
@@ -462,7 +465,7 @@ allow = for foreach if
 equivalent_modules = Moo Moo::Role
 
 [ValuesAndExpressions::ProhibitMagicNumbers]
-allowed_values = 0 1 2 3 4 5 -1 200 400 404
+allowed_values = -1 0 1 2 3 4 5 10 80 200 400 404 443 8080
 # Kind of literals to allow.
 # Valid values: Binary, Exp, Float, Hex, Octal.
 # allowed_types = Float

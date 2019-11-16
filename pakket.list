@@ -1,0 +1,8 @@
+perl/Dist-Zilla
+perl/Dist-Zilla-Plugin-Git
+perl/Dist-Zilla-Plugin-PromptIfStale
+perl/Dancer2
+perl/Data-Consumer
+perl/Log-Any
+perl/Net-Amazon-S3
+perl/Test2-Suite

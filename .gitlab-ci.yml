@@ -7,6 +7,9 @@ test:
         - docker
     image: $TEST_IMAGE
     script:
-        - PERL5LIB=/lib/pakket/5.28.1/libraries/active/lib/perl5 /lib/pakket/5.28.1/libraries/active/bin/dzil authordeps --missing
-        - PERL5LIB=/lib/pakket/5.28.1/libraries/active/lib/perl5 /lib/pakket/5.28.1/libraries/active/bin/dzil test --all
-        - PERL5LIB=/lib/pakket/5.28.1/libraries/active/lib/perl5 /lib/pakket/5.28.1/libraries/active/bin/dzil xtest --all
+        - pakket install --input-file pakket.list
+        - dzil authordeps --missing
+        - pakket install --input-file <(dzil authordeps --missing                  | sed '/^#/d' | sed -E 's|(.*)|perl\/\1|g' | sed -E 's|::|-|g')
+        - dzil listdeps --author --develop --missing
+        - pakket install --input-file <(dzil listdeps --author --develop --missing | sed '/^#/d' | sed -E 's|(.*)|perl\/\1|g' | sed -E 's|::|-|g')
+        - RELEASE_TESTING=1 dzil run yath test --author-testing -j 4 -P Moose

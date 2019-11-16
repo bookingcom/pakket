@@ -27,9 +27,10 @@
 --hanging-side-comments
 --static-side-comments
 
---closing-side-comments
---closing-side-comment-interval=40
---closing-side-comment-warnings
+--delete-closing-side-comments
+#--closing-side-comments
+#--closing-side-comment-interval=50
+#--closing-side-comment-warnings
 
 --space-keyword-paren
 --no-space-for-semicolon

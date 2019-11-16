@@ -10,6 +10,3 @@ perl/MIME-Base64
 perl/Module-Build-WithXSpp
 perl/Module-Build
 perl/Scalar-List-Utils
-perl/Test-Simple
-perl/parent
-perl/version

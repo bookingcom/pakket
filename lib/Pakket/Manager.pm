@@ -242,6 +242,7 @@ sub remove_package {
     my $repo = $self->_get_repo( $type );
     $repo->remove_package_file( $type, $self->package );
     $log->info( sprintf("Removed %s from the %s repo.", $self->package->id, $type ) );
+    return 0;
 }
 
 sub add_dependency {

@@ -1,6 +1,7 @@
 install_dir: ~/.cache/pakket/install/5.30.0
 log_file: ~/.cache/pakket/pakket.log
 allow_rollback: 1
+default-category: perl
 jobs: 3
 keep_rollbacks: 10
 use_hardlinks: 1
