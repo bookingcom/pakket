@@ -14,11 +14,11 @@ can_ok(
         store_content retrieve_content remove_content
         store_location retrieve_location remove_location
         retrieve_package_file remove_package_file latest_version_release
-    >,
+        >,
 );
 
 like(
-    exception { Pakket::Repository->new() },
+    exception {Pakket::Repository->new()},
     qr{You \s did \s not \s specify \s a \s backend }xms,
     'Backend is required to create a Pakket::Repository object',
 );

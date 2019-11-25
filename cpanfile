@@ -68,6 +68,7 @@ requires 'Dancer2';
 requires 'Dancer2::Plugin::ParamTypes';
 
 on 'test' => sub {
+	requires 'Code::TidyAll';
 	requires 'Module::Faker';
 	requires 'MooseX::Test::Role';
 	requires 'Perl::Critic::Bangs';
@@ -88,6 +89,7 @@ on 'test' => sub {
 	requires 'Perl::Critic::Pulp';
 	requires 'Perl::Critic::StricterSubs';
 	requires 'Perl::Critic::Tics';
+	requires 'Test::BOM';
 	requires 'Test::EOL';
 	requires 'Test::Perl::Critic::Progressive';
 	requires 'Test::Pod';

@@ -1,4 +1,5 @@
 package Pakket::Types;
+
 # ABSTRACT: Type definitions for Pakket
 
 use v5.22;
@@ -6,7 +7,7 @@ use strict;
 use warnings;
 
 use Moose::Util::TypeConstraints;
-use Carp     qw< croak >;
+use Carp qw< croak >;
 use Log::Any qw< $log >;
 use Ref::Util qw< is_ref is_arrayref is_hashref >;
 use Safe::Isa;
@@ -22,12 +23,12 @@ sub _coerce_backend_from_str {
     my $uri = shift;
 
     my ($scheme) = $uri =~ m{^ ( \w+ ) :// }xms;
-    $scheme = lc($scheme);
+    $scheme = lc ($scheme);
     $scheme = 'http' if ($scheme eq 'https');
-    my $class    = "Pakket::Repository::Backend::$scheme";
+    my $class = "Pakket::Repository::Backend::$scheme";
 
-    eval { require_module($class); 1; } or do {
-        croak( $log->critical("Failed to load backend '$class': $@") );
+    eval {require_module($class); 1;} or do {
+        croak($log->critical("Failed to load backend '$class': $@"));
     };
 
     return $class->new_from_uri($uri);
@@ -35,24 +36,24 @@ sub _coerce_backend_from_str {
 
 sub _coerce_backend_from_arrayref {
     my $arrayref = shift;
-    my ( $name, $data ) = @{$arrayref};
-    $name = lc($name);
+    my ($name, $data) = @{$arrayref};
+    $name = lc ($name);
     $data //= {};
 
     # TODO: Remove that later.
     # For back compatibility with old config.
     if (!is_hashref($data)) {
-        my ( $n, @params ) = @{$arrayref};
-        $data = { @params };
+        my ($n, @params) = @{$arrayref};
+        $data = {@params};
     }
 
     is_hashref($data)
-        or croak( $log->critical('Second arg to backend is not hashref') );
+        or croak($log->critical('Second arg to backend is not hashref'));
 
     my $class = "Pakket::Repository::Backend::$name";
 
-    eval { require_module($class); 1; } or do {
-        croak( $log->critical("Failed to load backend '$class': $@") );
+    eval {require_module($class); 1;} or do {
+        croak($log->critical("Failed to load backend '$class': $@"));
     };
 
     return $class->new($data);
@@ -61,31 +62,26 @@ sub _coerce_backend_from_arrayref {
 subtype 'PakketRepositoryBackend', as 'Object', where {
     $_->$_does('Pakket::Role::Repository::Backend')
         || is_arrayref($_)
-        || ( !is_ref($_) && length )
+        || (!is_ref($_) && length)
 }, message {
     'Must be a Pakket::Repository::Backend object or a URI string or arrayref'
 };
 
-coerce 'PakketRepositoryBackend', from 'Str',
-    via { return _coerce_backend_from_str($_); };
+coerce 'PakketRepositoryBackend', from 'Str', via {return _coerce_backend_from_str($_);};
 
-coerce 'PakketRepositoryBackend', from 'ArrayRef',
-    via { return _coerce_backend_from_arrayref($_); };
+coerce 'PakketRepositoryBackend', from 'ArrayRef', via {return _coerce_backend_from_arrayref($_);};
 
 # PakketRelease
 
 subtype 'PakketRelease', as 'Int';
 
-coerce 'PakketRelease', from 'Undef',
-    via { return PAKKET_DEFAULT_RELEASE() };
+coerce 'PakketRelease', from 'Undef', via {return PAKKET_DEFAULT_RELEASE()};
 
 # PakketVersioning
 
-subtype 'PakketVersioning', as 'Object',
-where { $_->$_does('Pakket::Role::Versioning') };
+subtype 'PakketVersioning', as 'Object', where {$_->$_does('Pakket::Role::Versioning')};
 
-coerce 'PakketVersioning', from 'Str',
-via {
+coerce 'PakketVersioning', from 'Str', via {
     my $type  = $_;
     my $class = "Pakket::Versioning::$type";
 
@@ -94,7 +90,7 @@ via {
         1;
     } or do {
         my $error = $@ || 'Zombie error';
-        croak( $log->critical("Could not load versioning module ($type)") );
+        croak($log->critical("Could not load versioning module ($type)"));
     };
 
     return $class->new();
@@ -102,7 +98,7 @@ via {
 
 # PakketPhase
 
-enum 'PakketPhase' => [ keys %{PAKKET_VALID_PHASES()} ];
+enum 'PakketPhase' => [keys %{PAKKET_VALID_PHASES()}];
 
 no Moose::Util::TypeConstraints;
 

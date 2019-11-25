@@ -1,4 +1,5 @@
 package Pakket::Command::Run;
+
 # ABSTRACT: The pakket run command
 
 use v5.22;
@@ -11,24 +12,17 @@ use Pakket::Log;
 use Log::Any::Adapter;
 use Path::Tiny qw< path >;
 
-sub abstract    { 'Run commands using pakket' }
-sub description { 'Run commands using pakket' }
+sub abstract    {'Run commands using pakket'}
+sub description {'Run commands using pakket'}
 
 sub opt_spec {
-    return (
-        [
-            'from=s',
-            'defines pakket active directory to use. '
-                . '(mandatory, unless set in PAKKET_ACTIVE_PATH)',
-        ],
-    );
+    return (['from=s', 'defines pakket active directory to use. ' . '(mandatory, unless set in PAKKET_ACTIVE_PATH)']);
 }
 
 sub validate_args {
-    my ( $self, $opt ) = @_;
+    my ($self, $opt) = @_;
 
-    Log::Any::Adapter->set( 'Dispatch',
-        'dispatcher' => Pakket::Log->build_logger( $opt->{'verbose'} ) );
+    Log::Any::Adapter->set('Dispatch', 'dispatcher' => Pakket::Log->build_logger($opt->{'verbose'}));
 
     my $active_path
         = exists $ENV{'PAKKET_ACTIVE_PATH'}
@@ -42,13 +36,13 @@ sub validate_args {
 }
 
 sub execute {
-    my ( $self, $opt, $args ) = @_;
+    my ($self, $opt, $args) = @_;
 
     my $runner = Pakket::Runner->new(
         'active_path' => $opt->{'active_path'},
     );
 
-    exit $runner->run( @{$args} );
+    exit $runner->run(@{$args});
 }
 
 1;

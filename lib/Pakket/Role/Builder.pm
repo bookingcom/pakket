@@ -1,4 +1,5 @@
 package Pakket::Role::Builder;
+
 # ABSTRACT: A role for all builders
 
 use v5.22;
@@ -11,7 +12,7 @@ requires qw< build_package >;
 has 'exclude_packages' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'default' => sub { +{} },
+    'default' => sub {+{}},
 );
 
 no Moose::Role;

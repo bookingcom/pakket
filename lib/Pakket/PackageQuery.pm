@@ -1,12 +1,13 @@
 package Pakket::PackageQuery;
+
 # ABSTRACT: An object representing a query for a package
 
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 
-use Carp              qw< croak >;
-use Log::Any          qw< $log >;
+use Carp qw< croak >;
+use Log::Any qw< $log >;
 use version 0.77;
 use Pakket::Constants qw<
     PAKKET_PACKAGE_SPEC
@@ -24,32 +25,32 @@ has 'release' => (
     'is'      => 'ro',
     'isa'     => 'PakketRelease',
     'coerce'  => 1,
-    'default' => sub { PAKKET_DEFAULT_RELEASE() },
+    'default' => sub {PAKKET_DEFAULT_RELEASE()},
 );
 
 has [qw<distribution source url summary path>] => (
-    'is'       => 'ro',
-    'isa'      => 'Maybe[Str]',
+    'is'  => 'ro',
+    'isa' => 'Maybe[Str]',
 );
 
 has [qw<patch pre_manage>] => (
-    'is'      => 'ro',
-    'isa'     => 'Maybe[ArrayRef]',
+    'is'  => 'ro',
+    'isa' => 'Maybe[ArrayRef]',
 );
 
 has [qw<manage build_opts bundle_opts>] => (
-    'is'      => 'ro',
-    'isa'     => 'Maybe[HashRef]',
+    'is'  => 'ro',
+    'isa' => 'Maybe[HashRef]',
 );
 
 has 'prereqs' => (
-    'is'      => 'ro',
-    'isa'     => 'Maybe[HashRef]',
+    'is'  => 'ro',
+    'isa' => 'Maybe[HashRef]',
 );
 
 has 'skip' => (
-    'is'      => 'ro',
-    'isa'     => 'Maybe[HashRef]',
+    'is'  => 'ro',
+    'isa' => 'Maybe[HashRef]',
 );
 
 has 'is_bootstrap' => (
@@ -72,32 +73,33 @@ sub BUILD {
     my $self = shift;
 
     # add supported categories
-    if ( !( $self->category eq 'perl' or $self->category eq 'native' ) ) {
-        croak( "Unsupported category: ${self->category}\n" );
+    if (!($self->category eq 'perl' or $self->category eq 'native')) {
+        croak("Unsupported category: ${self->category}\n");
     }
 }
 
 sub new_from_string {
-    my ( $class, $req_str, $source ) = @_;
+    my ($class, $req_str, $source) = @_;
 
-    if ( $req_str !~ PAKKET_PACKAGE_SPEC() ) {
-        croak( $log->critical("Cannot parse $req_str") );
+    if ($req_str !~ PAKKET_PACKAGE_SPEC()) {
+        croak($log->critical("Cannot parse $req_str"));
     } else {
+
         # This shuts up Perl::Critic
         return $class->new(
             'category' => $1,
             'name'     => $2,
             'version'  => $3 // 0,
-            ('release' => $4)x!! $4,
-            ('source'  => $source)x!! $source,
+            ('release' => $4) x !!$4,
+            ('source'  => $source) x !!$source,
         );
     }
 }
 
 sub new_from_meta {
-    my ( $class, $meta_spec ) = @_;
+    my ($class, $meta_spec) = @_;
 
-    my $params = { %$meta_spec{qw<category name version release source>} };
+    my $params = {%$meta_spec{qw<category name version release source>}};
 
     $params->{patch}      = $meta_spec->{patch}        if $meta_spec->{patch};
     $params->{path}       = $meta_spec->{path}         if $meta_spec->{path};
@@ -111,7 +113,7 @@ sub new_from_meta {
     my $build_opts = _convert_build_options($meta_spec);
     $build_opts->{'pre-build'}  = $meta_spec->{'pre-build'}  if $meta_spec->{'pre-build'};
     $build_opts->{'post-build'} = $meta_spec->{'post-build'} if $meta_spec->{'post-build'};
-    $params->{build_opts} = $build_opts if $build_opts;
+    $params->{build_opts}       = $build_opts                if $build_opts;
 
     return $class->new($params);
 }
@@ -120,12 +122,12 @@ sub _convert_requires {
     my ($meta_spec) = @_;
     return unless $meta_spec->{requires};
 
-    my $result = {};
+    my $result   = {};
     my $requires = $meta_spec->{requires};
     foreach my $type (keys %{$requires}) {
         foreach my $dep (@{$requires->{$type}}) {
-            if ( $dep !~ PAKKET_PACKAGE_SPEC() ) {
-                croak( $log->critical("Cannot parse requirement $dep") );
+            if ($dep !~ PAKKET_PACKAGE_SPEC()) {
+                croak($log->critical("Cannot parse requirement $dep"));
             } else {
                 $result->{$1}{$type}{$2} = {version => $3 // 0};
             }

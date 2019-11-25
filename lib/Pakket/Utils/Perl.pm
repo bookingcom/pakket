@@ -1,11 +1,12 @@
 package Pakket::Utils::Perl;
+
 # ABSTRACT: Perl specific utilities for Pakket
 
 use v5.22;
 use strict;
 use warnings;
 use version 0.77;
-use Exporter   qw< import >;
+use Exporter qw< import >;
 use Path::Tiny qw< path   >;
 use Module::CoreList;
 
@@ -19,7 +20,7 @@ sub list_core_modules {
 sub should_skip_core_module {
     my $name = shift;
 
-    if ( Module::CoreList::is_core($name) and !${Module::CoreList::upstream}{$name} ) {
+    if (Module::CoreList::is_core($name) and !${Module::CoreList::upstream}{$name}) {
         return 1;
     }
 

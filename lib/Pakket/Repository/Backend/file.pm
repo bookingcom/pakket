@@ -1,19 +1,20 @@
 package Pakket::Repository::Backend::file;
+
 # ABSTRACT: A file-based backend repository
 
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 
-use Carp              qw< croak >;
-use JSON::MaybeXS     qw< decode_json >;
-use Path::Tiny        qw< path >;
-use Log::Any          qw< $log >;
+use Carp qw< croak >;
+use JSON::MaybeXS qw< decode_json >;
+use Path::Tiny qw< path >;
+use Log::Any qw< $log >;
 use Types::Path::Tiny qw< Path AbsPath >;
-use Digest::SHA       qw< sha1_hex >;
+use Digest::SHA qw< sha1_hex >;
 use File::NFSLock;
-use Regexp::Common    qw< URI >;
-use Pakket::Utils     qw< encode_json_canonical encode_json_pretty >;
+use Regexp::Common qw< URI >;
+use Pakket::Utils qw< encode_json_canonical encode_json_pretty >;
 use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
 
 with qw<
@@ -34,20 +35,20 @@ has 'file_extension' => (
 );
 
 has 'index_file' => (
-    'is'       => 'ro',
-    'isa'      => Path,
-    'coerce'   => 1,
-    'default'  => sub {
+    'is'      => 'ro',
+    'isa'     => Path,
+    'coerce'  => 1,
+    'default' => sub {
         my $self = shift;
         return $self->directory->child('index.json');
     },
 );
 
 has 'lock_file' => (
-    'is'       => 'ro',
-    'isa'      => Path,
-    'coerce'   => 1,
-    'default'  => sub {
+    'is'      => 'ro',
+    'isa'     => Path,
+    'coerce'  => 1,
+    'default' => sub {
         my $self = shift;
         return $self->directory->child('index.lock');
     },
@@ -66,19 +67,19 @@ has 'mangle_filename' => (
 );
 
 sub new_from_uri {
-    my ( $class, $uri ) = @_;
+    my ($class, $uri) = @_;
 
     $uri =~ /$RE{'URI'}{'file'}{'-keep'}/xms
-        or croak( $log->critical("URI '$uri' is not a proper file URI") );
+        or croak($log->critical("URI '$uri' is not a proper file URI"));
 
-    my $path = $3; # perldoc Regexp::Common::URI::file
-    return $class->new( 'directory' => $path );
+    my $path = $3;                                                             # perldoc Regexp::Common::URI::file
+    return $class->new('directory' => $path);
 }
 
 sub BUILD {
     my $self = shift;
     if (!$self->directory->exists) {
-        croak( $log->criticalf("Directory %s doesn't exist", $self->directory->stringify));
+        croak($log->criticalf("Directory %s doesn't exist", $self->directory->stringify));
     }
 }
 
@@ -89,30 +90,29 @@ sub repo_index {
     $file->is_file
         or return +{};
 
-    return decode_json( $file->slurp_utf8 );
+    return decode_json($file->slurp_utf8);
 }
 
 sub all_object_ids {
     my $self           = shift;
-    my @all_object_ids = keys %{ $self->repo_index };
+    my @all_object_ids = keys %{$self->repo_index};
     return \@all_object_ids;
 }
 
 sub all_object_ids_by_name {
-    my ( $self, $name, $category ) = @_;
-    my @all_object_ids =
-        grep { $_ =~ PAKKET_PACKAGE_SPEC(); $1 eq $category and $2 eq $name }
-        keys %{ $self->repo_index };
+    my ($self, $name, $category) = @_;
+    my @all_object_ids = grep {$_ =~ PAKKET_PACKAGE_SPEC(); $1 eq $category and $2 eq $name}
+        keys %{$self->repo_index};
     return \@all_object_ids;
 }
 
 sub has_object {
-    my ( $self, $id ) = @_;
+    my ($self, $id) = @_;
     return exists $self->repo_index->{$id};
 }
 
 sub _store_in_index {
-    my ( $self, $id ) = @_;
+    my ($self, $id) = @_;
 
     my $name;
     if ($self->mangle_filename) {
@@ -124,6 +124,7 @@ sub _store_in_index {
     my $filename = $name . '.' . $self->file_extension;
 
     my $lock = File::NFSLock->new($self->lock_file->stringify, 2, undef, 1000);
+
     # Store in the index
     my $repo_index = $self->repo_index;
     $repo_index->{$id} = $filename;
@@ -134,7 +135,7 @@ sub _store_in_index {
 }
 
 sub _save_index {
-    my ( $self, $repo_index ) = @_;
+    my ($self, $repo_index) = @_;
 
     my $content
         = $self->pretty_json
@@ -145,28 +146,28 @@ sub _save_index {
 }
 
 sub _retrieve_from_index {
-    my ( $self, $id ) = @_;
+    my ($self, $id) = @_;
     return $self->repo_index->{$id};
 }
 
 sub _remove_from_index {
-    my ( $self, $id ) = @_;
-    my $lock = File::NFSLock->new($self->lock_file->stringify, 2, undef, 1000);
+    my ($self, $id) = @_;
+    my $lock       = File::NFSLock->new($self->lock_file->stringify, 2, undef, 1000);
     my $repo_index = $self->repo_index;
     delete $repo_index->{$id};
     $self->_save_index($repo_index);
 }
 
 sub store_location {
-    my ( $self, $id, $file_to_store ) = @_;
+    my ($self, $id, $file_to_store) = @_;
     my $filename  = $self->_store_in_index($id);
     my $directory = $self->directory;
 
-    return path($file_to_store)->copy( $directory->child($filename) );
+    return path($file_to_store)->copy($directory->child($filename));
 }
 
 sub retrieve_location {
-    my ( $self, $id ) = @_;
+    my ($self, $id) = @_;
     my $filename = $self->_retrieve_from_index($id);
     $filename
         and return $self->directory->child($filename);
@@ -176,7 +177,7 @@ sub retrieve_location {
 }
 
 sub remove_location {
-    my ( $self, $id ) = @_;
+    my ($self, $id) = @_;
     my $location = $self->retrieve_location($id);
     $location or return;
     $location->remove;
@@ -185,20 +186,19 @@ sub remove_location {
 }
 
 sub store_content {
-    my ( $self, $id, $content ) = @_;
+    my ($self, $id, $content) = @_;
     my $file_to_store = Path::Tiny->tempfile;
-    $file_to_store->spew( { 'binmode' => ':raw' }, $content );
-    return $self->store_location( $id, $file_to_store );
+    $file_to_store->spew({'binmode' => ':raw'}, $content);
+    return $self->store_location($id, $file_to_store);
 }
 
 sub retrieve_content {
-    my ( $self, $id ) = @_;
-    return $self->retrieve_location($id)
-                ->slurp_utf8( { 'binmode' => ':raw' } );
+    my ($self, $id) = @_;
+    return $self->retrieve_location($id)->slurp_utf8({'binmode' => ':raw'});
 }
 
 sub remove_content {
-    my ( $self, $id ) = @_;
+    my ($self, $id) = @_;
     return $self->remove_location($id);
 }
 

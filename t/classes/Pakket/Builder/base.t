@@ -5,7 +5,8 @@ use strict;
 use warnings;
 use Test::More 'tests' => 3;
 use Test::Fatal;
-use lib '.'; use t::lib::Utils;
+use lib '.';
+use t::lib::Utils;
 use Pakket::Builder;
 use Pakket::Package;
 use Path::Tiny qw< path >;
@@ -15,10 +16,10 @@ use Archive::Any;
 # This is used in the config() which requires a string to create
 # the repositories
 our @DIRS = map Path::Tiny->tempdir, 1 .. 3;
-END { unlink for @DIRS }
+END {unlink for @DIRS}
 
 sub create_builder {
-    return Pakket::Builder->new( 'config' => t::lib::Utils::config(@DIRS) );
+    return Pakket::Builder->new('config' => t::lib::Utils::config(@DIRS));
 }
 
 can_ok(
@@ -26,18 +27,15 @@ can_ok(
     qw<
         build bootstrap_build run_build snapshot_build_dir
         retrieve_new_files get_configure_flags
-    >,
+        >,
 );
 
 subtest 'Defaults' => sub {
     my $builder = create_builder();
-    isa_ok( $builder, 'Pakket::Builder' );
-    isa_ok( $builder->source_repo, 'Pakket::Repository::Source' );
+    isa_ok($builder,              'Pakket::Builder');
+    isa_ok($builder->source_repo, 'Pakket::Repository::Source');
 
-    isa_ok(
-        $builder->source_repo->backend,
-        'Pakket::Repository::Backend::file',
-    );
+    isa_ok($builder->source_repo->backend, 'Pakket::Repository::Backend::file');
 };
 
 subtest 'Build simple module' => sub {
@@ -45,14 +43,14 @@ subtest 'Build simple module' => sub {
     my $fake_dist_dir = t::lib::Utils::generate_modules();
 
     # Unpack each one
-    foreach my $tarball ( $fake_dist_dir->children ) {
+    foreach my $tarball ($fake_dist_dir->children) {
         my $archive = Archive::Any->new($tarball);
-        ok( $archive->extract($fake_dist_dir), 'Extracted successfully' );
+        ok($archive->extract($fake_dist_dir), 'Extracted successfully');
 
         # Import each one
         my ($dir_name) = "$tarball" =~ s{ [.]tar [.]gz $}{}rxms;
         my $source_dir = path($dir_name);
-        ok( $source_dir->is_dir, 'Got directory' );
+        ok($source_dir->is_dir, 'Got directory');
 
         my ($dist_name) = $source_dir->basename =~ s{ -0[.]01 $}{}rxms;
 

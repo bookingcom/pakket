@@ -1,4 +1,5 @@
 package Pakket::Role::BasicPackageAttrs;
+
 # ABSTRACT: Some helpers to print names nicely
 
 use v5.22;
@@ -7,14 +8,12 @@ use Pakket::Utils qw< canonical_package_name >;
 
 sub short_name {
     my $self = shift;
-    return canonical_package_name( $self->category, $self->name );
+    return canonical_package_name($self->category, $self->name);
 }
 
 sub full_name {
     my $self = shift;
-    return canonical_package_name(
-        $self->category, $self->name, $self->version, $self->release,
-    );
+    return canonical_package_name($self->category, $self->name, $self->version, $self->release);
 }
 
 sub id {

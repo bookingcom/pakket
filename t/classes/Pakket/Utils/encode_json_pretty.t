@@ -11,13 +11,13 @@ my $string = encode_json_pretty($struct);
 
 ## no critic qw(ValuesAndExpressions::ProhibitImplicitNewlines)
 is(
-$string,
-'{
+    $string,
+    '{
    "x" : [
       "y",
       "z"
    ]
 }
 ',
-'Pretty JSON',
+    'Pretty JSON',
 );

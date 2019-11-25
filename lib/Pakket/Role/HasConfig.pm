@@ -1,4 +1,5 @@
 package Pakket::Role::HasConfig;
+
 # ABSTRACT: A role providing access to the Pakket configuration file
 
 use v5.22;
@@ -13,7 +14,7 @@ has 'config' => (
 );
 
 sub _build_config {
-    my $self        = shift;
+    my $self          = shift;
     my $config_reader = Pakket::Config->new();
     return $config_reader->read_config;
 }

@@ -1,25 +1,26 @@
 package Pakket::Role::RunCommand;
+
 # ABSTRACT: Role for running commands
 
 use v5.22;
 use Moose::Role;
 use System::Command;
 use Path::Tiny qw< path >;
-use Log::Any   qw< $log >;
+use Log::Any qw< $log >;
 
 sub run_command {
-    my ( $self, $dir, $sys_cmds, $extra_opts ) = @_;
-    $log->debug( join ' ', @{$sys_cmds} );
+    my ($self, $dir, $sys_cmds, $extra_opts) = @_;
+    $log->debug(join ' ', @{$sys_cmds});
 
     my %opt = (
         'cwd' => path($dir)->stringify,
 
-        %{ $extra_opts || {} },
+        %{$extra_opts || {}},
 
         # 'trace' => $ENV{SYSTEM_COMMAND_TRACE},
     );
 
-    my $cmd = System::Command->new( @{$sys_cmds}, \%opt );
+    my $cmd = System::Command->new(@{$sys_cmds}, \%opt);
 
     my $success = $cmd->loop_on(
         'stdout' => sub {
@@ -37,23 +38,19 @@ sub run_command {
         },
     );
 
-    $log->debugf(
-        "Command '%s' exited with '%d'",
-        join( ' ', $cmd->cmdline ),
-        $cmd->exit,
-    );
+    $log->debugf("Command '%s' exited with '%d'", join (' ', $cmd->cmdline), $cmd->exit);
 
     return $success;
 }
 
 # does more or less the same as `command1 && command2 ... && commandN`
 sub run_command_sequence {
-    my ( $self, @commands ) = @_;
+    my ($self, @commands) = @_;
 
-    $log->debugf( 'Starting a sequence of %d commands', 0+@commands );
+    $log->debugf('Starting a sequence of %d commands', 0 + @commands);
 
-    for my $idx ( 0 .. $#commands ) {
-        my $success = $self->run_command( @{ $commands[$idx] } );
+    for my $idx (0 .. $#commands) {
+        my $success = $self->run_command(@{$commands[$idx]});
         unless ($success) {
             $log->debug("Sequence terminated on item $idx");
             return;

@@ -17,8 +17,7 @@ Log::Any::Adapter->set(
 
 sub arg_default_logger {
     return $_[1] || Log::Dispatch->new(
-        'outputs' => [
-            [
+        'outputs' => [[
                 'Screen',
                 'min_level' => 'notice',
                 'newline'   => 1,
@@ -30,8 +29,7 @@ sub arg_default_logger {
 sub generate_modules {
     my $fake_dist_dir = Path::Tiny->tempdir();
 
-    Module::Faker->make_fakes(
-        {
+    Module::Faker->make_fakes({
             'source' => path(qw< t corpus fake_perl_mods>),
             'dest'   => $fake_dist_dir,
         },

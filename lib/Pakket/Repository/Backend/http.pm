@@ -1,22 +1,23 @@
 package Pakket::Repository::Backend::http;
+
 # ABSTRACT: A remote HTTP backend repository
 
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 
-use Carp              qw< croak >;
-use URI::Escape       qw< uri_escape >;
-use JSON::MaybeXS     qw< decode_json >;
-use Path::Tiny        qw< path >;
-use Log::Any          qw< $log >;
+use Carp qw< croak >;
+use URI::Escape qw< uri_escape >;
+use JSON::MaybeXS qw< decode_json >;
+use Path::Tiny qw< path >;
+use Log::Any qw< $log >;
 use Types::Path::Tiny qw< Path >;
 use HTTP::Tiny;
-use Regexp::Common    qw< URI >;
-use Pakket::Utils     qw< encode_json_canonical >;
-use Time::HiRes       qw< usleep >;
+use Regexp::Common qw< URI >;
+use Pakket::Utils qw< encode_json_canonical >;
+use Time::HiRes qw< usleep >;
 
-use constant { 'HTTP_DEFAULT_PORT' => 80 };
+use constant {'HTTP_DEFAULT_PORT' => 80};
 
 has 'scheme' => (
     'is'      => 'ro',
@@ -33,14 +34,14 @@ has 'host' => (
 has 'port' => (
     'is'      => 'ro',
     'isa'     => 'Str',
-    'default' => sub { HTTP_DEFAULT_PORT() },
+    'default' => sub {HTTP_DEFAULT_PORT()},
 );
 
 has 'base_url' => (
-    'is'       => 'ro',
-    'isa'      => 'Str',
-    'lazy'     => 1,
-    'builder'  => '_build_base_url',
+    'is'      => 'ro',
+    'isa'     => 'Str',
+    'lazy'    => 1,
+    'builder' => '_build_base_url',
 );
 
 has 'base_path' => (
@@ -52,7 +53,7 @@ has 'base_path' => (
 has 'http_client' => (
     'is'      => 'ro',
     'isa'     => 'HTTP::Tiny',
-    'default' => sub { HTTP::Tiny->new },
+    'default' => sub {HTTP::Tiny->new},
 );
 
 has 'all_object_ids' => (
@@ -67,23 +68,23 @@ with qw<
 >;
 
 sub new_from_uri {
-    my ( $class, $uri ) = @_;
+    my ($class, $uri) = @_;
 
     # We allow the user to not include http, because we're nice like that
     $uri !~ m{^https?://}xms
         and $uri = "http://$uri";
 
     $uri =~ /$RE{'URI'}{'HTTP'}{ '-scheme' => qr{https?} }{'-keep'}/xms
-        or croak( $log->critical("URI '$uri' is not a proper HTTP URI") );
+        or croak($log->critical("URI '$uri' is not a proper HTTP URI"));
 
     # perldoc Regexp::Common::URI::http
     return $class->new(
-        'scheme'    => $2,
-        'host'      => $3,
+        'scheme' => $2,
+        'host'   => $3,
 
         # only if matched
-      ( 'port'      => $4 )x !!$4,
-      ( 'base_path' => $5 )x !!$5,
+        ('port' => $4) x !!$4,
+        ('base_path' => $5) x !!$5,
     );
 }
 
@@ -98,19 +99,20 @@ sub BUILD {
     # don't transfer the content. -- SX
     my $url      = $self->base_url . '/all_object_ids';
     my $response = $self->http_client->get($url);
-    if ( !$response->{'success'} ) {
-        croak( $log->criticalf( 'Could not connect to repository %s : %d -- %s',
-            $url, $response->{'status'}, $response->{'reason'} ) );
+    if (!$response->{'success'}) {
+        croak(
+            $log->criticalf(
+                'Could not connect to repository %s : %d -- %s',
+                $url, $response->{'status'}, $response->{'reason'}
+            )
+        );
     }
 }
 
 sub _build_base_url {
     my $self = shift;
 
-    return sprintf(
-        '%s://%s:%s%s',
-        $self->scheme, $self->host, $self->port, $self->base_path,
-    );
+    return sprintf ('%s://%s:%s%s', $self->scheme, $self->host, $self->port, $self->base_path);
 }
 
 sub _build_all_object_ids {
@@ -119,52 +121,57 @@ sub _build_all_object_ids {
     my $full_url = $self->base_url . $url;
     my $response = $self->http_client->get($full_url);
 
-    if ( !$response->{'success'} ) {
-        croak( $log->criticalf( 'Could not get remote all_object_ids: %d -- %s',
-            $response->{'status'}, $response->{'reason'} ) );
+    if (!$response->{'success'}) {
+        croak(
+            $log->criticalf(
+                'Could not get remote all_object_ids: %d -- %s',
+                $response->{'status'}, $response->{'reason'}
+            )
+        );
     }
 
-    my $content = decode_json( $response->{'content'} );
+    my $content = decode_json($response->{'content'});
     return $content->{'object_ids'};
 }
 
 sub all_object_ids_by_name {
-    my ( $self, $name, $category ) = @_;
+    my ($self, $name, $category) = @_;
     my $response = $self->http_client->get(
-        sprintf( '%s/all_object_ids_by_name?name=%s&category=%s',
+        sprintf (
+            '%s/all_object_ids_by_name?name=%s&category=%s',
             $self->base_url, uri_escape($name), uri_escape($category),
         ),
     );
 
-    if ( !$response->{'success'} ) {
-        croak( $log->criticalf( 'Could not get remote all_object_ids: %d -- %s',
-            $response->{'status'}, $response->{'reason'} ) );
+    if (!$response->{'success'}) {
+        croak(
+            $log->criticalf(
+                'Could not get remote all_object_ids: %d -- %s',
+                $response->{'status'}, $response->{'reason'}
+            )
+        );
     }
 
-    my $content = decode_json( $response->{'content'} );
+    my $content = decode_json($response->{'content'});
     return $content->{'object_ids'};
 }
 
 sub has_object {
-    my ( $self, $id ) = @_;
-    my $response = $self->http_client->get(
-        $self->base_url . '/has_object?id=' . uri_escape($id),
-    );
+    my ($self, $id) = @_;
+    my $response = $self->http_client->get($self->base_url . '/has_object?id=' . uri_escape($id));
 
-    if ( !$response->{'success'} ) {
-        croak( $log->criticalf( 'Could not get remote has_object: %d -- %s',
-            $response->{'status'}, $response->{'reason'} ) );
+    if (!$response->{'success'}) {
+        croak(
+            $log->criticalf('Could not get remote has_object: %d -- %s', $response->{'status'}, $response->{'reason'}));
     }
 
-    my $content = decode_json( $response->{'content'} );
+    my $content = decode_json($response->{'content'});
     return $content->{'has_object'};
 }
 
 sub store_location {
-    my ( $self, $id, $file_to_store ) = @_;
-    my $content = path($file_to_store)->slurp(
-        { 'binmode' => ':raw' },
-    );
+    my ($self, $id, $file_to_store) = @_;
+    my $content = path($file_to_store)->slurp({'binmode' => ':raw'});
 
     my $url      = "/store/location?id=" . uri_escape($id);
     my $full_url = $self->base_url . $url;
@@ -178,15 +185,18 @@ sub store_location {
         },
     );
 
-    if ( !$response->{'success'} ) {
-        croak( $log->criticalf(
-            'Could not store location for id %s, URL: %s, Status: %s, Reason: %s',
-            $id, $response->{'url'}, $response->{'status'}, $response->{'reason'}));
+    if (!$response->{'success'}) {
+        croak(
+            $log->criticalf(
+                'Could not store location for id %s, URL: %s, Status: %s, Reason: %s',
+                $id, $response->{'url'}, $response->{'status'}, $response->{'reason'}
+            )
+        );
     }
 }
 
 sub retrieve_location {
-    my ( $self, $id, $retries ) = @_;
+    my ($self, $id, $retries) = @_;
     $retries //= 3;
     my $url      = '/retrieve/location?id=' . uri_escape($id);
     my $full_url = $self->base_url . $url;
@@ -200,25 +210,27 @@ sub retrieve_location {
             return;
         }
 
-        croak( $log->criticalf( 'Could not retrieve parcel %s: %s', $id, $response->{content} ) );
+        croak($log->criticalf('Could not retrieve parcel %s: %s', $id, $response->{content}));
     }
     my $content  = $response->{'content'};
-    my $location = Path::Tiny->tempfile( "$$-" . ( 'X' x 10 ) );
+    my $location = Path::Tiny->tempfile("$$-" . ('X' x 10));
     $location->touch;
-    $location->append( { 'binmode' => ':raw' }, $content );
+    $location->append({'binmode' => ':raw'}, $content);
 
     return $location;
 }
 
 sub store_content {
-    my ( $self, $id, $content ) = @_;
+    my ($self, $id, $content) = @_;
     my $url      = "/store/content";
     my $full_url = $self->base_url . $url;
 
     my $response = $self->http_client->post(
         $full_url => {
-            'content' => encode_json_canonical(
-                { 'content' => $content, 'id' => $id, },
+            'content' => encode_json_canonical({
+                    'content' => $content,
+                    'id'      => $id,
+                },
             ),
 
             'headers' => {
@@ -227,45 +239,45 @@ sub store_content {
         },
     );
 
-    if ( !$response->{'success'} ) {
-        croak( $log->criticalf( 'Could not store content for id %s', $id ) );
+    if (!$response->{'success'}) {
+        croak($log->criticalf('Could not store content for id %s', $id));
     }
 }
 
 sub retrieve_content {
-    my ( $self, $id ) = @_;
+    my ($self, $id) = @_;
     my $url      = '/retrieve/content?id=' . uri_escape($id);
     my $full_url = $self->base_url . $url;
     my $response = $self->http_client->get($full_url);
 
-    if ( !$response->{'success'} ) {
-        croak( $log->criticalf( 'Could not retrieve content for id %s', $id ) );
+    if (!$response->{'success'}) {
+        croak($log->criticalf('Could not retrieve content for id %s', $id));
     }
 
     return $response->{'content'};
 }
 
 sub remove_location {
-    my ( $self, $id ) = @_;
-    my $url = '/remove/location?id=' . uri_escape($id);
+    my ($self, $id) = @_;
+    my $url      = '/remove/location?id=' . uri_escape($id);
     my $full_url = $self->base_url . $url;
     my $response = $self->http_client->get($full_url);
 
-    if ( !$response->{'success'} ) {
-        croak( $log->criticalf( 'Could not remove %s, url: %s, err: %s', $id, $response->{'url'}, $response->{'reason'}) );
+    if (!$response->{'success'}) {
+        croak($log->criticalf('Could not remove %s, url: %s, err: %s', $id, $response->{'url'}, $response->{'reason'}));
     }
 
     return $response->{'success'};
 }
 
 sub remove_content {
-    my ( $self, $id ) = @_;
-    my $url = '/remove/content?id=' . uri_escape($id);
+    my ($self, $id) = @_;
+    my $url      = '/remove/content?id=' . uri_escape($id);
     my $full_url = $self->base_url . $url;
     my $response = $self->http_client->get($full_url);
 
-    if ( !$response->{'success'} ) {
-        croak( $log->criticalf( 'Could not remove %s, url: %s, err: %s', $id, $response->{'url'}, $response->{'reason'}) );
+    if (!$response->{'success'}) {
+        croak($log->criticalf('Could not remove %s, url: %s, err: %s', $id, $response->{'url'}, $response->{'reason'}));
     }
 
     return $response->{'success'};

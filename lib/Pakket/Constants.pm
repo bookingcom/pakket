@@ -1,4 +1,5 @@
 package Pakket::Constants; ## no critic (Subroutines::ProhibitExportingUndeclaredSubs)
+
 # ABSTRACT: Constants used in Pakket
 
 use v5.22;
@@ -14,7 +15,7 @@ use constant {
     # CATEGORY/PACKAGE                 == latest version, latest release
     # CATEGORY/PACKAGE=VERSION         == Exact version, latest release
     # CATEGORY/PACKAGE=VERSION:RELEASE == Exact version and release
-    'PAKKET_PACKAGE_SPEC'  => qr{
+    'PAKKET_PACKAGE_SPEC' => qr{
         ^
         ( [^/]+ )       # category
         /

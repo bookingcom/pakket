@@ -1,4 +1,5 @@
 package Pakket::Scaffolder::Perl::CPANfile;
+
 # ABSTRACT: Scaffolding Perl cpanfile reader
 
 use v5.22;
@@ -21,10 +22,9 @@ has 'prereq_specs' => (
 
 sub _build_prereq_specs {
     my $self = shift;
-    my $file = Module::CPANfile->load( $self->cpanfile );
+    my $file = Module::CPANfile->load($self->cpanfile);
     return $file->prereq_specs;
 }
-
 
 __PACKAGE__->meta->make_immutable;
 no Moose;

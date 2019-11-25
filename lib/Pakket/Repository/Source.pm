@@ -1,4 +1,5 @@
 package Pakket::Repository::Source;
+
 # ABSTRACT: A source repository
 
 use v5.22;
@@ -11,23 +12,23 @@ use Path::Tiny;
 extends qw< Pakket::Repository >;
 
 sub retrieve_package_source {
-    my ( $self, $package ) = @_;
-    return $self->retrieve_package_file( 'source', $package );
+    my ($self, $package) = @_;
+    return $self->retrieve_package_file('source', $package);
 }
 
 sub store_package_source {
-    my ( $self, $package, $source_path ) = @_;
+    my ($self, $package, $source_path) = @_;
 
     $log->debug("Adding $source_path to file");
     my $file = $self->freeze_location($source_path);
 
     $log->debug("Storing $file");
-    $self->store_location( $package->id, $file );
+    $self->store_location($package->id, $file);
 }
 
 sub remove_package_source {
-    my ( $self, $package ) = @_;
-    return $self->remove_package_file( 'source', $package );
+    my ($self, $package) = @_;
+    return $self->remove_package_file('source', $package);
 }
 
 no Moose;

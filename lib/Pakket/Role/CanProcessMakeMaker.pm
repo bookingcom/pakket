@@ -1,4 +1,5 @@
 package Pakket::Role::CanProcessMakeMaker;
+
 # ABSTRACT: A role providing ability to process raw sourcess with MakeMaker
 
 use v5.22;
@@ -6,8 +7,8 @@ use Moose::Role;
 
 use Carp;
 use File::chdir;
-use Path::Tiny   qw< path >;
-use Log::Any     qw< $log >;
+use Path::Tiny qw< path >;
+use Log::Any qw< $log >;
 
 use Pakket::Downloader::ByUrl;
 
@@ -21,8 +22,8 @@ sub process_makefile_pl {
     $log->debugf("Processing sources with 'make dist'");
     {
         local $CWD = $sources->absolute;
-        my $path =$ENV{'PATH_ORIG'} // $ENV{'PATH'} // '';
-        my $lib  =$ENV{'PERL5LIB_ORIG'} // $ENV{'PERL5LIB'} // '';
+        my $path = $ENV{'PATH_ORIG'}     // $ENV{'PATH'}     // '';
+        my $lib  = $ENV{'PERL5LIB_ORIG'} // $ENV{'PERL5LIB'} // '';
         $self->_exec("PATH=$path PERL5LIB=$lib perl -f Makefile.PL");
         $self->_exec("PATH=$path PERL5LIB=$lib make dist DISTVNAME=new_dist");
         my $download = Pakket::Downloader::ByUrl::create($package->name, 'file://new_dist.tar.gz');

@@ -1,14 +1,15 @@
 package Pakket::Role::ParallelInstaller;
+
 # ABSTRACT: Enables parallel installation
 
 use v5.22;
 use Moose::Role;
 
-use Carp        qw < croak >;
+use Carp qw < croak >;
 use Data::Consumer::Dir;
-use List::Util  qw< any min >;
-use Log::Any    qw< $log >;
-use POSIX       ':sys_wait_h';
+use List::Util qw< any min >;
+use Log::Any qw< $log >;
+use POSIX ':sys_wait_h';
 use Time::HiRes qw< time usleep >;
 
 use constant {
@@ -20,8 +21,8 @@ use constant {
 };
 
 has 'jobs' => (
-    'is'        => 'ro',
-    'isa'       => 'Maybe[Int]',
+    'is'  => 'ro',
+    'isa' => 'Maybe[Int]',
 );
 
 has 'is_child' => (
@@ -82,16 +83,14 @@ sub spawn {
 
     my $subprocs = $self->_subproc_count;
     $subprocs and $log->infof('Spawning %s additional processes', $subprocs);
-    for ( 1 .. $subprocs ) {
+    for (1 .. $subprocs) {
         my $child = fork;
-        if ( not defined $child ) {
+        if (not defined $child) {
             croak "Fork failed: $!";
-        }
-        elsif ($child) {
-            push @{ $self->{'_children'} }, $child;
-            sleep(NEXT_FORK_WAIT_SEC());
-        }
-        else {
+        } elsif ($child) {
+            push @{$self->{'_children'}}, $child;
+            sleep (NEXT_FORK_WAIT_SEC());
+        } else {
             $self->{'is_child'} = 1;
             return;
         }
@@ -103,11 +102,11 @@ sub spawn {
 sub wait_all_children {
     my ($self) = @_;
 
-    $self->is_child and exit(0);
+    $self->is_child and exit (0);
 
-    my @children = @{ $self->_children };
+    my @children = @{$self->_children};
     while (@children) {
-        @children = grep { 0 == waitpid( $_, WNOHANG ) } @children;
+        @children = grep {0 == waitpid ($_, WNOHANG)} @children;
         usleep(SLEEP_TIME_USEC());
     }
 
@@ -123,19 +122,19 @@ sub is_parallel {
 }
 
 sub push_to_data_consumer {
-    my ( $self, $pkg, $opts ) = @_;
+    my ($self, $pkg, $opts) = @_;
 
     my $pkg_esc  = _escape_filename($pkg);
-    my $filename = sprintf( '%014d-%s', time * TIME_SHIFT(), $pkg_esc );
+    my $filename = sprintf ('%014d-%s', time * TIME_SHIFT(), $pkg_esc);
     my $dir      = $self->data_consumer_dir;
 
     # if it's already in the queue, return
-    my @dirs = grep -d, map { $dir->child($_) } qw(unprocessed working failed processed);
-    return if grep -e, map { $_->children(qr/\d{14}-\Q$pkg_esc\E$/ms) } @dirs; ## no critic (Perl::Critic::Policy::BuiltinFunctions::ProhibitBooleanGrep)
+    my @dirs = grep -d, map {$dir->child($_)} qw(unprocessed working failed processed);
+    return if grep -e, map {$_->children(qr/\d{14}-\Q$pkg_esc\E$/ms)} @dirs; ## no critic (Perl::Critic::Policy::BuiltinFunctions::ProhibitBooleanGrep)
 
     my $as_prereq = int !!$opts->{'as_prereq'};
 
-    $dir->child( 'unprocessed' => $filename )->spew( $as_prereq . $pkg );
+    $dir->child('unprocessed' => $filename)->spew($as_prereq . $pkg);
     $self->{'_to_process'}++;
 
     return;
@@ -144,7 +143,7 @@ sub push_to_data_consumer {
 sub _subproc_count {
     my ($self) = @_;
 
-    return min(MAX_SUBPROCESSES(), $self->jobs - 1, abs int($self->_to_process / PACKAGES_PER_SUBPROCESS()));
+    return min(MAX_SUBPROCESSES(), $self->jobs - 1, abs int ($self->_to_process / PACKAGES_PER_SUBPROCESS()));
 }
 
 sub _escape_filename {

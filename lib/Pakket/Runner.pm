@@ -1,4 +1,5 @@
 package Pakket::Runner;
+
 # ABSTRACT: Run Pakket-based applications
 
 use v5.22;
@@ -13,7 +14,7 @@ has 'active_path' => (
 );
 
 sub run {
-    my ( $self, @args ) = @_;
+    my ($self, @args) = @_;
 
     my $active_path = $self->active_path;
 

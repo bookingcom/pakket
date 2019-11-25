@@ -1,4 +1,5 @@
 package Pakket::Role::Perl::BootstrapModules;
+
 # ABSTRACT: role to provide Perl's list of bootstrap modules (distributions)
 
 use v5.22;
@@ -12,11 +13,7 @@ has 'perl_bootstrap_modules' => (
     'is'      => 'ro',
     'isa'     => 'ArrayRef',
     'default' => sub {
-        [
-            'ExtUtils-MakeMaker',
-            'Module-Build',
-            'Module-Build-WithXSpp',
-        ]
+        ['ExtUtils-MakeMaker', 'Module-Build', 'Module-Build-WithXSpp']
     },
 );
 

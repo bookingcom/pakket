@@ -1,5 +1,6 @@
 !bin
 /.build/
+/.tidyall.d/
 /Pakket-*
 /build*
 /fatlib

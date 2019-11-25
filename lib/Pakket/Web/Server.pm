@@ -1,4 +1,5 @@
 package Pakket::Web::Server;
+
 # ABSTRACT: Start a Pakket server
 
 use v5.22;
@@ -23,9 +24,7 @@ sub run {
     my $app    = Pakket::Web::App->to_app;
     my $runner = Plack::Runner->new();
 
-    my @runner_opts = (
-        $self->has_port ? ( '--port', $self->port ) : (),
-    );
+    my @runner_opts = ($self->has_port ? ('--port', $self->port) : ());
 
     $runner->parse_options(@runner_opts);
     return $runner->run($app);

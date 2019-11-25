@@ -1,4 +1,5 @@
 package Pakket::Role::HasParcelRepo;
+
 # ABSTRACT: Provide parcel repo support
 
 use v5.22;

@@ -1,4 +1,5 @@
 package Pakket::Utils::Repository;
+
 # ABSTRACT: Repository utility functions
 
 use v5.22;
@@ -18,11 +19,11 @@ my %file_ext = (
 );
 
 sub gen_repo_config {
-    my ( $self, $type, $directory ) = @_;
+    my ($self, $type, $directory) = @_;
     $directory or return;
 
-    if ( $directory =~ m{^(https?)://([^/:]+):?([^/]+)?(/.*)?$} ) {
-        my ( $protocol, $host, $port, $base_path ) = ( $1, $2, $3, $4 );
+    if ($directory =~ m{^(https?)://([^/:]+):?([^/]+)?(/.*)?$}) {
+        my ($protocol, $host, $port, $base_path) = ($1, $2, $3, $4);
         $port or $port = $protocol eq 'http' ? 80 : 443;
 
         return [

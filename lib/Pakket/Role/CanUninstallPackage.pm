@@ -1,18 +1,19 @@
 package Pakket::Role::CanUninstallPackage;
+
 # ABSTRACT: A role providing package uninstall functionality
 
 use v5.22;
 use Moose::Role;
-use Path::Tiny   qw< path >;
-use Log::Any     qw< $log >;
+use Path::Tiny qw< path >;
+use Log::Any qw< $log >;
 
 sub uninstall_package {
-    my ( $self, $info_file, $package ) = @_;
+    my ($self, $info_file, $package) = @_;
 
     my $info = delete $info_file->{'installed_packages'}{$package->{'category'}}{$package->{'name'}};
     $log->debugf("Deleting package %s/%s", $package->{'category'}, $package->{'name'});
 
-    for my $file ( sort @{ $info->{'files'} // [] } ) {
+    for my $file (sort @{$info->{'files'} // []}) {
         delete $info_file->{'installed_files'}{$file};
         my ($file_name) = $file =~ m/\w+\/(.+)/;
         my $path = $self->work_dir->child($file_name);

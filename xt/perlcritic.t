@@ -9,7 +9,7 @@ use Test::More;
 
 eval {
     require Test::Perl::Critic::Progressive;
-    Test::Perl::Critic::Progressive::set_critic_args('-profile' => 'xt/perlcriticrc');
+    Test::Perl::Critic::Progressive::set_critic_args('-profile' => 'xt/.perlcriticrc');
     1;
 } or do {
     plan('skip_all' => 'T::P::C::Progressive required for this test');

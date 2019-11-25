@@ -1,4 +1,5 @@
 package Pakket::Log;
+
 # ABSTRACT: A logger for Pakket
 
 use v5.22;
@@ -7,14 +8,14 @@ use warnings;
 use parent 'Exporter';
 use Carp;
 use IO::Interactive;
-use JSON::MaybeXS         qw< encode_json >;
-use Log::Any              qw< $log >;
+use JSON::MaybeXS qw< encode_json >;
+use Log::Any qw< $log >;
 use Log::Dispatch;
-use Path::Tiny            qw< path >;
+use Path::Tiny qw< path >;
 use Sys::Syslog;
 use Term::GentooFunctions qw< ebegin eend >;
-use Time::Format          qw< %time >;
-use Time::HiRes           qw< gettimeofday >;
+use Time::Format qw< %time >;
+use Time::HiRes qw< gettimeofday >;
 use Try::Tiny;
 
 use constant {
@@ -23,7 +24,7 @@ use constant {
     'NOTICE_LOG_LEVEL' => 1,
 
     'TERM_SIZE_MAX'     => 80,
-    'TERM_EXTRA_SPACES' => ( length(' * ') + length(' [ ok ]') ),
+    'TERM_EXTRA_SPACES' => (length (' * ') + length (' [ ok ]')),
 };
 
 # Just so I remember it:
@@ -49,18 +50,15 @@ sub send_data {
 }
 
 sub build_logger {
-    my ( $class, $verbosity, $path, $force_raw ) = @_;
+    my ($class, $verbosity, $path, $force_raw) = @_;
 
-    my @outputs = (
-        $class->_cli_logger($verbosity, $force_raw),
-        $class->_syslog_logger(),
-    );
+    my @outputs = ($class->_cli_logger($verbosity, $force_raw), $class->_syslog_logger());
 
     if ($path) {
         my $file = path($path);
-        my $dir = $file->parent();
+        my $dir  = $file->parent();
         if (($file->exists && -w $file) || ($dir->exists && -w $dir)) {
-            push(@outputs, $class->_file_logger($file->stringify));
+            push (@outputs, $class->_file_logger($file->stringify));
         }
     }
 
@@ -70,10 +68,10 @@ sub build_logger {
 }
 
 sub _cli_logger {
-    my ( $class, $verbosity, $force_raw ) = @_;
+    my ($class, $verbosity, $force_raw) = @_;
 
     return [
-        IO::Interactive::is_interactive() && !$force_raw ?  'Screen::Gentoo' : ('Screen', 'stderr' => 0),
+        IO::Interactive::is_interactive() && !$force_raw ? 'Screen::Gentoo' : ('Screen', 'stderr' => 0),
         'min_level' => $class->_verbosity_to_loglevel($verbosity),
         'newline'   => 1,
         'utf8'      => 1,
@@ -85,10 +83,12 @@ sub _syslog_logger {
         'Syslog',
         'min_level' => 'warning',
         'ident'     => 'pakket',
-        'callbacks' => [ sub {
-            my %data = @_;
-            return encode_json(\%data);
-        } ],
+        'callbacks' => [
+            sub {
+                my %data = @_;
+                return encode_json(\%data);
+            }
+        ],
     ];
 }
 
@@ -113,32 +113,32 @@ sub _file_logger {
         'filename'  => $file,
         'newline'   => 1,
         'mode'      => '>>',
-        'callbacks' => [ sub {
-            my %data = @_;
-            my $localtime = gettimeofday;
-            my $timestr = try {
-                $time{'yyyy-mm-dd hh:mm:ss.mmm', $localtime};
-            } catch {
-                $time{'yyyy-mm-dd hh:mm:ss.mmm', int($localtime)};
-            };
-            return sprintf '[%s] %s: %s', $timestr, $data{'level'}, $data{'message'};
-        } ],
+        'callbacks' => [
+            sub {
+                my %data      = @_;
+                my $localtime = gettimeofday;
+                my $timestr   = try {
+                    $time{'yyyy-mm-dd hh:mm:ss.mmm', $localtime};
+                } catch {
+                    $time{'yyyy-mm-dd hh:mm:ss.mmm', int ($localtime)};
+                };
+                return sprintf '[%s] %s: %s', $timestr, $data{'level'}, $data{'message'};
+            }
+        ],
     ];
 }
 
 sub _verbosity_to_loglevel {
-    my ( $class, $verbosity ) = @_;
+    my ($class, $verbosity) = @_;
 
     $verbosity ||= 0;
-    $verbosity += INFO_LOG_LEVEL(); # set this log level as default one
+    $verbosity += INFO_LOG_LEVEL();                                            # set this log level as default one
 
-    if ( $verbosity >= DEBUG_LOG_LEVEL() ) {
+    if ($verbosity >= DEBUG_LOG_LEVEL()) {
         return 'debug';
-    }
-    elsif ( $verbosity == INFO_LOG_LEVEL() ) {
+    } elsif ($verbosity == INFO_LOG_LEVEL()) {
         return 'info';
-    }
-    elsif ( $verbosity == NOTICE_LOG_LEVEL() ) {
+    } elsif ($verbosity == NOTICE_LOG_LEVEL()) {
         return 'notice';
     }
 

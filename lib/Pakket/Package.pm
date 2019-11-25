@@ -1,4 +1,5 @@
 package Pakket::Package;
+
 # ABSTRACT: An object representing a package
 
 use v5.22;
@@ -11,41 +12,41 @@ use version 0.77;
 
 with qw< Pakket::Role::BasicPackageAttrs >;
 
-has [ qw< name category version release > ] => (
+has [qw< name category version release >] => (
     'is'       => 'ro',
     'isa'      => 'Str',
     'required' => 1,
 );
 
 has [qw<source distribution path>] => (
-    'is'       => 'ro',
-    'isa'      => 'Maybe[Str]',
+    'is'  => 'ro',
+    'isa' => 'Maybe[Str]',
 );
 
 has [qw<patch pre_manage>] => (
-    'is'      => 'ro',
-    'isa'     => 'Maybe[ArrayRef]',
+    'is'  => 'ro',
+    'isa' => 'Maybe[ArrayRef]',
 );
 
 has [qw<skip manage>] => (
-    'is'      => 'ro',
-    'isa'     => 'Maybe[HashRef]',
+    'is'  => 'ro',
+    'isa' => 'Maybe[HashRef]',
 );
 
 has 'is_bootstrap' => (
-    'is'      => 'ro',
-    'isa'     => 'Maybe[Bool]',
+    'is'  => 'ro',
+    'isa' => 'Maybe[Bool]',
 );
 
 has [qw<build_opts bundle_opts>] => (
     'is'      => 'ro',
     'isa'     => 'Maybe[HashRef]',
-    'default' => sub { {} },
+    'default' => sub {{}},
 );
 
 has 'prereqs' => (
-    'is'      => 'ro',
-    'isa'     => 'Maybe[HashRef]',
+    'is'  => 'ro',
+    'isa' => 'Maybe[HashRef]',
 );
 
 # FIXME: GH #73 will make this more reasonable
@@ -75,31 +76,31 @@ sub BUILD {
 
     if ($self->category eq 'perl') {
         my $ver = version->new($self->version);
-        if ($ver->is_qv) {$ver = version->new($ver->normal)};
+        if ($ver->is_qv) {$ver = version->new($ver->normal)}
         $self->{version} = $ver->stringify();
     }
 }
 
 sub _build_configure_prereqs {
-    my $self    = shift;
+    my $self = shift;
     return $self->phase_prereqs('configure');
 }
 
 sub _build_test_prereqs {
-    my $self    = shift;
+    my $self = shift;
     return $self->phase_prereqs('test');
 }
 
 sub _build_runtime_prereqs {
-    my $self    = shift;
+    my $self = shift;
     return $self->phase_prereqs('runtime');
 }
 
 sub phase_prereqs {
-    my ( $self, $phase ) = @_;
+    my ($self, $phase) = @_;
     my $prereqs = $self->prereqs;
     return +{
-        map { $_ => $prereqs->{$_}{$phase} }
+        map {$_ => $prereqs->{$_}{$phase}}
             keys %{$prereqs},
     };
 }
@@ -109,16 +110,18 @@ sub spec {
 
     my $result = {
         'Package' => {
+
             # This is so we don't see is_bootstrap in spec
             # if not required -- SX
-            ( 'is_bootstrap' => 1 )x!! $self->is_bootstrap,
+            ('is_bootstrap' => 1) x !!$self->is_bootstrap,
 
-            map +( $_ => $self->$_ ), qw<category name version release>,
+            map +($_ => $self->$_), qw<category name version release>,
         },
 
         'Prereqs' => $self->prereqs,
 
-        map +( $_ => $self->$_ ), qw<build_opts bundle_opts>,
+        map +($_ => $self->$_),
+        qw<build_opts bundle_opts>,
     };
     $result->{Package}{source} = $self->{source} if $self->{source};
 
@@ -126,12 +129,12 @@ sub spec {
 }
 
 sub new_from_spec {
-    my ( $class, $spec ) = @_;
+    my ($class, $spec) = @_;
 
     my %package_details = (
-        %{ $spec->{'Package'} },
-        'prereqs'      => $spec->{'Prereqs'}    || {},
-        'build_opts'   => $spec->{'build_opts'} || {},
+        %{$spec->{'Package'}},
+        'prereqs'    => $spec->{'Prereqs'}    || {},
+        'build_opts' => $spec->{'build_opts'} || {},
         'is_bootstrap' => !!$spec->{'is_bootstrap'},
     );
 

@@ -1,4 +1,5 @@
 package Pakket::Repository;
+
 # ABSTRACT: Build in-memory representation of repo
 
 use v5.22;
@@ -10,7 +11,7 @@ use Archive::Tar;
 use Archive::Extract;
 use File::chdir;
 use Carp ();
-use Log::Any      qw< $log >;
+use Log::Any qw< $log >;
 use Pakket::Types qw< PakketRepositoryBackend >;
 use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
 use Pakket::Versioning;
@@ -21,19 +22,18 @@ has 'backend' => (
     'coerce'  => 1,
     'lazy'    => 1,
     'builder' => '_build_backend',
-    'handles' => [ qw<
-        all_object_ids all_object_ids_by_name has_object
-        store_content  retrieve_content  remove_content
-        store_location retrieve_location remove_location
-    > ],
+    'handles' => [
+        qw<
+            all_object_ids all_object_ids_by_name has_object
+            store_content  retrieve_content  remove_content
+            store_location retrieve_location remove_location
+            >
+    ],
 );
 
 sub _build_backend {
     my $self = shift;
-    Carp::croak( $log->critical(
-        'You did not specify a backend '
-      . '(using parameter or URI string)',
-    ) );
+    Carp::croak($log->critical('You did not specify a backend ' . '(using parameter or URI string)'));
 }
 
 sub BUILD {
@@ -42,17 +42,17 @@ sub BUILD {
 }
 
 sub retrieve_package_file {
-    my ( $self, $type, $package ) = @_;
-    my $file = $self->retrieve_location( $package->id );
+    my ($self, $type, $package) = @_;
+    my $file = $self->retrieve_location($package->id);
 
-    if ( !$file ) {
-        Carp::croak( $log->criticalf(
-            'We do not have the %s for package %s',
-            $type, $package->full_name,
-        ) );
+    if (!$file) {
+        Carp::croak($log->criticalf('We do not have the %s for package %s', $type, $package->full_name));
     }
 
-    my $dir = Path::Tiny->tempdir( 'CLEANUP' => 1, TEMPLATE => "$$-" . ('X' x 10) );
+    my $dir = Path::Tiny->tempdir(
+        'CLEANUP' => 1,
+        TEMPLATE  => "$$-" . ('X' x 10)
+    );
 
     # Prefer system 'tar' instead of 'in perl' archive extractor,
     # because 'tar' memory consumption is very low,
@@ -60,7 +60,10 @@ sub retrieve_package_file {
     # and we got the error "Out of memory" on KVMs
     $Archive::Extract::PREFER_BIN = 1;
 
-    my $arch = Archive::Extract->new('archive'=>$file->stringify, 'type'=>'tgz');
+    my $arch = Archive::Extract->new(
+        'archive' => $file->stringify,
+        'type'    => 'tgz'
+    );
 
     unless ($arch->extract('to' => $dir)) {
         Carp::croak($log->criticalf("[%s] Unable to extract %s to %s", $!, "$file", "$dir"));
@@ -70,22 +73,19 @@ sub retrieve_package_file {
 }
 
 sub remove_package_file {
-    my ( $self, $type, $package ) = @_;
-    my $file = $self->retrieve_location( $package->id );
+    my ($self, $type, $package) = @_;
+    my $file = $self->retrieve_location($package->id);
 
-    if ( !$file ) {
-        Carp::croak( $log->criticalf(
-            'We do not have the %s for package %s',
-            $type, $package->full_name,
-        ) );
+    if (!$file) {
+        Carp::croak($log->criticalf('We do not have the %s for package %s', $type, $package->full_name));
     }
 
     $log->debug("Removing $type package");
-    $self->remove_location( $package->id );
+    $self->remove_location($package->id);
 }
 
 sub latest_version_release {
-    my ( $self, $category, $name, $req_string ) = @_;
+    my ($self, $category, $name, $req_string) = @_;
 
     # This will also convert '0' to '>= 0'
     # (If we want to disable it, we just can just //= instead)
@@ -93,56 +93,45 @@ sub latest_version_release {
 
     # Category -> Versioning type class
     my %types = (
-        'perl' => 'Perl',
+        'perl'   => 'Perl',
         'native' => 'Perl',
     );
 
     my %versions;
-    foreach my $object_id ( @{ $self->all_object_ids } ) {
-        my ( $my_category, $my_name, $my_version, $my_release ) =
-            $object_id =~ PAKKET_PACKAGE_SPEC();
+    foreach my $object_id (@{$self->all_object_ids}) {
+        my ($my_category, $my_name, $my_version, $my_release) = $object_id =~ PAKKET_PACKAGE_SPEC();
 
         # Ignore what is not ours
         $category eq $my_category and $name eq $my_name
             or next;
 
         # Add the version
-        push @{ $versions{$my_version} }, $my_release;
+        push @{$versions{$my_version}}, $my_release;
     }
 
     my $versioner = Pakket::Versioning->new(
         'type' => $types{$category},
     );
 
-    my $latest_version = $versioner->latest(
-        $category, $name, $req_string, keys %versions,
-    ) or Carp::croak(
-        $log->criticalf(
-            'Could not analyze %s/%s to find latest version', $category,
-            $name,
-        ),
-    );
+    my $latest_version = $versioner->latest($category, $name, $req_string, keys %versions)
+        or Carp::croak($log->criticalf('Could not analyze %s/%s to find latest version', $category, $name));
 
     # return the latest version and latest release available for this version
-    return [
-        $latest_version,
-        ( sort @{ $versions{$latest_version} } )[-1],
-    ];
+    return [$latest_version, (sort @{$versions{$latest_version}})[-1]];
 }
 
 sub freeze_location {
-    my ( $self, $orig_path ) = @_;
+    my ($self, $orig_path) = @_;
 
     my $base_path = $orig_path;
     my @files;
 
-    if ( $orig_path->is_file ) {
+    if ($orig_path->is_file) {
         $base_path = $orig_path->basename;
         push @files, $orig_path;
-    } elsif ( $orig_path->is_dir ) {
+    } elsif ($orig_path->is_dir) {
         $orig_path->children
-            or Carp::croak(
-            $log->critical("Cannot freeze empty directory ($orig_path)") );
+            or Carp::croak($log->critical("Cannot freeze empty directory ($orig_path)"));
 
         $orig_path->visit(
             sub {
@@ -151,11 +140,10 @@ sub freeze_location {
 
                 push @files, $path;
             },
-            { 'recurse' => 1 },
+            {'recurse' => 1},
         );
     } else {
-        Carp::croak(
-            $log->criticalf( "Unknown location type: %s", "$orig_path" ) );
+        Carp::croak($log->criticalf("Unknown location type: %s", "$orig_path"));
     }
 
     @files = map {$_->relative($base_path)->stringify} @files;
@@ -163,12 +151,12 @@ sub freeze_location {
     # Write and compress
     my $arch = Archive::Tar->new();
     {
-        local $CWD = $base_path; # chdir, to use relative paths in archive
+        local $CWD = $base_path;                                               # chdir, to use relative paths in archive
         $arch->add_files(@files);
     }
     my $file = Path::Tiny->tempfile();
     $log->debug("Writing archive as $file");
-    $arch->write( $file->stringify, COMPRESS_GZIP );
+    $arch->write($file->stringify, COMPRESS_GZIP);
 
     return $file;
 }

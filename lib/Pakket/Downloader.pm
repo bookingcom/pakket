@@ -1,4 +1,5 @@
 package Pakket::Downloader;
+
 # ABSTRACT: Download sources supporting different protocols
 
 use v5.22;
@@ -7,10 +8,10 @@ use MooseX::StrictConstructor;
 use Archive::Any;
 use Archive::Tar;
 use File::chdir;
-use Carp              qw< croak >;
-use Path::Tiny        qw< path >;
+use Carp qw< croak >;
+use Path::Tiny qw< path >;
 use Types::Path::Tiny qw< Path >;
-use Log::Any          qw< $log >;
+use Log::Any qw< $log >;
 
 has 'package_name' => (
     'is'       => 'ro',
@@ -35,14 +36,14 @@ has 'tempdir' => (
 sub to_file {
     my ($self) = @_;
 
-    $log->debugf( 'Downloading file from %s', $self->url );
+    $log->debugf('Downloading file from %s', $self->url);
     return $self->download_to_file;
 }
 
 sub to_dir {
     my ($self) = @_;
 
-    $log->debugf( 'Downloading and extracting from %s to %s', $self->url,  $self->tempdir->absolute->stringify);
+    $log->debugf('Downloading and extracting from %s to %s', $self->url, $self->tempdir->absolute->stringify);
     return $self->download_to_dir;
 }
 
@@ -57,7 +58,7 @@ sub compress {
 
             push @files, $path;
         },
-        { 'recurse' => 1 },
+        {'recurse' => 1},
     );
     @files = map {$_->relative($base_path)->stringify} @files;
 
@@ -69,17 +70,17 @@ sub compress {
 
     my $file = Path::Tiny->tempfile();
     $log->debug("Writing archive as $file");
-    $arch->write( $file->stringify, COMPRESS_GZIP );
+    $arch->write($file->stringify, COMPRESS_GZIP);
 
     return $file;
 }
 
 sub decompress {
-    my ( $self, $file ) = @_;
+    my ($self, $file) = @_;
 
     my $archive = Archive::Any->new($file);
-    if ( $archive->is_naughty ) {
-        Carp::croak( $log->critical("Suspicious archive ($file)") );
+    if ($archive->is_naughty) {
+        Carp::croak($log->critical("Suspicious archive ($file)"));
     }
 
     my $dir = $self->tempdir;
@@ -92,7 +93,8 @@ sub decompress {
     # from an archive might return an empty directory listing
     # or none, which confuses us
     my @files = $dir->children();
-    if ( @files == 1 && $files[0]->is_dir ) {
+    if (@files == 1 && $files[0]->is_dir) {
+
         # Polite
         my @inner = $files[0]->children();
         foreach my $infile (@inner) {
@@ -108,7 +110,10 @@ sub decompress {
 
 sub _default_tempdir {
     my ($self) = @_;
-    return Path::Tiny->tempdir( 'CLEANUP' => 1, 'TEMPLATE' => "$$-" . ('X' x 10) );
+    return Path::Tiny->tempdir(
+        'CLEANUP'  => 1,
+        'TEMPLATE' => "$$-" . ('X' x 10)
+    );
 }
 
 __PACKAGE__->meta->make_immutable;

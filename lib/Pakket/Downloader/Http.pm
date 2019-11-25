@@ -1,15 +1,16 @@
 package Pakket::Downloader::Http;
+
 # ABSTRACT: Http downloader specialisation
 
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 
-use Carp                qw< croak >;
+use Carp qw< croak >;
 use HTTP::Tiny;
-use Log::Any            qw< $log >;
-use Path::Tiny          qw< path >;
-use Types::Path::Tiny   qw< Path >;
+use Log::Any qw< $log >;
+use Path::Tiny qw< path >;
+use Types::Path::Tiny qw< Path >;
 
 use namespace::autoclean;
 
@@ -24,9 +25,10 @@ sub download_to_file {
 
     my $file = Path::Tiny->tempfile;
     my $http = HTTP::Tiny->new();
-    my $result = $http->mirror($self->url, $file, {'headers' => {'If-Modified-Since' => 'Thu, 1 Jan 1970 01:00:00 GMT'}});
+    my $result
+        = $http->mirror($self->url, $file, {'headers' => {'If-Modified-Since' => 'Thu, 1 Jan 1970 01:00:00 GMT'}});
     if (!$result->{'success'}) {
-        Carp::croak( $log->critical("Can't download sources for ", $self->package_name) );
+        Carp::croak($log->critical("Can't download sources for ", $self->package_name));
     }
     return $file;
 }

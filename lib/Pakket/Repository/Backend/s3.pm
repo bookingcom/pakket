@@ -1,4 +1,5 @@
 package Pakket::Repository::Backend::s3; ## no critic (NamingConventions::Capitalization)
+
 # ABSTRACT: A remote S3-compatible backend repository
 
 use v5.22;
@@ -8,32 +9,32 @@ use warnings;
 use Moose;
 use MooseX::StrictConstructor;
 
-use Carp              qw< croak >;
-use JSON::MaybeXS     qw< decode_json >;
-use Log::Any          qw< $log >;
+use Carp qw< croak >;
+use JSON::MaybeXS qw< decode_json >;
+use Log::Any qw< $log >;
 use Net::Amazon::S3;
 use Net::Amazon::S3::Client;
 use Net::Amazon::S3::Client::Object;
-use Path::Tiny        qw< path >;
+use Path::Tiny qw< path >;
 use Try::Tiny;
-use Time::HiRes       qw< gettimeofday >;
+use Time::HiRes qw< gettimeofday >;
 
 use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
 
 has 's3' => (
-    'is'       => 'ro',
-    'isa'      => 'Net::Amazon::S3::Client',
-    'lazy'     => 1,
-    'clearer'  => 'clear_client',
-    'builder'  => '_build_s3_client',
+    'is'      => 'ro',
+    'isa'     => 'Net::Amazon::S3::Client',
+    'lazy'    => 1,
+    'clearer' => 'clear_client',
+    'builder' => '_build_s3_client',
 );
 
 has 's3_bucket' => (
-    'is'       => 'rw',
-    'isa'      => 'Net::Amazon::S3::Client::Bucket',
-    'lazy'     => 1,
-    'clearer'  => 'clear_bucket',
-    'builder'  => '_build_s3_bucket',
+    'is'      => 'rw',
+    'isa'     => 'Net::Amazon::S3::Client::Bucket',
+    'lazy'    => 1,
+    'clearer' => 'clear_bucket',
+    'builder' => '_build_s3_bucket',
 );
 
 has [qw< host bucket >] => (
@@ -43,17 +44,17 @@ has [qw< host bucket >] => (
 );
 
 has 'index' => (
-    'is'       => 'ro',
-    'isa'      => 'HashRef',
-    'lazy'     => 1,
-    'clearer'  => 'clear_index',
-    'builder'  => '_build_index',
+    'is'      => 'ro',
+    'isa'     => 'HashRef',
+    'lazy'    => 1,
+    'clearer' => 'clear_index',
+    'builder' => '_build_index',
 );
 
 has 'last_index_update_time' => (
-    'is'       => 'ro',
-    'isa'      => 'Num',
-    'default'  => sub {gettimeofday()},
+    'is'      => 'ro',
+    'isa'     => 'Num',
+    'default' => sub {gettimeofday()},
 );
 
 has 'file_extension' => (
@@ -113,7 +114,7 @@ sub _build_index {
     my $stream = $self->s3_bucket->list;
     while (!$stream->is_done) {
         foreach my $object ($stream->items) {
-            my ($key) = split(m/$self->{file_extension}$/xms, $object->key);
+            my ($key) = split (m/$self->{file_extension}$/xms, $object->key);
             $index{$key} = $object;
         }
     }
@@ -126,7 +127,7 @@ sub _get_all_object_ids {
     my ($self) = @_;
 
     my @all_object_ids = try {
-        keys %{ $self->index };
+        keys %{$self->index};
     } catch {
         croak($log->criticalf('Could not get remote all_object_ids, reason: %s', $_));
     };
@@ -225,11 +226,16 @@ sub retrieve_location {
     }
 
     my $location = try {
-        my $tmp_file = Path::Tiny->tempfile('pakket-' . ('X' x 10));           ## no critic qw(Perl::Critic::Policy::ValuesAndExpressions::ProhibitMagicNumbers)
+        my $tmp_file = Path::Tiny->tempfile('pakket-' . ('X' x 10)); ## no critic qw(Perl::Critic::Policy::ValuesAndExpressions::ProhibitMagicNumbers)
         $self->index->{$id}->get_filename($tmp_file->absolute->stringify);
         $tmp_file;
     } catch {
-        croak($log->criticalf('Could not retrieve location for id %s, version: %s, reason: %s', $id, "$Pakket::Repository::Backend::s3::VERSION", $_));
+        croak(
+            $log->criticalf(
+                'Could not retrieve location for id %s, version: %s, reason: %s', $id,
+                "$Pakket::Repository::Backend::s3::VERSION",                      $_
+            )
+        );
     };
 
     return $location;

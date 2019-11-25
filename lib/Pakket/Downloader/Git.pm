@@ -1,16 +1,17 @@
 package Pakket::Downloader::Git;
+
 # ABSTRACT: Git downloader specialisation
 
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
 
-use Carp                qw< croak >;
+use Carp qw< croak >;
 use File::Copy::Recursive;
 use Git::Wrapper;
-use Log::Any            qw< $log >;
-use Path::Tiny          qw< path >;
-use Types::Path::Tiny   qw< Path >;
+use Log::Any qw< $log >;
+use Path::Tiny qw< path >;
+use Types::Path::Tiny qw< Path >;
 use URI::Escape;
 
 use namespace::autoclean;
@@ -31,7 +32,7 @@ sub BUILD {
     my ($self) = @_;
 
     ($self->{'url'}, $self->{'folder'}) = split m/;f=/, $self->url;
-    ($self->{'url'}, $self->{'commit'}) = split m/#/, $self->url;
+    ($self->{'url'}, $self->{'commit'}) = split m/#/,   $self->url;
     $self->{'url'} =~ s|^git://||;
     $self->{'url'} =~ s|^git[+-]||;
 
@@ -63,13 +64,13 @@ sub download_to_file {
 sub download_to_dir {
     my ($self) = @_;
 
-    $log->debugf( 'Processing git repo %s with commit %s', $self->url, $self->commit // '' );
+    $log->debugf('Processing git repo %s with commit %s', $self->url, $self->commit // '');
     my $repo = Git::Wrapper->new($self->tempdir->absolute);
     $repo->clone($self->url, $self->tempdir->absolute);
     $self->commit and $repo->checkout(qw/--force --no-track -B pakket/, $self->commit);
 
     if ($self->folder) {
-        my $local_folder = Path::Tiny->tempdir( 'CLEANUP' => 1 );
+        my $local_folder = Path::Tiny->tempdir('CLEANUP' => 1);
         ## no critic (Perl::Critic::Policy::Variables::ProhibitPackageVars)
         $File::Copy::Recursive::CopyLink = 0;
         File::Copy::Recursive::dircopy($self->tempdir->child($self->folder), $local_folder);

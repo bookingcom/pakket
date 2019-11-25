@@ -1,20 +1,21 @@
 package Pakket::Downloader::File;
+
 # ABSTRACT: Local downloader specialisation
 
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
-use Path::Tiny        qw< path >;
+use Path::Tiny qw< path >;
 use Types::Path::Tiny qw< Path >;
-use Carp              qw< croak >;
-use Log::Any          qw< $log >;
+use Carp qw< croak >;
+use Log::Any qw< $log >;
 use namespace::autoclean;
 
 extends qw< Pakket::Downloader >;
 
 sub BUILD {
     my ($self) = @_;
-    (undef, $self->{url}) = split('file://', $self->url);
+    (undef, $self->{url}) = split ('file://', $self->url);
 }
 
 sub download_to_file {

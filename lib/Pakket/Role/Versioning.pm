@@ -1,4 +1,5 @@
 package Pakket::Role::Versioning;
+
 # ABSTRACT: A Versioning role
 
 use v5.22;

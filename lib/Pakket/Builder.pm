@@ -1,15 +1,16 @@
 package Pakket::Builder;
+
 # ABSTRACT: Build pakket packages
 
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
-use Carp                      qw< croak >;
-use Path::Tiny                qw< path        >;
-use File::Copy::Recursive     qw< dircopy     >;
+use Carp qw< croak >;
+use Path::Tiny qw< path        >;
+use File::Copy::Recursive qw< dircopy     >;
 use Algorithm::Diff::Callback qw< diff_hashes >;
-use Types::Path::Tiny         qw< Path >;
-use Log::Any                  qw< $log >;
+use Types::Path::Tiny qw< Path >;
+use Log::Any qw< $log >;
 use version 0.77;
 
 use Pakket::Log;
@@ -70,13 +71,13 @@ has 'keep_build_dir' => (
 has 'is_built' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'default' => sub { +{} },
+    'default' => sub {+{}},
 );
 
 has 'build_files_manifest' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'default' => sub { +{} },
+    'default' => sub {+{}},
 );
 
 has 'builders' => (
@@ -115,7 +116,7 @@ has 'installer' => (
 has 'installer_cache' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'default' => sub { +{} },
+    'default' => sub {+{}},
 );
 
 has 'bootstrapping' => (
@@ -127,7 +128,7 @@ has 'bootstrapping' => (
 has [qw< requirements overwrite >] => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'default' => sub { +{} },
+    'default' => sub {+{}},
 );
 
 sub _build_bundler {
@@ -139,13 +140,13 @@ sub _build_bundler {
 }
 
 sub build {
-    my ( $self, @queries ) = @_;
-    my %categories = map +( $_->category => 1 ), @queries;
+    my ($self, @queries) = @_;
+    my %categories = map +($_->category => 1), @queries;
 
     $self->_setup_build_dir;
 
-    if ( $self->bootstrapping ) {
-        foreach my $category ( keys %categories ) {
+    if ($self->bootstrapping) {
+        foreach my $category (keys %categories) {
             $self->bootstrap_build($category);
             $log->info('Bootstrapping');
         }
@@ -157,16 +158,16 @@ sub build {
 }
 
 sub DEMOLISH {
-    my $self      = shift;
+    my $self        = shift;
     my $top_pkg_dir = $self->top_pkg_dir;
 
-    if ( !$self->keep_build_dir ) {
+    if (!$self->keep_build_dir) {
         $log->debug("Removing build dir $top_pkg_dir");
 
         # "safe" is false because it might hit files which it does not have
         # proper permissions to delete (example: ZMQ::Constants.3pm)
         # which means it won't be able to remove the directory
-        $top_pkg_dir->remove_tree( { 'safe' => 0 } );
+        $top_pkg_dir->remove_tree({'safe' => 0});
     }
 
     return;
@@ -175,29 +176,29 @@ sub DEMOLISH {
 sub _setup_build_dir {
     my $self = shift;
 
-    $log->debugf( 'Creating pkg dir %s', $self->top_pkg_dir->stringify );
+    $log->debugf('Creating pkg dir %s', $self->top_pkg_dir->stringify);
     $self->top_pkg_dir;
 
     return;
 }
 
 sub bootstrap_build {
-    my ( $self, $category ) = @_;
+    my ($self, $category) = @_;
 
-    my @dists =
-        $category eq 'perl' ? @{ $self->perl_bootstrap_modules } :
+    my @dists = $category eq 'perl' ? @{$self->perl_bootstrap_modules}
+        :
+
         # add more categories here
         ();
 
     @dists or return;
 
     ## no critic qw(BuiltinFunctions::ProhibitComplexMappings Lax::ProhibitComplexMappings::LinesNotStatements)
-    my %dist_reqs = map {;
+    my %dist_reqs = map {
+        ;
         my $name    = $_;
-        my $ver_rel = $self->spec_repo->latest_version_release(
-            $category, $name,
-        );
-        my ( $version, $release ) = @{$ver_rel};
+        my $ver_rel = $self->spec_repo->latest_version_release($category, $name);
+        my ($version, $release) = @{$ver_rel};
 
         $name => Pakket::PackageQuery->new(
             'name'     => $name,
@@ -207,52 +208,41 @@ sub bootstrap_build {
         );
     } @dists;
 
-    foreach my $dist_name ( @dists ) {
+    foreach my $dist_name (@dists) {
         my $dist_req = $dist_reqs{$dist_name};
 
         $self->parcel_repo->has_object($dist_req->id)
             or next;
 
-        $log->debugf(
-            'Skipping: parcel %s already exists',
-            $dist_req->full_name,
-        );
+        $log->debugf('Skipping: parcel %s already exists', $dist_req->full_name);
 
         delete $dist_reqs{$dist_name};
     }
 
-    @dists = grep { $dist_reqs{$_} } @dists;
+    @dists = grep {$dist_reqs{$_}} @dists;
     @dists or return;
 
     # Pass I: bootstrap toolchain - build w/o dependencies
-    for my $dist_name ( @dists ) {
+    for my $dist_name (@dists) {
         my $dist_req = $dist_reqs{$dist_name};
 
-        $log->debugf( 'Bootstrapping: phase I: %s (%s)',
-                       $dist_req->full_name, 'no-deps' );
+        $log->debugf('Bootstrapping: phase I: %s (%s)', $dist_req->full_name, 'no-deps');
 
-        $self->run_build(
-            $dist_req,
-            { 'bootstrapping_1_skip_prereqs' => 1 },
-        );
+        $self->run_build($dist_req, {'bootstrapping_1_skip_prereqs' => 1});
     }
 
     # Pass II: bootstrap toolchain - build dependencies only
-    for my $dist_name ( @dists ) {
+    for my $dist_name (@dists) {
         my $dist_req = $dist_reqs{$dist_name};
 
-        $log->debugf( 'Bootstrapping: phase II: %s (%s)',
-                       $dist_req->full_name, 'deps-only' );
+        $log->debugf('Bootstrapping: phase II: %s (%s)', $dist_req->full_name, 'deps-only');
 
-        $self->run_build(
-            $dist_req,
-            { 'bootstrapping_2_deps_only' => 1 },
-        );
+        $self->run_build($dist_req, {'bootstrapping_2_deps_only' => 1});
     }
 
     # Pass III: bootstrap toolchain - rebuild w/ dependencies
     # XXX: Whoa!
-    my $bootstrap_builder = ref($self)->new(
+    my $bootstrap_builder = ref ($self)->new(
         'parcel_repo'    => $self->parcel_repo,
         'spec_repo'      => $self->spec_repo,
         'source_repo'    => $self->source_repo,
@@ -262,78 +252,76 @@ sub bootstrap_build {
         'bootstrapping'  => 0,
     );
 
-    for my $dist_name ( @dists ) {
+    for my $dist_name (@dists) {
         my $dist_req = $dist_reqs{$dist_name};
 
         # remove the temp (no-deps) parcel
-        $log->debugf( 'Removing %s (no-deps parcel)',
-                       $dist_req->full_name );
+        $log->debugf('Removing %s (no-deps parcel)', $dist_req->full_name);
 
         $self->parcel_repo->remove_package_parcel($dist_req);
 
         # build again with dependencies
 
-        $log->debugf( 'Bootstrapping: phase III: %s (%s)',
-                       $dist_req->full_name, 'full deps' );
+        $log->debugf('Bootstrapping: phase III: %s (%s)', $dist_req->full_name, 'full deps');
 
         $bootstrap_builder->build($dist_req);
     }
 }
 
 sub run_build {
-    my ( $self, $query, $params ) = @_;
+    my ($self, $query, $params) = @_;
     $params //= {};
     my $level             = $params->{'level'}                        || 0;
     my $skip_prereqs      = $params->{'bootstrapping_1_skip_prereqs'} || 0;
     my $bootstrap_prereqs = $params->{'bootstrapping_2_deps_only'}    || 0;
     my $full_name         = $query->full_name;
 
-    $self->builders->{ $query->category }->exclude_packages->{ $query->name }
+    $self->builders->{$query->category}->exclude_packages->{$query->name}
         and return;
 
-    if ( ! $bootstrap_prereqs and defined $self->is_built->{$full_name} ) {
-        $log->debug(
-            "We already built or building $full_name, skipping...",
-        );
+    if (!$bootstrap_prereqs and defined $self->is_built->{$full_name}) {
+        $log->debug("We already built or building $full_name, skipping...");
 
         return;
     }
 
     $self->is_built->{$full_name} = 1;
 
-    $log->infof( '%s Working on %s', '|...' x $level, $query->full_name );
+    $log->infof('%s Working on %s', '|...' x $level, $query->full_name);
 
     # Create a Package instance from the spec
     # using the information we have on it
     my $package_spec = $self->spec_repo->retrieve_package_spec($query);
-    my $package      = Pakket::Package->new_from_spec( +{
-        %{$package_spec},
+    my $package      = Pakket::Package->new_from_spec(
+        +{
+            %{$package_spec},
 
-        # We are dealing with a version which should not be installed
-        # outside of a bootstrap phase, so we're "marking" this package
-        'is_bootstrap' => !!$skip_prereqs,
-    } );
+            # We are dealing with a version which should not be installed
+            # outside of a bootstrap phase, so we're "marking" this package
+            'is_bootstrap' => !!$skip_prereqs,
+        }
+    );
 
     my $top_pkg_dir = $self->top_pkg_dir;
-    my $pkg_dir = $top_pkg_dir->child($self->prefix);
+    my $pkg_dir     = $top_pkg_dir->child($self->prefix);
 
     my $installer = $self->installer;
 
     if ((!$skip_prereqs && !$bootstrap_prereqs) && (($self->{overwrite}{name} // '') ne $package->{name})) {
         my $installer_cache = $self->installer_cache;
         my $bootstrap_cache = {
-            %{ $self->installer_cache },
+            %{$self->installer_cache},
 
             # Phase 3 needs to avoid trying to install
             # the bare minimum toolchain (Phase 1)
-            $query->category => { $package->name => $package->version },
+            $query->category => {$package->name => $package->version},
         };
 
         my $successfully_installed = $installer->try_to_install_package(
             $package,
             $self->use_prefix ? path($self->prefix) : $pkg_dir,
             {
-                'cache'        => ( $self->bootstrapping ? $installer_cache : $bootstrap_cache ),
+                'cache'        => ($self->bootstrapping ? $installer_cache : $bootstrap_cache),
                 'skip_prereqs' => $skip_prereqs,
             },
         );
@@ -341,36 +329,32 @@ sub run_build {
         if ($successfully_installed) {
 
             # snapshot_build_dir
-            $self->snapshot_build_dir( $package, $pkg_dir->absolute, 0 );
+            $self->snapshot_build_dir($package, $pkg_dir->absolute, 0);
 
-            $log->infof( '%s Installed %s', '|...' x $level, $query->full_name );
+            $log->infof('%s Installed %s', '|...' x $level, $query->full_name);
 
             # sync build cache with our install cache
             # so we do not accidentally build things
             # that were installed in some recursive iteration
-            foreach my $category ( sort keys %{$installer_cache} ) {
-                foreach my $package_name (
-                    keys %{ $installer_cache->{$category} } )
-                {
-                    my ($ver,$rel) = @{$installer_cache->{$category}{$package_name}};
+            foreach my $category (sort keys %{$installer_cache}) {
+                foreach my $package_name (keys %{$installer_cache->{$category}}) {
+                    my ($ver, $rel) = @{$installer_cache->{$category}{$package_name}};
                     my $pkg = Pakket::PackageQuery->new(
-                                        'category' => $category,
-                                        'name'     => $package_name,
-                                        'version'  => $ver,
-                                        'release'  => $rel,
-                                    );
-                    $self->is_built->{ $pkg->full_name } = 1;
+                        'category' => $category,
+                        'name'     => $package_name,
+                        'version'  => $ver,
+                        'release'  => $rel,
+                    );
+                    $self->is_built->{$pkg->full_name} = 1;
 
                     # save requirements of dependencies
                     my $spec = $self->spec_repo->retrieve_package_spec($pkg);
 
-                    for my $dep_category ( keys %{$spec->{'Prereqs'}} ) {
-                        my $runtime_deps =
-                                $spec->{'Prereqs'}{$dep_category}{'runtime'};
+                    for my $dep_category (keys %{$spec->{'Prereqs'}}) {
+                        my $runtime_deps = $spec->{'Prereqs'}{$dep_category}{'runtime'};
 
                         for my $dep_name (keys %$runtime_deps) {
-                            $self->requirements->{$dep_name}{$pkg->short_name} =
-                                        $runtime_deps->{$dep_name}{'version'};
+                            $self->requirements->{$dep_name}{$pkg->short_name} = $runtime_deps->{$dep_name}{'version'};
                         }
                     }
                 }
@@ -382,24 +366,24 @@ sub run_build {
 
     # recursively build prereqs
     # FIXME: GH #74
-    if ( $bootstrap_prereqs or ! $skip_prereqs ) {
-        foreach my $category ( keys %{ $self->builders } ) {
-            $self->_recursive_build_phase( $package, $category, 'configure', $level+1 );
-            $self->_recursive_build_phase( $package, $category, 'runtime', $level+1 );
+    if ($bootstrap_prereqs or !$skip_prereqs) {
+        foreach my $category (keys %{$self->builders}) {
+            $self->_recursive_build_phase($package, $category, 'configure', $level + 1);
+            $self->_recursive_build_phase($package, $category, 'runtime',   $level + 1);
         }
     }
 
-    $bootstrap_prereqs and return; # done building prereqs
+    $bootstrap_prereqs and return;                                             # done building prereqs
 
-    if ( my $builder = $self->builders->{ $package->category } ) {
+    if (my $builder = $self->builders->{$package->category}) {
         my $package_src_dir = $self->source_repo->retrieve_package_source($package);
 
         {
-            local %ENV = %ENV; # keep all env changes locally
-            local $ENV{'PACKAGE_PREFIX'} = $self->prefix;
-            local $ENV{'PACKAGE_SRC_DIR'} = $package_src_dir;
+            local %ENV                        = %ENV;                          # keep all env changes locally
+            local $ENV{'PACKAGE_PREFIX'}      = $self->prefix;
+            local $ENV{'PACKAGE_SRC_DIR'}     = $package_src_dir;
             local $ENV{'PACKAGE_TOP_PKG_DIR'} = $top_pkg_dir;
-            local $ENV{'PACKAGE_PKG_DIR'} = $pkg_dir;
+            local $ENV{'PACKAGE_PKG_DIR'}     = $pkg_dir;
             $log->debug("Src dir: '$package_src_dir'");
             $log->debug("Top pkg dir: '$top_pkg_dir'");
             $log->debug("Pkg dir: '$pkg_dir'");
@@ -410,91 +394,64 @@ sub run_build {
                 }
             }
 
-            if ($package->build_opts->{'pre-build'} ) {
-                foreach my $cmd ( @{ $package->build_opts->{'pre-build'} } ) {
+            if ($package->build_opts->{'pre-build'}) {
+                foreach my $cmd (@{$package->build_opts->{'pre-build'}}) {
                     $log->debugf("Executing '$cmd'");
-                    my $ecode = system($cmd);
+                    my $ecode = system ($cmd);
                     Carp::croak("Unable to run '$cmd'") if $ecode;
                 }
             }
 
             my $env_vars_spec = $package->build_opts->{'env_vars'};
+
             # FIXME: This shouldn't just be configure flags
             # we should allow the builder to have access to a general
             # metadata chunk which *might* include configure flags
-            my %env_vars = generate_env_vars($package_src_dir, $top_pkg_dir, path($self->prefix), $self->use_prefix, $env_vars_spec);
-            %env_vars = ( %ENV, %env_vars );
-            my $configure_flags = $self->get_configure_flags(
-                $package->build_opts->{'configure_flags'},
-                \%env_vars,
-            );
+            my %env_vars = generate_env_vars($package_src_dir, $top_pkg_dir, path($self->prefix), $self->use_prefix,
+                $env_vars_spec);
+            %env_vars = (%ENV, %env_vars);
+            my $configure_flags = $self->get_configure_flags($package->build_opts->{'configure_flags'}, \%env_vars);
 
-            my $build_flags = $self->get_configure_flags(
-                $package->build_opts->{'build_flags'},
-                \%env_vars,
-            );
+            my $build_flags = $self->get_configure_flags($package->build_opts->{'build_flags'}, \%env_vars);
 
-            if ( $package->build_opts->{'pre_build'} ) {
-                foreach my $cmd_set ( @{ $package->build_opts->{'pre_build'} } ) {
+            if ($package->build_opts->{'pre_build'}) {
+                foreach my $cmd_set (@{$package->build_opts->{'pre_build'}}) {
                     $cmd_set = $self->get_configure_flags($cmd_set, \%env_vars);
-                    $self->run_command(
-                        $package_src_dir,
-                        $cmd_set,
-                        {'env' => \%env_vars},
-                    );
+                    $self->run_command($package_src_dir, $cmd_set, {'env' => \%env_vars});
                 }
             }
 
             $builder->build_package(
-                $package->name,
-                $package_src_dir,
-                $top_pkg_dir,
-                path($self->prefix),
-                $self->use_prefix,
-                $configure_flags,
-                $build_flags,
-                $env_vars_spec,
+                $package->name,    $package_src_dir, $top_pkg_dir, path($self->prefix),
+                $self->use_prefix, $configure_flags, $build_flags, $env_vars_spec,
             );
 
-            if ( $package->build_opts->{'post_build'} ) {
-                foreach my $cmd_set ( @{ $package->build_opts->{'post_build'} } ) {
+            if ($package->build_opts->{'post_build'}) {
+                foreach my $cmd_set (@{$package->build_opts->{'post_build'}}) {
                     $cmd_set = $self->get_configure_flags($cmd_set, \%env_vars);
-                    $self->run_command(
-                        $package_src_dir,
-                        $cmd_set,
-                        {'env' => \%env_vars},
-                    );
+                    $self->run_command($package_src_dir, $cmd_set, {'env' => \%env_vars});
                 }
             }
 
-            if ( $package->build_opts->{'post-build'} ) {
-                foreach my $cmd ( @{ $package->build_opts->{'post-build'} } ) {
+            if ($package->build_opts->{'post-build'}) {
+                foreach my $cmd (@{$package->build_opts->{'post-build'}}) {
                     $log->debugf("Executing '$cmd'");
-                    my $ecode = system($cmd);
+                    my $ecode = system ($cmd);
                     Carp::croak("Unable to run '$cmd'") if $ecode;
                 }
             }
         }
     } else {
-        croak( $log->criticalf(
-            'I do not have a builder for category %s.',
-            $package->category,
-        ) );
+        croak($log->criticalf('I do not have a builder for category %s.', $package->category));
     }
 
-    my $package_files = $self->snapshot_build_dir(
-        $package, $pkg_dir,
-    );
+    my $package_files = $self->snapshot_build_dir($package, $pkg_dir);
 
-    $log->infof( '%s Bundling %s', '|...' x $level, $package->full_name );
-    $self->bundler->bundle(
-        $pkg_dir->absolute,
-        $package,
-        $package_files,
-    );
+    $log->infof('%s Bundling %s', '|...' x $level, $package->full_name);
+    $self->bundler->bundle($pkg_dir->absolute, $package, $package_files);
 
-    $log->infof( '%s Finished on %s', '|...' x $level, $query->full_name );
-    $log->infof( 'Building %s', $query->full_name );
+    $log->infof('%s Finished on %s', '|...' x $level, $query->full_name);
+    $log->infof('Building %s', $query->full_name);
 
     return;
 }
@@ -505,28 +462,25 @@ sub fix_timestamps {
         sub {
             my $src = shift;
             my $dst = path($dst_dir, $src->relative($src_dir));
-            $dst->touch( $src->stat->mtime );
+            $dst->touch($src->stat->mtime);
         },
-        { recurse => 1 }
+        {recurse => 1}
     );
 }
 
 sub _recursive_build_phase {
-    my ( $self, $package, $category, $phase, $level ) = @_;
-    my @prereqs = keys %{ $package->prereqs->{$category}{$phase} };
+    my ($self, $package, $category, $phase, $level) = @_;
+    my @prereqs = keys %{$package->prereqs->{$category}{$phase}};
 
     foreach my $prereq_name (@prereqs) {
-        $self->requirements->{$prereq_name}{$package->short_name} =
-            $package->prereqs->{$category}{$phase}{$prereq_name}{'version'};
+        $self->requirements->{$prereq_name}{$package->short_name}
+            = $package->prereqs->{$category}{$phase}{$prereq_name}{'version'};
 
-        my $prereq_ver_req = join(",",
-                                values %{$self->requirements->{$prereq_name}});
+        my $prereq_ver_req = join (",", values %{$self->requirements->{$prereq_name}});
 
-        my $ver_rel = $self->spec_repo->latest_version_release(
-            $category, $prereq_name, $prereq_ver_req,
-        );
+        my $ver_rel = $self->spec_repo->latest_version_release($category, $prereq_name, $prereq_ver_req);
 
-        my ( $version, $release ) = @{$ver_rel};
+        my ($version, $release) = @{$ver_rel};
 
         my $req = Pakket::PackageQuery->new(
             'category' => $category,
@@ -535,12 +489,12 @@ sub _recursive_build_phase {
             'release'  => $release,
         );
 
-        $self->run_build( $req, { 'level' => $level } );
+        $self->run_build($req, {'level' => $level});
     }
 }
 
 sub snapshot_build_dir {
-    my ( $self, $package, $pkg_dir, $error_out ) = @_;
+    my ($self, $package, $pkg_dir, $error_out) = @_;
     $error_out //= 1;
 
     $log->debug('Scanning directory.');
@@ -556,22 +510,23 @@ sub snapshot_build_dir {
 
     if ($error_out) {
         keys %{$package_files}
-            or croak( $log->criticalf(
-                'This is odd. %s build did not generate new files. '
-                    . 'Cannot package.',
+            or croak(
+            $log->criticalf(
+                'This is odd. %s build did not generate new files. ' . 'Cannot package.',
                 $package->full_name,
-            ) );
+            )
+            );
     }
 
     # store per all packages to get the diff
-    @{ $self->build_files_manifest }{ keys( %{$package_files} ) }
+    @{$self->build_files_manifest}{keys (%{$package_files})}
         = values %{$package_files};
 
     return $self->normalize_paths($package_files);
 }
 
 sub normalize_paths {
-    my ( $self, $package_files ) = @_;
+    my ($self, $package_files) = @_;
     my $paths;
     for my $path_and_timestamp (keys %$package_files) {
         my ($path) = $path_and_timestamp =~ /^(.+)_\d+?$/;
@@ -581,39 +536,39 @@ sub normalize_paths {
 }
 
 sub retrieve_new_files {
-    my ( $self, $build_dir ) = @_;
+    my ($self, $build_dir) = @_;
 
-    my $nodes = $self->_scan_directory($build_dir);
-    my $new_files
-        = $self->_diff_nodes_list( $self->build_files_manifest, $nodes, );
+    my $nodes     = $self->_scan_directory($build_dir);
+    my $new_files = $self->_diff_nodes_list($self->build_files_manifest, $nodes);
 
     return $new_files;
 }
 
 sub _scan_directory {
-    my ( $self, $dir ) = @_;
+    my ($self, $dir) = @_;
 
     my $visitor = sub {
-        my ( $node, $state ) = @_;
+        my ($node, $state) = @_;
 
         return if $node->is_dir;
 
-        my $path_and_timestamp = sprintf("%s_%s",$node->absolute, $node->stat->ctime);
+        my $path_and_timestamp = sprintf ("%s_%s", $node->absolute, $node->stat->ctime);
 
         # save the symlink path in order to symlink them
-        if ( -l $node ) {
-            path( $state->{ $path_and_timestamp } = readlink $node )->is_absolute
-                and croak( $log->critical(
-                    "Error. Absolute path symlinks aren't supported.",
-                ) );
+        if (-l $node) {
+            path($state->{$path_and_timestamp} = readlink $node)->is_absolute
+                and croak($log->critical("Error. Absolute path symlinks aren't supported."));
         } else {
-            $state->{ $path_and_timestamp } = '';
+            $state->{$path_and_timestamp} = '';
         }
     };
 
     return $dir->visit(
         $visitor,
-        { 'recurse' => 1, 'follow_symlinks' => 0 },
+        {
+            'recurse'         => 1,
+            'follow_symlinks' => 0
+        },
     );
 }
 
@@ -621,36 +576,36 @@ sub _scan_directory {
 # if we diff and copy in the same loop
 # instead of two steps
 sub _diff_nodes_list {
-    my ( $self, $old_nodes, $new_nodes ) = @_;
+    my ($self, $old_nodes, $new_nodes) = @_;
 
     my %nodes_diff;
     diff_hashes(
         $old_nodes,
         $new_nodes,
-        'added'   => sub { $nodes_diff{ $_[0] } = $_[1] },
+        'added' => sub {$nodes_diff{$_[0]} = $_[1]},
     );
 
     return \%nodes_diff;
 }
 
 sub get_configure_flags {
-    my ( $self, $config, $expand_env ) = @_;
+    my ($self, $config, $expand_env) = @_;
 
     $config or return [];
 
     my @flags = @{$config};
 
-    $self->_expand_flags_inplace( \@flags, $expand_env );
+    $self->_expand_flags_inplace(\@flags, $expand_env);
 
     return \@flags;
 }
 
 sub _expand_flags_inplace {
-    my ( $self, $flags, $env ) = @_;
+    my ($self, $flags, $env) = @_;
 
-    for my $flag ( @{$flags} ) {
-        for my $key ( keys %{$env} ) {
-            my $placeholder = '%' . uc($key) . '%';
+    for my $flag (@{$flags}) {
+        for my $key (keys %{$env}) {
+            my $placeholder = '%' . uc ($key) . '%';
             $flag =~ s/$placeholder/$env->{$key}/gsm;
         }
     }

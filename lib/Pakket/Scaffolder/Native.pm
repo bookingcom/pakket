@@ -1,11 +1,12 @@
 package Pakket::Scaffolder::Native;
+
 # ABSTRACT: Scffolding Native distributions
 
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
-use Path::Tiny          qw< path >;
-use Log::Any            qw< $log >;
+use Path::Tiny qw< path >;
+use Log::Any qw< $log >;
 
 use Pakket::Downloader::ByUrl;
 
@@ -17,8 +18,8 @@ with qw<
 >;
 
 has 'package' => (
-    'is' => 'ro',
-    'isa' => 'Pakket::PackageQuery',
+    'is'       => 'ro',
+    'isa'      => 'Pakket::PackageQuery',
     'required' => 1,
 );
 
@@ -44,15 +45,15 @@ sub _scaffold_package {
     $self->apply_patches($package, $sources);
 
     {
-        local %ENV = %ENV; # keep all env changes locally
+        local %ENV = %ENV;                                                     # keep all env changes locally
         if ($package->{manage}{env}) {
             foreach my $key (keys %{$package->{manage}{env}}) {
                 local $ENV{$key} = $package->{manage}{env}{$key};
             }
         }
 
-        foreach my $cmd (@{ $package->{pre_manage} }) {
-            my $ecode = system($cmd);
+        foreach my $cmd (@{$package->{pre_manage}}) {
+            my $ecode = system ($cmd);
             Carp::croak("Unable to run '$cmd'") if $ecode;
         }
     }
