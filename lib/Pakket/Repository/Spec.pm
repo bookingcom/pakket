@@ -20,7 +20,11 @@ sub retrieve_package_spec {
         $spec_str = $self->retrieve_content($package->id);
         1;
     } or do {
-        die "Cannot fetch content for package " . $package->id . "\n";
+        my @available
+            = sort map {(split (m/=/))[1]} $self->all_object_ids_by_name($package->name, $package->category)->@*;
+        croak(    'Cannot fetch content for package '
+                . $package->id . "\n"
+                . ('available versions: ' . join (', ', @available) . "\n") x !!scalar @available);
     };
 
     my $config;

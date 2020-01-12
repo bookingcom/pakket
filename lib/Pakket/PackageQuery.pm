@@ -76,6 +76,11 @@ sub BUILD {
     if (!($self->category eq 'perl' or $self->category eq 'native')) {
         croak("Unsupported category: ${self->category}\n");
     }
+    if ($self->category eq 'perl') {
+        my $ver = version->new($self->version);
+        if ($ver->is_qv) {$ver = version->new($ver->normal)}
+        $self->{version} = $ver->stringify();
+    }
 }
 
 sub new_from_string {

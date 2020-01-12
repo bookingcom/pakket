@@ -49,6 +49,12 @@ has 'prereqs' => (
     'isa' => 'Maybe[HashRef]',
 );
 
+has 'as_prereq' => (
+    'is'      => 'ro',
+    'isa'     => 'Bool',
+    'default' => sub {0},
+);
+
 # FIXME: GH #73 will make this more reasonable
 has 'configure_prereqs' => (
     'is'      => 'ro',
