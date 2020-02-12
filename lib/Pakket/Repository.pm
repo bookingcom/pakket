@@ -31,6 +31,17 @@ has 'backend' => (
     ],
 );
 
+has 'versioner' => (
+    'is'      => 'ro',
+    'isa'     => 'HashRef',
+    'default' => sub {
+        {
+            'native' => Pakket::Versioning->new('type' => 'Perl'),
+            'perl'   => Pakket::Versioning->new('type' => 'Perl'),
+        };
+    },
+);
+
 sub _build_backend {
     my $self = shift;
     Carp::croak($log->critical('You did not specify a backend ' . '(using parameter or URI string)'));
@@ -91,12 +102,6 @@ sub latest_version_release {
     # (If we want to disable it, we just can just //= instead)
     $req_string ||= '>= 0';
 
-    # Category -> Versioning type class
-    my %types = (
-        'perl'   => 'Perl',
-        'native' => 'Perl',
-    );
-
     my %versions;
     foreach my $object_id (@{$self->all_object_ids}) {
         my ($my_category, $my_name, $my_version, $my_release) = $object_id =~ PAKKET_PACKAGE_SPEC();
@@ -109,11 +114,7 @@ sub latest_version_release {
         push @{$versions{$my_version}}, $my_release;
     }
 
-    my $versioner = Pakket::Versioning->new(
-        'type' => $types{$category},
-    );
-
-    my $latest_version = $versioner->latest($category, $name, $req_string, keys %versions)
+    my $latest_version = $self->versioner->{$category}->latest($category, $name, $req_string, keys %versions)
         or Carp::croak($log->criticalf('Could not analyze %s/%s to find latest version', $category, $name));
 
     # return the latest version and latest release available for this version

@@ -348,7 +348,12 @@ sub _fetch_all_packages {
                     my $prereq_data = $runtime_prereqs->{$prereq_name};
 
                     my $p = $self->_get_prereq($prereq_category, $prereq_name, $prereq_data);
-                    if (not exists $self->installed_packages->{$p->short_name}) {
+                    if (exists $self->installed_packages->{$p->short_name}
+                        && $self->_is_version_satisfying($self->installed_packages->{$p->short_name}, $prereq_data))
+                    {
+                        $log->debug('Prereq is already fulfilled:', "$prereq_category/$prereq_name=$prereq_data->{'version'}");
+                    } else {
+                        $log->debug('Prereq is going to be installed:', "$prereq_category/$prereq_name=$prereq_data->{'version'}");
                         $self->push_to_data_consumer($p->full_name, {'as_prereq' => 1});
                     }
                 }
@@ -361,7 +366,7 @@ sub _fetch_all_packages {
             # stuff. $consumer->consume will continue until `unprocessed` is empty,
             # so it's useful to wait a bit (100ms) to wait for new items to be added.
             usleep SLEEP_TIME_USEC();
-        }
+        },
     );
 
     my $stats = $self->data_consumer->runstats();
@@ -380,6 +385,13 @@ sub _check_parcels_fetched {
         }
         croak($log->criticalf('Unable to fetch %d parcels', scalar @failed));
     }
+}
+
+sub _is_version_satisfying {
+    my ($self, $installed, $prereq) = @_;
+    my $version     = $installed->{'version'};
+    my $requirement = $prereq->{'version'};
+    return $self->parcel_repo->versioner->{$installed->{'category'}}->is_satisfying($requirement, $version);
 }
 
 sub _install_all_packages {
