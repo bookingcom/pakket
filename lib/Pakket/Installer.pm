@@ -351,9 +351,11 @@ sub _fetch_all_packages {
                     if (exists $self->installed_packages->{$p->short_name}
                         && $self->_is_version_satisfying($self->installed_packages->{$p->short_name}, $prereq_data))
                     {
-                        $log->debug('Prereq is already fulfilled:', "$prereq_category/$prereq_name=$prereq_data->{'version'}");
+                        $log->debug('Prereq is already fulfilled:',
+                            "$prereq_category/$prereq_name=$prereq_data->{'version'}");
                     } else {
-                        $log->debug('Prereq is going to be installed:', "$prereq_category/$prereq_name=$prereq_data->{'version'}");
+                        $log->debug('Prereq is going to be installed:',
+                            "$prereq_category/$prereq_name=$prereq_data->{'version'}");
                         $self->push_to_data_consumer($p->full_name, {'as_prereq' => 1});
                     }
                 }
