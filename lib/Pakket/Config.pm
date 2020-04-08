@@ -14,7 +14,7 @@ use Carp qw< croak >;
 has 'paths' => (
     'is'      => 'ro',
     'isa'     => 'ArrayRef',
-    'default' => sub {return ['~/.pakket', '/etc/pakket']},
+    'default' => sub {return ['~/.config/pakket', '~/.pakket', '/etc/pakket']},
 );
 
 has 'extensions' => (

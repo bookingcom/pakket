@@ -378,6 +378,8 @@ sub run_build {
     if (my $builder = $self->builders->{$package->category}) {
         my $package_src_dir = $self->source_repo->retrieve_package_source($package);
 
+        $builder->test(int !!($package->skip && !$package->skip->{'test'}));
+
         {
             local %ENV                        = %ENV;                          # keep all env changes locally
             local $ENV{'PACKAGE_PREFIX'}      = $self->prefix;

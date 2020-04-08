@@ -5,13 +5,21 @@ package Pakket::Builder::Perl;
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
-use English qw< -no_match_vars >;
-use Log::Any qw< $log >;
-use Pakket::Log;
-use Pakket::Utils qw< generate_env_vars >;
-use Carp ();
+use namespace::autoclean;
 
-with qw<Pakket::Role::Builder>;
+# core
+use Carp;
+use English qw(-no_match_vars);
+
+use Log::Any qw< $log >;
+
+# local
+use Pakket::Log;
+use Pakket::Utils qw(generate_env_vars);
+
+with qw(
+    Pakket::Role::Builder
+);
 
 has '+exclude_packages' => (
     'default' => sub {
@@ -105,6 +113,9 @@ sub _build_pl_cmds {
         # build
         [$build_dir, ['perl', '-f', './Build', @{$build_flags}], $opts],
 
+        # test
+        $self->test ? ([$build_dir, ['perl', '-f', './Build', 'test'], $opts]) : (),
+
         # install
         [$build_dir, ['perl', '-f', './Build', 'install', '--destdir', "$top_pkg_dir"], $opts],
 
@@ -115,6 +126,7 @@ sub _build_pl_cmds {
 
 sub _makefile_pl_cmds {
     my ($self, $build_dir, $top_pkg_dir, $prefix, $use_prefix, $config_flags, $build_flags, $opts) = @_;
+
     return (
 
         # configure
@@ -122,6 +134,9 @@ sub _makefile_pl_cmds {
 
         # build
         [$build_dir, ['make', @{$build_flags}], $opts],
+
+        # test
+        $self->test ? ([$build_dir, ['make', 'test'], $opts]) : (),
 
         # install
         [$build_dir, ['make', 'install', "DESTDIR=$top_pkg_dir"], $opts],
@@ -131,11 +146,8 @@ sub _makefile_pl_cmds {
     );
 }
 
-no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
 
 __END__
-
-=pod

@@ -129,6 +129,7 @@ sub spec {
         map +($_ => $self->$_),
         qw<build_opts bundle_opts>,
     };
+    $self->$_ && $self->$_->%* and $result->{$_} = $self->$_ foreach qw(skip);
     $result->{Package}{source} = $self->{source} if $self->{source};
 
     return $result;
@@ -143,6 +144,9 @@ sub new_from_spec {
         'build_opts' => $spec->{'build_opts'} || {},
         'is_bootstrap' => !!$spec->{'is_bootstrap'},
     );
+
+    $spec->{'skip'}
+        and $package_details{'skip'} = $spec->{'skip'};
 
     return $class->new(%package_details);
 }

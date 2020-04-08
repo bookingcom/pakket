@@ -15,6 +15,12 @@ has 'exclude_packages' => (
     'default' => sub {+{}},
 );
 
+has 'test' => (
+    'is'      => 'rw',
+    'isa'     => 'Int',
+    'default' => 0,
+);
+
 no Moose::Role;
 
 1;
