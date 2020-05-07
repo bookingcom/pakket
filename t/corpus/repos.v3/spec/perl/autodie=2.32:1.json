@@ -1,0 +1,73 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "autodie",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/T/TO/TODDR/autodie-2.32.tar.gz",
+      "version" : "2.32"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "develop" : {
+            "requires" : {
+               "perl/BSD-Resource" : "0",
+               "perl/IPC-System-Simple" : "0",
+               "perl/Import-Into" : "0",
+               "perl/Pod-Coverage-TrustPod" : "0",
+               "perl/Sub-Identify" : "0",
+               "perl/Test-Pod" : "1.41",
+               "perl/Test-Pod-Coverage" : "1.08",
+               "perl/Test-Simple" : "0"
+            }
+         },
+         "runtime" : {
+            "recommends" : {
+               "perl/IPC-System-Simple" : "0.12",
+               "perl/Sub-Identify" : "0"
+            },
+            "requires" : {
+               "perl/Scalar-List-Utils" : "0",
+               "perl/Tie-RefHash" : "0",
+               "perl/parent" : "0"
+            }
+         },
+         "test" : {
+            "recommends" : {
+               "perl/BSD-Resource" : "0",
+               "perl/Import-Into" : "1.002004"
+            },
+            "requires" : {
+               "perl/File-Temp" : "0",
+               "perl/Socket" : "0",
+               "perl/Test-Simple" : "0"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "Scalar-List-Utils" : {
+               "version" : "0"
+            },
+            "Tie-RefHash" : {
+               "version" : "0"
+            },
+            "parent" : {
+               "version" : "0"
+            }
+         }
+      }
+   }
+}

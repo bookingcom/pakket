@@ -1,0 +1,12 @@
+# vim: syntax=conf foldmethod=marker
+# man: cpan
+
+requires 'Algorithm::Diff::Callback';
+requires 'Archive::Extract', '< 0.30';
+requires 'Digest::MD5', '<= 2.50';
+requires 'File::Find', '0';
+requires 'File::Path', '0';
+requires 'JSON::PP', '>= 2.27103';
+requires 'List::Util', '> 1.25';
+requires 'parent', '0.217';
+requires 'version', '== 0.98';

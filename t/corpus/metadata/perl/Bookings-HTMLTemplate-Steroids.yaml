@@ -1,0 +1,26 @@
+Package:
+  category: perl
+  name: Bookings-HTMLTemplate-Steroids
+  version: 0.33
+  release: 1
+  commit: &COMMIT 946c1f5aba3d49c1e5b2c2903876bfc691379d74
+  source:
+    - git+https://$GIT_USERNAME:$GIT_PASSWORD@gitlab.booking.com/core/extension.git#
+    - *COMMIT
+    - ;f=Bookings-HTMLTemplate-Steroids
+Pakket:
+  version: 3.1415
+  scaffold:
+    skip:
+      dist: 1
+      dzil: 1
+  build:
+    no-test: 0
+  prereqs:
+    configure:
+      requires:
+        perl/ExtUtils-CAPI: 0
+        perl/Bookings-Tools-Translations-Lookup: 0
+    runtime:
+      requires:
+        perl/Bookings-Tools-Translations-Lookup: 0

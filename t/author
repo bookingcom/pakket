@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+dzil run yath test --author-testing -j 4 -P Moose

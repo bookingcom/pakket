@@ -1,0 +1,53 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Encode",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/D/DA/DANKOGAI/Encode-3.05.tar.gz",
+      "version" : "3.05"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/parent" : "0.221"
+            }
+         },
+         "test" : {
+            "requires" : {
+               "perl/Test-Simple" : "0.81_01"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "parent" : {
+               "version" : "0.221"
+            }
+         }
+      }
+   }
+}

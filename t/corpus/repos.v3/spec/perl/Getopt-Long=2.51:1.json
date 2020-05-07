@@ -1,0 +1,48 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Getopt-Long",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/J/JV/JV/Getopt-Long-2.51.tar.gz",
+      "version" : "2.51"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/Pod-Usage" : "1.14"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "Pod-Usage" : {
+               "version" : "1.14"
+            }
+         }
+      }
+   }
+}

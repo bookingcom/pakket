@@ -1,0 +1,48 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Text-Diff",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/N/NE/NEILB/Text-Diff-1.45.tar.gz",
+      "version" : "1.45"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/Algorithm-Diff" : "1.19"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "Algorithm-Diff" : {
+               "version" : "1.19"
+            }
+         }
+      }
+   }
+}

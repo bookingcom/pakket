@@ -1,0 +1,43 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "CPAN-Meta",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/CPAN-Meta-2.150010.tar.gz",
+      "version" : "2.150010"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "6.17"
+            },
+            "JSON-PP" : {
+               "version" : "2.27300"
+            }
+         },
+         "runtime" : {
+            "CPAN-Meta-Requirements" : {
+               "version" : "2.121"
+            },
+            "CPAN-Meta-YAML" : {
+               "version" : "0.011"
+            },
+            "Encode" : {
+               "version" : 0
+            },
+            "JSON-PP" : {
+               "version" : "2.27300"
+            },
+            "Scalar-List-Utils" : {
+               "version" : 0
+            },
+            "version" : {
+               "version" : "0.88"
+            }
+         }
+      }
+   },
+   "build_opts" : {},
+   "bundle_opts" : {}
+}

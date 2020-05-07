@@ -1,0 +1,43 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Test-Harness",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/L/LE/LEONT/Test-Harness-3.42.tar.gz",
+      "version" : "3.42"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "recommends" : {
+               "perl/Pod-Usage" : "1.12"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         }
+      }
+   }
+}

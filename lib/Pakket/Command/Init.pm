@@ -5,19 +5,25 @@ package Pakket::Command::Init;
 use v5.22;
 use strict;
 use warnings;
+use namespace::autoclean;
 
+use Carp;
 use English '-no_match_vars';
 
 use Pakket '-command';
-use Pakket::Log;
-use Pakket::Utils qw< is_writeable >;
+use Pakket::Utils qw(is_writeable);
 use Log::Any::Adapter;
-use Log::Any qw< $log >;
-use Path::Tiny qw< path >;
+use Log::Any qw($log);
+use Path::Tiny;
 use File::HomeDir;
 
-sub abstract    {'Initialize Pakket'}
-sub description {'Initialize Pakket'}
+sub abstract {
+    return 'Initialize Pakket';
+}
+
+sub description {
+    return 'Initialize Pakket';
+}
 
 sub opt_spec {
     return (
@@ -31,7 +37,7 @@ sub opt_spec {
 sub validate_args {
     my ($self, $opt) = @_;
 
-    Log::Any::Adapter->set('Dispatch', 'dispatcher' => Pakket::Log->build_logger($opt->{'verbose'}));
+    Log::Any::Adapter->set('Dispatch', 'dispatcher' => use_module('Pakket::Log')->build_logger($opt->{'verbose'}));
 
     # global installation and pakket is already available
     if (  !$opt->{'repo_dir'}
@@ -39,25 +45,25 @@ sub validate_args {
         && -d $ENV{'PAKKET_REPO'}
         && !$opt->{'force'})
     {
-        die $log->critical("Pakket is already globally initialized at $ENV{'PAKKET_REPO'}");
+        croak($log->critical("Pakket is already globally initialized at $ENV{'PAKKET_REPO'}"));
     }
 
     $self->{'repo'} = path(
         $opt->{'repo_dir'} // $opt->{'local'}
         ? (File::HomeDir->my_home, '.pakket')
-        : (Path::Tiny->rootdir, qw< usr local pakket >),
+        : (Path::Tiny->rootdir, qw(usr local pakket)),
     );
+    return;
 }
 
 sub execute {
     my $self = shift;
 
     # 1. create main repo directory
-    # TODO: allow configuration files? interactive?
     my $repo_dir = $self->{'repo'};
 
     if (!is_writeable($repo_dir)) {
-        die $log->critical("No permissions to write to $repo_dir.");
+        croak($log->critical("No permissions to write to $repo_dir."));
     }
 
     $repo_dir->is_dir
@@ -69,7 +75,6 @@ sub execute {
     $pakket_homedir->is_dir
         or $pakket_homedir->mkpath;
 
-    # FIXME: currently only bash support, what about csh/fish/zsh/Windows?
     my $shellfile = path($pakket_homedir, 'pakket.sh');
     $shellfile->spew(
         "export PAKKET_REPO=$repo_dir\n",

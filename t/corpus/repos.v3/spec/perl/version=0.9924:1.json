@@ -1,0 +1,45 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "version",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/J/JP/JPEACOCK/version-0.9924.tar.gz",
+      "version" : "0.9924"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "test" : {
+            "requires" : {
+               "perl/File-Temp" : "0.13",
+               "perl/Test-Simple" : "0.45",
+               "perl/parent" : "0.221"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         }
+      }
+   }
+}

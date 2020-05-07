@@ -1,0 +1,48 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "podlators",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/R/RR/RRA/podlators-4.14.tar.gz",
+      "version" : "4.14"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/Pod-Simple" : "3.06"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "Pod-Simple" : {
+               "version" : "3.06"
+            }
+         }
+      }
+   }
+}

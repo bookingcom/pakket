@@ -1,0 +1,28 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Module-Metadata",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/E/ET/ETHER/Module-Metadata-1.000037.tar.gz",
+      "version" : "1.000037"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : 0
+            }
+         },
+         "runtime" : {
+            "Encode" : {
+               "version" : 0
+            },
+            "version" : {
+               "version" : "0.87"
+            }
+         }
+      }
+   },
+   "build_opts" : {},
+   "bundle_opts" : {}
+}

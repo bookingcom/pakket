@@ -1,9 +1,0 @@
-requires 'App::FatPacker';
-requires 'App::GitHooks';
-requires 'App::githook::perltidy';
-requires 'App::perlbrew';
-requires 'Archive::Tar::Wrapper';
-requires 'Dist::Zilla';
-requires 'Dist::Zilla::App::Command::xtest';
-requires 'Dist::Zilla::Plugin::Git';
-requires 'IPC::Run3';

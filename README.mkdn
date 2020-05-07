@@ -4,7 +4,7 @@ Pakket - An Unopinionated Meta-Packaging System
 
 # VERSION
 
-version 2.147
+version 3.017
 
 # DESCRIPTION
 
@@ -193,15 +193,15 @@ installed.
 
 # AUTHORS
 
-- Sawyer X
-- Mickey Nasriachi
-- Gonzalo Diethelm
 - Andrei Grechkin
 - Eugene Chernenko
+- Gonzalo Diethelm
+- Mickey Nasriachi
+- Sawyer X
 
 # COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2019 by Sawyer X.
+This software is Copyright (c) 2020 by Sawyer X.
 
 This is free software, licensed under:
 

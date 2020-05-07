@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+export AUTHOR_TESTING=1
+export AUTOMATED_TESTING=1
+export EXTENDED_TESTING=1
+export NONINTERACTIVE_TESTING=1
+export RELEASE_TESTING=1
+export TEST_CRITIC=1
+export TEST_SPELLING=1
+
+dzil run yath test --qvf -j 4 -P Moose

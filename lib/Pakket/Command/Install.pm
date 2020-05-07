@@ -1,166 +1,135 @@
 package Pakket::Command::Install;
 
-# ABSTRACT: Install a Pakket parcel
+# ABSTRACT: Install a Pakket package
 
 use v5.22;
 use strict;
 use warnings;
+use open ':std', ':encoding(UTF-8)';
+use namespace::autoclean;
 
+# core
+use Carp;
+use Digest::SHA qw(sha1_hex);
+use experimental qw(declared_refs refaliasing signatures);
+
+# noncore
+use Log::Any qw($log);
+use Module::Runtime qw(use_module);
+use Path::Tiny;
+
+# local
 use Pakket '-command';
-use Pakket::Installer;
-use Pakket::Config;
-use Pakket::Log;
-use Pakket::Package;
-use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
-use Log::Any qw< $log >;
-use Log::Any::Adapter;
-use Path::Tiny qw< path >;
-use Digest::SHA qw< sha1_hex >;
 
-sub abstract    {'Install a package'}
-sub description {'Install a package'}
+use constant {                                                                 # no tidy
+    'MIN_MODULES_TO_ROLLBACK' => 30,
+};
 
-sub _determine_config {
-    my ($self, $opt) = @_;
-
-    # Read configuration
-    my $config_file   = $opt->{'config'};
-    my $config_reader = Pakket::Config->new($config_file ? ('files' => [$config_file]) : ());
-
-    my $config = $config_reader->read_config;
-
-    # Default File backend
-    if ($opt->{'from'}) {
-        $config->{'repositories'}{'parcel'} = [
-            'File',
-            'directory' => $opt->{'from'},
-        ];
-    }
-
-    # Double check
-    if (!$config->{'repositories'}{'parcel'}) {
-        $self->usage_error("Missing where to install from\n" . '(Create a configuration or use --from)');
-    }
-
-    if ($opt->{'to'}) {
-        $config->{'install_dir'} = $opt->{'to'};
-    }
-
-    if (defined $opt->{'jobs'}) {
-        $config->{'jobs'} = $opt->{'jobs'};
-    }
-
-    if ($opt->{'no_atomic'}) {
-        $config->{'atomic'} = 0;
-    }
-
-    if (!$config->{'install_dir'}) {
-        $self->usage_error("Missing where to install\n" . '(Create a configuration or use --to)');
-    }
-
-    return $config;
+sub abstract {
+    return 'Install packages';
 }
 
-sub _determine_packages {
-    my ($self, $opt, $args) = @_;
-
-    my @package_strs
-        = defined $opt->{'input_file'}
-        ? path($opt->{'input_file'})->lines_utf8({'chomp' => 1})
-        : @{$args};
-
-    @package_strs = sort @package_strs;
-
-    if ($opt->{'config'}{'allow_rollback'} && (30 < 0 + @package_strs)) {
-        $opt->{rollback_tag} = sha1_hex(@package_strs);
-        $log->debugf("rollback_tag %s is generated for requested %s packages", $opt->{rollback_tag}, 0 + @package_strs);
-    }
-
-    my @packages;
-    foreach my $package_str (@package_strs) {
-        next if $package_str =~ /^#/;
-        my ($pkg_cat, $pkg_name, $pkg_version, $pkg_release) = $package_str =~ PAKKET_PACKAGE_SPEC();
-
-        push @packages,
-            Pakket::Package->new(
-            'category' => $pkg_cat,
-            'name'     => $pkg_name,
-            'version'  => $pkg_version // 0,
-            'release'  => $pkg_release // 0,
-            );
-    }
-
-    return \@packages;
+sub description {
+    return 'Install packages';
 }
 
-sub opt_spec {
+sub opt_spec ($self, @args) {
     return (
-        ['to=s',            'directory to install the package in'],
-        ['from=s',          'directory to install the packages from'],
-        ['no-atomic',       "don't use atomic operations"],
-        ['input-file=s',    'install everything listed in this file'],
-        ['config|c=s',      'configuration file'],
-        ['log-file=s',      'log file'],
-        ['show-installed',  'print list of installed packages'],
-        ['ignore-failures', 'Continue even if some installs fail'],
-        ['force|f',         'force reinstall if package exists'],
-        ['jobs|j=i',        'number of workers to run in parallel'],
-        ['verbose|v+',      'verbose output (can be provided multiple times)'],
-        ['dry-run|n',       'dry-run installation and return only packages to be installed'],
+        ['file|f=s',     'process everything listed in this file'],
+        ['overwrite|w+', 'force reinstall if already installed'],
+        ['no-prereqs',   'do not process any dependencies at all'],
+        ['continue',     'continue on errors'],
+        ['dry-run|d',    'dry-run installation and return only list of packages to be installed'],
+        undef,
+        ['jobs|j=i', 'number of workers to run in parallel'],
+        ['atomic!',  'operation on current library is atomic'],
+        undef,
+        ['from=s', 'directory to install the packages from'],
+        ['to=s',   'directory to install the package in'],
+        undef,
+        ['show-installed', 'print list of installed packages (backward compatibility)'],
+        undef,
+        ['with-build',      'process dependencies for build phase'],
+        ['with-configure',  'process dependencies for configure phase'],
+        ['with-develop',    'process dependencies for develop phase'],
+        ['with-test',       'process dependencies for test phase'],
+        ['with-recommends', 'process recommended dependencies'],
+        ['with-suggests',   'process suggested dependencies'],
+        undef,
+        $self->SUPER::opt_spec(@args),
     );
 }
 
-sub validate_args {
-    my ($self, $opt, $args) = @_;
+sub validate_args ($self, $opt, $args) {
+    $self->SUPER::validate_args($opt, $args);
 
-    $opt->{'config'} = $self->_determine_config($opt);
-    my $log_file = $opt->{'log_file'} || $opt->{'config'}{'log_file'};
+    $log->debug('pakket', join (' ', @ARGV));
 
-    # for --dry-run always log raw
-    my $force_raw = $opt->{'dry_run'} ? 1 : 0;
+    my \%config = $self->{'config'};
 
-    Log::Any::Adapter->set('Dispatch',
-        'dispatcher' => Pakket::Log->build_logger($opt->{'verbose'}, $log_file, $force_raw));
+    defined $opt->{'from'}
+        and $config{'repositories'}{'parcel'} = $opt->{'from'};
+    $config{'repositories'}{'parcel'}
+        or $self->usage_error("Missing option where to install from\n(Create a configuration or use --from)");
 
-    $opt->{'packages'} = $self->_determine_packages($opt, $args);
+    defined $opt->{'to'}
+        and $config{'install_dir'} = $opt->{'to'};
+    $config{'install_dir'}
+        or $self->usage_error("Missing option where to install\n(Create a configuration or use --to)");
 
-    $opt->{'config'}{'env'}{'cli'} = 1;
-    $opt->{'config'}{'atomic'} //= 1;
-    $opt->{'config'}{'jobs'}   //= 1;
-}
-
-sub execute {
-    my ($self, $opt) = @_;
+    $config{'jobs'}   = $opt->{'jobs'}   // $config{'jobs'}   // 1;
+    $config{'atomic'} = $opt->{'atomic'} // $config{'atomic'} // 1;
 
     if ($opt->{'show_installed'}) {
-        my $installer = _create_installer($opt);
-        return $installer->show_installed();
+        $self->validate_no_args($args);
+    } else {
+        $opt->{'file'}
+            ? $self->validate_no_args($args)
+            : $self->validate_at_least_one_arg($args);
+        $self->_determine_queries($opt, $args);
     }
-
-    $log->debug("pakket " . join (" ", @ARGV));
-
-    my $installer = _create_installer($opt);
-
-    return $installer->dry_run(@{$opt->{'packages'}}) if $opt->{'dry_run'};
-
-    return $installer->install(@{$opt->{'packages'}});
+    return;
 }
 
-sub _create_installer {
-    my $opt = shift;
+sub execute ($self, $opt, $args) {
+    my \%config = $self->{'config'};
 
-    return Pakket::Installer->new(
-        'config'          => $opt->{'config'},
-        'atomic'          => $opt->{'config'}{'atomic'},
-        'pakket_dir'      => $opt->{'config'}{'install_dir'},
-        'force'           => $opt->{'force'},
-        'ignore_failures' => $opt->{'ignore_failures'},
-        'rollback_tag'    => $opt->{'rollback_tag'} // '',
-        'use_hardlinks'   => $opt->{'config'}{'use_hardlinks'} // 0,
-        'allow_rollback'  => $opt->{'config'}{'allow_rollback'} // 0,
-        'keep_rollbacks'  => $opt->{'config'}{'keep_rollbacks'} // 1,
-        'jobs'            => $opt->{'config'}{'jobs'},
+    $opt->{'show_installed'} and return use_module('Pakket::Controller::List')->new(
+        'pakket_dir' => $config{'install_dir'},
+    )->installed();
+
+    my @phases = (qw(runtime),  map {$opt->{"with_$_"} ? $_ : ()} qw(build configure develop test));
+    my @types  = (qw(requires), map {$opt->{"with_$_"} ? $_ : ()} qw(recommends suggests));
+
+    my $controller = use_module('Pakket::Controller::Install')->new(
+        'allow_rollback' => $config{'allow_rollback'} // 0,
+        'atomic'         => $config{'atomic'},
+        'config'         => $self->{'config'},
+        'jobs'           => $config{'jobs'},
+        'keep_rollbacks' => $config{'keep_rollbacks'} // 1,
+        'pakket_dir'     => $config{'install_dir'},
+        'rollback_tag'   => $opt->{'rollback_tag'} // '',
+        'use_hardlinks'  => $config{'use_hardlinks'} // 0,
+        'phases'         => [@phases],
+        'types'          => [@types],
+        map {defined $opt->{$_} ? +($_ => $opt->{$_}) : +()} qw(dry_run continue no_prereqs overwrite),
     );
+
+    return $controller->execute($self->%{qw(queries prereqs)});
+}
+
+sub _determine_queries ($self, $opt, $args) {
+    my @ids = sort $self->parse_requested_ids($opt, $args)->@*;
+
+    if ($self->{'config'}{'allow_rollback'} and MIN_MODULES_TO_ROLLBACK() < @ids) {
+        $opt->{'rollback_tag'} = sha1_hex(@ids);
+        $log->debugf('rollback_tag %s is generated for requested %d packages', $opt->{'rollback_tag'}, scalar @ids);
+    }
+
+    $self->build_queries(\@ids);
+    @{$self->{'queries'} // []}
+        and $log->trace('queries: ' . join (', ', map {$_->id} $self->{'queries'}->@*));
+    return;
 }
 
 1;
@@ -173,19 +142,14 @@ __END__
 
     # Install the first release of a particular version
     # of the package "Dancer2" of the category "perl"
+
     $ pakket install perl/Dancer2=0.205000:1
+    $ pakket install perl/Dancer2=0.205000
+    $ pakket install perl/Dancer2
+
+    $ cat file/pakket.list | pakket install
 
     $ pakket install --help
-
-        --to STR             directory to install the package in
-        --from STR           directory to install the packages from
-        --input-file STR     install everything listed in this file
-        -c STR --config STR  configuration file
-        --log-file STR       log file
-        --show-installed     print list of installed packages
-        --ignore-failures    Continue even if some installs fail
-        -f --force           force reinstall if package exists
-        -v --verbose         verbose output (can be provided multiple times)
 
 =head1 DESCRIPTION
 
@@ -194,4 +158,4 @@ including their category, their name, their version, and their release.
 If you do not provide a version or release, it will simply take the
 last one available.
 
-You can also show which packages are currently installed.
+=cut

@@ -1,0 +1,15 @@
+name: DBD-mysql
+category: perl
+version: ==4.046
+release: 5
+source: cpan
+pre-build:
+  - mkdir -p /tmp/mysql-static
+  - export OS_VERSION=$(rpm --eval '%{centos_ver}'); yum-config-manager --add-repo http://yum-mirror.anycast.prod.booking.com/yum/booking.com/$OS_VERSION/mysql-unstable/x86_64/RPMS/ || true
+  - yum clean all || true
+  - export OS_VERSION=$(rpm --eval '%{centos_ver}'); yum -y install mysql-community-devel-5.7.26-1.el${OS_VERSION} && cp /usr/lib64/mysql/libmysqlclient.a /tmp/mysql-static || true
+build:
+  configure-options:
+    - --libs="-L/tmp/mysql-static -lmysqlclient"
+  make-options:
+    - OTHERLDFLAGS=-L/tmp/mysql-static -L/usr/lib/x86_64-linux-gnu -lmysqlclient -lstdc++ -lssl

@@ -1,0 +1,23 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "ExtUtils-MakeMaker",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/B/BI/BINGOS/ExtUtils-MakeMaker-7.38.tar.gz",
+      "version" : "7.38"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "runtime" : {
+            "Encode" : {
+               "version" : 0
+            },
+            "podlators" : {
+               "version" : 0
+            }
+         }
+      }
+   },
+   "build_opts" : {},
+   "bundle_opts" : {}
+}

@@ -5,6 +5,7 @@
 --exclude=.build
 --exclude=.git
 --exclude=docs
+--exclude=tools
 --exclude=*.js
 --exclude=*.json
 --exclude=.ctags.d

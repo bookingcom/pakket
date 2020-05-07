@@ -5,18 +5,23 @@ package Pakket::Log;
 use v5.22;
 use strict;
 use warnings;
-use parent 'Exporter';
+use namespace::autoclean;
+
+# core
 use Carp;
-use IO::Interactive;
-use JSON::MaybeXS qw< encode_json >;
-use Log::Any qw< $log >;
-use Log::Dispatch;
-use Path::Tiny qw< path >;
 use Sys::Syslog;
-use Term::GentooFunctions qw< ebegin eend >;
-use Time::Format qw< %time >;
-use Time::HiRes qw< gettimeofday >;
+use Time::HiRes qw(gettimeofday);
+use experimental qw(declared_refs refaliasing signatures);
+
+# non core
+use IO::Interactive;
+use JSON::MaybeXS qw(encode_json);
+use Log::Dispatch::Screen::Gentoo;
+use Log::Dispatch;
+use Path::Tiny;
+use Time::Format qw(time_format);
 use Try::Tiny;
+use Unicode::UTF8;
 
 use constant {
     'DEBUG_LOG_LEVEL'  => 3,
@@ -38,20 +43,20 @@ use constant {
 # 8  debug     debugging messages for development
 # 9  trace     copious tracing output
 
-sub send_data {
-    my ($data, $started, $finished) = @_;
-    $data && $data->{'severity'} or return;
+sub send_data ($data, $started, $finished) {
+    $data && $data->{'severity'}
+        or return;
 
-    $started && $finished and $data->{'took'} = $finished - $started;
+    $started && $finished
+        and $data->{'took'} = $finished - $started;
 
     openlog('pakket', 'ndelay,pid');
     syslog($data->{'severity'}, encode_json($data));
     closelog();
+    return;
 }
 
-sub build_logger {
-    my ($class, $verbosity, $path, $force_raw) = @_;
-
+sub build_logger ($class, $verbosity, $path = undef, $force_raw = 0) {
     my @outputs = ($class->_cli_logger($verbosity, $force_raw), $class->_syslog_logger());
 
     if ($path) {
@@ -67,14 +72,17 @@ sub build_logger {
     );
 }
 
-sub _cli_logger {
-    my ($class, $verbosity, $force_raw) = @_;
-
+sub _cli_logger ($class, $verbosity, $force_raw = 0) {
     return [
-        IO::Interactive::is_interactive() && !$force_raw ? 'Screen::Gentoo' : ('Screen', 'stderr' => 0),
+        IO::Interactive::is_interactive() && !$force_raw ? 'Screen::Gentoo' : ('Screen', 'stderr' => 1),
         'min_level' => $class->_verbosity_to_loglevel($verbosity),
         'newline'   => 1,
-        'utf8'      => 1,
+        'utf8'      => 0,
+        'callbacks' => [
+            sub (%data) {
+                return Unicode::UTF8::decode_utf8($data{'message'});
+            },
+        ],
     ];
 }
 
@@ -84,19 +92,16 @@ sub _syslog_logger {
         'min_level' => 'warning',
         'ident'     => 'pakket',
         'callbacks' => [
-            sub {
-                my %data = @_;
+            sub (%data) {
                 return encode_json(\%data);
-            }
+            },
         ],
     ];
 }
 
-sub _file_logger {
-    my ($class, $file) = @_;
-
+sub _file_logger ($class, $file) {
     if (!$file) {
-        my $dir = Path::Tiny::path('~/.pakket');
+        my $dir = path('~/.pakket');
         eval {
             $dir->mkpath;
             1;
@@ -104,7 +109,7 @@ sub _file_logger {
             croak "Can't create directory $dir : " . $!;
         };
 
-        $file = $dir->child("pakket.log")->stringify;
+        $file = $dir->child('pakket.log')->stringify;
     }
 
     return [
@@ -114,25 +119,22 @@ sub _file_logger {
         'newline'   => 1,
         'mode'      => '>>',
         'callbacks' => [
-            sub {
-                my %data      = @_;
+            sub (%data) {
                 my $localtime = gettimeofday;
                 my $timestr   = try {
-                    $time{'yyyy-mm-dd hh:mm:ss.mmm', $localtime};
+                    time_format('yyyy-mm-dd hh:mm:ss.mmm', $localtime);
                 } catch {
-                    $time{'yyyy-mm-dd hh:mm:ss.mmm', int ($localtime)};
+                    time_format('yyyy-mm-dd hh:mm:ss.mmm', int ($localtime));
                 };
-                return sprintf '[%s] %s: %s', $timestr, $data{'level'}, $data{'message'};
-            }
+                return sprintf '[%s] %.3s: %s', $timestr, $data{'level'}, $data{'message'};
+            },
         ],
     ];
 }
 
-sub _verbosity_to_loglevel {
-    my ($class, $verbosity) = @_;
-
+sub _verbosity_to_loglevel ($class, $verbosity = 0) {
     $verbosity ||= 0;
-    $verbosity += INFO_LOG_LEVEL();                                            # set this log level as default one
+    $verbosity += NOTICE_LOG_LEVEL();                                          # set this log level as default one
 
     if ($verbosity >= DEBUG_LOG_LEVEL()) {
         return 'debug';

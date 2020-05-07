@@ -4,18 +4,23 @@ package Pakket::Role::HasSourceRepo;
 
 use v5.22;
 use Moose::Role;
+use namespace::autoclean;
+
+# core
+use experimental qw(declared_refs refaliasing signatures);
+
+# local
 use Pakket::Repository::Source;
-use Log::Any qw< $log >;
 
 has 'source_repo' => (
     'is'      => 'ro',
     'isa'     => 'Pakket::Repository::Source',
     'lazy'    => 1,
-    'default' => sub {
-        my $self = shift;
-
-        return Pakket::Repository::Source->new(
-            'backend' => $self->source_repo_backend,
+    'default' => sub ($self) {
+        Pakket::Repository::Source->new(
+            'backend'   => $self->source_repo_backend,
+            'log'       => $self->log,
+            'log_depth' => $self->log_depth,
         );
     },
 );
@@ -25,59 +30,29 @@ has 'source_repo_backend' => (
     'isa'     => 'PakketRepositoryBackend',
     'lazy'    => 1,
     'coerce'  => 1,
-    'default' => sub {
-        my $self = shift;
-        return $self->config->{'repositories'}{'source'};
-    },
+    'default' => sub ($self) {$self->config->{'repositories'}{'source'}},
 );
 
-sub add_source_for_package {
-    my ($self, $package, $sources) = @_;
-
-    # check if we already have the source in the repo
+sub add_source_for_package ($self, $package, $sources) {
     if ($self->source_repo->has_object($package->id) and !$self->overwrite) {
-        $log->debugf("Package %s already exists in source repo (skipping)", $package->full_name);
+        $self->log->debugf('Package %s already exists in source repo (skipping)', $package->id);
         return;
     }
 
     #remove .git dir if it exists in sources
-    $sources->child('.git')->remove_tree;
+    $sources->child('.git')->remove_tree({'safe' => 0});
 
     $self->_upload_sources($package, $sources);
+
+    return;
 }
 
-sub _upload_sources {
-    my ($self, $package, $dir) = @_;
-
-    $log->debugf("Uploading %s into source repo from %s", $package->name, "$dir");
-    $self->source_repo->store_package_source($package, $dir);
+sub _upload_sources ($self, $package, $dir) {
+    $self->log->debugf('uploading %s into source repo from %s', $package->name, "$dir");
+    $self->source_repo->store_package($package, $dir);
+    return;
 }
-
-no Moose::Role;
 
 1;
 
 __END__
-
-=pod
-
-=head1 DESCRIPTION
-
-=head1 ATTRIBUTES
-
-=head2 source_repo
-
-Stores the source repository, built with the backend using
-C<source_repo_backend>.
-
-=head2 source_repo_backend
-
-A hashref of backend information populated from the config file.
-
-=head1 SEE ALSO
-
-=over 4
-
-=item * L<Pakket::Repository::Source>
-
-=back

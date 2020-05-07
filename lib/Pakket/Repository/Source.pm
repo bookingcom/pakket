@@ -5,33 +5,33 @@ package Pakket::Repository::Source;
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
+use namespace::autoclean;
 
-use Log::Any qw< $log >;
-use Path::Tiny;
+# core
+use experimental qw(declared_refs refaliasing signatures);
 
-extends qw< Pakket::Repository >;
+extends qw(Pakket::Repository);
 
-sub retrieve_package_source {
-    my ($self, $package) = @_;
-    return $self->retrieve_package_file('source', $package);
+sub BUILDARGS ($class, %args) {
+    $args{'type'} //= 'source';
+
+    return Pakket::Role::HasLog->BUILDARGS(%args); ## no critic [Modules::RequireExplicitInclusion]
 }
 
-sub store_package_source {
-    my ($self, $package, $source_path) = @_;
+sub store_package ($self, $package, $path) {
+    $self->log->debug('compressing directory:', $path);
+    my $file = $self->freeze_location($path);
 
-    $log->debug("Adding $source_path to file");
-    my $file = $self->freeze_location($source_path);
-
-    $log->debug("Storing $file");
+    $self->log->debug('storing', $self->type, 'to', $package->id);
     $self->store_location($package->id, $file);
+
+    $self->add_to_cache($package->short_name, $package->version, $package->release);
+
+    return;
 }
 
-sub remove_package_source {
-    my ($self, $package) = @_;
-    return $self->remove_package_file('source', $package);
-}
-
-no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
+
+__END__

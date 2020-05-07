@@ -1,0 +1,8 @@
+# vim: syntax=conf foldmethod=marker
+# man: cpan
+
+on 'build' => sub {
+	requires 'App::FatPacker';
+	requires 'Archive::Tar::Wrapper';
+	requires 'Dist::Zilla';
+};

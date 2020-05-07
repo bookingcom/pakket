@@ -1,0 +1,56 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "ExtUtils-Install",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/B/BI/BINGOS/ExtUtils-Install-2.14.tar.gz",
+      "version" : "2.14"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0",
+               "perl/File-Path" : "0",
+               "perl/File-Temp" : "0"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            },
+            "File-Path" : {
+               "version" : "0"
+            },
+            "File-Temp" : {
+               "version" : "0"
+            }
+         }
+      }
+   }
+}

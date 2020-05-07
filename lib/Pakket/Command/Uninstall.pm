@@ -5,21 +5,25 @@ package Pakket::Command::Uninstall;
 use v5.22;
 use strict;
 use warnings;
+use namespace::autoclean;
 
-use Log::Any qw< $log >;
+use Carp;
+use Log::Any qw($log);
 use Log::Any::Adapter;
-use IO::Prompt::Tiny qw< prompt >;
-use Path::Tiny qw< path >;
+use IO::Prompt::Tiny qw(prompt);
+use Path::Tiny;
+use Module::Runtime qw(use_module);
 
 use Pakket '-command';
-use Pakket::Config;
-use Pakket::Uninstaller;
-use Pakket::Log;
-use Pakket::Package;
-use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
+use Pakket::Constants qw(PAKKET_PACKAGE_SPEC);
 
-sub abstract    {'Uninstall a package'}
-sub description {'Uninstall a package'}
+sub abstract {
+    return 'Uninstall a package';
+}
+
+sub description {
+    return 'Uninstall a package';
+}
 
 sub _determine_packages {
     my ($self, $opt, $args) = @_;
@@ -34,13 +38,13 @@ sub _determine_packages {
         my ($pkg_cat, $pkg_name) = $package_str =~ PAKKET_PACKAGE_SPEC();
 
         if (!$pkg_cat || !$pkg_name) {
-            die $log->critical("Can't parse $package_str. Use format category/package_name");
+            croak($log->critical("Can't parse $package_str. Use format category/package_name"));
         }
 
         push @packages,
             {
             'category' => $pkg_cat,
-            'name'     => $pkg_name
+            'name'     => $pkg_name,
             };
     }
 
@@ -52,7 +56,7 @@ sub _determine_config {
 
     # Read configuration
     my $config_file   = $opt->{'config'};
-    my $config_reader = Pakket::Config->new($config_file ? ('files' => [$config_file]) : ());
+    my $config_reader = use_module('Pakket::Config')->new($config_file ? ('files' => [$config_file]) : ());
 
     my $config = $config_reader->read_config;
 
@@ -82,16 +86,18 @@ sub opt_spec {
 sub validate_args {
     my ($self, $opt, $args) = @_;
 
-    Log::Any::Adapter->set('Dispatch', 'dispatcher' => Pakket::Log->build_logger($opt->{'verbose'}));
+    Log::Any::Adapter->set('Dispatch', 'dispatcher' => use_module('Pakket::Log')->build_logger($opt->{'verbose'}));
 
     $opt->{'config'}   = $self->_determine_config($opt);
     $opt->{'packages'} = $self->_determine_packages($opt, $args);
+
+    return;
 }
 
 sub execute {
     my ($self, $opt) = @_;
 
-    my $uninstaller = Pakket::Uninstaller->new(
+    my $uninstaller = use_module('Pakket::Controller::Uninstall')->new(
         'pakket_dir'           => $opt->{'config'}{'install_dir'},
         'packages'             => $opt->{'packages'},
         'without_dependencies' => $opt->{'without_dependencies'},
@@ -117,13 +123,3 @@ sub execute {
 1;
 
 __END__
-
-=pod
-
-=head1 SYNOPSIS
-
-    $ pakket uninstall perl/Dancer2
-
-=head1 DESCRIPTION
-
-Uninstall a given package.

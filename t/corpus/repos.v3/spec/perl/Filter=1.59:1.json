@@ -1,0 +1,52 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Filter",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/R/RU/RURBAN/Filter-1.59.tar.gz",
+      "version" : "1.59"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "recommends" : {
+               "perl/Class-XSAccessor" : "0",
+               "perl/Filter-Simple-Compile" : "0.02",
+               "perl/List-MoreUtils" : "0",
+               "perl/Perl-MinimumVersion" : "0",
+               "perl/Pod-Spell-CommonMistakes" : "0",
+               "perl/Test-CPAN-Meta" : "0",
+               "perl/Test-Kwalitee" : "0",
+               "perl/Test-Pod" : "1.00",
+               "perl/Test-Simple" : "0.88",
+               "perl/Text-CSV_XS" : "0"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         }
+      }
+   }
+}

@@ -1,0 +1,31 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "File-Temp",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/E/ET/ETHER/File-Temp-0.2309.tar.gz",
+      "version" : "0.2309"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : 0
+            }
+         },
+         "runtime" : {
+            "File-Path" : {
+               "version" : "2.06"
+            },
+            "Scalar-List-Utils" : {
+               "version" : 0
+            },
+            "parent" : {
+               "version" : "0.221"
+            }
+         }
+      }
+   },
+   "build_opts" : {},
+   "bundle_opts" : {}
+}

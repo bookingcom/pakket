@@ -1,0 +1,111 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Module-Build",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4231.tar.gz",
+      "version" : "0.4231"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "configure" : {
+            "requires" : {
+               "perl/CPAN-Meta" : "2.142060",
+               "perl/File-Path" : "0",
+               "perl/Module-Metadata" : "1.000002",
+               "perl/Perl-OSType" : "1",
+               "perl/version" : "0.87"
+            }
+         },
+         "runtime" : {
+            "recommends" : {
+               "perl/ExtUtils-Install" : "0.3",
+               "perl/ExtUtils-Manifest" : "1.54"
+            },
+            "requires" : {
+               "perl/CPAN-Meta" : "2.142060",
+               "perl/ExtUtils-Install" : "0",
+               "perl/ExtUtils-MakeMaker" : "0",
+               "perl/ExtUtils-Manifest" : "0",
+               "perl/File-Path" : "0",
+               "perl/Getopt-Long" : "0",
+               "perl/Module-Metadata" : "1.000002",
+               "perl/Perl-OSType" : "1",
+               "perl/Test-Harness" : "3.29",
+               "perl/Text-ParseWords" : "0",
+               "perl/podlators" : "2.17",
+               "perl/version" : "0.87"
+            }
+         },
+         "test" : {
+            "requires" : {
+               "perl/CPAN-Meta" : "1.4401",
+               "perl/CPAN-Meta-YAML" : "0.003",
+               "perl/File-Temp" : "0.15",
+               "perl/Test-Harness" : "3.29",
+               "perl/Test-Simple" : "0.49"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "CPAN-Meta" : {
+               "version" : "2.142060"
+            },
+            "File-Path" : {
+               "version" : "0"
+            },
+            "Module-Metadata" : {
+               "version" : "1.000002"
+            },
+            "Perl-OSType" : {
+               "version" : "1"
+            },
+            "version" : {
+               "version" : "0.87"
+            }
+         },
+         "runtime" : {
+            "CPAN-Meta" : {
+               "version" : "2.142060"
+            },
+            "ExtUtils-Install" : {
+               "version" : "0"
+            },
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            },
+            "ExtUtils-Manifest" : {
+               "version" : "0"
+            },
+            "File-Path" : {
+               "version" : "0"
+            },
+            "Getopt-Long" : {
+               "version" : "0"
+            },
+            "Module-Metadata" : {
+               "version" : "1.000002"
+            },
+            "Perl-OSType" : {
+               "version" : "1"
+            },
+            "Test-Harness" : {
+               "version" : "3.29"
+            },
+            "Text-ParseWords" : {
+               "version" : "0"
+            },
+            "podlators" : {
+               "version" : "2.17"
+            },
+            "version" : {
+               "version" : "0.87"
+            }
+         }
+      }
+   }
+}

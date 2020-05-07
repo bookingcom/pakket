@@ -1,0 +1,12 @@
+category: perl
+name: Text-Hunspell
+version: 2.14
+release: 1
+source: cpan
+requires:
+  configure:
+    - native/hunspell=>=2
+  build:
+    - native/hunspell
+  runtime:
+    - native/hunspell

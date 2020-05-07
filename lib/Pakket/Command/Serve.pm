@@ -5,44 +5,49 @@ package Pakket::Command::Serve;
 use v5.22;
 use strict;
 use warnings;
+use namespace::autoclean;
 
-use Path::Tiny qw< path >;
-use Log::Any::Adapter;
+# core
+use experimental qw(declared_refs refaliasing signatures);
 
+# non core
+use Log::Any qw($log);
+use Module::Runtime qw(use_module);
+use Path::Tiny;
+
+# local
 use Pakket '-command';
-use Pakket::Web::Server;
-use Pakket::Log;
 
-sub abstract    {'Serve objects'}
-sub description {'Serve objects'}
+sub abstract {
+    return 'Serve objects';
+}
 
-sub opt_spec {
-    return (
-        ['port=s',     'port where server will listen'],
-        ['verbose|v+', 'verbose output (can be provided multiple times)'],
+sub description {
+    return 'Serve objects';
+}
+
+sub opt_spec ($self, @args) {
+    return (                                                                   # no tidy
+        ['port=s', 'port where server will listen'],
+        undef,
+        $self->SUPER::opt_spec(@args),
     );
 }
 
-sub validate_args {
-    my ($self, $opt) = @_;
+sub validate_args ($self, $opt, $args) {
+    $self->SUPER::validate_args($opt, $args);
 
-    Log::Any::Adapter->set('Dispatch', 'dispatcher' => Pakket::Log->build_logger($opt->{'verbose'}));
+    $log->debug('pakket', join (' ', @ARGV));
+
+    return;
 }
 
-sub execute {
-    my ($self, $opt) = @_;
-    my $server = Pakket::Web::Server->new(
-
-        # default main object
-        map (+(
-                defined $opt->{$_}
-                ? ($_ => $opt->{$_})
-                : ()
-            ),
-            qw< port >),
+sub execute ($self, $opt, $args) {
+    my $server = use_module('Pakket::Web::Server')->new(                       # no tidy
+        map {defined $opt->{$_} ? ($_ => $opt->{$_}) : ()} qw(port),
     );
 
-    $server->run();
+    return $server->run();
 }
 
 1;
@@ -68,7 +73,7 @@ It will load one of following files in the following order:
 
 =item * C<PAKKET_WEB_CONFIG> environment variable (to a filename)
 
-=item * C<~/.pakket-web.json>
+=item * C<~/.config/pakket-web.json>
 
 =item * C</etc/pakket-web.json>
 
@@ -101,3 +106,5 @@ It will load one of following files in the following order:
             ...
         ]
     }
+
+=cut

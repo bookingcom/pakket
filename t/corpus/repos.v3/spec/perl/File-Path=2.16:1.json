@@ -1,0 +1,43 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "File-Path",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/J/JK/JKEENAN/File-Path-2.16.tar.gz",
+      "version" : "2.16"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "test" : {
+            "requires" : {
+               "perl/Test-Simple" : "0.44"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         }
+      }
+   }
+}

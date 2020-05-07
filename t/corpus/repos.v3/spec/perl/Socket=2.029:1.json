@@ -1,0 +1,38 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Socket",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/P/PE/PEVANS/Socket-2.029.tar.gz",
+      "version" : "2.029"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-Constant" : "0.23"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-Constant" : {
+               "version" : "0.23"
+            }
+         }
+      }
+   }
+}

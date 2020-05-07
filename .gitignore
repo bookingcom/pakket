@@ -1,8 +1,10 @@
 !bin
+!xt/release
 /.build/
 /.tidyall.d/
 /Pakket-*
 /build*
+/cover_db/
 /fatlib
 /nytprof*
 /tags

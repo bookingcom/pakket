@@ -5,57 +5,69 @@ package Pakket::Repository::Spec;
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
-use Types::Path::Tiny qw< Path >;
-use Carp qw< croak >;
-use JSON::MaybeXS qw< decode_json >;
-use Pakket::Utils qw< encode_json_pretty >;
+use namespace::autoclean;
 
-extends qw< Pakket::Repository >;
+# core
+use Carp;
+use experimental qw(declared_refs refaliasing signatures);
 
-sub retrieve_package_spec {
-    my ($self, $package) = @_;
+# non core
+use JSON::MaybeXS ();
 
-    my $spec_str;
-    eval {
-        $spec_str = $self->retrieve_content($package->id);
-        1;
+# local
+use Pakket::Type::Package;
+use Pakket::Utils qw(encode_json_pretty);
+
+extends qw(Pakket::Repository);
+
+sub BUILDARGS ($class, %args) {
+    $args{'type'} //= 'spec';
+
+    return Pakket::Role::HasLog->BUILDARGS(%args); ## no critic [Modules::RequireExplicitInclusion]
+}
+
+sub retrieve_package ($self, $package) {
+    return $self->retrieve_package_by_id($package->id);
+}
+
+sub retrieve_package_by_id ($self, $id) {
+    my $spec = eval {                                                          # no tidy
+        $self->retrieve_content($id);
     } or do {
-        my @available
-            = sort map {(split (m/=/))[1]} $self->all_object_ids_by_name($package->name, $package->category)->@*;
-        croak(    'Cannot fetch content for package '
-                . $package->id . "\n"
-                . ('available versions: ' . join (', ', @available) . "\n") x !!scalar @available);
+        chomp (my $error = $@ || 'zombie error');
+        croak($self->log->criticalf('Cannot fetch content for package: %s error: %s', $id, $error));
     };
 
-    my $config;
-    eval {
-        my $json       = JSON::MaybeXS->new(relaxed => 1);
-        my $config_raw = $json->decode($spec_str);
-        $config
-            = exists $config_raw->{'content'}
+    my $config = eval {                                                        # no tidy
+        my $json       = JSON::MaybeXS->new('relaxed' => 1);
+        my $config_raw = $json->decode($spec);
+        exists $config_raw->{'content'}
             ? $json->decode($config_raw->{'content'})
             : $config_raw;
-        1;
     } or do {
-        my $err = $@ || 'Unknown error';
-        croak("Cannot read spec properly: $err");
+        chomp (my $error = $@ || 'zombie error');
+        croak($self->log->critical('Cannot read spec properly:', $error));
     };
 
     return $config;
 }
 
-sub store_package_spec {
-    my ($self, $package, $spec) = @_;
+sub store_package ($self, $package, $spec = undef) {
+    $self->log->debug('storing', $self->type, 'to', $package->id);
+    $self->store_content($package->id, encode_json_pretty($spec || $package->spec));
 
-    return $self->store_content($package->id, encode_json_pretty($spec || $package->spec));
+    $self->add_to_cache($package->short_name, $package->version, $package->release);
+
+    return;
 }
 
-sub remove_package_spec {
-    my ($self, $package) = @_;
-    return $self->remove_package_file('spec', $package);
+sub gen_package ($self, $package) {
+    my $spec = $self->retrieve_package($package);
+    return Pakket::Type::Package->new_from_specdata($spec, $package->%{qw(as_prereq)});
 }
 
-no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
+
+__END__

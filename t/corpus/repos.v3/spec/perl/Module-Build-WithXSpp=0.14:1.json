@@ -1,0 +1,60 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Module-Build-WithXSpp",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/S/SM/SMUELLER/Module-Build-WithXSpp-0.14.tar.gz",
+      "version" : "0.14"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/Module-Build" : "0.26"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/Module-Build" : "0.26"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/Digest-MD5" : "0",
+               "perl/ExtUtils-CppGuess" : "0.04",
+               "perl/ExtUtils-XSpp" : "0.11",
+               "perl/Module-Build" : "0.26"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "Module-Build" : {
+               "version" : "0.26"
+            }
+         },
+         "configure" : {
+            "Module-Build" : {
+               "version" : "0.26"
+            }
+         },
+         "runtime" : {
+            "Digest-MD5" : {
+               "version" : "0"
+            },
+            "ExtUtils-CppGuess" : {
+               "version" : "0.04"
+            },
+            "ExtUtils-XSpp" : {
+               "version" : "0.11"
+            },
+            "Module-Build" : {
+               "version" : "0.26"
+            }
+         }
+      }
+   }
+}

@@ -4,65 +4,106 @@ package Pakket::Role::RunCommand;
 
 use v5.22;
 use Moose::Role;
+use namespace::autoclean;
+
+# core
+use Carp;
+use English qw(-no_match_vars);
+use File::chdir;
 use System::Command;
-use Path::Tiny qw< path >;
-use Log::Any qw< $log >;
+use experimental qw(declared_refs refaliasing signatures);
 
-sub run_command {
-    my ($self, $dir, $sys_cmds, $extra_opts) = @_;
-    $log->debug(join ' ', @{$sys_cmds});
+# local
+use Path::Tiny;
 
+# does more or less the same as `command1 && command2 ... && commandN`
+sub run_command_sequence ($self, $cwd, $common_opts, @commands) {
+    @commands
+        or return 1;
+
+    $self->log->debugf('starting a sequence of %d commands', scalar @commands);
+    for my $idx (0 .. $#commands) {
+        my $success = $self->run_command($cwd, $common_opts, $commands[$idx]);
+        if (!$success) {
+            $self->log->notice('Sequence terminated on item:', $idx);
+            return;
+        }
+    }
+    $self->log->debug('sequence finished');
+    return 1;
+}
+
+## no critic [Bangs::ProhibitBitwiseOperators]
+sub run_command ($self, $cwd, $opts, $command) {
     my %opt = (
-        'cwd' => path($dir)->stringify,
-
-        %{$extra_opts || {}},
+        'cwd' => path($cwd)->stringify,
+        $opts->%*,
 
         # 'trace' => $ENV{SYSTEM_COMMAND_TRACE},
     );
 
-    my $cmd = System::Command->new(@{$sys_cmds}, \%opt);
-
-    my $success = $cmd->loop_on(
-        'stdout' => sub {
-            my $msg = shift;
-            chomp $msg;
-            $log->debug($msg);
-            1;
-        },
-
-        'stderr' => sub {
-            my $msg = shift;
-            chomp $msg;
-            $log->notice($msg);
-            1;
-        },
-    );
-
-    $log->debugf("Command '%s' exited with '%d'", join (' ', $cmd->cmdline), $cmd->exit);
+    my $success;
+    if (ref $command eq 'ARRAY') {
+        my $cmd = System::Command->new($command->@*, \%opt);
+        $self->log->notice('Command:', $cmd->cmdline);
+        $success = $self->_do_run_command($cmd);
+        if ($cmd->exit) {
+            $self->log->error('Command:', join (' ', $cmd->cmdline), 'exited with', $cmd->exit);
+        } else {
+            $self->log->info('Command:', join (' ', $cmd->cmdline), 'exited with', $cmd->exit);
+        }
+    } else {
+        $self->log->notice('Command:', $command);
+        local $CWD = $cwd; ## no critic [Variables::ProhibitLocalVars]
+        local %ENV = $opts->{'env'}->%*;
+        my $errorcode = system ($command);
+        $success = $errorcode == 0;
+        if ($success) {
+            $self->log->info('Command: ', $command, 'exited with', $errorcode);
+        } else {
+            if ($CHILD_ERROR == -1) {
+                $self->log->errorf("Command: %s failed to execute: $!", $command);
+            } elsif ($CHILD_ERROR & 127) {
+                $self->log->errorf(
+                    "Command '%s' died with signal %d, %s coredump",
+                    $command,
+                    ($CHILD_ERROR & 127),
+                    ($CHILD_ERROR & 128) ? 'with' : 'without',
+                );
+            } else {
+                local $EXTENDED_OS_ERROR = $CHILD_ERROR >> 8;                  # use $! to convert errorcode to errormessage
+                $self->log->error('Command:', $command, 'exited with [', $EXTENDED_OS_ERROR, ']:',
+                    "$EXTENDED_OS_ERROR");
+            }
+        }
+    }
 
     return $success;
 }
 
-# does more or less the same as `command1 && command2 ... && commandN`
-sub run_command_sequence {
-    my ($self, @commands) = @_;
+sub _do_run_command ($self, $cmd) {
+    return $cmd->loop_on(
+        'stdout' => sub ($msg) {
+            chomp $msg;
+            $self->log->debug($msg);
+            1;
+        },
 
-    $log->debugf('Starting a sequence of %d commands', 0 + @commands);
-
-    for my $idx (0 .. $#commands) {
-        my $success = $self->run_command(@{$commands[$idx]});
-        unless ($success) {
-            $log->debug("Sequence terminated on item $idx");
-            return;
-        }
-    }
-
-    $log->debug('Sequence finished');
-
-    return 1;
+        'stderr' => sub ($msg) {
+            chomp $msg;
+            $self->log->warn($msg);
+            1;
+        },
+    );
 }
 
-no Moose::Role;
+before [qw(_do_run_command)] => sub ($self, @) {
+    return $self->log_depth_change(+1);
+};
+
+after [qw(_do_run_command)] => sub ($self, @) {
+    return $self->log_depth_change(-1);
+};
 
 1;
 
@@ -109,3 +150,5 @@ which each commands depends on the previous one succeeding.
 =item * L<System::Command>
 
 =back
+
+=cut

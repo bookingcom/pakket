@@ -1,0 +1,18 @@
+Package:
+  category: perl
+  name: Text-Hunspell
+  version: 2.14
+  release: 1
+  source: cpan
+Pakket:
+  version: 3
+  prereqs:
+    configure:
+      requires:
+        native/hunspell: '>=2'
+    build:
+      requires:
+        native/hunspell: 0
+    runtime:
+      requires:
+        native/hunspell: 0

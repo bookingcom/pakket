@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+if [[ -z "$(command -v cpanm)" ]]; then
+	echo 'Please install cpanm'
+	exit 1
+fi
+
+echo 'Installing seacan from git (on cpan it is too old)...'
+cpanm -nq https://github.com/gugod/Seacan/tarball/master
+echo
+echo 'Installing prereqs from cpanfile...'
+pushd tools &>/dev/null
+cpanm -nq --installdeps .
+popd &>/dev/null
+echo
+echo 'Installing dzil plugins and prereqs...'
+dzil authordeps --missing | cpanm -n -q
+echo
+echo 'Installing autoguessed prereqs...'
+dzil listdeps --author --develop --missing | cpanm -n -q

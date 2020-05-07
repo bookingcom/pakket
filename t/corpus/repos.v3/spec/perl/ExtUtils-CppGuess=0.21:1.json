@@ -1,0 +1,62 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "ExtUtils-CppGuess",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/E/ET/ETJ/ExtUtils-CppGuess-0.21.tar.gz",
+      "version" : "0.21"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/Capture-Tiny" : "0",
+               "perl/File-Temp" : "0"
+            }
+         },
+         "test" : {
+            "requires" : {
+               "perl/Capture-Tiny" : "0",
+               "perl/ExtUtils-MakeMaker" : "0",
+               "perl/ExtUtils-Manifest" : "0",
+               "perl/Module-Build" : "0",
+               "perl/Test-Simple" : "0.88",
+               "perl/autodie" : "0"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "Capture-Tiny" : {
+               "version" : "0"
+            },
+            "File-Temp" : {
+               "version" : "0"
+            }
+         }
+      }
+   }
+}

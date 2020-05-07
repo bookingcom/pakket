@@ -5,14 +5,15 @@ package Pakket::Web::Repo;
 use v5.22;
 use Dancer2 'appname' => 'Pakket::Web';
 use Dancer2::Plugin::Pakket::ParamTypes;
+use namespace::autoclean;
 
-use Carp qw< croak >;
-use Log::Any qw< $log >;
+use Carp;
+use Log::Any qw($log);
 use Pakket::Repository::Spec;
 use Pakket::Repository::Parcel;
 use Pakket::Repository::Source;
 
-## no critic qw(Modules::RequireExplicitInclusion)
+## no critic [Modules::RequireExplicitInclusion]
 
 my %repo_types = (
     'spec'   => sub {return Pakket::Repository::Spec->new(@_);},
@@ -34,7 +35,7 @@ sub create {
             return encode_json({
                     'version' => "$Pakket::Web::Repo::VERSION",
                     'objects' => scalar @{$repo->all_object_ids},
-                }
+                },
             );
         };
 
@@ -43,14 +44,14 @@ sub create {
 
             return encode_json({
                     'has_object' => $repo->has_object($id),
-                }
+                },
             );
         };
 
         get '/all_object_ids' => sub {
             return encode_json({
                     'object_ids' => $repo->all_object_ids,
-                }
+                },
             );
         };
 
@@ -60,8 +61,8 @@ sub create {
             my $name     = query_parameters->get('name');
             my $category = query_parameters->get('category');
             return encode_json({
-                    'object_ids' => $repo->all_object_ids_by_name($name, $category),
-                }
+                    'object_ids' => $repo->all_object_ids_by_name($category, $name),
+                },
             );
             };
 
@@ -72,7 +73,7 @@ sub create {
                 return encode_json({
                         'id'      => $id,
                         'content' => $repo->retrieve_content($id),
-                    }
+                    },
                 );
             };
 
@@ -116,13 +117,7 @@ sub create {
             prefix '/remove' => sub {
                 get '/location' => with_types [['query', 'id', 'Str', 'MissingID']] => sub {
                     my $id = query_parameters->get('id');
-                    $repo->remove_location($id);
-                    return encode_json({'success' => 1});
-                };
-
-                get '/content' => with_types [['query', 'id', 'Str', 'MissingID']] => sub {
-                    my $id = query_parameters->get('id');
-                    $repo->remove_content($id);
+                    $repo->remove($id);
                     return encode_json({'success' => 1});
                 };
             };
@@ -132,3 +127,5 @@ sub create {
 }
 
 1;
+
+__END__

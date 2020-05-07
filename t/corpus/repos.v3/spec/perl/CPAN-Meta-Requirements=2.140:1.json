@@ -1,0 +1,90 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "CPAN-Meta-Requirements",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/CPAN-Meta-Requirements-2.140.tar.gz",
+      "version" : "2.140"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "6.17"
+            }
+         },
+         "develop" : {
+            "requires" : {
+               "perl/Dist-Zilla" : "5",
+               "perl/Dist-Zilla-Plugin-Authority" : "0",
+               "perl/Dist-Zilla-Plugin-BumpVersionAfterRelease" : "0",
+               "perl/Dist-Zilla-Plugin-CheckChangesHasContent" : "0",
+               "perl/Dist-Zilla-Plugin-CheckExtraTests" : "0",
+               "perl/Dist-Zilla-Plugin-CheckMetaResources" : "0",
+               "perl/Dist-Zilla-Plugin-CheckPrereqsIndexed" : "0",
+               "perl/Dist-Zilla-Plugin-CopyFilesFromBuild-Filtered" : "0",
+               "perl/Dist-Zilla-Plugin-Git" : "0",
+               "perl/Dist-Zilla-Plugin-Git-Contributors" : "0",
+               "perl/Dist-Zilla-Plugin-GithubMeta" : "0",
+               "perl/Dist-Zilla-Plugin-InsertCopyright" : "0",
+               "perl/Dist-Zilla-Plugin-MakeMaker-Highlander" : "0.003",
+               "perl/Dist-Zilla-Plugin-MetaProvides-Package" : "0",
+               "perl/Dist-Zilla-Plugin-MinimumPerl" : "0",
+               "perl/Dist-Zilla-Plugin-OnlyCorePrereqs" : "0.014",
+               "perl/Dist-Zilla-Plugin-Pod2Readme" : "0",
+               "perl/Dist-Zilla-Plugin-Prereqs-AuthorDeps" : "0",
+               "perl/Dist-Zilla-Plugin-PromptIfStale" : "0",
+               "perl/Dist-Zilla-Plugin-SurgicalPodWeaver" : "0",
+               "perl/Dist-Zilla-Plugin-Test-Compile" : "0",
+               "perl/Dist-Zilla-Plugin-Test-MinimumVersion" : "0",
+               "perl/Dist-Zilla-Plugin-Test-Perl-Critic" : "0",
+               "perl/Dist-Zilla-Plugin-Test-PodSpelling" : "0",
+               "perl/Dist-Zilla-Plugin-Test-Portability" : "0",
+               "perl/Dist-Zilla-Plugin-Test-ReportPrereqs" : "0",
+               "perl/Dist-Zilla-Plugin-Test-Version" : "0",
+               "perl/Dist-Zilla-PluginBundle-Git-CheckFor" : "0",
+               "perl/File-Temp" : "0",
+               "perl/Pod-Coverage-TrustPod" : "0",
+               "perl/Pod-Spell" : "0",
+               "perl/Software-License" : "0",
+               "perl/Test-CPAN-Meta" : "0",
+               "perl/Test-Pod" : "1.41",
+               "perl/Test-Pod-Coverage" : "1.08",
+               "perl/Test-Simple" : "0",
+               "perl/Test-Spelling" : "0.12",
+               "perl/Test-Version" : "1"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/version" : "0.88"
+            }
+         },
+         "test" : {
+            "recommends" : {
+               "perl/CPAN-Meta" : "2.120900"
+            },
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0",
+               "perl/Test-Simple" : "0.88",
+               "perl/version" : "0.88"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "6.17"
+            }
+         },
+         "runtime" : {
+            "version" : {
+               "version" : "0.88"
+            }
+         }
+      }
+   }
+}

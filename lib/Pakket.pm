@@ -5,8 +5,13 @@ package Pakket;
 use v5.22;
 use strict;
 use warnings;
+use namespace::autoclean;
 
 use App::Cmd::Setup '-app';
+
+sub allow_any_unambiguous_abbrev {
+    return 0;
+}
 
 1;
 

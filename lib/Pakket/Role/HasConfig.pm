@@ -4,6 +4,12 @@ package Pakket::Role::HasConfig;
 
 use v5.22;
 use Moose::Role;
+use namespace::autoclean;
+
+# core
+use experimental qw(declared_refs refaliasing signatures);
+
+# local
 use Pakket::Config;
 
 has 'config' => (
@@ -13,13 +19,9 @@ has 'config' => (
     'builder' => '_build_config',
 );
 
-sub _build_config {
-    my $self          = shift;
-    my $config_reader = Pakket::Config->new();
-    return $config_reader->read_config;
+sub _build_config ($self) {
+    return Pakket::Config->new()->read_config;
 }
-
-no Moose::Role;
 
 1;
 
@@ -40,3 +42,5 @@ This role is a wrapper around L<Pakket::Config>.
 =head2 config
 
 A hashref built from the config file using L<Pakket::Config>.
+
+=cut

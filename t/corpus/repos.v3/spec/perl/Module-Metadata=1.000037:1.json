@@ -1,0 +1,74 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Module-Metadata",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/E/ET/ETHER/Module-Metadata-1.000037.tar.gz",
+      "version" : "1.000037"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "develop" : {
+            "recommends" : {
+               "perl/Dist-Zilla-PluginBundle-Author-ETHER" : "0.150",
+               "perl/Dist-Zilla-PluginBundle-Git-VersionManager" : "0.007"
+            },
+            "requires" : {
+               "perl/CPAN-Changes" : "0.19",
+               "perl/Pod-Coverage-TrustPod" : "0",
+               "perl/Test-CPAN-Meta" : "0",
+               "perl/Test-EOL" : "0",
+               "perl/Test-Kwalitee" : "1.21",
+               "perl/Test-MinimumVersion" : "0",
+               "perl/Test-Mojibake" : "0",
+               "perl/Test-NoTabs" : "0",
+               "perl/Test-Pod" : "1.41",
+               "perl/Test-Pod-Coverage" : "1.08",
+               "perl/Test-Pod-No404s" : "0",
+               "perl/Test-Portability-Files" : "0",
+               "perl/Test-Simple" : "0.90"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/Encode" : "0",
+               "perl/version" : "0.87"
+            }
+         },
+         "test" : {
+            "recommends" : {
+               "perl/CPAN-Meta" : "2.120900"
+            },
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0",
+               "perl/File-Path" : "0",
+               "perl/File-Temp" : "0",
+               "perl/Test-Simple" : "0.88"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "Encode" : {
+               "version" : "0"
+            },
+            "version" : {
+               "version" : "0.87"
+            }
+         }
+      }
+   }
+}

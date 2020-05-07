@@ -1,0 +1,43 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "parent",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/C/CO/CORION/parent-0.238.tar.gz",
+      "version" : "0.238"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "test" : {
+            "requires" : {
+               "perl/Test-Simple" : "0.40"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         }
+      }
+   }
+}

@@ -1,7 +1,7 @@
-install_dir: ~/.cache/pakket/install/5.30.0
+install_dir: ~/.cache/pakket/install
 log_file: ~/.cache/pakket/pakket.log
 allow_rollback: 1
-default-category: perl
+default_category: perl
 jobs: 3
 keep_rollbacks: 10
 use_hardlinks: 1
@@ -11,16 +11,23 @@ repositories:
         - directory
         - ~/.cache/pakket/spec
         - file_extension
-        - json
+        - .json
     source:
         - file
         - directory
         - ~/.cache/pakket/source
         - file_extension
-        - tar.gz
+        - .tgz
     parcel:
         - file
         - directory
-        - ~/.cache/pakket/parcel/arch-5.30.0
+        - ~/.cache/pakket/parcel
         - file_extension
-        - tar.gz
+        - tgz
+native:
+  build:
+    make-options: ['-j2']
+    no-test: 2
+perl:
+  build:
+    no-test: 2

@@ -4,22 +4,17 @@ package Pakket::Role::Repository::Backend;
 
 use v5.22;
 use Moose::Role;
+use namespace::autoclean;
 
 # These are helper methods we want the backend to implement
 # in order for the Repository to easily use across any backend
-requires qw<
+requires qw(
     new_from_uri
-
     all_object_ids all_object_ids_by_name has_object
-
-    store_content  retrieve_content  remove_content
-    store_location retrieve_location remove_location
->;
-
-no Moose::Role;
+    store_content retrieve_content store_location
+    retrieve_location remove
+);
 
 1;
 
 __END__
-
-=pod

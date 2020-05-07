@@ -1,0 +1,33 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Spiffy",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/I/IN/INGY/Spiffy-0.46.tar.gz",
+      "version" : "0.46"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "6.30"
+            }
+         },
+         "develop" : {
+            "requires" : {
+               "perl/Test-Pod" : "1.41"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "6.30"
+            }
+         }
+      }
+   }
+}

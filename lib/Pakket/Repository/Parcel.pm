@@ -5,33 +5,33 @@ package Pakket::Repository::Parcel;
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
+use namespace::autoclean;
 
-use Log::Any qw< $log >;
-use Path::Tiny;
+# core
+use experimental qw(declared_refs refaliasing signatures);
 
-extends qw< Pakket::Repository >;
+extends qw(Pakket::Repository);
 
-sub retrieve_package_parcel {
-    my ($self, $package) = @_;
-    return $self->retrieve_package_file('parcel', $package);
+sub BUILDARGS ($class, %args) {
+    $args{'type'} //= 'parcel';
+
+    return Pakket::Role::HasLog->BUILDARGS(%args); ## no critic [Modules::RequireExplicitInclusion]
 }
 
-sub store_package_parcel {
-    my ($self, $package, $parcel_path) = @_;
+sub store_package ($self, $package, $path) {
+    $self->log->debug('compressing directory:', $path);
+    my $file = $self->freeze_location($path);
 
-    $log->debug("Adding $parcel_path to file");
-    my $file = $self->freeze_location($parcel_path);
-
-    $log->debug("Storing $file");
+    $self->log->debug('storing', $self->type, 'to', $package->id);
     $self->store_location($package->id, $file);
+
+    $self->add_to_cache($package->short_name, $package->version, $package->release);
+
+    return;
 }
 
-sub remove_package_parcel {
-    my ($self, $package) = @_;
-    return $self->remove_package_file('parcel', $package);
-}
-
-no Moose;
 __PACKAGE__->meta->make_immutable;
 
 1;
+
+__END__

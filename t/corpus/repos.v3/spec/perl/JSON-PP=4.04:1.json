@@ -1,0 +1,52 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "JSON-PP",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/I/IS/ISHIGAKI/JSON-PP-4.04.tar.gz",
+      "version" : "4.04"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/Scalar-List-Utils" : "1.08",
+               "perl/Test-Simple" : "0"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "Scalar-List-Utils" : {
+               "version" : "1.08"
+            },
+            "Test-Simple" : {
+               "version" : "0"
+            }
+         }
+      }
+   }
+}

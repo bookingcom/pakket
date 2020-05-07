@@ -1,0 +1,120 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "CPAN-Meta",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/CPAN-Meta-2.150010.tar.gz",
+      "version" : "2.150010"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "6.17"
+            },
+            "suggests" : {
+               "perl/JSON-PP" : "2.27300"
+            }
+         },
+         "develop" : {
+            "recommends" : {
+               "perl/Perl-Critic-Lax" : "0"
+            },
+            "requires" : {
+               "perl/Dist-Zilla" : "5",
+               "perl/Dist-Zilla-Plugin-Authority" : "0",
+               "perl/Dist-Zilla-Plugin-BumpVersionAfterRelease" : "0",
+               "perl/Dist-Zilla-Plugin-CheckChangesHasContent" : "0",
+               "perl/Dist-Zilla-Plugin-CheckExtraTests" : "0",
+               "perl/Dist-Zilla-Plugin-CheckMetaResources" : "0",
+               "perl/Dist-Zilla-Plugin-CheckPrereqsIndexed" : "0",
+               "perl/Dist-Zilla-Plugin-CopyFilesFromBuild-Filtered" : "0",
+               "perl/Dist-Zilla-Plugin-DualLife" : "0",
+               "perl/Dist-Zilla-Plugin-Git" : "0",
+               "perl/Dist-Zilla-Plugin-Git-Contributors" : "0",
+               "perl/Dist-Zilla-Plugin-Git-Remote-Check" : "0",
+               "perl/Dist-Zilla-Plugin-GithubMeta" : "0",
+               "perl/Dist-Zilla-Plugin-InsertCopyright" : "0",
+               "perl/Dist-Zilla-Plugin-MakeMaker-Highlander" : "0.003",
+               "perl/Dist-Zilla-Plugin-MetaProvides-Package" : "0",
+               "perl/Dist-Zilla-Plugin-MinimumPerl" : "0",
+               "perl/Dist-Zilla-Plugin-OnlyCorePrereqs" : "0.014",
+               "perl/Dist-Zilla-Plugin-Pod2Readme" : "0",
+               "perl/Dist-Zilla-Plugin-Prereqs-AuthorDeps" : "0",
+               "perl/Dist-Zilla-Plugin-PromptIfStale" : "0",
+               "perl/Dist-Zilla-Plugin-SurgicalPodWeaver" : "0.0021",
+               "perl/Dist-Zilla-Plugin-Test-Compile" : "0",
+               "perl/Dist-Zilla-Plugin-Test-Perl-Critic" : "0",
+               "perl/Dist-Zilla-Plugin-Test-PodSpelling" : "0",
+               "perl/Dist-Zilla-Plugin-Test-Portability" : "0",
+               "perl/Dist-Zilla-Plugin-Test-ReportPrereqs" : "0",
+               "perl/Dist-Zilla-Plugin-Test-Version" : "0",
+               "perl/Dist-Zilla-PluginBundle-DAGOLDEN" : "0",
+               "perl/Dist-Zilla-PluginBundle-Git-CheckFor" : "0",
+               "perl/File-Temp" : "0",
+               "perl/Pod-Coverage-TrustPod" : "0",
+               "perl/Pod-Spell" : "0",
+               "perl/Software-License" : "0",
+               "perl/Test-CPAN-Meta" : "0",
+               "perl/Test-Pod" : "1.41",
+               "perl/Test-Pod-Coverage" : "1.08",
+               "perl/Test-Portability-Files" : "0",
+               "perl/Test-Simple" : "0",
+               "perl/Test-Spelling" : "0.12",
+               "perl/Test-Version" : "1"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/CPAN-Meta-Requirements" : "2.121",
+               "perl/CPAN-Meta-YAML" : "0.011",
+               "perl/Encode" : "0",
+               "perl/JSON-PP" : "2.27300",
+               "perl/Scalar-List-Utils" : "0",
+               "perl/version" : "0.88"
+            }
+         },
+         "test" : {
+            "recommends" : {
+               "perl/CPAN-Meta" : "2.120900"
+            },
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0",
+               "perl/File-Temp" : "0.20",
+               "perl/JSON-PP" : "2.27300",
+               "perl/Test-Simple" : "0.88"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "6.17"
+            }
+         },
+         "runtime" : {
+            "CPAN-Meta-Requirements" : {
+               "version" : "2.121"
+            },
+            "CPAN-Meta-YAML" : {
+               "version" : "0.011"
+            },
+            "Encode" : {
+               "version" : "0"
+            },
+            "JSON-PP" : {
+               "version" : "2.27300"
+            },
+            "Scalar-List-Utils" : {
+               "version" : "0"
+            },
+            "version" : {
+               "version" : "0.88"
+            }
+         }
+      }
+   }
+}

@@ -5,16 +5,31 @@ package Pakket::Repository;
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
+use namespace::autoclean;
 
-use Path::Tiny;
+# core
 use Archive::Tar;
-use Archive::Extract;
+use Carp;
+use Errno qw(:POSIX);
+use Module::Runtime qw(use_module);
+use experimental qw(declared_refs refaliasing signatures);
+
+# non core
 use File::chdir;
-use Carp ();
-use Log::Any qw< $log >;
-use Pakket::Types qw< PakketRepositoryBackend >;
-use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
-use Pakket::Versioning;
+use Path::Tiny;
+
+# local
+use Pakket::Helper::Versioner;
+use Pakket::Type qw(PakketRepositoryBackend);
+use Pakket::Utils::Package qw(
+    PAKKET_PACKAGE_STR
+);
+
+has 'type' => (
+    'is'       => 'ro',
+    'isa'      => 'Str',
+    'required' => 1,
+);
 
 has 'backend' => (
     'is'      => 'ro',
@@ -22,89 +37,130 @@ has 'backend' => (
     'coerce'  => 1,
     'lazy'    => 1,
     'builder' => '_build_backend',
-    'handles' => [
-        qw<
-            all_object_ids all_object_ids_by_name has_object
-            store_content  retrieve_content  remove_content
-            store_location retrieve_location remove_location
-            >
+    'handles' => [qw(
+            all_object_ids all_object_ids_by_name has_object remove
+            retrieve_content retrieve_location
+            store_content store_location
+            ),
     ],
 );
 
-has 'versioner' => (
+has 'all_objects_cache' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'default' => sub {
-        {
-            'native' => Pakket::Versioning->new('type' => 'Perl'),
-            'perl'   => Pakket::Versioning->new('type' => 'Perl'),
-        };
-    },
+    'lazy'    => 1,
+    'builder' => '_build_all_objects_cache',
+    'clearer' => 'clear_cache',
 );
 
-sub _build_backend {
-    my $self = shift;
-    Carp::croak($log->critical('You did not specify a backend ' . '(using parameter or URI string)'));
-}
+with qw(
+    Pakket::Role::CanFilterRequirements
+    Pakket::Role::HasLog
+);
 
-sub BUILD {
-    my $self = shift;
+sub BUILD ($self, @) {
     $self->backend();
+    return;
 }
 
-sub retrieve_package_file {
-    my ($self, $type, $package) = @_;
-    my $file = $self->retrieve_location($package->id);
+sub retrieve_package_file ($self, $package) {
+    my $id = $package->id;
 
-    if (!$file) {
-        Carp::croak($log->criticalf('We do not have the %s for package %s', $type, $package->full_name));
-    }
+    my $file = $self->retrieve_location($id)
+        or croak($self->log->criticalf('We do not have the %s for package %s', $self->type, $id));
+    $self->log->tracef('fetched %s %s to %s', $self->type, $id, $file->stringify);
 
     my $dir = Path::Tiny->tempdir(
-        'CLEANUP' => 1,
-        TEMPLATE  => "$$-" . ('X' x 10)
+        'CLEANUP'  => 1,
+        'TEMPLATE' => 'pakket-extract-' . $package->name . '-XXXXXXXXXX',
     );
 
-    # Prefer system 'tar' instead of 'in perl' archive extractor,
-    # because 'tar' memory consumption is very low,
-    # but perl extractor is really  greed for memory
-    # and we got the error "Out of memory" on KVMs
+    # Prefer system 'tar' instead of 'in perl' archive extractor, because 'tar' memory consumption is very low,
+    # but perl extractor is really greed for memory and we got the error "Out of memory" on KVMs
+
+    my $ae = use_module('Archive::Extract');
+    ## no critic [Modules::RequireExplicitInclusion]
     $Archive::Extract::PREFER_BIN = 1;
+    $Archive::Extract::PREFER_BIN
+        or croak('Incorrectly initialized Archive::Extract');
 
-    my $arch = Archive::Extract->new(
+    my $arch = $ae->new(
         'archive' => $file->stringify,
-        'type'    => 'tgz'
+        'type'    => 'tgz',
     );
 
-    unless ($arch->extract('to' => $dir)) {
-        Carp::croak($log->criticalf("[%s] Unable to extract %s to %s", $!, "$file", "$dir"));
-    }
+    $arch->extract('to' => $dir)
+        or croak($self->log->criticalf(q{[%s] Unable to extract '%s' to '%s'}, $!, $file, $dir));
+    $self->log->tracef('extracted %s %s to %s', $self->type, $id, $dir->stringify);
 
     return $dir;
 }
 
-sub remove_package_file {
-    my ($self, $type, $package) = @_;
-    my $file = $self->retrieve_location($package->id);
+sub freeze_location ($self, $orig_path) {
+    my $base_path = $orig_path;
 
-    if (!$file) {
-        Carp::croak($log->criticalf('We do not have the %s for package %s', $type, $package->full_name));
+    my @files;
+    if ($orig_path->is_file) {
+        $base_path = $orig_path->basename;
+        push (@files, $orig_path);
+    } elsif ($orig_path->is_dir) {
+        $orig_path->children
+            or croak($self->log->critical("Cannot freeze empty directory ($orig_path)"));
+
+        $orig_path->visit(
+            sub ($path, $) {
+                $path->is_file
+                    or return;
+                push @files, $path;
+            },
+            {'recurse' => 1},
+        );
+    } else {
+        croak($self->log->critical('Unknown location type:', $orig_path));
     }
 
-    $log->debug("Removing $type package");
-    $self->remove_location($package->id);
+    @files = map {$_->relative($base_path)->stringify} @files;
+
+    # Write and compress
+    my $arch = Archive::Tar->new();
+    {
+        local $CWD = $base_path; ## no critic [Variables::ProhibitLocalVars] chdir, to use relative paths in archive
+        $arch->add_files(@files);
+    }
+    my $file = Path::Tiny->tempfile();
+    $arch->write($file->stringify, COMPRESS_GZIP);
+
+    return $file;
 }
 
-sub latest_version_release {
-    my ($self, $category, $name, $req_string) = @_;
+sub remove_package_file ($self, $package) {
+    my $id = $package->id;
+
+    if (not $self->has_object($id)) {
+        croak($self->log->criticalf('We do not have the %s for package %s', $self->type, $id));
+    }
+
+    $self->log->debugf('removing %s package %s', $self->type, $id);
+    $self->remove($id);
+
+    return;
+}
+
+sub latest_version_release ($self, $category, $name, $req_string) {
 
     # This will also convert '0' to '>= 0'
     # (If we want to disable it, we just can just //= instead)
     $req_string ||= '>= 0';
 
+    # Category -> Versioner type class
+    my %types = (
+        'perl'   => 'Perl',
+        'native' => 'Perl',
+    );
+
     my %versions;
     foreach my $object_id (@{$self->all_object_ids}) {
-        my ($my_category, $my_name, $my_version, $my_release) = $object_id =~ PAKKET_PACKAGE_SPEC();
+        my ($my_category, $my_name, $my_version, $my_release) = $object_id =~ PAKKET_PACKAGE_STR();
 
         # Ignore what is not ours
         $category eq $my_category and $name eq $my_name
@@ -114,56 +170,74 @@ sub latest_version_release {
         push @{$versions{$my_version}}, $my_release;
     }
 
-    my $latest_version = $self->versioner->{$category}->latest($category, $name, $req_string, keys %versions)
-        or Carp::croak($log->criticalf('Could not analyze %s/%s to find latest version', $category, $name));
+    my $versioner = Pakket::Helper::Versioner->new(
+        'type' => $types{$category},
+    );
+
+    my $latest_version = $versioner->latest($category, $name, $req_string, keys %versions)
+        or croak($self->log->criticalf('Could not analyze %s/%s to find latest version', $category, $name));
 
     # return the latest version and latest release available for this version
     return [$latest_version, (sort @{$versions{$latest_version}})[-1]];
 }
 
-sub freeze_location {
-    my ($self, $orig_path) = @_;
+sub filter_requirements ($self, $requirements) {
+    return $self->filter_packages_in_cache($requirements, $self->all_objects_cache);
+}
 
-    my $base_path = $orig_path;
-    my @files;
+sub filter_queries ($self, $queries) {                                         # returns only existing packages
+    my %requirements = map {$_->short_name => $_} $queries->@*;
+    my (\@found, undef) = $self->filter_packages_in_cache(\%requirements, $self->all_objects_cache);
+    return @found;
+}
 
-    if ($orig_path->is_file) {
-        $base_path = $orig_path->basename;
-        push @files, $orig_path;
-    } elsif ($orig_path->is_dir) {
-        $orig_path->children
-            or Carp::croak($log->critical("Cannot freeze empty directory ($orig_path)"));
+sub select_available_packages ($self, $requirements, %params) {
+    $requirements->%*
+        or return;
 
-        $orig_path->visit(
-            sub {
-                my $path = shift;
-                $path->is_file or return;
+    $self->log->debugf('checking which packages are available in %s repo...', $self->type);
+    my ($packages, $not_found) = $self->filter_packages_in_cache($requirements, $self->all_objects_cache);
+    if ($not_found->@*) {
+        foreach my $package ($not_found->@*) {
+            my @available = $self->available_variants($self->all_objects_cache->{$package->short_name});
+            $params{'silent'}
+                or $self->log->warning(
+                'Could not find package in',
+                $self->type, 'repo:', $package->id, ('( available:', join (', ', @available), ')') x !!@available,
+                );
+        }
 
-                push @files, $path;
-            },
-            {'recurse' => 1},
-        );
-    } else {
-        Carp::croak($log->criticalf("Unknown location type: %s", "$orig_path"));
+        my $msg = sprintf ('Unable to find amount of parcels in repo: %d', scalar $not_found->@*);
+        if ($params{'continue'}) {
+            $params{'silent'}
+                or $self->log->warn($msg);
+        } else {
+            local $! = ENOENT;
+            croak($self->log->critical($msg));
+        }
     }
+    return $packages;
+}
 
-    @files = map {$_->relative($base_path)->stringify} @files;
-
-    # Write and compress
-    my $arch = Archive::Tar->new();
-    {
-        local $CWD = $base_path;                                               # chdir, to use relative paths in archive
-        $arch->add_files(@files);
+sub _build_all_objects_cache ($self) {
+    my %result;
+    foreach my $id ($self->all_object_ids->@*) {
+        my ($category, $name, $version, $release) = $id =~ PAKKET_PACKAGE_STR();
+        $result{"${category}/${name}"}{$version}{$release}++;
     }
-    my $file = Path::Tiny->tempfile();
-    $log->debug("Writing archive as $file");
-    $arch->write($file->stringify, COMPRESS_GZIP);
+    return \%result;
+}
 
-    return $file;
+sub add_to_cache ($self, $short_name, $version, $release) {
+    $self->all_objects_cache->{$short_name}{$version}{$release}++;
+    return;
+}
+
+sub _build_backend ($self) {
+    croak($self->log->critical('Cannot create backend of generic type (using parameter or URI string)'));
 }
 
 __PACKAGE__->meta->make_immutable;
-no Moose;
 
 1;
 
@@ -174,7 +248,7 @@ __END__
 =head1 SYNOPSIS
 
     my $repository = Pakket::Repository::Spec->new(
-        'backend' => Pakket::Repository::Backend::file->new(...),
+        'backend' => Pakket::Repository::Backend::File->new(...),
     );
 
     # or
@@ -207,7 +281,7 @@ documentation about particular repository methods, see:
 =head2 backend
 
     my $repo = Pakket::Repository::Source->new(
-        'backend' => Pakket::Repository::Backend::file->new(
+        'backend' => Pakket::Repository::Backend::File->new(
             ...
         ),
     );
@@ -235,15 +309,15 @@ Existing backends are:
 
 =over 4
 
-=item * L<Pakket::Repository::Backend::file>
+=item * L<Pakket::Repository::Backend::File>
 
 File-based backend, useful locally.
 
-=item * L<Pakket::Repository::Backend::http>
+=item * L<Pakket::Repository::Backend::Http>
 
 HTTP-based backend, useful remotely.
 
-=item * L<Pakket::Repository::Backend::dbi>
+=item * L<Pakket::Repository::Backend::Dbi>
 
 Database-based backed, useful remotely.
 
@@ -262,8 +336,6 @@ See examples in C<backend> above.
 =head2 retrieve_package_file
 
 =head2 remove_package_file
-
-=head2 latest_version_release
 
 =head2 freeze_location
 
@@ -287,10 +359,6 @@ This method will call C<store_content> on the backend.
 
 This method will call C<retrieve_content> on the backend.
 
-=head2 remove_content
-
-This method will call C<remove_content> on the backend.
-
 =head2 store_location
 
 This method will call C<store_location> on the backend.
@@ -299,6 +367,8 @@ This method will call C<store_location> on the backend.
 
 This method will call C<retrieve_location> on the backend.
 
-=head2 remove_location
+=head2 remove
 
-This method will call C<remove_location> on the backend.
+This method will call C<remove> on the backend.
+
+=cut

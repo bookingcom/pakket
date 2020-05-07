@@ -9,4 +9,11 @@ use strict;
 
 use Pakket;
 
-exit (Pakket->run // 0);
+my $app = Pakket->new();
+
+# Data::Dump::dd $app;
+# Data::Dump::dd [sort $app->command_names()];
+# Data::Dump::dd [sort $app->command_plugins];
+# my ($cmd, $opt, $args) = Pakket::Command::Install->prepare($app);
+
+exit ($app->run() // 0);

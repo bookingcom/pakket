@@ -1,22 +1,20 @@
 #!/usr/bin/env perl
 
-# XXX
 # This script needs to be fatpacked when done.
 # In order to do this, please use the pre-commit hook
 # available in the tools/git-hooks directory, as such:
 # ( cd .git/hooks && ln -s ../../tools/git-hooks/pre-commit )
-# XXX
 
-use 5.010;
+use v5.22;
 use strict;
 use warnings;
 use diagnostics;
 
 use App::Seacan;
-use English      '-no_match_vars';
-use Getopt::Long qw<:config no_ignore_case>;
-use IPC::Open3   qw<open3>;
-use Path::Tiny   qw<path tempdir>;
+use English '-no_match_vars';
+use Getopt::Long qw(:config no_ignore_case);
+use IPC::Open3 qw(open3);
+use Path::Tiny qw(path tempdir);
 
 use constant {
     'DEFAULT_PERL_VERSION' => '5.28.1',
@@ -24,7 +22,7 @@ use constant {
 
 my $app_dir = path('.');
 Getopt::Long::GetOptions(
-    'perl=s'    => \( my $perl_version = DEFAULT_PERL_VERSION() ),
+    'perl=s'    => \(my $perl_version = DEFAULT_PERL_VERSION()),
     'app-dir=s' => \$app_dir,
     'files=s@'  => \my @additional_files,
     'help'      => \my $help,
@@ -34,15 +32,15 @@ $help and _print_help();
 
 -d $app_dir or _print_help('--app-dir must point to a directory');
 
-my $top_src_dir  = tempdir( 'CLEANUP' => 1 );
-my $top_dest_dir = tempdir( 'CLEANUP' => 1 );
+my $top_src_dir  = tempdir('CLEANUP' => 1);
+my $top_dest_dir = tempdir('CLEANUP' => 1);
 my $source_dir   = $top_src_dir->child('pakket');
 my $dest_dir     = $top_dest_dir->child('pakket');
 
 $dest_dir->mkpath();
 $source_dir->mkpath();
 
-my @directories  = qw<bin lib>;
+my @directories = qw(bin lib share);
 foreach my $dir (@directories) {
     path($dir)->visit(
         sub {
@@ -58,15 +56,15 @@ foreach my $dir (@directories) {
             say "Copy $next -> $next_path";
             $next->copy($next_path);
         },
-        { 'recurse' => 1 },
+        {'recurse' => 1},
     );
 }
 
 # cpanfile must be there so "cpanm" would work on the app
-foreach my $node ( @additional_files, 'cpanfile' ) {
+foreach my $node (@additional_files, 'cpanfile') {
     my $file = path($node);
     say "Copy $file -> $source_dir";
-    $file->copy( $source_dir->child($file) );
+    $file->copy($source_dir->child($file));
 }
 
 my $seacan = App::Seacan->new(
@@ -79,26 +77,27 @@ my $seacan = App::Seacan->new(
         },
 
         'perl' => {
-            'version'             => $perl_version,
-                'installed_as'    => 'seacan',
-                'notest'          => 1,
-                'noman'           => 1,
-                'relocatable_INC' => 1,
-                'parallel'        => _detect_cores(),
+            'version'         => $perl_version,
+            'installed_as'    => 'seacan',
+            'notest'          => 1,
+            'noman'           => 1,
+            'relocatable_INC' => 1,
+            'parallel'        => _detect_cores(),
         },
     },
 );
 
 $seacan->run;
-say "Seacan is finished";
+say 'Seacan is finished';
 
-say "Packing...";
+say 'Packing...';
 my @cmd = (
     'tar', '--create', '--gzip', '--exclude-vcs', "--directory=$top_dest_dir",
     '--file=' . path('pakket.tar.gz')->absolute, '.',
 );
-say join(" ", @cmd);
-system(@cmd);
+say join (' ', @cmd);
+system (@cmd)
+    or die 'Unable to run command';
 
 sub _print_help {
     my $error   = shift;
@@ -122,11 +121,11 @@ _END_HELP
 
 sub _detect_cores {
     my $cores = 1;
-    if ( $OSNAME =~ /linux/xms ) {
+    if ($OSNAME =~ /linux/xms) {
         local $SIG{'CHLD'} = 'IGNORE';
-        my ( $writer, $reader, $err );
-        open3( $writer, $reader, $err, 'nproc' );
-        chomp( $cores = <$reader> );
+        my ($writer, $reader, $err);
+        open3($writer, $reader, $err, 'nproc');
+        chomp ($cores = <$reader>);
     }
 
     return $cores;

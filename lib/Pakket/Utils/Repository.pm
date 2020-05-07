@@ -5,17 +5,22 @@ package Pakket::Utils::Repository;
 use v5.22;
 use strict;
 use warnings;
-use parent 'Exporter';
 
-use Carp qw< croak >;
-use Path::Tiny qw< path >;
+# core
+use Carp;
+use Path::Tiny;
 
-our @EXPORT_OK = (qw< gen_repo_config >);
+# exports
+use namespace::clean;
+use Exporter qw(import);
+our @EXPORT_OK = qw(
+    gen_repo_config
+);
 
 my %file_ext = (
     'spec'   => 'json',
-    'source' => 'tar.gz',
-    'parcel' => 'tar.gz',
+    'source' => 'tgz',
+    'parcel' => 'tgz',
 );
 
 sub gen_repo_config {
@@ -50,4 +55,5 @@ sub gen_repo_config {
 }
 
 1;
+
 __END__

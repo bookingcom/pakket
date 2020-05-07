@@ -5,8 +5,9 @@ package Pakket::Web::Server;
 use v5.22;
 use Moose;
 use MooseX::StrictConstructor;
+use namespace::autoclean;
 
-use Log::Any qw< $log >;
+use Log::Any qw($log);
 use Plack::Runner;
 
 use Pakket::Web::App;
@@ -31,7 +32,6 @@ sub run {
 }
 
 __PACKAGE__->meta->make_immutable;
-no Moose;
 
 1;
 

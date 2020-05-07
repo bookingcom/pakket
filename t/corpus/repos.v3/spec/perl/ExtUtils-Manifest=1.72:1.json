@@ -1,0 +1,97 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "ExtUtils-Manifest",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/E/ET/ETHER/ExtUtils-Manifest-1.72.tar.gz",
+      "version" : "1.72"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            },
+            "suggests" : {
+               "perl/JSON-PP" : "2.27300"
+            }
+         },
+         "develop" : {
+            "recommends" : {
+               "perl/Dist-Zilla-PluginBundle-Git-VersionManager" : "0.007"
+            },
+            "requires" : {
+               "perl/CPAN-Changes" : "0.19",
+               "perl/Dist-Zilla" : "5",
+               "perl/Dist-Zilla-Plugin-Authority" : "0",
+               "perl/Dist-Zilla-Plugin-CheckChangesHasContent" : "0",
+               "perl/Dist-Zilla-Plugin-CheckExtraTests" : "0.024",
+               "perl/Dist-Zilla-Plugin-CheckIssues" : "0",
+               "perl/Dist-Zilla-Plugin-CheckPrereqsIndexed" : "0",
+               "perl/Dist-Zilla-Plugin-CheckSelfDependency" : "0",
+               "perl/Dist-Zilla-Plugin-CheckStrictVersion" : "0",
+               "perl/Dist-Zilla-Plugin-CopyFilesFromRelease" : "0",
+               "perl/Dist-Zilla-Plugin-DualLife" : "0.04",
+               "perl/Dist-Zilla-Plugin-Git" : "0",
+               "perl/Dist-Zilla-Plugin-Git-Contributors" : "0.029",
+               "perl/Dist-Zilla-Plugin-Git-Describe" : "0.004",
+               "perl/Dist-Zilla-Plugin-Git-Remote-Check" : "0",
+               "perl/Dist-Zilla-Plugin-GitHub" : "0",
+               "perl/Dist-Zilla-Plugin-InstallGuide" : "1.200005",
+               "perl/Dist-Zilla-Plugin-MetaProvides-Package" : "1.15000002",
+               "perl/Dist-Zilla-Plugin-MinimumPerl" : "1.006",
+               "perl/Dist-Zilla-Plugin-MojibakeTests" : "0.8",
+               "perl/Dist-Zilla-Plugin-OnlyCorePrereqs" : "0.014",
+               "perl/Dist-Zilla-Plugin-Prereqs-AuthorDeps" : "0",
+               "perl/Dist-Zilla-Plugin-PromptIfStale" : "0",
+               "perl/Dist-Zilla-Plugin-ReadmeAnyFromPod" : "0.142180",
+               "perl/Dist-Zilla-Plugin-Test-CPAN-Changes" : "0.012",
+               "perl/Dist-Zilla-Plugin-Test-Compile" : "2.039",
+               "perl/Dist-Zilla-Plugin-Test-MinimumVersion" : "2.000003",
+               "perl/Dist-Zilla-Plugin-Test-Pod-No404s" : "0",
+               "perl/Dist-Zilla-Plugin-Test-Portability" : "2.000007",
+               "perl/Dist-Zilla-Plugin-Test-ReportPrereqs" : "0.022",
+               "perl/Dist-Zilla-PluginBundle-Git-VersionManager" : "0",
+               "perl/Encode" : "0",
+               "perl/Software-License" : "0",
+               "perl/Test-CPAN-Meta" : "0",
+               "perl/Test-MinimumVersion" : "0",
+               "perl/Test-Mojibake" : "0",
+               "perl/Test-Pod" : "1.41",
+               "perl/Test-Pod-No404s" : "0",
+               "perl/Test-Portability-Files" : "0",
+               "perl/Test-Simple" : "0.96"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/File-Path" : "0"
+            }
+         },
+         "test" : {
+            "recommends" : {
+               "perl/CPAN-Meta" : "2.120900"
+            },
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0",
+               "perl/Test-Simple" : "0"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "File-Path" : {
+               "version" : "0"
+            }
+         }
+      }
+   }
+}

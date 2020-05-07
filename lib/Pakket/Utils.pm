@@ -5,144 +5,228 @@ package Pakket::Utils;
 use v5.22;
 use strict;
 use warnings;
+
+# core
+use List::Util qw(any);
+use experimental qw(declared_refs refaliasing signatures);
 use version 0.77;
 
-use Exporter qw< import >;
+# non core
 use JSON::MaybeXS;
 
-our @EXPORT_OK = qw<
-    is_writeable
-    generate_env_vars
-    canonical_package_name
+# exports
+use namespace::clean;
+use Exporter qw(import);
+our @EXPORT_OK = qw(
+    clean_hash
     encode_json_canonical
     encode_json_pretty
->;
+    env_vars
+    env_vars_build
+    env_vars_passthrough
+    env_vars_scaffold
+    expand_variables
+    is_writeable
+    normalize_version
+    get_application_version
+);
 
-sub is_writeable {
-    my $path = shift;                                                          # Path::Tiny objects
+sub get_application_version {
+    return ($Pakket::Utils::VERSION && $Pakket::Utils::VERSION->{'original'}) // '3.1415';
 
+    #state $name = __PACKAGE__ . '::VERSION';
+    #return *{$name} // '3.1415';
+}
+
+sub normalize_version ($input) {
+    my $version = version->parse($input);
+    $version->is_qv
+        and return $version->normal;
+    return $version->stringify;
+}
+
+sub is_writeable ($path) {
     while (!$path->is_rootdir) {
-        $path->exists and return -w $path;
+        $path->exists
+            and return -w $path;
         $path = $path->parent;
     }
-
     return -w $path;
 }
 
-sub generate_env_vars {
-    my ($build_dir, $top_pkg_dir, $prefix, $use_prefix, $opts, $manual_env_vars) = @_;
-    my $pkg_dir = $top_pkg_dir->child($prefix);
+## no critic [Subroutines::ProhibitManyArgs]
 
-    my $inc = $opts->{'inc'} || '';
-    $manual_env_vars //= {};
-
-    my @perl5lib = (
-        $pkg_dir->child(qw<lib perl5>)->absolute->stringify,
-        ($prefix->child(qw<lib perl5>)->absolute->stringify) x !!$use_prefix,
-        $inc || (), $build_dir,
+sub env_vars ($build_dir, $environment, %params) {
+    my @params   = @params{qw(bootstrap_dir pkg_dir prefix use_prefix)};
+    my $c_path   = generate_cpath(@params);
+    my $lib_path = generate_lib_path(@params);
+    my %c_opts   = (
+        ('CPATH' => $c_path) x !!$c_path,
+        'PKG_CONFIG_PATH' => generate_pkgconfig_path(@params),
+        'LD_LIBRARY_PATH' => $lib_path,
+        'LD_RUN_PATH'     => $params{'prefix'}->child(qw(lib))->absolute->stringify,
+        'LIBRARY_PATH'    => $lib_path,
     );
 
+    my @perl5lib = (
+        $params{'pkg_dir'}->child(qw(lib perl5))->absolute->stringify,
+        ($params{'prefix'}->child(qw(lib perl5))->absolute->stringify) x !!$params{'use_prefix'},
+        $params{'sources'}->child(qw(lib))->absolute->stringify,
+        $params{'sources'}->child(qw(blib lib))->absolute->stringify,
+        $params{'sources'}->child(qw(blib))->absolute->stringify,
+        $params{'bootstrap_dir'}->child(qw(lib perl5))->absolute->stringify,
+
+        # this make some tests fail, so doing this only for restricted amount of distributions
+        ($params{'sources'}->absolute->stringify) x !!_expect_inc_dot($params{'sources'}),
+    );
     my %perl_opts = (
         'PERL5LIB'                  => join (':', @perl5lib),
-        'PERL_LOCAL_LIB_ROOT'       => '',
+        'PERL_LOCAL_LIB_ROOT'       => $params{'pkg_dir'}->child(qw(lib perl5))->absolute->stringify,
         'PERL5_CPAN_IS_RUNNING'     => 1,
         'PERL5_CPANM_IS_RUNNING'    => 1,
         'PERL5_CPANPLUS_IS_RUNNING' => 1,
         'PERL_MM_USE_DEFAULT'       => 1,
-        'PERL_MB_OPT'               => '',
-        'PERL_MM_OPT'               => '',
+        'PERL_MB_OPT'               => '--install_base ' . $params{'prefix'}->absolute->stringify,
+        'PERL_MM_OPT'               => 'INSTALL_BASE=' . $params{'prefix'}->absolute->stringify,
+
+        # By default ExtUtils::Install checks if a file wasn't changed then skip it which breaks
+        # CanBundle::snapshot_build_dir(). To change that behaviour and force installer to copy all files,
+        # ExtUtils::Install uses a parameter 'always_copy' or environment variable EU_INSTALL_ALWAYS_COPY.
+        'EU_INSTALL_ALWAYS_COPY' => 1,
     );
 
-    my $lib_path = generate_lib_path($pkg_dir, $prefix, $use_prefix);
     return (
-        'CPATH'           => generate_cpath($pkg_dir, $prefix, $use_prefix),
-        'PKG_CONFIG_PATH' => generate_pkgconfig_path($pkg_dir, $prefix, $use_prefix),
-        'LD_LIBRARY_PATH' => $lib_path,
-        'LIBRARY_PATH'    => $lib_path,
-        'PATH'            => generate_bin_path($pkg_dir, $prefix, $use_prefix),
+        'PATH' => generate_bin_path(@params, $params{'sources'}),
+        %c_opts,
         %perl_opts,
-        %{$manual_env_vars},
+        env_vars_passthrough(),
+        env_vars_build($build_dir, %params),
+        %{$environment // {}},
     );
 }
 
-sub generate_cpath {
-    my ($pkg_dir, $prefix, $use_prefix) = @_;
+sub _expect_inc_dot ($sources) {
+    return any {$sources->child($_)->exists} qw(
+        inc parts private builder lib/Devel/Symdump.pm constants.pl.PL openssl_config.PL pam.cfg.in
+        File-NFSLock.spec.PL MyInstall.pm mkheader tab/misc.pl Configure.pm
+    );
+}
+
+sub env_vars_build ($build_dir, %params) {
+    return (
+        'PACKAGE_BUILD_DIR' => $build_dir->absolute->stringify,
+        'PACKAGE_PKG_DIR'   => $params{'pkg_dir'}->absolute->stringify,
+        'PACKAGE_PREFIX'    => $params{'prefix'}->absolute->stringify,
+        'PACKAGE_SOURCES'   => $params{'sources'}->absolute->stringify,
+        'PACKAGE_SRC_DIR'   => $params{'sources'}->absolute->stringify,        # backward compatibility
+    );
+}
+
+sub env_vars_scaffold ($params) {
+    return (
+        'PACKAGE_SOURCES' => $params->{'sources'}->absolute->stringify,
+        'PACKAGE_SRC_DIR' => $params->{'sources'}->absolute->stringify,        # backward compatibility
+    );
+}
+
+sub env_vars_passthrough {
+    my %result = (
+        'LANG'   => 'en_US.utf8',
+        'LC_ALL' => 'en_US.utf8',
+        %ENV{qw(HOME TERM TZ all_proxy http_proxy HTTP_PROXY https_proxy HTTPS_PROXY no_proxy NO_PROXY)},
+    );
+
+    return clean_hash(\%result)->%*;
+}
+
+sub generate_cpath ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
+    my @incpaths = (                                                           # no tidy
+        $pkg_dir->child('include'),
+        ($prefix->child('include')) x !!$use_prefix,
+        $bootstrap_dir->child('include'),
+    );
 
     my @paths;
-    my @incpaths = $pkg_dir->child('include');
-    if ($use_prefix) {
-        push (@incpaths, $prefix->child('include'));
-    }
     foreach my $path (@incpaths) {
-        if ($path->exists) {
-            push (@paths, $path->absolute->stringify);
-            push @paths, map {$_->absolute->stringify} grep {$_->is_dir} $path->children();
-        }
+        $path->is_dir
+            or next;
+        push (@paths, map {$_->absolute->stringify} grep {$_->is_dir} $path, $path->children);
     }
     return join (':', @paths);
 }
 
-sub generate_lib_path {
-    my ($pkg_dir, $prefix, $use_prefix) = @_;
-
-    my @paths = ($pkg_dir->child('lib')->absolute->stringify);
-    if ($use_prefix) {
-        push (@paths, $prefix->child('lib')->absolute->stringify);
-    }
+sub generate_lib_path ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
+    my @paths = map {$_->absolute->stringify} $pkg_dir->child('lib'), ($prefix->child('lib')) x !!$use_prefix,
+        $bootstrap_dir->child('lib');
     if (defined (my $env_library_path = $ENV{'LD_LIBRARY_PATH'})) {
         push (@paths, $env_library_path);
     }
     return join (':', @paths);
 }
 
-sub generate_bin_path {
-    my ($pkg_dir, $prefix, $use_prefix) = @_;
-
-    my @paths = ($pkg_dir->child('bin')->absolute->stringify);
-    if ($use_prefix) {
-        push (@paths, $prefix->child('bin')->absolute->stringify);
-    }
+sub generate_bin_path ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix, $sources) {
+    my @paths = map {$_->absolute->stringify} $pkg_dir->child('bin'), ($prefix->child('bin')) x !!$use_prefix,
+        $sources->child(qw(blib bin)), $bootstrap_dir->child('bin');
     if (defined (my $env_bin_path = $ENV{'PATH'})) {
         push (@paths, $env_bin_path);
     }
     return join (':', @paths);
 }
 
-sub generate_pkgconfig_path {
-    my ($pkg_dir, $prefix, $use_prefix) = @_;
-
-    my @paths = ($pkg_dir->child('lib/pkgconfig')->absolute->stringify);
-    if ($use_prefix) {
-        push (@paths, $prefix->child('lib/pkgconfig')->absolute->stringify);
-    }
+sub generate_pkgconfig_path ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
+    my @paths = map {$_->absolute->stringify} $pkg_dir->child(qw(lib pkgconfig)),
+        ($prefix->child(qw(lib pkgconfig))) x !!$use_prefix, $bootstrap_dir->child(qw(lib pkgconfig));
     if (defined (my $env_pkgconfig_path = $ENV{'PKG_CONFIG_PATH'})) {
         push (@paths, $env_pkgconfig_path);
     }
     return join (':', @paths);
 }
 
-sub canonical_package_name {
-    my ($category, $package, $version, $release) = @_;
-
-    if ($version && $release) {
-        return sprintf '%s/%s=%s:%s', $category, $package, $version, $release;
-    }
-
-    if ($version) {
-        return sprintf '%s/%s=%s', $category, $package, $version;
-    }
-
-    return sprintf '%s/%s', $category, $package;
-}
-
-sub encode_json_canonical {
-    my $content = shift;
+sub encode_json_canonical ($content) {
     return JSON::MaybeXS->new->canonical->encode($content);
 }
 
-sub encode_json_pretty {
-    my $content = shift;
+sub encode_json_pretty ($content) {
     return JSON::MaybeXS->new->pretty->canonical->encode($content);
+}
+
+sub clean_hash ($data) {
+    ref $data eq 'HASH'
+        or return $data;
+    foreach my $key (keys $data->%*) {
+        $data->{$key} = clean_hash($data->{$key});
+        if (!defined $data->{$key} || (ref $data->{$key} eq 'HASH' && !$data->{$key}->%*)) {
+            delete $data->{$key};
+            next;
+        }
+    }
+    $data->%*
+        and return $data;
+    return {};
+}
+
+sub expand_variables ($variables, $env) {
+    $variables
+        or return [];
+
+    my @copy = $variables->@*;
+    _expand_flags_inplace(\@copy, $env);
+
+    return \@copy;
+}
+
+sub _expand_flags_inplace ($variables, $env) {
+    for my $var ($variables->@*) {
+        if (ref $var eq 'ARRAY') {
+            _expand_flags_inplace($var, $env);
+            next;
+        }
+        for my $key (keys $env->%*) {
+            my $placeholder = '%' . uc ($key) . '%';
+            $var =~ s{$placeholder}{$env->{$key}}msg;
+        }
+    }
+    return;
 }
 
 1;

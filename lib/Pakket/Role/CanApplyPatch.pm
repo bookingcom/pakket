@@ -4,27 +4,35 @@ package Pakket::Role::CanApplyPatch;
 
 use v5.22;
 use Moose::Role;
-use Path::Tiny qw< path >;
-use Log::Any qw< $log >;
+use namespace::autoclean;
 
-sub apply_patches {
-    my ($self, $package, $sources) = @_;
+# core
+use Carp;
+use experimental qw(declared_refs refaliasing signatures);
 
-    return unless $package->{patch};
+# non core
+use Path::Tiny;
 
-    $log->debugf("Applying some patches to $sources");
-    foreach my $patch (@{$package->{patch}}) {
-        unless ($patch =~ m/\//) {
-            $patch = path($package->{path}, '../patch/' . $package->name, $patch)->absolute;
+sub apply_patches ($self, $query, $params) {
+    $query->pakket_meta
+        or return;
+
+    my $meta    = $query->pakket_meta->scaffold // {};
+    my $patches = $meta->{'patch'}
+        or return;
+
+    $self->log->info('Applying patches for:', $query->id);
+    foreach my $patch ($patches->@*) {
+        if ($patch !~ m{/}) {
+            $patch = path($query->{'path'}, '../patch/' . $query->name, $patch)->absolute;
         }
-        $log->debugf('Patching with ' . $patch);
-        my $cmd   = "patch --no-backup-if-mismatch -p1 -sN -i $patch -d " . $sources->absolute;
-        my $ecode = system ($cmd);
-        Carp::croak("Unable to apply patch '$cmd'") if $ecode;
+        $self->log->info('Patching with:', $patch);
+        my $cmd = "patch --no-backup-if-mismatch -p1 -sN -i $patch -d " . $params->{'sources'}->absolute;
+        system ($cmd) == 0
+            or $self->log->croak('Unable to apply patch:', $cmd);
     }
+    return;
 }
-
-no Moose::Role;
 
 1;
 

@@ -1,0 +1,30 @@
+# vim: syntax=conf foldmethod=marker
+# man: cpan
+
+requires 'Algorithm::Diff::Callback';
+
+on 'build' => sub {
+	requires 'MooseX::Test::Role', '== 0.04';
+	requires 'Perl::Critic::Bangs';
+	requires 'perl_mlb';
+};
+
+on 'configure' => sub {
+	requires 'Perl::Critic::Freenode';
+	requires 'Perl::Critic::Itch';
+	requires 'Archive::Tar::Wrapper';
+};
+
+on 'develop' => sub {
+	requires 'Perl::Critic::Moose';
+	requires 'Perl::Critic::Policy::BuiltinFunctions::ProhibitDeleteOnArrays';
+};
+
+on 'runtime' => sub {
+	requires 'Code::TidyAll1';
+};
+
+on 'test' => sub {
+	requires 'Code::TidyAll';
+	requires 'Module::Faker';
+};

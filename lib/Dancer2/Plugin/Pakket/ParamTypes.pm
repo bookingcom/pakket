@@ -5,18 +5,15 @@ package Dancer2::Plugin::Pakket::ParamTypes;
 use v5.22;
 use strict;
 use warnings;
+use namespace::autoclean;
 
 use Dancer2::Plugin;
 
 use constant {'HTTP_USER_ERROR' => 400};
 
-extends('Dancer2::Plugin::ParamTypes');
-plugin_keywords('with_types');
+extends qw(Dancer2::Plugin::ParamTypes);
 
-sub with_types {
-    my $self = shift;
-    return $self->SUPER::with_types(@_);
-}
+plugin_keywords('with_types');
 
 sub BUILD {
     my $self = shift;
@@ -58,4 +55,11 @@ sub BUILD {
     return;
 }
 
+sub with_types {
+    my $self = shift;
+    return $self->SUPER::with_types(@_);
+}
+
 1;
+
+__END__

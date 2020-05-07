@@ -1,0 +1,52 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Digest",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/G/GA/GAAS/Digest-1.17.tar.gz",
+      "version" : "1.17"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/MIME-Base64" : "0",
+               "perl/Test-Simple" : "0.47"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "MIME-Base64" : {
+               "version" : "0"
+            },
+            "Test-Simple" : {
+               "version" : "0.47"
+            }
+         }
+      }
+   }
+}

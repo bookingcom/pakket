@@ -1,0 +1,65 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Test-Base",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/I/IN/INGY/Test-Base-0.89.tar.gz",
+      "version" : "0.89"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "develop" : {
+            "requires" : {
+               "perl/Test-Pod" : "1.41"
+            }
+         },
+         "runtime" : {
+            "recommends" : {
+               "perl/Test-Deep" : "0"
+            },
+            "requires" : {
+               "perl/Filter" : "0",
+               "perl/Scalar-List-Utils" : "1.07",
+               "perl/Spiffy" : "0.40",
+               "perl/Test-Simple" : "0.88"
+            }
+         },
+         "test" : {
+            "requires" : {
+               "perl/Algorithm-Diff" : "1.15",
+               "perl/ExtUtils-MakeMaker" : "6.52",
+               "perl/Text-Diff" : "0.35"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "Filter" : {
+               "version" : "0"
+            },
+            "Scalar-List-Utils" : {
+               "version" : "1.07"
+            },
+            "Spiffy" : {
+               "version" : "0.40"
+            },
+            "Test-Simple" : {
+               "version" : "0.88"
+            }
+         }
+      }
+   }
+}

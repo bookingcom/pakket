@@ -1,0 +1,56 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Test-Differences",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/D/DC/DCANTRELL/Test-Differences-0.67.tar.gz",
+      "version" : "0.67"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/Capture-Tiny" : "0.24",
+               "perl/Test-Simple" : "0.88",
+               "perl/Text-Diff" : "1.43"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "Capture-Tiny" : {
+               "version" : "0.24"
+            },
+            "Test-Simple" : {
+               "version" : "0.88"
+            },
+            "Text-Diff" : {
+               "version" : "1.43"
+            }
+         }
+      }
+   }
+}

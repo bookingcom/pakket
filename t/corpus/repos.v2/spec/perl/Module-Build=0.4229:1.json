@@ -1,0 +1,70 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Module-Build",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/L/LE/LEONT/Module-Build-0.4229.tar.gz",
+      "version" : "0.4229"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "CPAN-Meta" : {
+               "version" : "2.142060"
+            },
+            "File-Path" : {
+               "version" : 0
+            },
+            "Module-Metadata" : {
+               "version" : "1.000002"
+            },
+            "Perl-OSType" : {
+               "version" : "1"
+            },
+            "version" : {
+               "version" : "0.87"
+            }
+         },
+         "runtime" : {
+            "CPAN-Meta" : {
+               "version" : "2.142060"
+            },
+            "ExtUtils-Install" : {
+               "version" : 0
+            },
+            "ExtUtils-MakeMaker" : {
+               "version" : 0
+            },
+            "ExtUtils-Manifest" : {
+               "version" : 0
+            },
+            "File-Path" : {
+               "version" : 0
+            },
+            "Getopt-Long" : {
+               "version" : 0
+            },
+            "Module-Metadata" : {
+               "version" : "1.000002"
+            },
+            "Perl-OSType" : {
+               "version" : "1"
+            },
+            "Test-Harness" : {
+               "version" : "3.29"
+            },
+            "Text-ParseWords" : {
+               "version" : 0
+            },
+            "podlators" : {
+               "version" : "2.17"
+            },
+            "version" : {
+               "version" : "0.87"
+            }
+         }
+      }
+   },
+   "build_opts" : {},
+   "bundle_opts" : {}
+}

@@ -1,0 +1,59 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Pod-Simple",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/K/KH/KHW/Pod-Simple-3.40.tar.gz",
+      "version" : "3.40"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "recommends" : {
+               "perl/Encode" : "2.78"
+            },
+            "requires" : {
+               "perl/Pod-Escapes" : "1.04",
+               "perl/Test-Simple" : "0",
+               "perl/Text-Tabs+Wrap" : "98.112902"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "Pod-Escapes" : {
+               "version" : "1.04"
+            },
+            "Test-Simple" : {
+               "version" : "0"
+            },
+            "Text-Tabs+Wrap" : {
+               "version" : "98.112902"
+            }
+         }
+      }
+   }
+}

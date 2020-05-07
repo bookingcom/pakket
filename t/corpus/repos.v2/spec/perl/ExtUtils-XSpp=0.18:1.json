@@ -1,0 +1,25 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "ExtUtils-XSpp",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/S/SM/SMUELLER/ExtUtils-XSpp-0.18.tar.gz",
+      "version" : "0.18"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "Module-Build" : {
+               "version" : "0.40"
+            }
+         },
+         "runtime" : {
+            "Digest-MD5" : {
+               "version" : "2.0"
+            }
+         }
+      }
+   },
+   "build_opts" : {},
+   "bundle_opts" : {}
+}

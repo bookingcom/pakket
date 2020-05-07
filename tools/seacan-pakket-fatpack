@@ -1,0 +1,25 @@
+#!/usr/bin/env perl
+
+use v5.22;
+use strict;
+use warnings;
+
+use Carp;
+use File::Basename;
+use File::chdir;
+
+local $CWD = dirname(__FILE__); ## no critic [Variables::ProhibitLocalVars]
+my $source_script = 'seacan-pakket';
+my $packed_script = "$source_script-packed.pl";
+
+say "FatPacking: $source_script > $packed_script";
+system("fatpack pack '$source_script' > '$packed_script'") == 0
+    or croak('Cannot run fatpack');
+
+say 'Cleaning up';
+system('rm -rf fatlib') == 0
+    or croak('Cannot cleanup');
+
+1;
+
+__END__

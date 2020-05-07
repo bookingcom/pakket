@@ -1,0 +1,20 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Perl-OSType",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/Perl-OSType-1.010.tar.gz",
+      "version" : "1.010"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "6.17"
+            }
+         }
+      }
+   },
+   "build_opts" : {},
+   "bundle_opts" : {}
+}

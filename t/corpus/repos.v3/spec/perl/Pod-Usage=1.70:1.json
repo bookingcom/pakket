@@ -1,0 +1,52 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Pod-Usage",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/M/MA/MAREKR/Pod-Usage-1.70.tar.gz",
+      "version" : "1.70"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "build" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/Test-Simple" : "0.6",
+               "perl/podlators" : "4"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "build" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "Test-Simple" : {
+               "version" : "0.6"
+            },
+            "podlators" : {
+               "version" : "4"
+            }
+         }
+      }
+   }
+}

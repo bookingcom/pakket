@@ -95,3 +95,5 @@ the interpreter!
 
 This option is not yet available, but we intend to provide builds of
 Pakket as either an C<.rpm> or C<.deb> packages.
+
+=cut

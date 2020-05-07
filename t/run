@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+dzil run yath test -j 4 -P Moose

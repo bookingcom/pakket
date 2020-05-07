@@ -1,0 +1,76 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "File-Temp",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/E/ET/ETHER/File-Temp-0.2309.tar.gz",
+      "version" : "0.2309"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0"
+            }
+         },
+         "develop" : {
+            "recommends" : {
+               "perl/Dist-Zilla-PluginBundle-Author-ETHER" : "0.145",
+               "perl/Dist-Zilla-PluginBundle-Git-VersionManager" : "0.007"
+            },
+            "requires" : {
+               "perl/CPAN-Changes" : "0.19",
+               "perl/Encode" : "0",
+               "perl/Pod-Coverage-TrustPod" : "0",
+               "perl/Pod-Spell" : "0",
+               "perl/Test-CPAN-Meta" : "0",
+               "perl/Test-Kwalitee" : "1.21",
+               "perl/Test-Mojibake" : "0",
+               "perl/Test-Pod" : "1.41",
+               "perl/Test-Pod-Coverage" : "1.08",
+               "perl/Test-Pod-No404s" : "0",
+               "perl/Test-Portability-Files" : "0",
+               "perl/Test-Simple" : "0.96",
+               "perl/Test-Spelling" : "0.12"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/File-Path" : "2.06",
+               "perl/Scalar-List-Utils" : "0",
+               "perl/parent" : "0.221"
+            }
+         },
+         "test" : {
+            "recommends" : {
+               "perl/CPAN-Meta" : "2.120900"
+            },
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0",
+               "perl/Test-Simple" : "0"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "0"
+            }
+         },
+         "runtime" : {
+            "File-Path" : {
+               "version" : "2.06"
+            },
+            "Scalar-List-Utils" : {
+               "version" : "0"
+            },
+            "parent" : {
+               "version" : "0.221"
+            }
+         }
+      }
+   }
+}

@@ -1,0 +1,27 @@
+# vim: syntax=conf foldmethod=marker
+# man: cpan
+
+# runtime loaded modules have to be installed explicitly
+requires 'Archive::Extract';
+#requires 'MetaCPAN::Client';
+
+on 'build' => sub {
+	requires 'App::FatPacker';
+	requires 'Archive::Tar::Wrapper';
+	requires 'Dist::Zilla';
+};
+
+on 'test' => sub {
+	requires 'Perl::Critic::Bangs';
+	requires 'Perl::Critic::Freenode';
+	requires 'Perl::Critic::Lax';
+	requires 'Perl::Critic::Moose';
+	requires 'Perl::Critic::Policy::Perlsecret';
+	requires 'Perl::Critic::Policy::TryTiny::RequireUse';
+	requires 'Perl::Critic::Pulp';
+	requires 'Perl::Critic::StricterSubs';
+	requires 'Perl::Critic::Tics';
+	requires 'Perl::Tidy', '>= 20200110';
+	requires 'Test2::Harness';
+	requires 'Test2::Suite';
+};

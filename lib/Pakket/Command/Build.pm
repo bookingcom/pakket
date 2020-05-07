@@ -1,53 +1,66 @@
 package Pakket::Command::Build;
 
-# ABSTRACT: Build a Pakket parcel
+# ABSTRACT: Build a parcel
 
 use v5.22;
 use strict;
 use warnings;
+use namespace::autoclean;
 
+# core
+use experimental qw(declared_refs refaliasing signatures);
+
+# non core
+use Log::Any qw($log);
+use Module::Runtime qw(use_module);
+use Path::Tiny;
+
+# local
 use Pakket '-command';
-use Pakket::Constants qw< PAKKET_PACKAGE_SPEC >;
-use Pakket::Config;
-use Pakket::Builder;
-use Pakket::PackageQuery;
-use Pakket::Log;
-use Pakket::Utils::Repository qw< gen_repo_config >;
+use Pakket::Utils::Repository qw(gen_repo_config);
 
-use Path::Tiny qw< path >;
-use Log::Any qw< $log >;
-use Log::Any::Adapter;
+sub abstract {
+    return 'Build parcels';
+}
 
-sub abstract    {'Build a package'}
-sub description {'Build a package'}
+sub description {
+    return 'Build parcels from prepared source and spec files';
+}
 
-sub opt_spec {
+sub opt_spec ($self, @args) {
     return (
-        ['input-file=s',    'build stuff from this file'],
-        ['build-dir=s',     'use an existing build directory'],
-        ['keep-build-dir',  'do not delete the build directory'],
-        ['spec-dir=s',      'directory holding the specs'],
-        ['source-dir=s',    'directory holding the sources'],
-        ['output-dir=s',    'output directory (default: .)'],
-        ['config|c=s',      'configuration file'],
-        ['verbose|v+',      'verbose output (can be provided multiple times)'],
-        ['log-file=s',      'Log file (default: build.log)'],
-        ['ignore-failures', 'Continue even if some builds fail'],
-        ['overwrite',       'overwrite artifacts even if they are already exist'],
-        ['prefix=s',        'custom prefix used during build'],
-        ['use-prefix',      'use prefix to install all dependencies'],
+        ['file|f=s',     'path to input file (- for STDIN)'],
+        ['overwrite|w+', 'overwrite artifacts even if they are already exist (overwrite even prereqs if doubled)'],
+        ['no-prereqs',   'do not process any dependencies at all'],
+        ['keep|k',       'do not delete the build directory'],
+        undef,
+        ['no-continue|e', 'do not continue on error'],
+        ['dry-run|d',     'do not write result into repo'],
+        undef,
+        ['no-man',     'remove man pages'],
+        ['no-test|n+', 'ignore (-n) or skip (-nn) test completely'],
+        ['prefix|p=s', 'custom prefix used during build'],
+        undef,
+        ['source-dir=s', 'directory holding the sources'],
+        ['spec-dir=s',   'directory holding the specs'],
+        ['output-dir=s', 'output directory'],
+        undef,
+        ['with-develop',    'process dependencies for develop phase'],
+        ['with-recommends', 'process recommended dependencies'],
+        ['with-suggests',   'process suggested dependencies'],
+        undef,
+        $self->SUPER::opt_spec(@args),
     );
 }
 
-sub _determine_config {
-    my ($self, $opt) = @_;
+sub validate_args ($self, $opt, $args) {
+    $self->SUPER::validate_args($opt, $args);
 
-    my $config_file   = $opt->{'config'};
-    my $config_reader = Pakket::Config->new($config_file ? ('files' => [$config_file]) : ());
+    $log->debug('pakket', join (' ', @ARGV));
 
-    my $config = $config_reader->read_config;
+    my \%config = $self->{'config'};
 
-    # Setup default repos
+    # setup default repos
     my %repo_opt = (
         'spec'   => 'spec_dir',
         'source' => 'source_dir',
@@ -59,94 +72,37 @@ sub _determine_config {
         my $directory = $opt->{$opt_key};
         if ($directory) {
             my $repo_conf = $self->gen_repo_config($type, $directory);
-            $config->{'repositories'}{$type} = $repo_conf;
+            $config{'repositories'}{$type} = $repo_conf;
         }
-        $config->{'repositories'}{$type}
+        $config{'repositories'}{$type}
             or $self->usage_error("Missing configuration for $type repository");
     }
 
-    return $config;
-}
+    $opt->{'build_dir'}
+        and path($opt->{'build_dir'})->is_dir
+        || $self->usage_error($log->critical('You asked to use a build dir that does not exist:', $opt->{'build_dir'}));
 
-sub validate_args {
-    my ($self, $opt, $args) = @_;
-
-    $opt->{'config'} = $self->_determine_config($opt);
-    $opt->{'config'}{'env'}{'cli'} = 1;
-
-    my $log_file = $opt->{'log_file'} || $opt->{'config'}{'log_file'};
-    Log::Any::Adapter->set(
-        'Dispatch',
-        'dispatcher' => Pakket::Log->build_logger($opt->{'verbose'}, $log_file),
-    );
-
-    my @specs;
-    if (defined (my $file = $opt->{'input_file'})) {
-        my $path = path($file);
-        $path->exists && $path->is_file
-            or $self->usage_error("Bad input file: $path");
-
-        push @specs, $path->lines_utf8({'chomp' => 1});
-    } elsif (@{$args}) {
-        @specs = @{$args};
-    } else {
-        $self->usage_error('Must specify at least one package or a file');
-    }
-
-    foreach my $spec_str (@specs) {
-        my ($cat, $name, $version, $release) = $spec_str =~ PAKKET_PACKAGE_SPEC();
-
-        $cat && $name && $version && $release
-            or $self->usage_error("Provide category/name=version:release, not '$spec_str'");
-
-        my $query;
-        eval {$query = Pakket::PackageQuery->new_from_string($spec_str); 1;} or do {
-            my $error = $@ || 'Zombie error';
-            $log->debug("Failed to create PackageQuery: $error");
-            $self->usage_error("We do not understand this package string: $spec_str");
-        };
-
-        push @{$self->{'queries'}}, $query;
-    }
-
-    if ($opt->{'build_dir'}) {
-        path($opt->{'build_dir'})->is_dir
-            or die "You asked to use a build dir that does not exist.\n";
-    }
-}
-
-sub execute {
-    my ($self, $opt) = @_;
-
-    my $builder = Pakket::Builder->new(
-        'config'    => $opt->{'config'},
-        'overwrite' => $opt->{overwrite} ? {name => $self->{queries}[0]{name}} : +{},
-
-        # Maybe we have it, maybe we don't
-        map (+(
-                defined $opt->{$_}
-                ? ($_ => $opt->{$_})
-                : ()
-            ),
-            qw< build_dir keep_build_dir prefix use_prefix>),
-    );
-
-    if (!$opt->{'ignore_failures'}) {
-        $builder->build(@{$self->{'queries'}});
-        return;
-    }
-
-    foreach my $query (@{$self->{'queries'}}) {
-        eval {
-            $builder->build($query);
-            1;
-        } or do {
-            my $error = $@ || 'Zombie error';
-            $log->warnf('Failed to build %s, skipping.', $query->full_name);
-        };
-    }
+    $opt->{'file'}
+        ? $self->validate_no_args($args)
+        : $self->validate_at_least_one_arg($args);
+    $self->build_queries($self->parse_requested_ids($opt, $args));
 
     return;
+}
+
+sub execute ($self, $opt, $args) {
+    my @phases = (qw(configure runtime build test), map {$opt->{"with_$_"} ? $_ : ()} qw(develop));
+    my @types  = (qw(requires),                     map {$opt->{"with_$_"} ? $_ : ()} qw(recommends suggests));
+
+    my $controller = use_module('Pakket::Controller::Build')->new(
+        'config' => $self->{'config'},
+        'phases' => [@phases],
+        'types'  => [@types],
+        map {defined $opt->{$_} ? +($_ => $opt->{$_}) : +()} qw(dry_run keep no_continue no_prereqs overwrite prefix),
+        qw(no_man no_test prefix),
+    );
+
+    return $controller->execute($self->%{qw(queries prereqs)});
 }
 
 1;
@@ -160,19 +116,6 @@ __END__
     $ pakket build perl/Dancer2
 
     $ pakket build native/tidyp=1.04
-
-    $ pakket build --help
-
-        --input-file STR     build stuff from this file
-        --build-dir STR      use an existing build directory
-        --keep-build-dir     do not delete the build directory
-        --spec-dir STR       directory holding the specs
-        --source-dir STR     directory holding the sources
-        --output-dir STR     output directory (default: .)
-        -c STR --config STR  configuration file
-        -v --verbose         verbose output (can be provided multiple times)
-        --log-file STR       Log file (default: build.log)
-        --ignore-failures    Continue even if one the builds failed
 
 =head1 DESCRIPTION
 
@@ -190,3 +133,5 @@ generate parcels, which are the build artifacts.
 
 Depending on the configuration you have for Pakket, the result will
 either be saved in a file or in a database or sent to a remote server.
+
+=cut

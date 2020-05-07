@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+curl -Ls 'http://www.perl.com/CPAN/modules/02packages.details.txt' -o "$(git rev-parse --show-toplevel)/share/02packages.details.txt"

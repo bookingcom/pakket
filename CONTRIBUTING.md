@@ -1,14 +1,60 @@
-### How to test stuff
-You must have docker & docker-compose installed
+# Contributing
 
-	docker-compose build && docker-compose run  bash
+## Introduction
 
-This will get you inside a docker container, where you can test pakket manually.
+You need several applications to be able to contribute, run tests, lint and format the code
 
-We also have a sample test file that you can use:
+1. Perl interpreter (using perlbrew)
+2. cpanm
+3. modules to build the package
+4. modules to run tests
+5. modules to run perlcritic and perltidy
 
-	pakket install --input-file t/test-pakket.list
+## Setup
 
-### Limitations:
+* Install perlbrew on your system (https://perlbrew.pl/)
+* Init the perlbrew (only once if you didn't have it before)
+```
+    perlbrew init
+```
+* Install Perl interpreter
+```
+    perlbrew install -nf -j 5 perl-5.30.2
+    perlbrew lib create perl-5.30.2@default
+    perlbrew switch perl-5.30.2@default
+```
+* Install cpanm
+```
+    perlbrew install-cpanm
+```
+* restart your shell
+* Install necessary modules
+```
+    tools/setup-dev-environment
+```
 
-* `pakket --version` will not work
+## Testing
+
+## Running perltidy and perlcritic for all files
+
+```
+    t/tidy
+```
+
+### Run only unit tests
+
+```
+    t/run
+```
+
+### Run unit and author tests
+
+```
+    t/author
+```
+
+### Run all possible tests before release
+
+```
+    t/release
+```

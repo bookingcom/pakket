@@ -4,6 +4,12 @@ package Pakket::Role::HasParcelRepo;
 
 use v5.22;
 use Moose::Role;
+use namespace::autoclean;
+
+# core
+use experimental qw(declared_refs refaliasing signatures);
+
+# local
 use Pakket::Repository::Parcel;
 
 has 'parcel_repo' => (
@@ -11,11 +17,11 @@ has 'parcel_repo' => (
     'isa'     => 'Pakket::Repository::Parcel',
     'lazy'    => 1,
     'clearer' => '_reset_parcel_repo',
-    'default' => sub {
-        my $self = shift;
-
-        return Pakket::Repository::Parcel->new(
-            'backend' => $self->parcel_repo_backend,
+    'default' => sub ($self) {
+        Pakket::Repository::Parcel->new(
+            'backend'   => $self->parcel_repo_backend,
+            'log'       => $self->log,
+            'log_depth' => $self->log_depth,
         );
     },
 );
@@ -26,46 +32,15 @@ has 'parcel_repo_backend' => (
     'lazy'    => 1,
     'coerce'  => 1,
     'clearer' => '_reset_parcel_repo_backend',
-    'default' => sub {
-        my $self = shift;
-        return $self->config->{'repositories'}{'parcel'};
-    },
+    'default' => sub ($self) {$self->config->{'repositories'}{'parcel'}},
 );
 
-sub reset_parcel_backend {
-    my ($self) = @_;
-
+sub reset_parcel_backend ($self) {
     $self->_reset_parcel_repo_backend();
     $self->_reset_parcel_repo();
-
     return;
 }
-
-no Moose::Role;
 
 1;
 
 __END__
-
-=pod
-
-=head1 DESCRIPTION
-
-=head1 ATTRIBUTES
-
-=head2 parcel_repo
-
-Stores the parcel repository, built with the backend using
-C<parcel_repo_backend>.
-
-=head2 parcel_repo_backend
-
-A hashref of backend information populated from the config file.
-
-=head1 SEE ALSO
-
-=over 4
-
-=item * L<Pakket::Repository::Parcel>
-
-=back

@@ -1,9 +1,9 @@
-[PerlTidy]
-select = **/*.{pl,pm,t}
-ignore = tools/**/*
-argv = -pro=xt/.perltidyrc
-
 [PerlCritic]
 select = **/*.{pl,pm,t}
 ignore = tools/**/*
-argv = -p xt/.perlcriticrc -severity 5
+argv = -p t/.perlcriticrc -severity 1
+
+[PerlTidy]
+select = **/*.{pl,pm,t}
+ignore = tools/**/*
+argv = -pro=t/.perltidyrc

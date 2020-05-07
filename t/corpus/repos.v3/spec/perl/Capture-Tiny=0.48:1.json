@@ -1,0 +1,72 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "Capture-Tiny",
+      "release" : 1,
+      "source" : "https://cpan.metacpan.org/authors/id/D/DA/DAGOLDEN/Capture-Tiny-0.48.tar.gz",
+      "version" : "0.48"
+   },
+   "Pakket" : {
+      "prereqs" : {
+         "configure" : {
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "6.17"
+            }
+         },
+         "develop" : {
+            "requires" : {
+               "perl/Dist-Zilla" : "5",
+               "perl/Dist-Zilla-Plugin-OSPrereqs" : "0",
+               "perl/Dist-Zilla-Plugin-ReleaseStatus-FromVersion" : "0",
+               "perl/Dist-Zilla-PluginBundle-DAGOLDEN" : "0.072",
+               "perl/File-Temp" : "0",
+               "perl/Pod-Coverage-TrustPod" : "0",
+               "perl/Pod-Spell" : "0",
+               "perl/Software-License" : "0",
+               "perl/Test-CPAN-Meta" : "0",
+               "perl/Test-MinimumVersion" : "0",
+               "perl/Test-Perl-Critic" : "0",
+               "perl/Test-Pod" : "1.41",
+               "perl/Test-Pod-Coverage" : "1.08",
+               "perl/Test-Portability-Files" : "0",
+               "perl/Test-Simple" : "0",
+               "perl/Test-Spelling" : "0.12",
+               "perl/Test-Version" : "1"
+            }
+         },
+         "runtime" : {
+            "requires" : {
+               "perl/File-Temp" : "0",
+               "perl/Scalar-List-Utils" : "0"
+            }
+         },
+         "test" : {
+            "recommends" : {
+               "perl/CPAN-Meta" : "2.120900"
+            },
+            "requires" : {
+               "perl/ExtUtils-MakeMaker" : "0",
+               "perl/Test-Simple" : "0.62"
+            }
+         }
+      },
+      "version" : "3.1415"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "6.17"
+            }
+         },
+         "runtime" : {
+            "File-Temp" : {
+               "version" : "0"
+            },
+            "Scalar-List-Utils" : {
+               "version" : "0"
+            }
+         }
+      }
+   }
+}
