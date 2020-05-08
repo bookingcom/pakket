@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+echo 'Archive::Tar::Wrapper'
+echo 'ETHER/Devel-Declare-0.006019.tar.gz'
+echo 'Parallel::ForkManager'
+
+dzil authordeps
+dzil listdeps --author --develop

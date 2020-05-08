@@ -8,9 +8,4 @@ test:
   image: $TEST_IMAGE
   script:
     - perl -v
-    - pakket install --input-file pakket.list
-    - dzil authordeps --missing
-    - pakket install --input-file <(dzil authordeps --missing                  | sed '/^#/d' | sed -E 's|(.*)|perl\/\1|g' | sed -E 's|::|-|g')
-    - dzil listdeps --author --develop --missing
-    - pakket install --input-file <(dzil listdeps --author --develop --missing | sed '/^#/d' | sed -E 's|(.*)|perl\/\1|g' | sed -E 's|::|-|g')
-    - RELEASE_TESTING=1 dzil run yath test --author-testing -j 4 -P Moose
+    - t/release

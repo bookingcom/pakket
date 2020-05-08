@@ -5,4 +5,6 @@ on 'build' => sub {
 	requires 'App::FatPacker';
 	requires 'Archive::Tar::Wrapper';
 	requires 'Dist::Zilla';
+	# parallel run support for TidyAll
+	requires 'Parallel::ForkManager';
 };

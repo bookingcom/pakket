@@ -38,7 +38,7 @@ sub BUILDARGS ($class, %args) {
         ('log' => $args{'log'}) x !!$args{'log'},
         ('log_depth' => $args{'log_depth'}) x !!$args{'log_depth'},
     );
-    delete %args{qw(log log_depth)};
+    delete @args{qw(log log_depth)};
 
     given ($args{'url'}) {
         when (m/^http/) {

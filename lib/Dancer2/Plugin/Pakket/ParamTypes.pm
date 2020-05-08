@@ -9,11 +9,11 @@ use namespace::autoclean;
 
 use Dancer2::Plugin;
 
-use constant {'HTTP_USER_ERROR' => 400};
-
 extends qw(Dancer2::Plugin::ParamTypes);
 
 plugin_keywords('with_types');
+
+use constant {'HTTP_USER_ERROR' => 400};
 
 sub BUILD {
     my $self = shift;
