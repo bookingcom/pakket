@@ -14,7 +14,7 @@ use experimental qw(declared_refs refaliasing signatures);
 use Module::Runtime qw(use_module);
 
 # local
-use Pakket::Type::Package;
+use Pakket::Type::PackageQuery;
 use Pakket::Utils qw(normalize_version);
 
 extends qw(Pakket::Controller::BaseRemoteOperation);
@@ -23,6 +23,12 @@ has 'file' => (
     'is'       => 'ro',
     'isa'      => 'Str',
     'required' => 1,
+);
+
+has [qw(overwrite)] => (
+    'is'      => 'ro',
+    'isa'     => 'Int',
+    'default' => 0,
 );
 
 sub execute ($self) {
@@ -36,16 +42,25 @@ sub execute ($self) {
         $query->clear_short_name;
     }
 
-    my $version = normalize_version($query->requirement)
-        or $self->croak('Version is required');
-
     $query->release
         or $self->croak('Release is required');
 
-    my $package = Pakket::Type::Package->new(
-        $query->%{qw(category name release)},
-        'version' => $version,
-    );
+    my $package;
+    if (my @found = $repo->filter_queries([$query])) {
+        if ($self->overwrite) {
+            $package = $found[0];
+        } else {
+            $self->croak('Package already exists:', $found[0]->id);
+        }
+    } else {
+        my $version = normalize_version($query->requirement)
+            or $self->croak('Version is required');
+
+        $package = Pakket::Type::PackageQuery->new(
+            $query->%{qw(category name release)},
+            'version' => $version,
+        );
+    }
 
     $repo->store_location($package->id, $self->file);
 

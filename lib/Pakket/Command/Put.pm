@@ -35,11 +35,12 @@ sub description {
 
 sub opt_spec ($self, @args) {
     return (                                                                   # no tidy
-        ['repo|r=s', 'repo to put object to'],
-        ['parcel|p', 'alias of --repo=parcel'],
-        ['source|u', 'alias of --repo=source'],
-        ['spec|s',   'alias of --repo=spec'],
-        ['file|f=s', 'path to the file', {'required' => 1}],
+        ['repo|r=s',     'repo to put object to'],
+        ['parcel|p',     'alias of --repo=parcel'],
+        ['source|u',     'alias of --repo=source'],
+        ['spec|s',       'alias of --repo=spec'],
+        ['file|f=s',     'path to the file', {'required' => 1}],
+        ['overwrite|w+', 'overwrite artifacts even if they are already exist'],
         undef,
         $self->SUPER::opt_spec(@args),
     );
@@ -71,10 +72,10 @@ sub execute ($self, $opt, $args) {
     my \@queries = $self->build_queries($args);
 
     my $controller = use_module('Pakket::Controller::Put')->new(
-        'config'  => $self->{'config'},
-        'repo'    => $self->{'repo'},
-        'file'    => $opt->{'file'},
+        $self->%{qw(config repo)},
+        $opt->%{qw(file)},
         'queries' => \@queries,
+        map {defined $opt->{$_} ? +($_ => $opt->{$_}) : +()} qw(overwrite),
     );
 
     return $controller->execute();
