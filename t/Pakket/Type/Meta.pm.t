@@ -18,7 +18,7 @@ use YAML;
 # local
 use Pakket::Type::Meta;
 
-describe 'default constructors' => sub {
+tests 'default constructors' => sub {
     ok(lives {Pakket::Type::Meta->new()}, 'Can be created with minimal amount of params')
         or diag($@);
 };

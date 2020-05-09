@@ -211,17 +211,19 @@ describe 'filter_packages_in_cache' {
     my %queries2 = %queries{qw(perl/Test-Simple perl/version)};
 
     my ($found, $not_found) = $consumer->filter_packages_in_cache(\%queries, \%cache);
-    like(
-        [sort {$a->short_name cmp $b->short_name} $found->@*],
-        [@tests{qw(perl/AnyEvent-YACurl=<0.09_008:2 perl/Encode perl/Tiny)}],
-        'found',
-    );
+    tests 'filter_packages_in_cache works properly' {
+        like(
+            [sort {$a->short_name cmp $b->short_name} $found->@*],
+            [@tests{qw(perl/AnyEvent-YACurl=<0.09_008:2 perl/Encode perl/Tiny)}],
+            'found',
+        );
 
-    like(
-        [sort {$a->short_name cmp $b->short_name} $not_found->@*],
-        [@tests{qw(perl/Test-Simple=2 perl/version=>v1)}],
-        'not found',
-    );
+        like(
+            [sort {$a->short_name cmp $b->short_name} $not_found->@*],
+            [@tests{qw(perl/Test-Simple=2 perl/version=>v1)}],
+            'not found',
+        );
+    };
 };
 
 describe 'creating and removing packages in repo' => sub {

@@ -18,7 +18,7 @@ use t::lib::Utils qw(match_any_item test_prepare_context_real test_run);
 
 ## no critic [ValuesAndExpressions::ProhibitMagicNumbers]
 
-describe '"install" command integration' {
+tests '"install" command integration' {
     my %ctx = test_prepare_context_real();
     my $opt = {
         'env' => {

@@ -58,10 +58,18 @@ describe 'normalize_version' {
     );
 
     foreach my $test (@tests) {
-        is(normalize_version($test->[0]), $test->[1], $test->[2]);
+        tests 'normalize_version works properly with' {
+            is(normalize_version($test->[0]), $test->[1], $test->[2]);
+        };
     }
 
-    like(dies {normalize_version('< 42')}, qr{Invalid\sversion\sformat}xms, 'Fail on requirement instead of version',);
+    tests 'normalize_version works properly' {
+        like(
+            dies {normalize_version('< 42')},
+            qr{Invalid\sversion\sformat}xms,
+            'Fail on requirement instead of version',
+        );
+    };
 };
 
 describe 'clean_hash' {
@@ -117,10 +125,12 @@ describe 'clean_hash' {
     );
 
     foreach my $test (@tests) {
-        my $r1 = clean_hash($test->[0]);                                       # scalar context
-        is($r1, $test->[1], $test->[2]);
-        my ($r2) = +(clean_hash($test->[0]));                                  # list context
-        is($r2, $test->[1], $test->[2]);
+        tests 'clean_hash works properly' {
+            my $r1 = clean_hash($test->[0]);                                   # scalar context
+            is($r1, $test->[1], $test->[2]);
+            my ($r2) = +(clean_hash($test->[0]));                              # list context
+            is($r2, $test->[1], $test->[2]);
+        };
     }
 };
 
