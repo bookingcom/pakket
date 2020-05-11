@@ -27,11 +27,14 @@ sub execute ($self) {
     foreach my $id (sort $ids->@*) {
         my $spec    = $self->spec_repo->retrieve_package_by_id($id);
         my $package = Pakket::Type::Package->new_from_specdata($spec);
+        $self->log->notice('Processing:', $package->id);
 
-        #        if ($package->category eq 'perl') {
-        #            #
-        #        }
-        $self->spec_repo->store_package($package, clean_hash($spec));
+        my $clean_spec = clean_hash($spec);
+
+        # if ($package->category eq 'perl') {
+        # }
+
+        $self->spec_repo->store_package($package, $clean_spec);
     }
 
     return 0;

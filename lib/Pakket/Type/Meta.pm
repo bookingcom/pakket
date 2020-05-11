@@ -88,7 +88,7 @@ sub new_from_specdata ($class, $input, %additional) {
 # private
 
 sub _try_spec_v3 ($spec) {
-    exists $spec->{'Pakket'} && $spec->{'Pakket'}{'version'} >= 3
+    exists $spec->{'Pakket'} && $spec->{'Pakket'}{'version'} && $spec->{'Pakket'}{'version'} >= 3
         and return $spec->{'Pakket'};
     return;
 }

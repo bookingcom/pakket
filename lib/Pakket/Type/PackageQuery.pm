@@ -81,10 +81,13 @@ sub new_from_cpanfile ($class, $name, $requirement) {
     );
 }
 
-sub new_from_pakket_metadata ($class, $input) {
+sub new_from_pakket_metadata ($class, $input, %additional) {
     return $class->new(
-        $input->%{qw(category name version release source)},
+        $input->%{qw(category name source)},
+        ('requirement' => $input->{version}) x !!$input->{version},
+        ('release'     => $input->{release}) x !!$input->{release},
         'pakket_meta' => Pakket::Type::Meta->new_from_metadata($input),
+        %additional,
     );
 }
 
