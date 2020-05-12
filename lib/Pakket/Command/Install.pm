@@ -9,7 +9,6 @@ use open ':std', ':encoding(UTF-8)';
 use namespace::autoclean;
 
 # core
-use Carp;
 use Digest::SHA qw(sha1_hex);
 use experimental qw(declared_refs refaliasing signatures);
 
@@ -147,7 +146,7 @@ __END__
     $ pakket install perl/Dancer2=0.205000
     $ pakket install perl/Dancer2
 
-    $ cat file/pakket.list | pakket install
+    $ cat file/pakket.list | pakket install -f -
 
     $ pakket install --help
 

@@ -81,24 +81,24 @@ It will load one of following files in the following order:
 
 =head2 Configuration example
 
-    $ cat ~/.pakket-web.json
+    $ cat ~/.config/pakket-web.json
 
     {
         "repositories" : [
             {
-                "type" : "Spec",
+                "type" : "spec",
                 "path" : "/pakket/spec"
                 "backend" : [
-                    "HTTP",
+                    "http",
                     "host", "pakket.mydomain.com",
                     "port", 80
                 ]
             },
             {
-                "type" : "Source",
+                "type" : "source",
                 "path" : "/pakket/source",
                 "backend" : [
-                    "File",
+                    "file",
                     "directory", "/mnt/pakket-sources"
                 ],
             },

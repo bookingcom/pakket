@@ -14,8 +14,8 @@ use version;
 with qw(Pakket::Role::Versioner);
 
 sub compare ($self, $req1, $req2) {
-    my ($ver1, $rel1) = split (/:/, $req1);
-    my ($ver2, $rel2) = split (/:/, $req2);
+    my ($ver1, $rel1) = split (m/:/, $req1);
+    my ($ver2, $rel2) = split (m/:/, $req2);
     $rel1 //= 1;
     $rel2 //= 1;
     return (version->parse($ver1) <=> version->parse($ver2) or $rel1 <=> $rel2);

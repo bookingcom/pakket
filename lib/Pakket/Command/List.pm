@@ -8,7 +8,6 @@ use warnings;
 use namespace::autoclean;
 
 # core
-use Carp;
 use experimental qw(declared_refs refaliasing signatures);
 
 # noncore
@@ -22,15 +21,9 @@ use constant {
     'SUBJECTS' => {
         'absent' => {
             'match'   => '^ab',
-            'repo'    => 'spec',
+            'repo'    => 'parcel',
             'handler' => sub ($s) {
                 $s->absent();
-            },
-        },
-        'installed' => {
-            'match'   => '^in',
-            'handler' => sub ($s) {
-                $s->installed();
             },
         },
         'parcels' => {
@@ -40,6 +33,7 @@ use constant {
                 $s->parcels();
             },
         },
+
         'sources' => {
             'match'   => '^so',
             'repo'    => 'source',
@@ -54,6 +48,13 @@ use constant {
                 $s->specs();
             },
         },
+
+        'installed' => {
+            'match'   => '^in',
+            'handler' => sub ($s) {
+                $s->installed();
+            },
+        },
     },
 };
 
@@ -66,7 +67,7 @@ sub usage_desc ($self, @) {
 }
 
 sub description {
-    return 'List installed packages, parcels/sources/specs available in the repos';
+    return 'List installed packages, parcels/sources/specs available in the repos and absent parcels';
 }
 
 sub opt_spec ($self, @args) {
@@ -104,7 +105,7 @@ sub execute ($self, $opt, $args) {
 }
 
 sub _grep_subject ($self, $arg) {
-    $arg //= 'parcels';
+    $arg //= 'installed';
 
     my \%map = SUBJECTS();
     foreach my $name (keys %map) {
