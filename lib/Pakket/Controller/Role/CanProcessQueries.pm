@@ -18,6 +18,11 @@ requires qw(
     process_query
 );
 
+with qw(
+    Pakket::Role::CanVisitPrereqs
+    Pakket::Role::Perl::HasCpan
+);
+
 has [qw(no_prereqs no_continue)] => (
     'is'      => 'ro',
     'isa'     => 'Bool',
@@ -42,7 +47,7 @@ has 'types' => (
     'required' => 1,
 );
 
-sub execute ($self, %params) {
+sub _execute ($self, %params) { ## no critic [Subroutines::ProhibitUnusedPrivateSubroutines]
     $params{'prereqs'} && $params{'prereqs'}->%*
         and $params{'queries'} = $self->_prepare_external_prereqs(delete $params{'prereqs'});
 

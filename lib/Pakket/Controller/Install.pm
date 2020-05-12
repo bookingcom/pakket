@@ -70,9 +70,10 @@ has [qw(processing)] => (
 );
 
 with qw(
+    Pakket::Controller::Role::CanProcessQueries
     Pakket::Role::CanFilterRequirements
-    Pakket::Role::CanVisitPrereqs
     Pakket::Role::CanUninstallPackage
+    Pakket::Role::CanVisitPrereqs
     Pakket::Role::HasConfig
     Pakket::Role::HasInfoFile
     Pakket::Role::HasLibDir
@@ -85,14 +86,19 @@ sub execute ($self, %params) {
     $params{'prereqs'} && $params{'prereqs'}->%*
         and $params{'queries'} = $self->_parse_external_prereqs($params{'prereqs'});
 
-    my $queries = $params{'queries'};
+    my @queries;
+    foreach my $query ($params{'queries'}->@*) {
+        $query->is_module()                                                    # no tidy
+            and $query = $query->clone('name' => $self->determine_distribution($query->name));
+        push (@queries, $query);
+    }
 
     $self->dry_run
-        and return $self->_do_dry_run($queries);
+        and return $self->_do_dry_run(\@queries);
 
     my $_start = time;
-    my $size   = $queries->@*;
-    my $result = $self->_do_install($queries);
+    my $size   = @queries;
+    my $result = $self->_do_install(\@queries);
 
     Pakket::Log::send_data({
             'severity' => $result ? 'warning' : 'info',
@@ -118,6 +124,10 @@ sub _do_dry_run ($self, $queries) {
     say $_->id foreach $not_found->@*;
 
     return E2BIG;
+}
+
+sub process_query ($self, $query, %params) {
+    return;
 }
 
 sub _do_install ($self, $queries) {

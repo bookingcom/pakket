@@ -52,7 +52,6 @@ with qw(
     MooseX::Clone
     Pakket::Controller::Role::CanProcessQueries
     Pakket::Role::CanFilterRequirements
-    Pakket::Role::CanVisitPrereqs
     Pakket::Role::HasConfig
     Pakket::Role::HasLog
     Pakket::Role::HasSourceRepo
@@ -60,6 +59,10 @@ with qw(
     Pakket::Role::Perl::BootstrapModules
     Pakket::Role::Perl::HasCpan
 );
+
+sub execute ($self, %params) {
+    return $self->_execute(%params);
+}
 
 sub process_query ($self, $query, %params) {
     my $id = $query->short_name;

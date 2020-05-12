@@ -77,15 +77,17 @@ with qw(
     Pakket::Controller::Role::CanProcessQueries
     Pakket::Role::CanBundle
     Pakket::Role::CanFilterRequirements
-    Pakket::Role::CanVisitPrereqs
     Pakket::Role::HasConfig
     Pakket::Role::HasLog
     Pakket::Role::HasParcelRepo
     Pakket::Role::HasSourceRepo
     Pakket::Role::HasSpecRepo
-    Pakket::Role::Perl::HasCpan
     Pakket::Role::RunCommand
 );
+
+sub execute ($self, %params) {
+    return $self->_execute(%params);
+}
 
 sub process_query ($self, $query, %params) {
     my $id      = $query->short_name;
