@@ -33,11 +33,15 @@ with qw(
 );
 
 sub execute ($self, %params) {
-    my %env = env_vars(
-        $params{'build_dir'},
-        $params{'metadata'}{'environment'},
-        'bootstrap_dir' => $self->bootstrap_dir,
-        %params,
+    my %env = (
+        env_vars(
+            $params{'build_dir'},
+            $params{'metadata'}{'environment'},
+            'bootstrap_dir' => $self->bootstrap_dir,
+            %params,
+        ),
+
+        # 'PREFIX' => $params{'prefix'}->absolute,
     );
 
     $params{'opts'}              = {'env' => \%env};
@@ -54,8 +58,9 @@ sub execute ($self, %params) {
             or $self->croak('Failed to run pre-build commands');
     }
 
-    my @configurator_flags = ('--prefix=' . $params{'prefix'}->absolute);
     my @run_params         = ($params{'sources'}, $params{'opts'});
+    my @configurator_flags = ('--prefix=' . $params{'prefix'}->absolute);
+    my @make_flags;
 
     my $configurator;
     if ($params{'sources'}->child('configure')->is_file) {
@@ -67,23 +72,29 @@ sub execute ($self, %params) {
     } elsif ($params{'sources'}->child('CMakeLists.txt')->is_file) {
         $configurator       = 'cmake';
         @configurator_flags = ('-DCMAKE_INSTALL_PREFIX=' . $params{'prefix'}->absolute, '.');
+    } elsif ($params{'sources'}->child('Makefile')->is_file) {
+        $self->log->warn('Only Makefile is found, trying to run it');
+        undef @configurator_flags;
+        push (@make_flags, 'PREFIX=' . $params{'prefix'}->absolute);
     } else {
         $self->croak("Cannot find configurator '[Cc]onfigure', 'config' or cmake for:", $params{'name'});
     }
 
     my @commands = (                                                           # no tidy
-        [                                                                      # configure
-            $configurator, @{$self->config->{'native'}{'build'}{'configure-options'} // []},
-            $params{'configure-options'}->@*, @configurator_flags,
-        ],
+        ([                                                                  # configure
+                $configurator, @{$self->config->{'native'}{'build'}{'configure-options'} // []},
+                $params{'configure-options'}->@*, @configurator_flags,
+            ]
+        ) x !!@configurator_flags,
         [                                                                      # make
             'make', @{$self->config->{'native'}{'build'}{'make-options'} // []}, $params{'make-options'}->@*,
+            @make_flags,
         ],
         (                                                                      # test
             ['make', 'test']
         ) x !!($params{'no-test'} < 1),
         [                                                                      # install
-            'make', 'install', "DESTDIR=$params{build_dir}",
+            'make', 'install', "DESTDIR=$params{build_dir}", @make_flags,
         ],
         (                                                                      # cleanup man pages
             ['rm', '-rf', $params{'pkg_dir'}->child('man')->absolute->stringify]

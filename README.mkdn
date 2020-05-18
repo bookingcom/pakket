@@ -4,7 +4,7 @@ Pakket - An Unopinionated Meta-Packaging System
 
 # VERSION
 
-version 3.019
+version 3.020
 
 # DESCRIPTION
 
