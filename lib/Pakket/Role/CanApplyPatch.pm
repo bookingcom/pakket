@@ -22,12 +22,14 @@ sub apply_patches ($self, $query, $params) {
         or return;
 
     $self->log->info('Applying patches for:', $query->id);
+    my $patches_path = $query->pakket_meta->{'path'}->parent->parent->child('patch', $query->name)->absolute;
     foreach my $patch ($patches->@*) {
-        if ($patch !~ m{/}) {
-            $patch = path($query->{'path'}, '../patch/' . $query->name, $patch)->absolute;
-        }
-        $self->log->info('Patching with:', $patch);
-        my $cmd = "patch --no-backup-if-mismatch -p1 -sN -i $patch -d " . $params->{'sources'}->absolute;
+        my $full_path
+            = $patch =~ m{/}
+            ? $patch
+            : $patches_path->child($patch);
+        $self->log->info('Patching with:', $full_path);
+        my $cmd = "patch --no-backup-if-mismatch -p1 -sN -i $full_path -d " . $params->{'sources'}->absolute;
         system ($cmd) == 0
             or $self->log->croak('Unable to apply patch:', $cmd);
     }

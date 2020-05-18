@@ -69,7 +69,7 @@ sub execute ($self, %params) {
     # taken from cpanminus
     my %must_use_mm
         = map {($_ => 1)}
-        qw(version ExtUtils-MakeMaker ExtUtils-ParseXS ExtUtils-Install ExtUtils-Manifest Module-Build);
+        qw(version ExtUtils-MakeMaker ExtUtils-ParseXS ExtUtils-Install ExtUtils-Manifest);
 
     # If you have a Build.PL file but we can't load Module::Build, it means you didn't declare it as a dependency
     # If you have a Makefile.PL, we can at least use that, otherwise, we'll croak
@@ -122,7 +122,7 @@ sub _build_pl_cmds ($self, %params) {
 sub _makefile_pl_cmds ($self, %params) {
     return (
         ['perl', '-V'],                                                        # info
-        ['perl', '-f', 'Makefile.PL', 'NO_PACKLIST=1', 'NO_PERLLOCAL=1', $params{'configure-options'}->@*],  # configure
+        ['perl', '-f', 'Makefile.PL', 'verbose', 'NO_PACKLIST=1', 'NO_PERLLOCAL=1', $params{'configure-options'}->@*],  # configure
         ['make', $params{'make-options'}->@*],                                 # build
         (['make', 'test'],) x !!($params{'no-test'} < 1),                      # test
         ['make', 'install', 'DESTDIR=' . $params{'build_dir'}->absolute->stringify],                         # install

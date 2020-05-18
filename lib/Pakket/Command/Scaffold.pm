@@ -14,7 +14,6 @@ use experimental qw(declared_refs refaliasing signatures switch);
 use Log::Any qw($log);
 use Module::Runtime qw(use_module);
 use Path::Tiny;
-use YAML;
 
 # local
 use Pakket '-command';
@@ -110,8 +109,7 @@ sub _determine_queries ($self, $opt, $args) {
             );
         }
         when ('meta') {
-            my $data = path($opt->{'file'})->slurp_utf8;
-            $query = $pq->new_from_pakket_metadata(Load($data));
+            $query = $pq->new_from_pakket_metafile(path($opt->{'file'}));
         }
         when (['cpan', 'cpanfile', undef]) {
             my @ids = sort $self->parse_requested_ids($opt, $args)->@*;

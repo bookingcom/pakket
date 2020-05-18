@@ -25,6 +25,11 @@ has [qw(prereqs scaffold build test)] => (
     'isa' => 'Maybe[HashRef]',
 );
 
+has [qw(path)] => (
+    'is'  => 'ro',
+    'isa' => 'Maybe[Path::Tiny]',
+);
+
 with qw(
     MooseX::Clone
 );
@@ -66,7 +71,7 @@ sub new_from_prereqs ($class, $input, %additional) {
 
 sub new_from_metafile ($class, $path, %additional) {
     my $input = YAML::Load($path->slurp_utf8);
-    return $class->new_from_metadata($input, %additional);
+    return $class->new_from_metadata($input, %additional, 'path' => $path->absolute);
 }
 
 sub new_from_metadata ($class, $input, %additional) {
@@ -76,7 +81,6 @@ sub new_from_metadata ($class, $input, %additional) {
 
     #ref $meta{'source'} eq 'ARRAY'
     #and $meta{'source'} = join ('', $meta{'source'}->@*);
-    #return $class->new($params->%*, %additional, 'path' => $path->parent->absolute);
 }
 
 sub new_from_specdata ($class, $input, %additional) {

@@ -15,6 +15,7 @@ use experimental qw(declared_refs refaliasing signatures);
 
 # non core
 use Log::Any qw($log);
+use YAML;
 
 # local
 use Pakket::Type::Meta;
@@ -81,12 +82,13 @@ sub new_from_cpanfile ($class, $name, $requirement) {
     );
 }
 
-sub new_from_pakket_metadata ($class, $input, %additional) {
+sub new_from_pakket_metafile ($class, $path, %additional) {
+    my $data = Load($path->slurp_utf8);
     return $class->new(
-        $input->%{qw(category name source)},
-        ('requirement' => $input->{version}) x !!$input->{version},
-        ('release'     => $input->{release}) x !!$input->{release},
-        'pakket_meta' => Pakket::Type::Meta->new_from_metadata($input),
+        $data->%{qw(category name source)},
+        ('requirement' => $data->{version}) x !!$data->{version},
+        ('release'     => $data->{release}) x !!$data->{release},
+        'pakket_meta' => Pakket::Type::Meta->new_from_metafile($path),
         %additional,
     );
 }
