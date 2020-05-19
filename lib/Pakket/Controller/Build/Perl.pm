@@ -52,6 +52,10 @@ sub execute ($self, %params) {
         %params,
     );
 
+    # add path to libperl.so of current perl to LIBRARY_PATH
+    chomp (my $archlib = `perl -MConfig -e 'print \$Config{archlib}'`);
+    $env{'LIBRARY_PATH'} = join (':', $env{'LIBRARY_PATH'}, $archlib . '/CORE');
+
     $params{'opts'}              = {'env' => \%env};
     $params{'configure-options'} = expand_variables($params{'metadata'}{'configure-options'}, \%env);
     $params{'make-options'}      = expand_variables($params{'metadata'}{'make-options'}, \%env);
