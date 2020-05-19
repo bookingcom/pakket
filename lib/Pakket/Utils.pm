@@ -63,9 +63,11 @@ sub env_vars ($build_dir, $environment, %params) {
     my %c_opts   = (
         ('CPATH' => $c_path) x !!$c_path,
         'PKG_CONFIG_PATH' => generate_pkgconfig_path(@params),
-        'LD_LIBRARY_PATH' => $lib_path,
-        'LD_RUN_PATH'     => $params{'prefix'}->child(qw(lib))->absolute->stringify,
-        'LIBRARY_PATH'    => $lib_path,
+        'LD_LIBRARY_PATH' => $lib_path,                                        # dynamic loader searches here at runtime
+        'LIBRARY_PATH'    => $lib_path,                                        # linker searches here after -L
+
+        # DO NOT set LD_RUN_PATH onto temp dirs - they will be baked into binary's rpath
+        'LD_RUN_PATH' => $params{'prefix'}->child(qw(lib))->absolute->stringify,
     );
 
     my @perl5lib = (
@@ -158,27 +160,24 @@ sub generate_cpath ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
 sub generate_lib_path ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
     my @paths = map {$_->absolute->stringify} $pkg_dir->child('lib'), ($prefix->child('lib')) x !!$use_prefix,
         $bootstrap_dir->child('lib');
-    if (defined (my $env_library_path = $ENV{'LD_LIBRARY_PATH'})) {
-        push (@paths, $env_library_path);
-    }
+    $ENV{'LD_LIBRARY_PATH'}
+        and push (@paths, $ENV{'LD_LIBRARY_PATH'});
     return join (':', @paths);
 }
 
 sub generate_bin_path ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix, $sources) {
     my @paths = map {$_->absolute->stringify} $pkg_dir->child('bin'), ($prefix->child('bin')) x !!$use_prefix,
         $sources->child(qw(blib bin)), $bootstrap_dir->child('bin');
-    if (defined (my $env_bin_path = $ENV{'PATH'})) {
-        push (@paths, $env_bin_path);
-    }
+    $ENV{'PATH'}
+        and push (@paths, $ENV{'PATH'});
     return join (':', @paths);
 }
 
 sub generate_pkgconfig_path ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
     my @paths = map {$_->absolute->stringify} $pkg_dir->child(qw(lib pkgconfig)),
         ($prefix->child(qw(lib pkgconfig))) x !!$use_prefix, $bootstrap_dir->child(qw(lib pkgconfig));
-    if (defined (my $env_pkgconfig_path = $ENV{'PKG_CONFIG_PATH'})) {
-        push (@paths, $env_pkgconfig_path);
-    }
+    $ENV{'PKG_CONFIG_PATH'}
+        and push (@paths, $ENV{'PKG_CONFIG_PATH'});
     return join (':', @paths);
 }
 

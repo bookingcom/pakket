@@ -251,9 +251,14 @@ sub _bootstrap_builder ($self, $builder) {
     # now all packages exist let's just install them into bootstrap dir
     $self->log->notice('Install bootsrap modules for:', $builder->type);
     my (\@found, undef) = $self->parcel_repo->filter_requirements($requirements);
+
+    # we need to keep found packages in the same order as modules
+    my %found = map {+($_->short_name => $_)} @found;
+
     my $prefix  = path($self->prefix || DEFAULT_PREFIX())->absolute;
     my $pkg_dir = $builder->bootstrap_dir->child($prefix)->absolute;
-    foreach my $package (@found) {
+    foreach my $module ($modules->@*) {
+        my $package = $found{$module};
         $self->log->notice('Installing package:', $package->id);
         $self->_do_install_package(
             $package,
