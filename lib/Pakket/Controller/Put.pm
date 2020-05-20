@@ -53,7 +53,7 @@ sub execute ($self) {
             $self->croak('Package already exists:', $found[0]->id);
         }
     } else {
-        my $version = normalize_version($query->requirement)
+        my $version = $query->category eq 'native' ? $query->requirement : normalize_version($query->requirement)
             or $self->croak('Version is required');
 
         $package = Pakket::Type::PackageQuery->new(

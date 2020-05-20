@@ -25,7 +25,9 @@ sub download_to_file ($self, $log) {
     my $result
         = $http->mirror($self->url, $file, {'headers' => {'If-Modified-Since' => 'Thu, 1 Jan 1970 01:00:00 GMT'}});
     if (!$result->{'success'}) {
-        croak($log->critical(q{Can't download sources for:}, $self->package_name));
+        $log->critical('Status:', $result->{'status'});
+        $log->critical('Reason:', $result->{'reason'});
+        croak($log->critical(q{Can't download:}, $self->name));
     }
     return $file;
 }
