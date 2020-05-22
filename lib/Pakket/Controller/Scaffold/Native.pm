@@ -75,7 +75,7 @@ sub _run_pre_scaffold_commands ($self, $query, $params) {
 
 sub _merge_release_info ($self, $query, $release_info, $params) {
     $query->{'release'} //= 1;
-    $query->{'version'} = normalize_version($release_info->{'version'} // $query->{'requirement'});
+    $query->{'version'} = $release_info->{'version'} // $query->{'requirement'};
 
     # we had PackageQuery in $package now convert it to Package
     my %query_hash = $query->%*;
