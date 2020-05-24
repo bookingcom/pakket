@@ -125,10 +125,10 @@ sub _build_pl_cmds ($self, %params) {
 sub _makefile_pl_cmds ($self, %params) {
     return (
         ['perl', '-V'],                                                        # info
-        ['perl', '-f', 'Makefile.PL', 'verbose', 'NO_PACKLIST=1', 'NO_PERLLOCAL=1', $params{'configure-options'}->@*], # configure
+        ['perl', '-f', 'Makefile.PL', 'NO_PACKLIST=1', 'NO_PERLLOCAL=1', $params{'configure-options'}->@*],  # configure
         ['make', $params{'make-options'}->@*],                                 # build
         (['make', 'test'],) x !!($params{'no-test'} < 1),                      # test
-        ['make', 'install', 'DESTDIR=' . $params{'build_dir'}->absolute->stringify],    # install
+        ['make', 'install', 'DESTDIR=' . $params{'build_dir'}->absolute->stringify],                         # install
         (['rm', '-rf', $params{'pkg_dir'}->child('man')->absolute->stringify]) x !!$params{'no-man'}, # cleanup man pages
     );
 }
