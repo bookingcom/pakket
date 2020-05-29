@@ -53,6 +53,8 @@ has [qw(release_info)] => (
 sub BUILDARGS ($class, %args) {
     $args{'source'} && ref $args{'source'} eq 'ARRAY'
         and $args{'source'} = join ('', $args{'source'}->@*);
+    $args{'requirement'} && $args{'requirement'} =~ m/:/
+        and croak($log->critical('Bug in program, requirement has ":" in it', $args{'name'}, $args{'requirement'}));
 
     return \%args;
 }

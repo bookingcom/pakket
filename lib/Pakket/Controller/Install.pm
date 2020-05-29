@@ -116,12 +116,12 @@ sub execute ($self, %params) {
 }
 
 sub _do_dry_run ($self, $queries) {
-    my (undef, $not_found) = $self->filter_packages_in_cache(as_requirements($queries), $self->all_installed_cache);
+    my (undef, \@not_found) = $self->filter_packages_in_cache(as_requirements($queries), $self->all_installed_cache);
 
-    $not_found->@*
+    @not_found
         or return 0;
 
-    say $_->id foreach $not_found->@*;
+    say $_->id foreach @not_found;
 
     return E2BIG;
 }
@@ -221,8 +221,8 @@ sub _fetch_all_packages ($self) {
                     return $consumer->leave;
                 }
 
-                my $as_prereq   = substr $file_contents, 0, 1;
-                my $package_str = substr $file_contents, 1;
+                my $as_prereq   = substr ($file_contents, 0, 1);
+                my $package_str = substr ($file_contents, 1);
                 my $package     = Pakket::Type::Package->new_from_string(
                     $package_str,
                     'as_prereq' => $as_prereq,
@@ -280,9 +280,8 @@ sub _process_prereqs ($self, $parcel_dir) {
         sub ($phase, $type, $name, $requirement) {
             $self->log->trace('adding prereq:', $name, $requirement);
             my $query = Pakket::Type::PackageQuery->new_from_string(
-                $name,
-                'requirement' => $requirement,
-                'as_prereq'   => 1,
+                "$name=$requirement",
+                'as_prereq' => 1,
             );
 
             $self->log->infof('Found prereq %9s %10s: %s=%s', $phase, $type, $name, $requirement);
