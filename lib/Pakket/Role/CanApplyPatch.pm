@@ -31,7 +31,7 @@ sub apply_patches ($self, $query, $params) {
         $self->log->info('Patching with:', $full_path);
         my $cmd = "patch --no-backup-if-mismatch -p1 -sN -i $full_path -d " . $params->{'sources'}->absolute;
         system ($cmd) == 0
-            or $self->log->croak('Unable to apply patch:', $cmd);
+            or $self->croak('Unable to apply patch:', $cmd);
     }
     return;
 }
