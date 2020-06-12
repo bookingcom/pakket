@@ -125,6 +125,8 @@ sub _update_release_info ($self, $query, $release_info, $params) {
             my $file = $params->{'sources'}->child($name);
             if ($file->is_file) {
                 my $meta = $self->meta_load($file);
+                $release_info->{'version'} && $release_info->{'version'} ne $meta->version
+                    and $self->croak(q{Version in META.json doesn't match version of release info});
                 $release_info->{'version'} = $meta->version;
                 $release_info->{'prereqs'} = $meta->effective_prereqs->as_string_hash;
                 $found                     = 1;
@@ -144,7 +146,9 @@ sub _merge_release_info ($self, $query, $release_info, $params) {
         and $self->log->info('Preparing prereqs for:', $query->id)
         and $self->_filter_prereqs($query, $release_info->{'prereqs'});
 
-    $query->{'source'}  = $release_info->{'download_url'}               if $release_info->{'download_url'};
+    $query->{'source'} = $release_info->{'download_url'} if $release_info->{'download_url'};
+    $query->{'version'} && $release_info->{'version'} && $query->{'version'} ne $release_info->{'version'}
+        and $self->croakf(q{Version(%s) doesn't match sources(%s)}, $query->{'version'}, $release_info->{'version'});
     $query->{'version'} = normalize_version($release_info->{'version'}) if $release_info->{'version'};
     $query->{'release'} //= 1;
 

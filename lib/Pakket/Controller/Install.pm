@@ -431,9 +431,9 @@ sub _package_to_upgrade ($self, $package) {
     my $installed_package = $self->select_best_package($query, $self->all_installed_cache->{$package->short_name});
     if ($installed_package) {
         if ($package->variant eq $installed_package->variant) {
-            $self->log->info('Going to reinstall:', $package->id);
+            $self->log->notice('Going to reinstall:', $package->id);
         } else {
-            $self->log->info('Going to replace', $installed_package->id, 'with', $package->id);
+            $self->log->notice('Going to replace', $installed_package->id, 'with', $package->id);
         }
         return $installed_package;
     }

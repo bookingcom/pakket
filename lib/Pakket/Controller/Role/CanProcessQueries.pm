@@ -130,8 +130,9 @@ sub process_prereqs ($self, $package, %params) {
 }
 
 sub _finalize ($self) {
-    $self->log->notice('[SUCCESS]',                       $_) foreach sort keys $self->succeeded->%*;
-    $self->log->notice('Successfuly processed packages:', scalar $self->succeeded->%*);
+    $self->log->notice('[SUCCESS]', $_) foreach sort keys $self->succeeded->%*;
+    $self->succeeded->%*
+        and $self->log->notice('Successfuly processed packages:', scalar $self->succeeded->%*);
 
     $self->failed->%*
         or return 0;

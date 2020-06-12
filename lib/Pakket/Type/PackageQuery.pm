@@ -88,6 +88,7 @@ sub new_from_pakket_metafile ($class, $path, %additional) {
     my $data = Load($path->slurp_utf8);
     return $class->new(
         $data->%{qw(category name source)},
+        ('version'     => $data->{version}) x !!$data->{version},
         ('requirement' => $data->{version}) x !!$data->{version},
         ('release'     => $data->{release}) x !!$data->{release},
         'pakket_meta' => Pakket::Type::Meta->new_from_metafile($path),

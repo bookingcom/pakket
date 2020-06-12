@@ -62,6 +62,12 @@ sub croak ($self, @messages) {
     Carp::croak($msg);
 }
 
+sub croakf ($self, $format, @messages) {
+    my $msg = sprintf ($format, @messages);
+    $self->log->critical($msg);
+    Carp::croak($msg);
+}
+
 1;
 
 __END__
