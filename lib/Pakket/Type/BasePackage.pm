@@ -17,7 +17,7 @@ use Log::Any qw($log);
 
 # local
 use Pakket::Utils::Package qw(
-    PAKKET_PACKAGE_STR
+    parse_package_id
 );
 
 has [qw(category name)] => (
@@ -47,12 +47,10 @@ sub BUILDARGS ($class, %args) {
 
     my $default_category = delete $args{'default_category'};
     if (!$args{'category'}) {
-        if ($args{'name'} =~ PAKKET_PACKAGE_STR()) {
-            $args{'category'} = $LAST_PAREN_MATCH{'category'} // $default_category;
-            $args{'name'}     = $LAST_PAREN_MATCH{'name'};
-            $args{'requirement'} ||= $LAST_PAREN_MATCH{'version'} if $LAST_PAREN_MATCH{'version'};
-            $args{'release'}     ||= $LAST_PAREN_MATCH{'release'} if $LAST_PAREN_MATCH{'release'};
-        }
+        ($args{'category'}, $args{'name'}, my ($version, $release))
+            = parse_package_id($args{'name'}, $default_category);
+        $args{'requirement'} ||= $version if $version;
+        $args{'release'}     ||= $release if $release;
     }
 
     $args{'category'}

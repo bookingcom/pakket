@@ -21,8 +21,10 @@ use Regexp::Common qw(URI);
 use Types::Path::Tiny qw(Path AbsPath);
 
 # local
-use Pakket::Constants qw(PAKKET_PACKAGE_SPEC);
 use Pakket::Utils qw(encode_json_canonical encode_json_pretty);
+use Pakket::Utils::Package qw(
+    parse_package_id
+);
 
 has 'directory' => (
     'is'       => 'ro',
@@ -100,7 +102,8 @@ sub all_object_ids ($self) {
 }
 
 sub all_object_ids_by_name ($self, $category, $name) {
-    my @all_object_ids = grep {$_ =~ PAKKET_PACKAGE_SPEC() and $1 eq $category and $2 eq $name} keys $self->index->%*; ## no critic qw[Perl::Critic::Policy::RegularExpressions::ProhibitCaptureWithoutTest]
+    my @all_object_ids
+        = grep {my ($c, $n) = parse_package_id($_); $c eq $category and $n eq $name} keys $self->index->%*;
 
     return \@all_object_ids;
 }

@@ -17,7 +17,9 @@ use experimental qw(declared_refs refaliasing signatures);
 use YAML ();
 
 # local
-use Pakket::Constants qw(PAKKET_PACKAGE_SPEC);
+use Pakket::Utils::Package qw(
+    parse_package_id
+);
 use Pakket::Utils qw(clean_hash get_application_version);
 
 has [qw(prereqs scaffold build test)] => (
@@ -170,11 +172,10 @@ sub _convert_meta_v2_prereqs ($meta) {
     my %result;
     foreach my $type (keys $requires->%*) {
         foreach my $dep ($requires->{$type}->@*) {
-            if ($dep !~ PAKKET_PACKAGE_SPEC()) {
-                croak('Cannot parse requirement: ', $dep);
-            } else {
-                $result{$type}{'requires'}{"$1/$2"} = $3 // 0;
-            }
+            my ($c, $n, $v) = parse_package_id($dep);
+            $c && $n
+                or croak('Cannot parse requirement: ', $dep);
+            $result{$type}{'requires'}{"$c/$n"} = $v // 0;
         }
     }
     return \%result;
@@ -207,35 +208,6 @@ sub _convert_meta_v2_build ($meta) {
     );
     return \%result;
 }
-
-#sub _convert_requires ($meta) {
-#my %result;
-#my $requires = $meta->{'requires'};
-#foreach my $type (keys %{$requires}) {
-#foreach my $dep (@{$requires->{$type}}) {
-#if ($dep !~ PAKKET_PACKAGE_SPEC()) {
-#croak('Cannot parse requirement: ', $dep);
-#} else {
-#$result{$1}{$type}{$2} = {'version' => $3 // 0};
-#}
-#}
-#}
-#return \%result;
-#}
-
-#sub _convert_build_options ($meta_spec) {
-#my $opts = $meta_spec->{'build'}
-#or return;
-#
-#my %result;
-#$result{'env_vars'}        = $opts->{'env'}               if $opts->{'env'};
-#$result{'configure_flags'} = $opts->{'configure-options'} if $opts->{'configure-options'};
-#$result{'build_flags'}     = $opts->{'make-options'}      if $opts->{'make-options'};
-#$result{'pre-build'}       = $meta_spec->{'pre-build'}    if $meta_spec->{'pre-build'};
-#$result{'post-build'}      = $meta_spec->{'post-build'}   if $meta_spec->{'post-build'};
-#
-#return \%result;
-#}
 
 __PACKAGE__->meta->make_immutable;
 

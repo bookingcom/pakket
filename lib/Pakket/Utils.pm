@@ -26,16 +26,13 @@ our @EXPORT_OK = qw(
     env_vars_passthrough
     env_vars_scaffold
     expand_variables
+    get_application_version
     is_writeable
     normalize_version
-    get_application_version
 );
 
 sub get_application_version {
     return ($Pakket::Utils::VERSION && $Pakket::Utils::VERSION->{'original'}) // '3.1415';
-
-    #state $name = __PACKAGE__ . '::VERSION';
-    #return *{$name} // '3.1415';
 }
 
 sub normalize_version ($input) {
@@ -137,7 +134,6 @@ sub env_vars_passthrough {
         'LC_ALL' => 'en_US.utf8',
         %ENV{qw(HOME TERM TZ all_proxy http_proxy HTTP_PROXY https_proxy HTTPS_PROXY no_proxy NO_PROXY)},
     );
-
     return clean_hash(\%result)->%*;
 }
 
@@ -157,19 +153,19 @@ sub generate_cpath ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
     return join (':', @paths);
 }
 
-sub generate_lib_path ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
-    my @paths = map {$_->absolute->stringify} $pkg_dir->child('lib'), ($prefix->child('lib')) x !!$use_prefix,
-        $bootstrap_dir->child('lib');
-    $ENV{'LD_LIBRARY_PATH'}
-        and push (@paths, $ENV{'LD_LIBRARY_PATH'});
-    return join (':', @paths);
-}
-
 sub generate_bin_path ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix, $sources) {
     my @paths = map {$_->absolute->stringify} $pkg_dir->child('bin'), ($prefix->child('bin')) x !!$use_prefix,
         $sources->child(qw(blib bin)), $bootstrap_dir->child('bin');
     $ENV{'PATH'}
         and push (@paths, $ENV{'PATH'});
+    return join (':', @paths);
+}
+
+sub generate_lib_path ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
+    my @paths = map {$_->absolute->stringify} $pkg_dir->child('lib'), ($prefix->child('lib')) x !!$use_prefix,
+        $bootstrap_dir->child('lib');
+    $ENV{'LD_LIBRARY_PATH'}
+        and push (@paths, $ENV{'LD_LIBRARY_PATH'});
     return join (':', @paths);
 }
 
@@ -186,7 +182,7 @@ sub encode_json_canonical ($content) {
 }
 
 sub encode_json_pretty ($content) {
-    return JSON::MaybeXS->new->pretty->canonical->encode($content);
+    return JSON::MaybeXS->new->canonical->pretty->encode($content);
 }
 
 sub clean_hash ($data) {

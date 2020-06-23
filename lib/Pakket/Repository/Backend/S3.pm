@@ -22,7 +22,9 @@ use Path::Tiny;
 use Try::Tiny;
 
 # local
-use Pakket::Constants qw(PAKKET_PACKAGE_SPEC);
+use Pakket::Utils::Package qw(
+    parse_package_id
+);
 
 has 's3' => (
     'is'      => 'ro',
@@ -103,7 +105,7 @@ sub all_object_ids ($self) {
 
 sub all_object_ids_by_name ($self, $category, $name) {
     my @all_object_ids = try {
-        grep {$_ =~ PAKKET_PACKAGE_SPEC(); $1 eq $category and $2 eq $name} keys %{$self->index}; ## no critic [Perl::Critic::Policy::RegularExpressions::ProhibitCaptureWithoutTest]
+        grep {my ($c, $n) = parse_package_id($_); $c eq $category and $n eq $name} keys %{$self->index};
     } catch {
         croak($log->criticalf('Could not get remote all_object_ids, reason: %s', $_));
     };

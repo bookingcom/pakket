@@ -20,6 +20,7 @@ use Exporter qw(import);
 our @EXPORT_OK = qw(
     PAKKET_PACKAGE_STR
     canonical_name
+    parse_package_id
     parse_requirement
     short_name
     short_variant
@@ -61,6 +62,13 @@ sub canonical_name ($category, $name, $version = undef, $release = undef) {
         and return sprintf '%s/%s=%s', $category, $name, $version;
 
     return short_name($category, $name);
+}
+
+sub parse_package_id ($package_id, $default_category = undef) {
+    if ($package_id =~ PAKKET_PACKAGE_STR()) {
+        return +($LAST_PAREN_MATCH{'category'} // $default_category, @LAST_PAREN_MATCH{qw(name version release)});
+    }
+    return;
 }
 
 sub parse_requirement ($requirement, $default = '==') {

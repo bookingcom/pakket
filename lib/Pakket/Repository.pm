@@ -9,7 +9,6 @@ use namespace::autoclean;
 
 # core
 use Archive::Tar;
-use Carp;
 use Errno qw(:POSIX);
 use Module::Runtime qw(use_module);
 use experimental qw(declared_refs refaliasing signatures);
@@ -22,7 +21,7 @@ use Path::Tiny;
 use Pakket::Helper::Versioner;
 use Pakket::Type qw(PakketRepositoryBackend);
 use Pakket::Utils::Package qw(
-    PAKKET_PACKAGE_STR
+    parse_package_id
 );
 
 has 'type' => (
@@ -67,12 +66,12 @@ sub retrieve_package_file ($self, $package) {
     my $id = $package->id;
 
     my $file = $self->retrieve_location($id)
-        or croak($self->log->criticalf('We do not have the %s for package %s', $self->type, $id));
+        or $self->croakf('We do not have the %s for package %s', $self->type, $id);
     $self->log->tracef('fetched %s %s to %s', $self->type, $id, $file->stringify);
 
     my $dir = Path::Tiny->tempdir(
         'CLEANUP'  => 1,
-        'TEMPLATE' => 'pakket-extract-' . $package->name . '-XXXXXXXXXX',
+        'TEMPLATE' => join ('', 'pakket-extract-', $package->name, '-XXXXXXXXXX'),
     );
 
     # Prefer system 'tar' instead of 'in perl' archive extractor, because 'tar' memory consumption is very low,
@@ -82,7 +81,7 @@ sub retrieve_package_file ($self, $package) {
     ## no critic [Modules::RequireExplicitInclusion]
     $Archive::Extract::PREFER_BIN = 1;
     $Archive::Extract::PREFER_BIN
-        or croak('Incorrectly initialized Archive::Extract');
+        or $self->croak('Incorrectly initialized Archive::Extract');
 
     my $arch = $ae->new(
         'archive' => $file->stringify,
@@ -90,7 +89,7 @@ sub retrieve_package_file ($self, $package) {
     );
 
     $arch->extract('to' => $dir)
-        or croak($self->log->criticalf(q{[%s] Unable to extract '%s' to '%s'}, $!, $file, $dir));
+        or $self->croakf(q{[%s] Unable to extract '%s' to '%s'}, $!, $file, $dir);
     $self->log->tracef('extracted %s %s to %s', $self->type, $id, $dir->stringify);
 
     return $dir;
@@ -105,7 +104,7 @@ sub freeze_location ($self, $orig_path) {
         push (@files, $orig_path);
     } elsif ($orig_path->is_dir) {
         $orig_path->children
-            or croak($self->log->critical("Cannot freeze empty directory ($orig_path)"));
+            or $self->croak('Cannot freeze empty directory:', $orig_path);
 
         $orig_path->visit(
             sub ($path, $) {
@@ -116,7 +115,7 @@ sub freeze_location ($self, $orig_path) {
             {'recurse' => 1},
         );
     } else {
-        croak($self->log->critical('Unknown location type:', $orig_path));
+        $self->croak('Unknown location type:', $orig_path);
     }
 
     @files = map {$_->relative($base_path)->stringify} @files;
@@ -137,7 +136,7 @@ sub remove_package_file ($self, $package) {
     my $id = $package->id;
 
     if (not $self->has_object($id)) {
-        croak($self->log->criticalf('We do not have the %s for package %s', $self->type, $id));
+        $self->croakf('We do not have the %s for package %s', $self->type, $id);
     }
 
     $self->log->debugf('removing %s package %s', $self->type, $id);
@@ -147,12 +146,8 @@ sub remove_package_file ($self, $package) {
 }
 
 sub latest_version_release ($self, $category, $name, $req_string) {
+    $req_string ||= '>= 0';                                                    # explicitly convert '0' to '>= 0'
 
-    # This will also convert '0' to '>= 0'
-    # (If we want to disable it, we just can just //= instead)
-    $req_string ||= '>= 0';
-
-    # Category -> Versioner type class
     my %types = (
         'perl'   => 'Perl',
         'native' => 'Perl',
@@ -160,13 +155,11 @@ sub latest_version_release ($self, $category, $name, $req_string) {
 
     my %versions;
     foreach my $object_id (@{$self->all_object_ids}) {
-        my ($my_category, $my_name, $my_version, $my_release) = $object_id =~ PAKKET_PACKAGE_STR();
+        my ($my_category, $my_name, $my_version, $my_release) = parse_package_id($object_id);
 
-        # Ignore what is not ours
         $category eq $my_category and $name eq $my_name
             or next;
 
-        # Add the version
         push @{$versions{$my_version}}, $my_release;
     }
 
@@ -175,7 +168,7 @@ sub latest_version_release ($self, $category, $name, $req_string) {
     );
 
     my $latest_version = $versioner->latest($category, $name, $req_string, keys %versions)
-        or croak($self->log->criticalf('Could not analyze %s/%s to find latest version', $category, $name));
+        or $self->croakf('Could not analyze %s/%s to find latest version', $category, $name);
 
     # return the latest version and latest release available for this version
     return [$latest_version, (sort @{$versions{$latest_version}})[-1]];
@@ -213,7 +206,7 @@ sub select_available_packages ($self, $requirements, %params) {
                 or $self->log->warn($msg);
         } else {
             local $! = ENOENT;
-            croak($self->log->critical($msg));
+            $self->croak($msg);
         }
     }
     return $packages;
@@ -222,7 +215,7 @@ sub select_available_packages ($self, $requirements, %params) {
 sub _build_all_objects_cache ($self) {
     my %result;
     foreach my $id ($self->all_object_ids->@*) {
-        my ($category, $name, $version, $release) = $id =~ PAKKET_PACKAGE_STR();
+        my ($category, $name, $version, $release) = parse_package_id($id);
         $result{"${category}/${name}"}{$version}{$release}++;
     }
     return \%result;
@@ -234,7 +227,8 @@ sub add_to_cache ($self, $short_name, $version, $release) {
 }
 
 sub _build_backend ($self) {
-    croak($self->log->critical('Cannot create backend of generic type (using parameter or URI string)'));
+    $self->croak('Cannot create backend of generic type (using parameter or URI string)');
+    return;
 }
 
 __PACKAGE__->meta->make_immutable;

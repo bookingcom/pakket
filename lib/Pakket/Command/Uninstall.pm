@@ -15,7 +15,9 @@ use Path::Tiny;
 use Module::Runtime qw(use_module);
 
 use Pakket '-command';
-use Pakket::Constants qw(PAKKET_PACKAGE_SPEC);
+use Pakket::Utils::Package qw(
+    parse_package_id
+);
 
 sub abstract {
     return 'Uninstall a package';
@@ -35,7 +37,7 @@ sub _determine_packages {
 
     my @packages;
     foreach my $package_str (@package_strs) {
-        my ($pkg_cat, $pkg_name) = $package_str =~ PAKKET_PACKAGE_SPEC();
+        my ($pkg_cat, $pkg_name) = parse_package_id($package_str);
 
         if (!$pkg_cat || !$pkg_name) {
             croak($log->critical("Can't parse $package_str. Use format category/package_name"));
