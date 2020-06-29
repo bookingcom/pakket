@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -Eeuo pipefail
+
 if [[ -z "$(command -v cpanm)" ]]; then
 	echo 'Please install cpanm'
 	exit 1
