@@ -118,18 +118,18 @@ sub _build_pl_cmds ($self, %params) {
         ['perl', '-f', './Build', $params{'make-options'}->@*],                # build
         (['perl', '-f', './Build', 'test']) x !!($params{'no-test'} < 1),      # test TODO support run test ignore failure
         ['perl', '-f', './Build', 'install', '--destdir', $params{'build_dir'}->absolute->stringify],    # install
-        (['rm', '-rf', $params{'pkg_dir'}->child('man')->absolute->stringify]) x !!$params{'no-man'}, # cleanup man pages
+        (['rm', '-rf', $params{'pkg_dir'}->child('man')->absolute->stringify]) x !!$params{'no-man'},    # cleanup man pages
     );
 }
 
 sub _makefile_pl_cmds ($self, %params) {
     return (
         ['perl', '-V'],                                                        # info
-        ['perl', '-f', 'Makefile.PL', 'NO_PACKLIST=1', 'NO_PERLLOCAL=1', $params{'configure-options'}->@*],  # configure
+        ['perl', '-f', 'Makefile.PL', 'NO_PACKLIST=1', 'NO_PERLLOCAL=1', $params{'configure-options'}->@*],    # configure
         ['make', $params{'make-options'}->@*],                                 # build
         (['make', 'test'],) x !!($params{'no-test'} < 1),                      # test
-        ['make', 'install', 'DESTDIR=' . $params{'build_dir'}->absolute->stringify],                         # install
-        (['rm', '-rf', $params{'pkg_dir'}->child('man')->absolute->stringify]) x !!$params{'no-man'}, # cleanup man pages
+        ['make', 'install', 'DESTDIR=' . $params{'build_dir'}->absolute->stringify],                           # install
+        (['rm', '-rf', $params{'pkg_dir'}->child('man')->absolute->stringify]) x !!$params{'no-man'},          # cleanup man pages
     );
 }
 

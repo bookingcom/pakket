@@ -118,7 +118,7 @@ sub inject_prereqs ($self, $prereqs) {
 }
 
 sub variant ($self) {
-    return Pakket::Utils::Package::short_variant($self->version, $self->release);
+    return Pakket::Utils::Package::short_variant($self->requirement, $self->release);
 }
 
 __PACKAGE__->meta->make_immutable;

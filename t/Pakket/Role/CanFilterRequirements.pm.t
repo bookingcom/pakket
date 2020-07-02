@@ -95,7 +95,7 @@ my %cache = (
 #ok($consuming_class->class_method());
 describe 'select_best_version_from_cache' {
     my %tests = (
-        'perl/Tiny1'       => [undef, undef],
+        'perl/Tiny1' => [undef, undef],
         'perl/Tiny'        => ['0.55', {map {$_ => 1} 1, 5, 8}],
         'perl/Tiny=0.33'   => ['0.33', {map {$_ => 1} 1, 3}],
         'perl/Tiny===0.33' => ['0.33', {map {$_ => 1} 1, 3}],

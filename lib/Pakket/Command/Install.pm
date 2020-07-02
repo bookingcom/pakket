@@ -34,11 +34,14 @@ sub description {
 
 sub opt_spec ($self, @args) {
     return (
-        ['file|f=s',     'process everything listed in this file'],
-        ['overwrite|w+', 'force reinstall if already installed'],
-        ['no-prereqs',   'do not process any dependencies at all'],
-        ['continue',     'continue on errors'],
-        ['dry-run|d',    'dry-run installation and return only list of packages to be installed'],
+        ['file|input-file|f=s', 'process everything listed in this file'],
+        ['overwrite|w+',        'force reinstall if already installed'],
+        ['no-prereqs',          'do not process any dependencies at all'],
+        ['continue',            'continue on errors'],
+        [
+            'dry-run|d+',
+            'dry-run installation and return only list of packages to be installed (can be set twice to enforce recursive check for dependencies)',
+        ],
         undef,
         ['jobs|j=i', 'number of workers to run in parallel'],
         ['atomic!',  'operation on current library is atomic'],

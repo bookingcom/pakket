@@ -71,11 +71,11 @@ has 'known_incorrect_name_fixes' => (
     'isa'     => 'HashRef',
     'default' => sub {
         +{
-            'App::Fatpacker'                                       => 'App::FatPacker',
-            'Test::YAML::Meta::Version'                            => 'Test::YAML::Meta',          # not sure about this
-            'Net::Server::SS::Prefork'                             => 'Net::Server::SS::PreFork',
-            'Data::Sah::Coerce::perl::To_date::From_float::epoch'  => 'Data::Sah::Coerce',
-            'Data::Sah::Coerce::perl::To_date::From_obj::datetime' => 'Data::Sah::Coerce',
+            'App::Fatpacker'                                                     => 'App::FatPacker',
+            'Test::YAML::Meta::Version'                                          => 'Test::YAML::Meta',           # not sure about this
+            'Net::Server::SS::Prefork'                                           => 'Net::Server::SS::PreFork',
+            'Data::Sah::Coerce::perl::To_date::From_float::epoch'                => 'Data::Sah::Coerce',
+            'Data::Sah::Coerce::perl::To_date::From_obj::datetime'               => 'Data::Sah::Coerce',
             'Data::Sah::Coerce::perl::To_date::From_obj::time_moment'            => 'Data::Sah::Coerce',
             'Data::Sah::Coerce::perl::To_date::From_str::iso8601'                => 'Data::Sah::Coerce',
             'Data::Sah::Coerce::perl::To_str::From_str::normalize_perl_distname' => 'Data::Sah::Coerce',
@@ -216,7 +216,7 @@ sub _get_distribution_02packages ($self, $module_name) {
     $distribution_name ||= $self->_get_distribution_from_02packages_api($module_name);
 
     $self->cpan_02packages
-        or $distribution_name ||= $self->_get_distribution_from_02packages_file($module_name); # fallback to cpan_02packages
+        or $distribution_name ||= $self->_get_distribution_from_02packages_file($module_name);    # fallback to cpan_02packages
 
     return $distribution_name;
 }

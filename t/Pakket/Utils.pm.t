@@ -83,7 +83,7 @@ describe 'clean_hash' {
         ['42',  '42',  'true string'],
 
         # arrays
-        [[], [], 'empty array'],
+        [[],      [],      'empty array'],
         [[1, 42], [1, 42], 'non-empty array'],
         [[undef], [undef], 'non-empty undef array'],
 
