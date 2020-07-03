@@ -117,6 +117,10 @@ sub inject_prereqs ($self, $prereqs) {
     return;
 }
 
+sub id ($self) {
+    return Pakket::Utils::Package::canonical_name($self->category, $self->name, $self->requirement, $self->release);
+}
+
 sub variant ($self) {
     return Pakket::Utils::Package::short_variant($self->requirement, $self->release);
 }

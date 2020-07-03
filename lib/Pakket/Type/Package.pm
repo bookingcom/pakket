@@ -74,6 +74,10 @@ sub spec ($self) {
     return clean_hash(\%result);
 }
 
+sub id ($self) {
+    return Pakket::Utils::Package::canonical_name($self->category, $self->name, $self->version, $self->release);
+}
+
 sub variant ($self) {
     return Pakket::Utils::Package::short_variant($self->version, $self->release);
 }

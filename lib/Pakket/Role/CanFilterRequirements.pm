@@ -88,7 +88,7 @@ sub select_best_version_from_cache ($self, $requirement, $package_cache) {
 
     my \%cache = $package_cache;
 
-    my @versions = keys %cache;
+    my @versions = sort keys %cache;
     $self->log->tracef('matching requirement %s %s to: %s',
         $requirement->name, $requirement->conditions, join (' ', @versions));
     @versions = $self->versioners->{$requirement->category}->select_versions($requirement->conditions, \@versions)

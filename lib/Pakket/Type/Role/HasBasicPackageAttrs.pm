@@ -39,10 +39,6 @@ sub BUILD ($self, @) {
     return;
 }
 
-sub id ($self) {
-    return canonical_name($self->category, $self->name, $self->version, $self->release);
-}
-
 sub requirement ($self) {
     return parse_requirement($self->version, $self->as_prereq ? '>=' : '==');
 }
