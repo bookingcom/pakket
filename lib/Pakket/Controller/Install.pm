@@ -32,6 +32,7 @@ use Pakket::Utils qw(
     clean_hash
     is_writeable
 );
+use Pakket::Utils::DependencyBuilder;
 
 use constant {
     'SLEEP_TIME_USEC' => 1_000,
@@ -176,19 +177,19 @@ sub _do_install ($self, $queries) {
         or $self->log->notice('All packages are already installed')
         and return 0;
 
-    my $packages = $self->_check_against_repository(\%requirements);
-    $packages->@*
+    my \@packages = $self->parcel_repo->select_available_packages(\%requirements, 'continue' => $self->continue);
+    @packages
         or $self->log->notice('All packages are already installed')
         and return 0;
 
-    $self->log->notice('Requested packages:', scalar $packages->@*);
-    $self->_fetch_packages_parallel($packages);
+    $self->log->notice('Requested packages:', scalar @packages);
+    $self->_fetch_packages_parallel(\@packages);
     my $install_count = $self->_install_all_packages();
 
     $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
     $self->activate_work_dir;
 
-    $self->log->info('Finished installing:', join (', ', map {$_->id} $packages->@*));
+    $self->log->info('Finished installing:', join (', ', map {$_->id} @packages));
     $self->log->noticef(q{Finished installing %d packages into: %s}, $install_count, $self->pakket_dir);
 
     return 0;
@@ -202,59 +203,18 @@ sub install_parcel ($self, $package, $parcel_dir, $target_dir) {
 }
 
 sub _recursive_requirements ($self, $queries) {
-    my %cache;
+    my $dependency_builder = Pakket::Utils::DependencyBuilder->new(
+        $self->%{qw(log log_depth)},
+        'spec_repo' => $self->spec_repo,
+    );
+    my \%requirements = $dependency_builder->recursive_requirements(
+        $queries,
+        'parcel_repo' => $self->parcel_repo,
+        'phases'      => $self->phases,
+        'types'       => $self->types,
+    );
 
-    my \@queries = $queries;
-    while (@queries) {
-        my \%requirements = as_requirements(\@queries);
-
-        $self->filter_packages_in_cache(\%requirements, \%cache);
-        $self->_check_against_installed(\%requirements);
-        my \@packages = $self->_check_against_repository(\%requirements);
-
-        @queries = ();
-        foreach my $pkg (@packages) {
-            my $spec    = $self->spec_repo->retrieve_package($pkg);
-            my $package = Pakket::Type::Package->new_from_specdata($spec);
-            $cache{$package->short_name}{$package->version}{$package->release} //= $pkg;
-
-            my $meta = $package->pakket_meta->prereqs
-                or next;
-
-            $self->log->infof('Prereqs for: %s', $package->id);
-
-            $self->log_depth_change(+1);
-            $self->visit_prereqs(
-                $meta,
-                sub ($phase, $type, $name, $requirement) {
-                    $self->log->infof('Found prereq %9s %10s: %s=%s', $phase, $type, $name, $requirement);
-                    push (
-                        @queries,
-                        Pakket::Type::PackageQuery->new_from_string(
-                            "$name=$requirement",
-                            'as_prereq' => 1,
-                        ),
-                    );
-                },
-                'phases' => $self->phases,
-                'types'  => $self->types,
-            );
-            $self->log_depth_change(-1);
-        }
-    }
-
-    my @result;
-    foreach my $short_name (sort keys %cache) {
-        my \%versions = $cache{$short_name};
-        %versions == 1
-            or $self->croak('Package has ambigious versions:', $short_name, keys %versions);
-        my (\%releases) = values %versions;
-        %releases == 1
-            or $self->croak('Package has ambigious release:', $short_name, keys %versions, keys %releases);
-        push (@result, values %releases);
-    }
-
-    return \@result;
+    return $dependency_builder->validate_requirements(\%requirements);
 }
 
 sub _fetch_packages_parallel ($self, $packages) {
@@ -358,11 +318,12 @@ sub _process_prereqs ($self, $parcel_dir) {
             %requirements
                 or return;
 
-            my $packages = $self->_check_against_repository(\%requirements);
-            $packages->@*
+            my \@packages
+                = $self->parcel_repo->select_available_packages(\%requirements, 'continue' => $self->continue);
+            @packages
                 or return;
 
-            $self->push_to_data_consumer($packages->[0]->id, {'as_prereq' => 1});
+            $self->push_to_data_consumer($packages[0]->id, {'as_prereq' => 1});
         },
         'phases' => $self->phases,
         'types'  => $self->types,
@@ -453,32 +414,6 @@ sub _check_against_installed ($self, $requirements) {
     $self->log->info('Package is already installed:', $_->id) foreach $installed->@*;
 
     return;
-}
-
-sub _check_against_repository ($self, $requirements) {
-    $requirements->%*
-        or return [];
-
-    $self->log->debug('checking which packages are available in parcel repo...');
-    my ($packages, $not_found) = $self->filter_packages_in_cache($requirements, $self->parcel_repo->all_objects_cache);
-    if ($not_found->@*) {
-        foreach my $package ($not_found->@*) {
-            my @available = $self->available_variants($self->parcel_repo->all_objects_cache->{$package->short_name});
-            $self->log->warning(
-                'Could not find package in parcel repo:',
-                $package->id, ('( available:', join (', ', @available), ')') x !!@available,
-            );
-        }
-
-        my $msg = sprintf ('Unable to find amount of parcels in repo: %d', scalar $not_found->@*);
-        if ($self->continue) {
-            $self->log->warn($msg);
-        } else {
-            local $! = ENOENT;
-            $self->croak($msg);
-        }
-    }
-    return $packages;
 }
 
 sub _get_rollback_tags ($self) {

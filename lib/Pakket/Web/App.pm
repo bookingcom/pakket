@@ -13,6 +13,7 @@ use experimental qw(declared_refs refaliasing signatures);
 # non core
 use List::Util qw(first);
 use Log::Any qw($log);
+use Module::Runtime qw(use_module);
 use Path::Tiny;
 
 # local
@@ -20,7 +21,8 @@ use Pakket::Web::Repo;
 use Pakket::Utils qw(get_application_version);
 
 use constant {
-    'PATHS'   => [$ENV{'PAKKET_WEB_CONFIG'} || (), '~/.config/pakket-web.json', '/etc/pakket-web.json'],
+    'PATHS' =>
+        [$ENV{'PAKKET_WEB_CONFIG'} || (), '~/.config/pakket-web.json', '~/.pakket-web.json', '/etc/pakket-web.json'],
     'DIRNAME' => dirname(__FILE__),
 };
 
@@ -37,10 +39,13 @@ sub status_page {
 sub setup ($class, $config_file = undef) {
     $config_file //= first {path($_)->exists} PATHS()->@*
         or croak(
-        $log->fatal('Please specify a config file: PAKKET_WEB_CONFIG, ~/.pakket-web.json, or /etc/pakket-web.json',));
+        $log->fatal(
+            'Please specify a config file: PAKKET_WEB_CONFIG, ~/.config/pakket-web.json, or /etc/pakket-web.json'),
+        );
 
     my $config = decode_json(path($config_file)->slurp_utf8);
 
+    my $spec_repo;
     my @repos;
     foreach my $repo_config ($config->{'repositories'}->@*) {
         my $repo = Pakket::Web::Repo->create($repo_config);
@@ -51,7 +56,14 @@ sub setup ($class, $config_file = undef) {
                 'repo'        => $repo,
             },
         );
+
+        if (!$spec_repo && $repo_config->{'type'} eq 'spec') {
+            $spec_repo = $repo;
+        }
     }
+
+    $spec_repo && defined $config->{'snapshot'}
+        and use_module('Pakket::Web::Snapshot')->expose($config->{'snapshot'}, $spec_repo, @repos);
 
     # status page is accessible via / and /status
     get '/'       => \&status_page;

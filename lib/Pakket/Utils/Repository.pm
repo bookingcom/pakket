@@ -9,6 +9,7 @@ use warnings;
 # core
 use Carp;
 use Path::Tiny;
+use experimental qw(declared_refs refaliasing signatures);
 
 # exports
 use namespace::clean;
@@ -23,9 +24,9 @@ my %file_ext = (
     'parcel' => 'tgz',
 );
 
-sub gen_repo_config {
-    my ($self, $type, $directory) = @_;
-    $directory or return;
+sub gen_repo_config ($type, $directory) {
+    $directory
+        or return;
 
     if ($directory =~ m{^(https?)://([^/:]+):?([^/]+)?(/.*)?$}) {
         my ($protocol, $host, $port, $base_path) = ($1, $2, $3, $4);

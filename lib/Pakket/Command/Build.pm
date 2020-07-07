@@ -71,7 +71,7 @@ sub validate_args ($self, $opt, $args) {
         my $opt_key   = $repo_opt{$type};
         my $directory = $opt->{$opt_key};
         if ($directory) {
-            my $repo_conf = $self->gen_repo_config($type, $directory);
+            my $repo_conf = gen_repo_config($type, $directory);
             $config{'repositories'}{$type} = $repo_conf;
         }
         $config{'repositories'}{$type}

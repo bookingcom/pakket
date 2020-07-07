@@ -186,7 +186,7 @@ sub filter_queries ($self, $queries) {                                         #
 
 sub select_available_packages ($self, $requirements, %params) {
     $requirements->%*
-        or return;
+        or return [];
 
     $self->log->debugf('checking which packages are available in %s repo...', $self->type);
     my ($packages, $not_found) = $self->filter_packages_in_cache($requirements, $self->all_objects_cache);
@@ -200,7 +200,7 @@ sub select_available_packages ($self, $requirements, %params) {
                 );
         }
 
-        my $msg = sprintf ('Unable to find amount of parcels in repo: %d', scalar $not_found->@*);
+        my $msg = sprintf ('Unable to find amount of packages in repo: %d', scalar $not_found->@*);
         if ($params{'continue'}) {
             $params{'silent'}
                 or $self->log->warn($msg);
