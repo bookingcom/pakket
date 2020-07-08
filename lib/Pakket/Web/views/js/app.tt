@@ -11,7 +11,8 @@
 
 	// extendable via the payload
 	const COLUMNS_MANDATORY = ['spec', 'source'];
-	const DISPLAY_GITLAB_LINKS = window.location.hostname.indexOf('.booking.com') > -1 ? true : false;
+	const DOMAIN = 'booking';
+	const DISPLAY_GITLAB_LINKS = window.location.hostname.indexOf('.' + DOMAIN + '.com') > -1 ? true : false;
 	let desiredColumnsOrder = COLUMNS_MANDATORY;
 	const urlPieces = location.href.split('s=');
 	const $onlyBrokenEl = $('#only-problematic');
@@ -260,7 +261,7 @@
 		let name = config.name;
 		if (DISPLAY_GITLAB_LINKS) {
 			name = `<a target="_blank" title="${name}"
-				href="https://gitlab.booking.com/packaging/pakket/meta/blob/master/${name}.yaml">${name}</a>`;
+				href="https://gitlab.` + DOMAIN + `.com/packaging/pakket/meta/-/tree/master/${name}.yaml">${name}</a>`;
 		}
 		let tableRow = `<td class="name">${name}</td>
 			<td class="version">${(versionsArr.length === 1 ? versionsArr[0] : ('<select data-name="' + config.name.replace(/[\/\.\:]/g,'') + '">' + versionsUI + '</select>'))}</td>`;
