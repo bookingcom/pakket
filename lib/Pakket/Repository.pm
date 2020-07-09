@@ -216,7 +216,11 @@ sub _build_all_objects_cache ($self) {
     my %result;
     foreach my $id ($self->all_object_ids->@*) {
         my ($category, $name, $version, $release) = parse_package_id($id);
-        $result{"${category}/${name}"}{$version}{$release}++;
+        if ($category && $name && $version && $release) {
+            $result{"${category}/${name}"}{$version}{$release}++;
+        } else {
+            $self->log->warn('Invalid id:', $id);
+        }
     }
     return \%result;
 }

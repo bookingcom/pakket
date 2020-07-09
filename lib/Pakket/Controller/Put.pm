@@ -14,7 +14,7 @@ use experimental qw(declared_refs refaliasing signatures);
 use Module::Runtime qw(use_module);
 
 # local
-use Pakket::Type::PackageQuery;
+use Pakket::Type::Package;
 use Pakket::Utils qw(normalize_version);
 
 extends qw(Pakket::Controller::BaseRemoteOperation);
@@ -56,7 +56,7 @@ sub execute ($self) {
         my $version = $query->category eq 'native' ? $query->requirement : normalize_version($query->requirement)
             or $self->croak('Version is required');
 
-        $package = Pakket::Type::PackageQuery->new(
+        $package = Pakket::Type::Package->new(
             $query->%{qw(category name release)},
             'version' => $version,
         );
