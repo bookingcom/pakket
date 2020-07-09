@@ -79,18 +79,26 @@ sub expose ($class, $config, $spec_repo, @repos) {
                 if ($object->exists) {
                     $result = $object->get_decoded;
                 } else {
-                    my @queries = map {
-                        Pakket::Type::PackageQuery->new_from_string($_,
-                            'default_category' => $config->{'default_category'})
-                    } @ids;
-                    my $requirements = $dependency_builder->recursive_requirements(
-                        \@queries,
-                        'parcel_repo' => $r->{'repo'},
-                        'phases'      => ['runtime'],
-                        'types'       => ['requires'],
-                    );
-                    $result = [map $_->id, $dependency_builder->validate_requirements($requirements)->@*];
-                    $object->put(encode_json($result));
+                    eval {
+                        my @queries = map {
+                            Pakket::Type::PackageQuery->new_from_string($_,
+                                'default_category' => $config->{'default_category'})
+                        } @ids;
+                        my $requirements = $dependency_builder->recursive_requirements(
+                            \@queries,
+                            'parcel_repo' => $r->{'repo'},
+                            'phases'      => ['runtime'],
+                            'types'       => ['requires'],
+                        );
+                        $result = [map $_->id, $dependency_builder->validate_requirements($requirements)->@*];
+                        $object->put(encode_json($result));
+                        1;
+                    }
+                    or do {
+                        chomp(my $error = $@ || 'zombie error');
+                        send_error($error, 500);
+                    };
+
                 }
 
                 return encode_json({
