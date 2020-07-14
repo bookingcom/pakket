@@ -4,6 +4,7 @@
 	const CSS_CLASS_PAKKET_BAD        = 'bad';
 	const CSS_CLASS_PAKKET_FINE       = 'ok';
 	const CSS_CLASS_PAKKET_MISSING    = 'missing';
+	const CSS_CLASS_PAKKET_OUTDATED   = 'outdated';
 	const CSS_CLASS_PAKKET_LATEST     = 'latest';
 	const CSS_CLASS_PAKKET_NOT_LATEST = 'not-latest';
 	const FLAG_GET_ONLY_BROKEN        = 'broken=1';
@@ -19,9 +20,7 @@
 	const $searchEl = $('#s_pakket');
 	const $tbodyEl = $('#tbody');
 	let columnInfo = {};
-	// parcels list we fetch from localSorage / BE once
-	// and do all further manipulations
-	let parcels;
+	let parcels; // parcels list we fetch from localSorage / BE once and do all further manipulations
 
 	// changing 'only broken' checkbox ASAP
 	if (RENDER_ONLY_BROKEN) {
@@ -50,15 +49,12 @@
 			const cachedPakketObject = JSON.stringify(data);
 			if (pakketsInLocalStorage !== cachedPakketObject) {
 				localStorage.setItem(localStorageKey, cachedPakketObject);
-				// re-rendering UI
-				_renderUI(data);
+				_renderUI(data); // re-rendering UI
 			}
 		});
-
 	}
 
 	function fetchVersion() {
-
 		const URL_FETCH_VERSION = '/info';
 		const localStorageKey = 'pakket-version';
 		// first checking if data is available at localStorage
@@ -77,114 +73,33 @@
 				_renderVersion(version);
 			}
 		});
-
 	}
 
 	/*
 	 * Helper functions
 	 **/
 
-	function _renderVersion(version) {
-		$('#pakket-uwsgi-version').text(version);
-		$('.pakket-uwsgi-version').show();
-	}
-
-	function _renderTableBody() {
-		// by default rendering whole list of parcels
-		let payload = parcels;
-		const onlyBroken = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;;
-		let searchQuery = $searchEl.val();
-		searchQuery = searchQuery ? searchQuery.trim() : '';
-		searchQuery = searchQuery.toLowerCase();
-		searchQuery = searchQuery.replace(/::/g,'-');
-
-		// filtering out only broken if it's a case
-		if (onlyBroken) {
-			payload = [];
-			parcels.forEach((pakket) => {
-				// skipping pakket based on flag onlyBroken
-				let isBroken = false;
-				Object.values(pakket[1]).forEach((value) => {
-					if (typeof value !== 'object') {
-						if (value === 0) {
-							isBroken = true;
-							return;
-						}
-					} else {
-						if (Object.values(value).filter(val => val === 0).length > 0) {
-							isBroken = true;
-						}
-					}
-				});
-
-				if (isBroken) {
-					payload.push(pakket);
-				}
-			});
-		}
-
-		// filtering by name
-		if (searchQuery.length) {
-			// cloning payload
-			const lookup = payload.slice();
-			payload = [];
-			lookup.forEach((pakket) => {
-				if (pakket[0].toLowerCase().indexOf(searchQuery) > -1) {
-					payload.push(pakket);
-				}
-			});
-		}
-
-		// calculating and rendering body
-		let tableBody = '';
-		const pakketsMap = new Map();
-
-		// calculating pakketsMap - no rendering yet
-		payload.forEach((pakket) => {
-			const nameFull = pakket[0];
-			const namePieces = nameFull.split('=');
-			const nameShort = namePieces[0];
-			const version = namePieces[1];
-			let mapVersions = pakketsMap.get(nameShort);
-			mapVersions = mapVersions || [];
-			if (mapVersions) {
-				mapVersions.push(version);
-			}
-			pakketsMap.set(nameShort, mapVersions);
-		});
-		// actual rendering to a string
-		payload.forEach((pakket) => {
-			const namePieces = pakket[0].split('=');
-			tableBody += columnRenderer({
-				name: namePieces[0],
-				version: namePieces[1],
-				order: desiredColumnsOrder,
-				data: pakket,
-				versions_all: pakketsMap.get(namePieces[0])
-			});
-		});
-
-		// required on re-render
-		$tbodyEl.empty();
-		$tbodyEl.append(`${tableBody}`);
-	}
-
 	function _renderUI(data) {
-
 		// re-creating columnInfo
 		columnInfo = {};
 		// same regarding desiredColumnsOrder
 		desiredColumnsOrder = COLUMNS_MANDATORY;
 
+		parcels = new Map(Object.entries(data));
+
 		// taking pakket #1 and getting columns metadata from it
-		const keys = Object.keys(data[0][1]);
+		const first = parcels.values().next().value;
+		const keys = Object.keys(first);
 		keys.forEach((key) => {
+			if (key === 'cpan') {
+				return;
+			}
 			if (desiredColumnsOrder.indexOf(key) === -1) {
 				columnInfo[key] = [];
 			}
 			// getting OS metadata from first perl version prop
 			if (strIsPerlVersion(key)){
-				columnInfo[key] = Object.keys(data[0][1][key]).sort();
+				columnInfo[key] = Object.keys(first[key]).sort();
 			}
 		});
 
@@ -192,6 +107,7 @@
 
 		let tableHead = '<tr>';
 		tableHead += '<td class="name" rowspan="2" colspan="2">Distribution</td>';
+		tableHead += '<td class="cpan" rowspan="2" colspan="1">Update</td>';
 		desiredColumnsOrder.forEach((column) => {
 			// calculating colspan and rowspan
 			let colspan = 1;
@@ -220,12 +136,96 @@
 		$('#thead').append(tableHead);
 
 		// making payload available globally
-		parcels = data;
 		_renderTableBody();
-
 	}
 
-	// helper functions
+	function _renderVersion(version) {
+		$('#pakket-uwsgi-version').text(version);
+		$('.pakket-uwsgi-version').show();
+	}
+
+	function _renderTableBody() {
+		// by default rendering whole list of parcels
+		const onlyBroken = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;;
+		let searchQuery = $searchEl.val();
+		searchQuery = searchQuery ? searchQuery.trim() : '';
+		searchQuery = searchQuery.toLowerCase();
+		searchQuery = searchQuery.replace(/::/g,'-');
+
+		let ids = Array.from(parcels.keys()).sort();
+
+		// filtering out only broken if it's a case
+		if (onlyBroken) {
+			let filtered = new Array;
+			ids.forEach((id) => {
+				const pakket = parcels.get(id);
+				let isBroken = false;
+				Object.values(pakket).forEach((value) => {
+					if (typeof value !== 'object') {
+						if (value === 0) {
+							isBroken = true;
+							return;
+						}
+					} else {
+						if (Object.values(value).filter(val => val === 0).length > 0) {
+							isBroken = true;
+						}
+					}
+				});
+
+				if (isBroken) {
+					filtered.push(id);
+				}
+			});
+			ids = filtered;
+		}
+
+		// filtering by name
+		if (searchQuery.length) {
+			let filtered = new Array;
+			ids.forEach((id) => {
+				if (id.toLowerCase().indexOf(searchQuery) > -1) {
+					filtered.push(id);
+				}
+			});
+			ids = filtered;
+		}
+
+		// calculating and rendering body
+		let tableBody = '';
+		const pakketsMap = new Map();
+
+		// calculating pakketsMap - no rendering yet
+		ids.forEach((id) => {
+			const nameFull = id;
+			const namePieces = nameFull.split('=');
+			const nameShort = namePieces[0];
+			const version = namePieces[1];
+			let mapVersions = pakketsMap.get(nameShort);
+			mapVersions = mapVersions || [];
+			if (mapVersions) {
+				mapVersions.push(version);
+			}
+			pakketsMap.set(nameShort, mapVersions);
+		});
+		// actual rendering to a string
+		ids.forEach((id) => {
+			const pakket = parcels.get(id);
+			const namePieces = id.split('=');
+			tableBody += columnRenderer({
+				name: namePieces[0],
+				version: namePieces[1],
+				order: desiredColumnsOrder,
+				data: pakket,
+				versions_all: pakketsMap.get(namePieces[0])
+			});
+		});
+
+		// required on re-render
+		$tbodyEl.empty();
+		$tbodyEl.append(`${tableBody}`);
+	}
+
 	// Is the string containing Perl version?
 	function strIsPerlVersion(str) {
 		return !isNaN(parseInt(str));
@@ -259,19 +259,28 @@
 			versionsUI += `<option value="${version}" ${(version === config.version) ? 'selected' : ''}>${version}</option>`;
 		});
 		let name = config.name;
+
 		if (DISPLAY_GITLAB_LINKS) {
 			name = `<a target="_blank" title="${name}"
 				href="https://gitlab.` + DOMAIN + `.com/packaging/pakket/meta/-/tree/master/${name}.yaml">${name}</a>`;
 		}
-		let tableRow = `<td class="name">${name}</td>
-			<td class="version">${(versionsArr.length === 1 ? versionsArr[0] : ('<select data-name="' + config.name.replace(/[\/\.\:]/g,'') + '">' + versionsUI + '</select>'))}</td>`;
+
+		const namePieces = config.name.split('/');
+		let cpan_ver = config.data['cpan'] ? config.data['cpan'] : '';
+		cpan_ver = `<a target="_blank" title="" href="https://metacpan.org/release/${namePieces[1]}">${cpan_ver}</a>`;
+
+		let tableRow = `
+			<td class="name">${name}</td>
+			<td class="version">${(versionsArr.length === 1 ? versionsArr[0] : ('<select data-name="' + config.name.replace(/[\/\.\:]/g,'') + '">' + versionsUI + '</select>'))}</td>
+			<td class="${config.data['cpan'] ? 'outdated' : 'none'}">${cpan_ver}</td>
+		`;
 		config.order.forEach((column) => {
-			if (strIsPerlVersion(column)){
+			if (strIsPerlVersion(column)) {
 				columnInfo[column].forEach((os) => {
-					renderQueue.push(config.data[1][column][os] ? '+' : '-');
+					renderQueue.push((config.data[column] && config.data[column][os]) ? '+' : '-');
 				});
 			} else {
-				renderQueue.push(config.data[1][column] ? '+' : '-');
+				renderQueue.push(config.data[column] ? '+' : '-');
 			}
 		});
 		// rendering queue
@@ -327,5 +336,4 @@
 		if ((new Date().getTime() - timeout) < TIMEOUT) clearTimeout(timeout);
 		timeout = setTimeout(search, TIMEOUT);
 	});
-
 })();

@@ -8,7 +8,15 @@ use MooseX::StrictConstructor;
 use namespace::autoclean;
 
 # core
+use Carp qw(carp);
+use version;
 use experimental qw(declared_refs refaliasing signatures);
+
+# non core
+use Module::Runtime qw(use_module);
+
+# local
+use Pakket::Helper::Versioner;
 
 with qw(
     Pakket::Role::HasConfig
@@ -34,6 +42,15 @@ sub absent ($self) {
 
 sub installed ($self) {
     say foreach sort $self->load_installed_packages($self->active_dir)->@*;
+
+    return 0;
+}
+
+sub outdated ($self) {
+    my $cpan = use_module('Pakket::Helper::Cpan')->new;
+
+    my \%outdated = $cpan->outdated($self->parcel_repo->all_objects_cache);
+    say "$_=$outdated{$_}{'version'} ($outdated{$_}{'cpan_version'})" foreach sort keys %outdated;
 
     return 0;
 }

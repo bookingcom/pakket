@@ -22,7 +22,7 @@ has 'type' => (
     'isa'      => 'PakketHelperVersioner',
     'coerce'   => 1,
     'required' => 1,
-    'handles'  => ['compare', 'compare_full'],
+    'handles'  => ['compare', 'compare_version', 'compare_full'],
 );
 
 with qw(

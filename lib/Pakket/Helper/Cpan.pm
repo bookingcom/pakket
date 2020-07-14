@@ -46,6 +46,13 @@ has 'versioner' => (
     'default' => sub {Pakket::Helper::Versioner->new('type' => 'Perl')},
 );
 
+has 'latest_distributions' => (
+    'is'      => 'ro',
+    'isa'     => 'HashRef',
+    'lazy'    => 1,
+    'builder' => '_build_latest_distributions',
+);
+
 has 'cpan_02packages' => (
     'is'      => 'ro',
     'isa'     => 'Parse::CPAN::Packages::Fast',
@@ -205,6 +212,29 @@ sub determine_distribution ($self, $module_name) {
     $self->distributions_cache->{$module_name} = $distribution;
 
     return $distribution;
+}
+
+sub outdated ($self, $cache) {
+    my \%cpan_dist = $self->latest_distributions;
+
+    my %result;
+    foreach my $package (sort keys $cache->%*) {
+        my $distribution = $package =~ s{.* /}{}xmsgr;
+        if (exists $cpan_dist{$distribution}) {
+            my @versions       = keys $cache->{$package}->%*;
+            my $cpan_version   = $cpan_dist{$distribution}{'version'};
+            my $latest_version = $self->versioner->select_latest(\@versions);
+
+            if ($self->versioner->compare_version($latest_version, $cpan_version) < 0) {
+                $result{$package} = {
+                    'version'      => $latest_version,
+                    'cpan_version' => $cpan_version,
+                };
+            }
+        }
+    }
+
+    return \%result;
 }
 
 sub _get_distribution_02packages ($self, $module_name) {
@@ -421,6 +451,29 @@ sub _build_cpan_02packages_file ($self) {
         }
     };
     return $file;
+}
+
+sub _build_latest_distributions ($self) {
+    my %cpan_dist;
+    foreach my $dist ($self->cpan_02packages->distributions) {
+        $dist->{'dist'} && $dist->{'version'}
+            or next;
+
+        if (exists $cpan_dist{$dist->{'dist'}}) {
+            eval {
+                if ($self->versioner->compare_version($cpan_dist{$dist->{'dist'}}{'version'}, $dist->{'version'}) < 0) {
+                    $cpan_dist{$dist->{'dist'}} = $dist;
+                }
+                1;
+            } or do {
+                my $error = $@ || 'zombie error';
+                carp "Eval finished with: $error for $dist->{'dist'}";
+            };
+        } else {
+            $cpan_dist{$dist->{'dist'}} = $dist;
+        }
+    }
+    return \%cpan_dist;
 }
 
 __PACKAGE__->meta->make_immutable;

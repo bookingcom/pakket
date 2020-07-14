@@ -93,9 +93,8 @@ sub expose ($class, $config, $spec_repo, @repos) {
                         $result = [map $_->id, $dependency_builder->validate_requirements($requirements)->@*];
                         $object->put(encode_json($result));
                         1;
-                    }
-                    or do {
-                        chomp(my $error = $@ || 'zombie error');
+                    } or do {
+                        chomp (my $error = $@ || 'zombie error');
                         send_error($error, 500);
                     };
 

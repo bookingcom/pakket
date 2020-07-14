@@ -26,11 +26,19 @@ tbody td {
 .missing {
   background: #ff6;
 }
+.outdated {
+  background: #FFBB77;
+}
 .name {
   background: transparent;
   text-align: left;
   padding-left: 25px;
   width: 300px;
+  font-weight: normal;
+}
+.none {
+  background: transparent;
+  text-align: center;
   font-weight: normal;
 }
 .options-panel {

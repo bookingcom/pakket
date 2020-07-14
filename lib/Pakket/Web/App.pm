@@ -37,6 +37,8 @@ sub status_page {
 }
 
 sub setup ($class, $config_file = undef) {
+    my $cpan = use_module('Pakket::Helper::Cpan')->new;
+
     $config_file //= first {path($_)->exists} PATHS()->@*
         or croak(
         $log->fatal(
@@ -80,35 +82,49 @@ sub setup ($class, $config_file = undef) {
         );
     };
 
+    ## no critic [ControlStructures::ProhibitDeepNests]
     get '/all_packages' => sub {
         set 'content_type' => 'application/json';
-        my %packages;
+
+        my %all_packages;
         for my $repo (@repos) {
-            my \@ids = $repo->{'repo'}->all_object_ids();
-            for my $package (@ids) {
-                $packages{$package}{$repo} = 1;
+            for my $package ($repo->{'repo'}->all_object_ids->@*) {
+                $all_packages{$package}{$repo} = 1;
             }
-        }
-        my %output;
-        for my $repo (@repos) {
-            my $type = $repo->{'repo_config'}{'type'};
-            if ($type eq 'spec' or $type eq 'source') {
-                for my $package (keys %packages) {
-                    $output{$package}{$type} = $packages{$package}{$repo} // 0;
-                }
-            } else {
-                my ($p1, $p2, $p3) = split (m{/}, $repo->{'repo_config'}{'path'});
-                for my $package (keys %packages) {
-                    $output{$package}{$p3}{$p2} = $packages{$package}{$repo} // 0;
-                }
-            }
-        }
-        my @sorted_output;
-        for my $package (sort keys %output) {
-            push @sorted_output, [$package, $output{$package}];
         }
 
-        return encode_json(\@sorted_output);
+        my %result;
+        foreach my $repo (@repos) {
+            my $type = $repo->{'repo_config'}{'type'};
+            my ($p1, $p2, $p3) = split (m{/}, $repo->{'repo_config'}{'path'});
+
+            if ($type eq 'spec') {                                             # here detect outdated packages
+                my \%cache    = $repo->{'repo'}->all_objects_cache;
+                my \%outdated = $cpan->outdated(\%cache);
+                foreach my $short_name (keys %outdated) {
+                    my \%versions = $cache{$short_name};
+                    foreach my $version (keys %versions) {
+                        my \%releases = $versions{$version};
+                        foreach my $release (keys %releases) {
+                            my $id = "$short_name=$version:$release";
+                            $result{$id}{'cpan'} = $outdated{$short_name}{'cpan_version'};
+                        }
+                    }
+                }
+            }
+
+            if ($type eq 'spec' or $type eq 'source') {
+                for my $id (keys %all_packages) {
+                    $result{$id}{$type} = $all_packages{$id}{$repo} // 0;
+                }
+            } else {
+                for my $id (keys %all_packages) {
+                    $result{$id}{$p3}{$p2} = $all_packages{$id}{$repo} // 0;
+                }
+            }
+        }
+
+        return encode_json(\%result);
     };
 
     # manually defining static resources

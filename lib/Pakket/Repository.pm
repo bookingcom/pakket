@@ -37,7 +37,7 @@ has 'backend' => (
     'lazy'    => 1,
     'builder' => '_build_backend',
     'handles' => [qw(
-            all_object_ids all_object_ids_by_name has_object remove
+            all_object_ids_by_name has_object remove
             retrieve_content retrieve_location
             store_content store_location
             ),
@@ -60,6 +60,12 @@ with qw(
 sub BUILD ($self, @) {
     $self->backend();
     return;
+}
+
+sub all_object_ids ($self) {
+    my $ids = $self->backend->all_object_ids();
+    $self->{'all_objects_cache'} = $self->_build_all_objects_cache($ids);
+    return $ids;
 }
 
 sub retrieve_package_file ($self, $package) {
@@ -212,9 +218,15 @@ sub select_available_packages ($self, $requirements, %params) {
     return $packages;
 }
 
-sub _build_all_objects_cache ($self) {
+sub add_to_cache ($self, $short_name, $version, $release) {
+    $self->all_objects_cache->{$short_name}{$version}{$release}++;
+    return;
+}
+
+sub _build_all_objects_cache ($self, $ids = undef) {
     my %result;
-    foreach my $id ($self->all_object_ids->@*) {
+    $ids //= $self->all_object_ids;
+    foreach my $id ($ids->@*) {
         my ($category, $name, $version, $release) = parse_package_id($id);
         if ($category && $name && $version && $release) {
             $result{"${category}/${name}"}{$version}{$release}++;
@@ -223,11 +235,6 @@ sub _build_all_objects_cache ($self) {
         }
     }
     return \%result;
-}
-
-sub add_to_cache ($self, $short_name, $version, $release) {
-    $self->all_objects_cache->{$short_name}{$version}{$release}++;
-    return;
 }
 
 sub _build_backend ($self) {

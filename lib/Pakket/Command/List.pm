@@ -55,6 +55,12 @@ use constant {
                 $s->installed();
             },
         },
+        'outdated' => {
+            'match'   => '^ou',
+            'handler' => sub ($s) {
+                $s->outdated();
+            },
+        },
     },
 };
 

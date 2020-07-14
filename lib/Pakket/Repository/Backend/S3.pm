@@ -3,17 +3,16 @@ package Pakket::Repository::Backend::S3;
 # ABSTRACT: A remote S3-compatible backend repository
 
 use v5.22;
-use namespace::autoclean;
 use Moose;
 use MooseX::StrictConstructor;
+use namespace::autoclean;
 
 # core
 use Carp;
 use Time::HiRes qw(gettimeofday);
-use experimental qw(declared_refs refaliasing signatures switch);
+use experimental qw(declared_refs refaliasing signatures);
 
 # non core
-use JSON::MaybeXS qw(decode_json);
 use Log::Any qw($log);
 use Net::Amazon::S3;
 use Net::Amazon::S3::Client;
@@ -84,7 +83,9 @@ with qw(
     Pakket::Role::Repository::Backend
 );
 
-use constant {'index_update_interval' => 60 * 5};
+use constant {
+    'INDEX_UPDATE_INTERVAL' => 60 * 5,
+};
 
 sub new_from_uri ($class, $uri) {
     croak($log->criticalf('new_from_uri: not implemented yet'));
@@ -93,7 +94,6 @@ sub new_from_uri ($class, $uri) {
 sub BUILD ($self, @) {
     $self->{'file_extension'} =~ s{^[.]+}{}xms;
 
-    # check that repo exists just access bucket
     return;
 }
 
@@ -104,16 +104,20 @@ sub all_object_ids ($self) {
 }
 
 sub all_object_ids_by_name ($self, $category, $name) {
+    $self->_check_index_age();
+
     my @all_object_ids = try {
         grep {my ($c, $n) = parse_package_id($_); $c eq $category and $n eq $name} keys %{$self->index};
     } catch {
         croak($log->criticalf('Could not get remote all_object_ids, reason: %s', $_));
     };
+
     return \@all_object_ids;
 }
 
 sub has_object ($self, $id) {
-    exists $self->index->{$id} && return 1;
+    exists $self->index->{$id}
+        and return 1;
 
     my $object = $self->s3_bucket->object('key' => join ('.', $id, $self->file_extension));
     if ($object->exists) {
@@ -125,15 +129,20 @@ sub has_object ($self, $id) {
 }
 
 sub remove ($self, $id) {
+    $self->_check_index($id);
+
     try {
         $self->index->{$id}->delete;
     } catch {
         croak($log->criticalf('Could not remove content for %s, reason: %s', $id, $_));
     };
+
     return 1;
 }
 
 sub retrieve_content ($self, $id) {
+    $self->_check_index($id);
+
     my $content = try {
         $self->index->{$id}->get;
     } catch {
@@ -144,22 +153,14 @@ sub retrieve_content ($self, $id) {
 }
 
 sub retrieve_location ($self, $id) {
-    if (not defined $self->index->{$id}) {
-        $log->debugf('Index miss on retreive for "%s"', $id);
-        $self->_check_index_age();
-    }
+    $self->_check_index($id);
 
     my $location = try {
         my $tmp_file = Path::Tiny->tempfile('pakket-' . ('X' x 10));
         $self->index->{$id}->get_filename($tmp_file->absolute->stringify);
         $tmp_file;
     } catch {
-        croak(
-            $log->criticalf(
-                'Could not retrieve location for id %s, version: %s, reason: %s', $id,
-                "$Pakket::Repository::Backend::s3::VERSION",                      $_,
-            ),
-        );
+        croak($log->criticalf('Could not retrieve location for id %s, reason: %s', $id, $_));
     };
 
     return $location;
@@ -235,10 +236,18 @@ sub _get_all_object_ids ($self) {
     return \@all_object_ids;
 }
 
+sub _check_index ($self, $id) {
+    if (not defined $self->index->{$id}) {
+        $log->debugf('Index miss for "%s"', $id);
+        $self->_check_index_age();
+    }
+    return;
+}
+
 sub _check_index_age ($self) {
 
-    # clear index if it is older then index_update_interval
-    if ($self->last_index_update_time < gettimeofday() - index_update_interval()) {
+    # clear index if it is older then INDEX_UPDATE_INTERVAL
+    if ($self->last_index_update_time < gettimeofday() - INDEX_UPDATE_INTERVAL()) {
         $log->debugf('Clear index for "%s"', $self->s3_bucket->name);
         $self->clear_client();
         $self->clear_bucket();
