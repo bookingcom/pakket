@@ -257,7 +257,7 @@ sub _install_packages_sequential {
     my ($self, $packages) = @_;
 
     my %installer_cache;
-    foreach my $package (@{$packages}) {
+    foreach my $package (sort {$a->short_name cmp $b->short_name} $packages->@*) {
         eval {
             $self->install_package($package, $self->work_dir, {'cache' => \%installer_cache});
             1;
@@ -405,6 +405,7 @@ sub _install_all_packages {
     my $dc_dir = $self->data_consumer_dir;
 
     my $info_file = $self->load_info_file($dir);
+    my @pkgs;
     $dc_dir->child('processed')->visit(
         sub {
             my ($file, $state) = @_;
@@ -424,22 +425,38 @@ sub _install_all_packages {
                 my $spec      = decode_json $spec_file->slurp_utf8;
                 my $package   = Pakket::Package->new_from_spec($spec);
 
-                # uninstall previous version of the package
-                my $package_to_update = $self->_package_to_upgrade($package);
-                if ($package_to_update) {
-                    $self->uninstall_package($info_file, $package_to_update);
-                }
-
-                _copy_package_to_install_dir($full_parcel_dir, $dir);
-
-                $self->add_package_to_info_file($parcel_dir, $info_file, $package, {'as_prereq' => $as_prereq});
-
-                $log->noticef('Delivering parcel %s', $package->full_name);
-
-                $installed_count++;
+                push (
+                    @pkgs,
+                    {
+                        'package'   => $package,
+                        'dir'       => $parcel_dir,
+                        'full_dir'  => $full_parcel_dir,
+                        'as_prereq' => $as_prereq,
+                    }
+                );
             }
-        }
+        },
     );
+
+    # enforce order
+    foreach my $pkg (sort {$a->{'package'}->short_name cmp $b->{'package'}->short_name} @pkgs) {
+        my ($package, $parcel_dir, $full_parcel_dir, $as_prereq) = $pkg->@{qw(package dir full_dir as_prereq)};
+
+        # uninstall previous version of the package
+        my $package_to_update = $self->_package_to_upgrade($package);
+        if ($package_to_update) {
+            $self->uninstall_package($info_file, $package_to_update);
+        }
+
+        _copy_package_to_install_dir($full_parcel_dir, $dir);
+
+        $self->add_package_to_info_file($parcel_dir, $info_file, $package, {'as_prereq' => $as_prereq});
+
+        $log->noticef('Delivering parcel %s', $package->full_name);
+
+        $installed_count++;
+    }
+
     $self->save_info_file($dir, $info_file);
 
     $dc_dir->remove_tree({'safe' => 0});

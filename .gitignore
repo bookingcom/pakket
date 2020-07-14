@@ -5,4 +5,5 @@
 /build*
 /fatlib
 /nytprof*
+/t/Dockerfile
 /tags
