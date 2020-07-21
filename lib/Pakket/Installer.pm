@@ -239,10 +239,7 @@ sub _do_install {
     $self->_check_packages_in_parcel_repo($packages);
 
     $log->infof('Requested %s parcels', scalar @{$packages});
-    my $installed_count
-        = $self->is_parallel
-        ? $self->_install_packages_parallel($packages)
-        : $self->_install_packages_sequential($packages);
+    my $installed_count = $self->_install_packages_parallel($packages);
 
     $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
     $self->activate_work_dir;
