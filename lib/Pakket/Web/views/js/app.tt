@@ -8,7 +8,9 @@
 	const CSS_CLASS_PAKKET_LATEST     = 'latest';
 	const CSS_CLASS_PAKKET_NOT_LATEST = 'not-latest';
 	const FLAG_GET_ONLY_BROKEN        = 'broken=1';
+	const FLAG_GET_ONLY_OUTDATED      = 'outdated=1';
 	const RENDER_ONLY_BROKEN          = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;
+	const RENDER_ONLY_OUTDATED        = location.href.indexOf(FLAG_GET_ONLY_OUTDATED) > -1 ? true : false;
 
 	// extendable via the payload
 	const COLUMNS_MANDATORY = ['spec', 'source'];
@@ -17,6 +19,7 @@
 	let desiredColumnsOrder = COLUMNS_MANDATORY;
 	const urlPieces = location.href.split('s=');
 	const $onlyBrokenEl = $('#only-problematic');
+	const $onlyOutdatedEl = $('#only-outdated');
 	const $searchEl = $('#s_pakket');
 	const $tbodyEl = $('#tbody');
 	let columnInfo = {};
@@ -25,6 +28,9 @@
 	// changing 'only broken' checkbox ASAP
 	if (RENDER_ONLY_BROKEN) {
 		$onlyBrokenEl.attr('checked', 'checked');
+	}
+	if (RENDER_ONLY_OUTDATED) {
+		$onlyOutdatedEl.attr('checked', 'checked');
 	}
 	// same thing with query string
 	if (urlPieces.length === 2) {
@@ -146,7 +152,8 @@
 
 	function _renderTableBody() {
 		// by default rendering whole list of parcels
-		const onlyBroken = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;;
+		const onlyBroken   = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;;
+		const onlyOutdated = location.href.indexOf(FLAG_GET_ONLY_OUTDATED) > -1 ? true : false;;
 		let searchQuery = $searchEl.val();
 		searchQuery = searchQuery ? searchQuery.trim() : '';
 		searchQuery = searchQuery.toLowerCase();
@@ -154,8 +161,28 @@
 
 		let ids = Array.from(parcels.keys()).sort();
 
-		// filtering out only broken if it's a case
-		if (onlyBroken) {
+		if (searchQuery.length) { // filtering by name
+			let filtered = new Array;
+			ids.forEach((id) => {
+				if (id.toLowerCase().indexOf(searchQuery) > -1) {
+					filtered.push(id);
+				}
+			});
+			ids = filtered;
+		}
+
+		if (onlyOutdated) {
+			let filtered = new Array;
+			ids.forEach((id) => {
+				const pakket = parcels.get(id);
+				if ('cpan' in pakket) {
+					filtered.push(id);
+				}
+			});
+			ids = filtered;
+		}
+
+		if (onlyBroken) { // filtering out only broken if it's a case
 			let filtered = new Array;
 			ids.forEach((id) => {
 				const pakket = parcels.get(id);
@@ -174,17 +201,6 @@
 				});
 
 				if (isBroken) {
-					filtered.push(id);
-				}
-			});
-			ids = filtered;
-		}
-
-		// filtering by name
-		if (searchQuery.length) {
-			let filtered = new Array;
-			ids.forEach((id) => {
-				if (id.toLowerCase().indexOf(searchQuery) > -1) {
 					filtered.push(id);
 				}
 			});
@@ -237,6 +253,9 @@
 		const params = [];
 		if ($onlyBrokenEl.is(':checked')) {
 			params.push(FLAG_GET_ONLY_BROKEN);
+		}
+		if ($onlyOutdatedEl.is(':checked')) {
+			params.push(FLAG_GET_ONLY_OUTDATED);
 		}
 		if (search.length) {
 			params.push(`s=${search}`);
@@ -319,6 +338,17 @@
 	});
 
 	$onlyBrokenEl.on('change', function(){
+		if ($(this).is(':checked')) {
+			// reflecting change in URL
+			window.history.pushState('', '', composeGetQuery());
+		} else {
+			// reflecting change in URL
+			window.history.replaceState('', '', composeGetQuery());
+		}
+		_renderTableBody();
+	});
+
+	$onlyOutdatedEl.on('change', function(){
 		if ($(this).is(':checked')) {
 			// reflecting change in URL
 			window.history.pushState('', '', composeGetQuery());

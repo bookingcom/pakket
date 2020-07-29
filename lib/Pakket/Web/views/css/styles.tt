@@ -15,7 +15,7 @@ td {
   font-weight: bold;
 }
 tbody td {
-  background: #6f6;
+  background: #ABEBC6;
   word-wrap: break-word;
   width: 150px;
   padding: 5px;
@@ -24,10 +24,10 @@ tbody td {
   visibility: hidden;
 }
 .missing {
-  background: #ff6;
+  background: #FFB3B3;
 }
 .outdated {
-  background: #FFBB77;
+  background: #B3BBFF;
 }
 .name {
   background: transparent;

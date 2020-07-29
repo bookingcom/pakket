@@ -19,6 +19,8 @@
   <div class="hidden options-panel">
     <input type="checkbox" name="only-problematic" id="only-problematic" value="1" />
     <label for="only-problematic">Show only problematic</label>
+    <input type="checkbox" name="only-outdated" id="only-outdated" value="1" />
+    <label for="only-outdated">Show only outdated</label>
   </div>
   <table>
     <thead id="thead">

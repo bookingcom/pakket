@@ -444,9 +444,15 @@ sub _build_cpan_02packages_file ($self) {
         1;
     } or do {
         foreach my $dir (@INC) {
-            my $path = path($dir)->child(qw(.. share 02packages.details.txt));
-            $path->exists
-                and $file = $path->stringify
+            my $path1 = path($dir)->child(qw(auto share dist Pakket 02packages.details.txt));
+            my $path2 = path($dir)->child(qw(.. share 02packages.details.txt));
+            $self->log->debug('checking 02packages in:', $path1->stringify);
+            $path1->exists
+                and $file = $path1->stringify
+                and last;
+            $self->log->debug('checking 02packages in:', $path2->stringify);
+            $path2->exists
+                and $file = $path2->stringify
                 and last;
         }
     };
