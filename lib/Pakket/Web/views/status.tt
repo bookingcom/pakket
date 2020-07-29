@@ -15,7 +15,7 @@
   <h2 class="hidden">Pakket status page
     <input type="text" class="s" name="s_pakket" id="s_pakket" size="50" placeholder="filter by name" />
   </h2>
-  <div class="pakket-uwsgi-version">v. <span id="pakket-uwsgi-version">x.x</span></div>
+  <div class="pakket-uwsgi-version">v<span id="pakket-uwsgi-version">x.x</span></div>
   <div class="hidden options-panel">
     <input type="checkbox" name="only-problematic" id="only-problematic" value="1" />
     <label for="only-problematic">Show only problematic</label>

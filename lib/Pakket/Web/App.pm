@@ -36,6 +36,7 @@ sub status_page {
     return template 'status';
 }
 
+## no critic [Subroutines::ProhibitExcessComplexity]
 sub setup ($class, $config_file = undef) {
     my $cpan = use_module('Pakket::Helper::Cpan')->new;
 
@@ -80,6 +81,23 @@ sub setup ($class, $config_file = undef) {
                 'repositories' => \@repositories,
             },
         );
+    };
+
+    get '/updates' => sub {
+        set 'content_type' => 'application/json';
+
+        my @result;
+        foreach my $repo (@repos) {
+            my $type = $repo->{'repo_config'}{'type'};
+            if ($type eq 'spec') {
+                my \%cache    = $repo->{'repo'}->all_objects_cache;
+                my \%outdated = $cpan->outdated(\%cache);
+                @result = map {"$_=$outdated{$_}{'cpan_version'}"} sort keys %outdated;
+                last;
+            }
+        }
+
+        return encode_json({'items' => \@result});
     };
 
     ## no critic [ControlStructures::ProhibitDeepNests]

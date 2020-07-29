@@ -43,7 +43,7 @@
 
 	function renderPackages() {
 		const URL_FETCH_PAKKETS = '/all_packages';
-		const localStorageKey = 'pakkets';
+		const localStorageKey = 'pakket';
 		// first checking if data is available at localStorage
 		let pakketsInLocalStorage = localStorage.getItem(localStorageKey);
 		if (pakketsInLocalStorage) {
@@ -113,7 +113,7 @@
 
 		let tableHead = '<tr>';
 		tableHead += '<td class="name" rowspan="2" colspan="2">Distribution</td>';
-		tableHead += '<td class="cpan" rowspan="2" colspan="1">Update</td>';
+		tableHead += '<td class="cpan" rowspan="2" colspan="1"><a target="_blank" href="/updates">Updates</a></td>';
 		desiredColumnsOrder.forEach((column) => {
 			// calculating colspan and rowspan
 			let colspan = 1;
