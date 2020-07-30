@@ -55,10 +55,10 @@ use constant {
                 $s->installed();
             },
         },
-        'outdated' => {
-            'match'   => '^ou',
+        'updates' => {
+            'match'   => '^up',
             'handler' => sub ($s) {
-                $s->outdated();
+                $s->updates();
             },
         },
     },
@@ -79,6 +79,7 @@ sub description {
 sub opt_spec ($self, @args) {
     return (                                                                   # no tidy
         ['repo|r=s', 'Repository'],
+        ['json',     'Format as JSON'],
         undef,
         $self->SUPER::opt_spec(@args),
     );
@@ -105,6 +106,7 @@ sub execute ($self, $opt, $args) {
     my $list    = use_module('Pakket::Controller::List')->new(
         'config'     => $self->{'config'},
         'pakket_dir' => $self->{'config'}{'install_dir'},
+        'json'       => $opt->{'json'},
     );
 
     return $subject->{'handler'}->($list);

@@ -14,9 +14,15 @@ use experimental qw(declared_refs refaliasing signatures);
 
 # non core
 use Module::Runtime qw(use_module);
+use JSON::MaybeXS qw(encode_json);
 
 # local
 use Pakket::Helper::Versioner;
+
+has 'json' => (
+    'is'      => 'ro',
+    'default' => 0,
+);
 
 with qw(
     Pakket::Role::HasConfig
@@ -46,11 +52,15 @@ sub installed ($self) {
     return 0;
 }
 
-sub outdated ($self) {
+sub updates ($self) {
     my $cpan = use_module('Pakket::Helper::Cpan')->new;
 
-    my \%outdated = $cpan->outdated($self->parcel_repo->all_objects_cache);
-    say "$_=$outdated{$_}{'version'} ($outdated{$_}{'cpan_version'})" foreach sort keys %outdated;
+    my \%outdated = $cpan->outdated($self->all_installed_cache);
+    if ($self->json) {
+        say encode_json([map {"$_=$outdated{$_}{'cpan_version'}"} sort keys %outdated]);
+    } else {
+        say "$_=$outdated{$_}{'version'} ($outdated{$_}{'cpan_version'})" foreach sort keys %outdated;
+    }
 
     return 0;
 }
