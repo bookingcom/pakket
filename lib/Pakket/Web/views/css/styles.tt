@@ -27,6 +27,7 @@ tbody td {
   background: #FFB3B3;
 }
 .outdated {
+  text-align: left;
   background: #B3BBFF;
 }
 .name {
@@ -38,7 +39,7 @@ tbody td {
 }
 .none {
   background: transparent;
-  text-align: center;
+  text-align: left;
   font-weight: normal;
 }
 .options-panel {

@@ -9,20 +9,23 @@
 	const CSS_CLASS_PAKKET_NOT_LATEST = 'not-latest';
 	const FLAG_GET_ONLY_BROKEN        = 'broken=1';
 	const FLAG_GET_ONLY_OUTDATED      = 'outdated=1';
+	const FLAG_GET_ONLY_NONCPAN       = 'noncpan=1';
 	const RENDER_ONLY_BROKEN          = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;
 	const RENDER_ONLY_OUTDATED        = location.href.indexOf(FLAG_GET_ONLY_OUTDATED) > -1 ? true : false;
+	const RENDER_ONLY_NONCPAN         = location.href.indexOf(FLAG_GET_ONLY_NONCPAN) > -1 ? true : false;
 
 	// extendable via the payload
 	const COLUMNS_MANDATORY = ['spec', 'source'];
 	const DOMAIN = 'booking';
 	const DISPLAY_GITLAB_LINKS = window.location.hostname.indexOf('.' + DOMAIN + '.com') > -1 ? true : false;
 	let desiredColumnsOrder = COLUMNS_MANDATORY;
-	const urlPieces = location.href.split('s=');
-	const $onlyBrokenEl = $('#only-problematic');
-	const $onlyOutdatedEl = $('#only-outdated');
-	const $searchEl = $('#s_pakket');
-	const $tbodyEl = $('#tbody');
-	let columnInfo = {};
+	const urlPieces         = location.href.split('s=');
+	const $onlyBrokenEl     = $('#only-problematic');
+	const $onlyOutdatedEl   = $('#only-outdated');
+	const $onlyNonCPANEl    = $('#only-non-cpan');
+	const $searchEl         = $('#s_pakket');
+	const $tbodyEl          = $('#tbody');
+	let columnInfo          = {};
 	let parcels; // parcels list we fetch from localSorage / BE once and do all further manipulations
 
 	// changing 'only broken' checkbox ASAP
@@ -31,6 +34,9 @@
 	}
 	if (RENDER_ONLY_OUTDATED) {
 		$onlyOutdatedEl.attr('checked', 'checked');
+	}
+	if (RENDER_ONLY_NONCPAN) {
+		$onlyNonCPANEl.attr('checked', 'checked');
 	}
 	// same thing with query string
 	if (urlPieces.length === 2) {
@@ -43,7 +49,7 @@
 
 	function renderPackages() {
 		const URL_FETCH_PAKKETS = '/all_packages';
-		const localStorageKey = 'pakket';
+		const localStorageKey = 'pakket-2020-07-30';
 		// first checking if data is available at localStorage
 		let pakketsInLocalStorage = localStorage.getItem(localStorageKey);
 		if (pakketsInLocalStorage) {
@@ -97,7 +103,7 @@
 		const first = parcels.values().next().value;
 		const keys = Object.keys(first);
 		keys.forEach((key) => {
-			if (key === 'cpan') {
+			if (key === 'cpan' || key === 'cpan_version') {
 				return;
 			}
 			if (desiredColumnsOrder.indexOf(key) === -1) {
@@ -154,7 +160,8 @@
 		// by default rendering whole list of parcels
 		const onlyBroken   = location.href.indexOf(FLAG_GET_ONLY_BROKEN) > -1 ? true : false;;
 		const onlyOutdated = location.href.indexOf(FLAG_GET_ONLY_OUTDATED) > -1 ? true : false;;
-		let searchQuery = $searchEl.val();
+		const onlyNonCPAN  = location.href.indexOf(FLAG_GET_ONLY_NONCPAN) > -1 ? true : false;;
+		let searchQuery    = $searchEl.val();
 		searchQuery = searchQuery ? searchQuery.trim() : '';
 		searchQuery = searchQuery.toLowerCase();
 		searchQuery = searchQuery.replace(/::/g,'-');
@@ -175,7 +182,18 @@
 			let filtered = new Array;
 			ids.forEach((id) => {
 				const pakket = parcels.get(id);
-				if ('cpan' in pakket) {
+				if ('cpan_version' in pakket) {
+					filtered.push(id);
+				}
+			});
+			ids = filtered;
+		}
+
+		if (onlyNonCPAN) {
+			let filtered = new Array;
+			ids.forEach((id) => {
+				const pakket = parcels.get(id);
+				if (!('cpan' in pakket)) {
 					filtered.push(id);
 				}
 			});
@@ -257,6 +275,9 @@
 		if ($onlyOutdatedEl.is(':checked')) {
 			params.push(FLAG_GET_ONLY_OUTDATED);
 		}
+		if ($onlyNonCPANEl.is(':checked')) {
+			params.push(FLAG_GET_ONLY_NONCPAN);
+		}
 		if (search.length) {
 			params.push(`s=${search}`);
 		}
@@ -285,13 +306,18 @@
 		}
 
 		const namePieces = config.name.split('/');
-		let cpan_ver = config.data['cpan'] ? config.data['cpan'] : '';
-		cpan_ver = `<a target="_blank" title="" href="https://metacpan.org/release/${namePieces[1]}">${cpan_ver}</a>`;
+		let cpan_version = config.data['cpan_version'] ? config.data['cpan_version'] : '';
+		cpan_version = `<a target="_blank" title="" href="https://fastapi.metacpan.org/release/${namePieces[1]}">${cpan_version}</a>`;
+
+		let icon
+			= config.data['cpan']
+			? `<a target="_blank" title="${namePieces[1]}" href="https://metacpan.org/release/${namePieces[1]}"><img src="/png/metacpan-icon.png"</img></a>`
+			: '';
 
 		let tableRow = `
 			<td class="name">${name}</td>
 			<td class="version">${(versionsArr.length === 1 ? versionsArr[0] : ('<select data-name="' + config.name.replace(/[\/\.\:]/g,'') + '">' + versionsUI + '</select>'))}</td>
-			<td class="${config.data['cpan'] ? 'outdated' : 'none'}">${cpan_ver}</td>
+			<td class="${config.data['cpan_version'] ? 'outdated' : 'none'}">${icon} ${cpan_version}</td>
 		`;
 		config.order.forEach((column) => {
 			if (strIsPerlVersion(column)) {
@@ -349,6 +375,17 @@
 	});
 
 	$onlyOutdatedEl.on('change', function(){
+		if ($(this).is(':checked')) {
+			// reflecting change in URL
+			window.history.pushState('', '', composeGetQuery());
+		} else {
+			// reflecting change in URL
+			window.history.replaceState('', '', composeGetQuery());
+		}
+		_renderTableBody();
+	});
+
+	$onlyNonCPANEl.on('change', function(){
 		if ($(this).is(':checked')) {
 			// reflecting change in URL
 			window.history.pushState('', '', composeGetQuery());

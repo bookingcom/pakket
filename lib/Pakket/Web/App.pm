@@ -28,6 +28,7 @@ use constant {
 
 set 'content_type' => 'application/json';
 
+## no critic [Modules::RequireExplicitInclusion]
 sub status_page {
     set 'content_type' => 'text/html';
     set 'auto_page'    => 1;
@@ -117,15 +118,21 @@ sub setup ($class, $config_file = undef) {
             my ($p1, $p2, $p3) = split (m{/}, $repo->{'repo_config'}{'path'});
 
             if ($type eq 'spec') {                                             # here detect outdated packages
-                my \%cache    = $repo->{'repo'}->all_objects_cache;
-                my \%outdated = $cpan->outdated(\%cache);
-                foreach my $short_name (keys %outdated) {
+                my \%cache              = $repo->{'repo'}->all_objects_cache;
+                my \%outdated           = $cpan->outdated(\%cache);
+                my \%cpan_distributions = $cpan->latest_distributions;
+                foreach my $short_name (keys %cache) {
                     my \%versions = $cache{$short_name};
+                    my $name = $short_name =~ s{.* /}{}xmsgr;
                     foreach my $version (keys %versions) {
                         my \%releases = $versions{$version};
                         foreach my $release (keys %releases) {
                             my $id = "$short_name=$version:$release";
-                            $result{$id}{'cpan'} = $outdated{$short_name}{'cpan_version'};
+                            exists $cpan_distributions{$short_name}
+                                and $result{$id}{'cpan'} = 1;
+                            exists $outdated{$short_name} and do {
+                                $result{$id}{'cpan_version'} = $outdated{$short_name}{'cpan_version'};
+                            };
                         }
                     }
                 }
@@ -168,7 +175,13 @@ sub setup ($class, $config_file = undef) {
     };
 
     get '/favicon.ico' => sub {
-        return send_file(path(DIRNAME(), 'views', 'favicon.ico')->stringify, 'content_type' => 'image/x-icon');
+        set 'content_type' => 'image/x-icon';
+        return send_file(path(DIRNAME(), 'views', 'favicon.ico')->stringify, system_path => 1);
+    };
+
+    get '/png/:name' => sub {
+        set 'content_type' => 'image/png';
+        return send_file(path(DIRNAME(), 'views', 'png', params->{name})->stringify, system_path => 1);
     };
 
     return;

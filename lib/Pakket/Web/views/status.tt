@@ -21,6 +21,8 @@
     <label for="only-problematic">Show only problematic</label>
     <input type="checkbox" name="only-outdated" id="only-outdated" value="1" />
     <label for="only-outdated">Show only outdated</label>
+    <input type="checkbox" name="only-non-cpan" id="only-non-cpan" value="1" />
+    <label for="only-non-cpan">Show only non-CPAN</label>
   </div>
   <table>
     <thead id="thead">

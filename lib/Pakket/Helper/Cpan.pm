@@ -219,10 +219,9 @@ sub outdated ($self, $cache) {
 
     my %result;
     foreach my $package (sort keys $cache->%*) {
-        my $distribution = $package =~ s{.* /}{}xmsgr;
-        if (exists $cpan_dist{$distribution}) {
+        if (exists $cpan_dist{$package}) {
             my @versions       = keys $cache->{$package}->%*;
-            my $cpan_version   = $cpan_dist{$distribution}{'version'};
+            my $cpan_version   = $cpan_dist{$package}{'version'};
             my $latest_version = $self->versioner->select_latest(\@versions);
 
             if ($self->versioner->compare_version($latest_version, $cpan_version) < 0) {
@@ -468,15 +467,15 @@ sub _build_latest_distributions ($self) {
         if (exists $cpan_dist{$dist->{'dist'}}) {
             eval {
                 if ($self->versioner->compare_version($cpan_dist{$dist->{'dist'}}{'version'}, $dist->{'version'}) < 0) {
-                    $cpan_dist{$dist->{'dist'}} = $dist;
+                    $cpan_dist{"perl/$dist->{'dist'}"} = $dist;
                 }
                 1;
             } or do {
                 my $error = $@ || 'zombie error';
-                carp "Eval finished with: $error for $dist->{'dist'}";
+                carp "Build latest distributions error $error for $dist->{'dist'}";
             };
         } else {
-            $cpan_dist{$dist->{'dist'}} = $dist;
+            $cpan_dist{"perl/$dist->{'dist'}"} = $dist;
         }
     }
     return \%cpan_dist;
