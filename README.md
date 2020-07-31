@@ -2,10 +2,6 @@
 
 Pakket - An Unopinionated Meta-Packaging System
 
-# VERSION
-
-version 3.039
-
 # DESCRIPTION
 
 Pakket is a meta-packaging system that allows you to manage
@@ -191,17 +187,13 @@ Instead, a Pakket package contains everything created at install time
 for a built package, including the headers, if such would have been
 installed.
 
-# AUTHORS
+# AUTHOR
 
-- Andrei Grechkin
-- Eugene Chernenko
-- Gonzalo Diethelm
-- Mickey Nasriachi
-- Sawyer X
+booking.com
 
 # COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2020 by Sawyer X.
+This software is Copyright (c) 2020 by booking.com.
 
 This is free software, licensed under:
 
