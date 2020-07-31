@@ -282,25 +282,26 @@ __END__
 
 =head1 SYNOPSIS
 
+    my $id      = 'perl/Pakket=0:1';
     my $backend = Pakket::Repository::Backend::Http->new(
         'scheme'      => 'https',
         'host'        => 'your.pakket.subdomain.company.com',
         'port'        => '80',
-        'base_path'   => '/pakket/,
-        'http_client' => HTTP::Tiny->new(...),
+        'base_path'   => '/pakket/',
+        'http_client' => HTTP::Tiny->new(),
     );
 
     # Handling locations
-    $backend->store_location( $id, $path_to_file );
+    $backend->store_location( $id, 'path/to/file' );
     my $path_to_file = $backend->retrieve_location($id);
     $backend->remove($id);
 
     # Handling content
-    $backend->store_content( $id, $structure );
+    $backend->store_content( $id, 'structured_data' );
     my $structure = $backend->retrieve_content($id);
 
     # Getting data
-    my $ids = $backend->all_object_ids; # [ ... ]
+    #my $ids = $backend->all_object_ids; # [ ... ]
     my $ids = $backend->all_object_ids_by_name('perl', 'Path::Tiny');
     if ( $backend->has_object($id) ) {
         ...

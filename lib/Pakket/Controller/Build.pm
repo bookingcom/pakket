@@ -289,8 +289,8 @@ __END__
 
 =head1 SYNOPSIS
 
-    use Pakket::Builder;
-    my $builder = Pakket::Builder->new();
+    use Pakket::Controller::Build;
+    my $builder = Pakket::Controller::Build->new;
     $builder->execute();
 
 =head1 DESCRIPTION

@@ -145,13 +145,13 @@ __END__
     # Install the first release of a particular version
     # of the package "Dancer2" of the category "perl"
 
-    $ pakket install perl/Dancer2=0.205000:1
-    $ pakket install perl/Dancer2=0.205000
-    $ pakket install perl/Dancer2
+    #$ pakket install perl/Dancer2=0.205000:1
+    #$ pakket install perl/Dancer2=0.205000
+    #$ pakket install perl/Dancer2
 
-    $ cat file/pakket.list | pakket install -f -
+    #$ cat file/pakket.list | pakket install -f -
 
-    $ pakket install --help
+    #$ pakket install --help
 
 =head1 DESCRIPTION
 

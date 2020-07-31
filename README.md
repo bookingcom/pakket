@@ -189,11 +189,11 @@ installed.
 
 # AUTHOR
 
-booking.com
+Booking.com
 
 # COPYRIGHT AND LICENSE
 
-This software is Copyright (c) 2020 by booking.com.
+This software is Copyright (c) 2020 by Booking.com.
 
 This is free software, licensed under:
 

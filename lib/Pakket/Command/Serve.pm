@@ -58,8 +58,8 @@ __END__
 
 =head1 SYNOPSIS
 
-    $ pakket serve
-    $ pakket serve --port 3000
+    #$ pakket serve
+    #$ pakket serve --port 3000
 
 =head1 DESCRIPTION
 

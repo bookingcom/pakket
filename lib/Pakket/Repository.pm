@@ -252,12 +252,12 @@ __END__
 
 =head1 SYNOPSIS
 
-    my $repository = Pakket::Repository::Spec->new(
-        'backend' => Pakket::Repository::Backend::File->new(...),
+    my $repository1 = Pakket::Repository::Spec->new(
+        'backend' => Pakket::Repository::Backend::File->new,
     );
 
     # or
-    my $repository = Pakket::Repository::Spec->new(
+    my $repository2 = Pakket::Repository::Spec->new(
         'backend' => 'file:///var/lib/',
     );
 
