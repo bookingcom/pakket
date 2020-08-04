@@ -227,7 +227,7 @@ describe 'filter_packages_in_cache' {
 };
 
 describe 'creating and removing packages in repo' => sub {
-    my $dir    = path($ENV{'TMPDIR'});
+    my $dir    = $ENV{'TMPDIR'} ? path($ENV{'TMPDIR'}) : Path::Tiny->tempdir;
     my @dirs   = map {my $ret = $dir->child($_); $ret->mkpath; $ret} 1 .. 3;
     my $config = t::lib::Utils::config(@dirs);
     my $repo;

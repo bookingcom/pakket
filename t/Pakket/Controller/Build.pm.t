@@ -19,7 +19,7 @@ use Pakket::Controller::Build;
 use Pakket::Type::Package;
 use t::lib::Utils qw(match_any_item test_prepare_context_real test_run);
 
-my $dir    = path($ENV{'TMPDIR'});
+my $dir    = $ENV{'TMPDIR'} ? path($ENV{'TMPDIR'}) : Path::Tiny->tempdir;
 my @dirs   = map {my $ret = $dir->child($_); $ret->mkpath; $ret} 1 .. 3;
 my $config = t::lib::Utils::config(@dirs);
 
