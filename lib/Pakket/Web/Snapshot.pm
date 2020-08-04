@@ -77,7 +77,7 @@ sub expose ($class, $config, $spec_repo, @repos) {
                     'content_type' => 'application/json',
                 );
                 if ($object->exists) {
-                    $result = $object->get_decoded;
+                    $result = decode_json($object->get);
                 } else {
                     eval {
                         my @queries = map {
