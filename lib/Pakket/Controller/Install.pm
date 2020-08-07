@@ -27,11 +27,7 @@ use Pakket::Log;
 use Pakket::Type::Package;
 use Pakket::Type::PackageQuery;
 use Pakket::Type;
-
-use Pakket::Utils qw(
-    clean_hash
-    is_writeable
-);
+use Pakket::Utils qw(clean_hash is_writeable);
 use Pakket::Utils::DependencyBuilder;
 
 use constant {
@@ -120,6 +116,17 @@ sub execute ($self, %params) {
     return $result;
 }
 
+sub process_query ($self, $query, %params) {
+    return;
+}
+
+sub install_parcel ($self, $package, $parcel_dir, $target_dir) {
+    $self->log->info('Delivering parcel:', $package->id);
+    $self->_move_parcel_dir($parcel_dir->child(PARCEL_FILES_DIR()), $target_dir);
+
+    return;
+}
+
 sub _do_dry_run_simple ($self, $queries) {
     my (undef, \@not_found) = $self->filter_packages_in_cache(as_requirements($queries), $self->all_installed_cache);
 
@@ -140,10 +147,6 @@ sub _do_dry_run_recursive ($self, $queries) {
     say $_->id foreach @packages;
 
     return E2BIG;
-}
-
-sub process_query ($self, $query, %params) {
-    return;
 }
 
 sub _do_install ($self, $queries) {
@@ -172,66 +175,38 @@ sub _do_install ($self, $queries) {
     is_writeable($self->libraries_dir)
         or croak($self->log->critical(q{Can't write to the installation directory:}, $self->libraries_dir));
 
+    my %saved_requirements = %requirements;                                    # save requirements to test against them later
     $self->_check_against_installed(\%requirements);
     %requirements
         or $self->log->notice('All packages are already installed')
         and return 0;
 
-    my \@packages = $self->parcel_repo->select_available_packages(\%requirements, 'continue' => $self->continue);
-    @packages
-        or $self->log->notice('All packages are already installed')
-        and return 0;
+    delete @saved_requirements{keys %requirements};                            # keep only requirements which are already installed
 
-    $self->log->notice('Requested packages:', scalar @packages);
-    $self->_fetch_packages_parallel(\@packages);
-    my $install_count = $self->_install_all_packages();
-
-    $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
-    $self->activate_work_dir;
-
-    $self->log->info('Finished installing:', join (', ', map {$_->id} @packages));
-    $self->log->noticef(q{Finished installing %d packages into: %s}, $install_count, $self->pakket_dir);
-
-    return 0;
-}
-
-sub install_parcel ($self, $package, $parcel_dir, $target_dir) {
-    $self->log->info('Delivering parcel:', $package->id);
-    $self->_move_parcel_dir($parcel_dir->child(PARCEL_FILES_DIR()), $target_dir);
-
-    return;
-}
-
-sub _recursive_requirements ($self, $queries) {
-    my $dependency_builder = Pakket::Utils::DependencyBuilder->new(
-        $self->%{qw(log log_depth)},
-        'spec_repo' => $self->spec_repo,
-    );
-    my \%requirements = $dependency_builder->recursive_requirements(
-        $queries,
-        'parcel_repo' => $self->parcel_repo,
-        'phases'      => $self->phases,
-        'types'       => $self->types,
-    );
-
-    return $dependency_builder->validate_requirements(\%requirements);
-}
-
-sub _fetch_packages_parallel ($self, $packages) {
-    $self->push_to_data_consumer($_->id) foreach $packages->@*;
+    $self->log->notice('Requested packages:', scalar keys %requirements);
+    $self->push_to_data_consumer(\%requirements);
 
     $self->spawn_workers();
 
     $self->is_child                                                            # reinit backend after forking, this prevent problems with network backends
         and $self->reset_parcel_backend();
 
-    $self->_fetch_all_packages();
+    $self->_fetch_packages();
     $self->wait_workers();
 
-    return $self->_check_fetch_failures();
+    $self->_check_fetch_failures();
+    my $installed_count = $self->_install_packages(\%saved_requirements);
+
+    $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
+    $self->activate_work_dir;
+
+    #$self->log->info('Finished installing:', join (', ', map {$_->id} @packages));
+    $self->log->noticef(q{Finished installing %d packages into: %s}, $installed_count, $self->pakket_dir);
+
+    return 0;
 }
 
-sub _fetch_all_packages ($self) {
+sub _fetch_packages ($self) {
     my $dir         = $self->work_dir;
     my $dc_dir      = $self->data_consumer_dir;
     my $failure_dir = $self->data_consumer_dir->child('failed');
@@ -251,15 +226,14 @@ sub _fetch_all_packages ($self) {
                     $self->log->infof('Another worker got hold of the lock for %s first -- skipping', $file);
                     return $consumer->leave;
                 }
+                my $data = decode_json($file_contents);
 
-                my $as_prereq   = substr ($file_contents, 0, 1);
-                my $package_str = substr ($file_contents, 1);
-                my $package     = Pakket::Type::Package->new_from_string(
-                    $package_str,
-                    'as_prereq' => $as_prereq,
-                );
+                my $package
+                    = Pakket::Type::Package->new_from_string($data->{'short_name'},
+                    $data->%{qw(version release as_prereq)},
+                    );
 
-                $self->log->notice('Fetching parcel', $package->id, ('(as prereq)') x !!$as_prereq);
+                $self->log->notice("Fetching parcel [$PID]:", $package->id, ('(as prereq)') x !!$package->as_prereq);
 
                 my $parcel_dir = $self->parcel_repo->retrieve_package_file($package);
                 $self->_process_prereqs($parcel_dir);
@@ -304,30 +278,24 @@ sub _process_prereqs ($self, $parcel_dir) {
         join (',', $self->types->@*),
     );
 
+    my %requirements;
     $self->visit_prereqs(
         $meta,
         sub ($phase, $type, $name, $requirement) {
+            $self->log->infof('Found prereq %9s %10s: %s=%s', $phase, $type, $name, $requirement);
             my $query = Pakket::Type::PackageQuery->new_from_string(
                 "$name=$requirement",
                 'as_prereq' => 1,
             );
-
-            $self->log->infof('Found prereq %9s %10s: %s=%s', $phase, $type, $name, $requirement);
-            my \%requirements = as_requirements([$query]);
-            $self->_check_against_installed(\%requirements);
-            %requirements
-                or return;
-
-            my \@packages
-                = $self->parcel_repo->select_available_packages(\%requirements, 'continue' => $self->continue);
-            @packages
-                or return;
-
-            $self->push_to_data_consumer($packages[0]->id, {'as_prereq' => 1});
+            $requirements{$query->short_name} = $query;
         },
         'phases' => $self->phases,
         'types'  => $self->types,
     );
+
+    $self->_check_against_installed(\%requirements);
+
+    $self->push_to_data_consumer(\%requirements);
 
     return;
 }
@@ -337,56 +305,73 @@ sub _check_fetch_failures ($self) {
     my @failed      = $self->data_consumer_dir->child('failed')->children;
     if (!$self->continue && @failed) {
         foreach my $file (@failed) {
-            my $package_str = substr $file->slurp, 1;
-            $self->log->critical('Unable to fetch:', $package_str);
+            my $data = decode_json($file->slurp_utf8);
+            $self->log->critical("Unable to fetch: $data->{'short_name'}=$data->{'version'}:$data->{'release'}");
         }
         $self->croak('Unable to fetch amount of parcels:', scalar @failed);
     }
     return;
 }
 
-sub _install_all_packages ($self) {
+sub _install_packages ($self, $saved_requirements) {
     my $dc_dir = $self->data_consumer_dir;
 
-    my $info_file = $self->load_info_file($self->work_dir);
-
-    my $installed_count = 0;
+    my %packages;
+    my %packages_cache;
     $dc_dir->child('processed')->visit(
-        sub ($file, $state) {
-            read ($file->filehandle, my $as_prereq, 1)
-                or croak($self->log->critical(q{Couldn't read:}, $file->absolute));
-            $as_prereq eq '0' || $as_prereq eq '1'
-                or croak($self->log->criticalf('Unexpected contents in %s: %s', $file->absolute, $file->slurp));
-
-            my $parcel_dir = $dc_dir->child('to_install', $file->basename, PARCEL_FILES_DIR());
+        sub ($path, $state) {
+            my $parcel_dir = $dc_dir->child('to_install', $path->basename, PARCEL_FILES_DIR());
             $parcel_dir->exists
                 or croak($self->log->critical(q{Couldn't find dir where parcel was extracted:}, $parcel_dir));
 
+            my $data      = decode_json($path->slurp_utf8);
             my $spec_file = $parcel_dir->child(PARCEL_METADATA_FILE());
-            my $package   = Pakket::Type::Package->new_from_specdata(decode_json($spec_file->slurp_utf8));
-
-            # uninstall previous version of the package
-            my $package_to_upgrade = $self->_package_to_upgrade($package);
-            $package_to_upgrade
-                and $self->uninstall_package($info_file, $package_to_upgrade);
-
-            $self->log->notice('Delivering parcel', $package->id);
-            $self->_move_parcel_dir($parcel_dir, $self->work_dir);
-            $self->add_package_to_info_file(
-                'parcel_dir' => $parcel_dir,
-                'info_file'  => $info_file,
-                'package'    => $package,
-                'as_prereq'  => $as_prereq,
+            my $package   = Pakket::Type::Package->new_from_specdata(
+                decode_json($spec_file->slurp_utf8),
+                'as_prereq' => $data->{'as_prereq'},
             );
 
-            ++$installed_count;
+            exists $packages{$package->short_name}
+                and carp('Package fetched several times: ', $package->id);
+
+            $packages{$package->short_name} = {
+                'package'    => $package,
+                'parcel_dir' => $parcel_dir,
+            };
+            $packages_cache{$package->short_name}{$package->version}{$package->release} = undef;
         },
     );
+
+    # check here that required versions are not spoiled during dependency resolve
+    my (undef, \@not_found) = $self->filter_packages_in_cache($saved_requirements, \%packages_cache);
+    if (@not_found) {
+        $self->log->critical('Required package is spoiled by some prereq:', $_->id) for @not_found;
+        $self->croak('You have inconsistency between required and prereq versions');
+    }
+
+    my $info_file = $self->load_info_file($self->work_dir);
+    foreach my $short_name (sort keys %packages) {
+        my $package = $packages{$short_name}{'package'};
+
+        # uninstall previous version of the package
+        my $package_to_upgrade = $self->_package_to_upgrade($package);
+        $package_to_upgrade
+            and $self->uninstall_package($info_file, $package_to_upgrade);
+
+        $self->log->notice('Delivering parcel', $package->id);
+        $self->add_package_to_info_file(
+            'parcel_dir' => $packages{$short_name}{'parcel_dir'},
+            'info_file'  => $info_file,
+            'package'    => $package,
+            'as_prereq'  => $package->as_prereq,
+        );
+        $self->_move_parcel_dir($packages{$short_name}{'parcel_dir'}, $self->work_dir);
+    }
     $self->save_info_file($self->work_dir, $info_file);
 
     $dc_dir->remove_tree({'safe' => 0});
 
-    return $installed_count;
+    return scalar %packages;
 }
 
 sub _move_parcel_dir ($self, $parcel_dir, $work_dir) {
@@ -410,10 +395,10 @@ sub _check_against_installed ($self, $requirements) {
         or return;
 
     $self->log->debug('checking which packages are already installed...');
-    my ($installed, undef) = $self->filter_packages_in_cache($requirements, $self->all_installed_cache);
-    $self->log->info('Package is already installed:', $_->id) foreach $installed->@*;
+    my (\@installed, undef) = $self->filter_packages_in_cache($requirements, $self->all_installed_cache);
+    $self->log->info('Package is already installed:', $_->id) foreach @installed;
 
-    return;
+    return \@installed;
 }
 
 sub _get_rollback_tags ($self) {
@@ -441,6 +426,21 @@ sub _package_to_upgrade ($self, $package) {
         return $installed_package;
     }
     return;
+}
+
+sub _recursive_requirements ($self, $queries) {
+    my $dependency_builder = Pakket::Utils::DependencyBuilder->new(
+        $self->%{qw(log log_depth)},
+        'spec_repo' => $self->spec_repo,
+    );
+    my \%requirements = $dependency_builder->recursive_requirements(
+        $queries,
+        'parcel_repo' => $self->parcel_repo,
+        'phases'      => $self->phases,
+        'types'       => $self->types,
+    );
+
+    return $dependency_builder->validate_requirements(\%requirements);
 }
 
 before [qw(install_parcel)] => sub ($self, @) {

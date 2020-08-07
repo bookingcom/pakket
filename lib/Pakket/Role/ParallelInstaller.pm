@@ -3,11 +3,14 @@ package Pakket::Role::ParallelInstaller;
 # ABSTRACT: Enables parallel installation
 
 use v5.22;
+use autodie;
 use Moose::Role;
 use namespace::autoclean;
 
 # core
 use Carp;
+use Fcntl qw(:flock);
+use English qw(-no_match_vars);
 use List::Util qw(any min);
 use POSIX qw(:sys_wait_h);
 use Time::HiRes qw(time usleep);
@@ -15,9 +18,10 @@ use experimental qw(declared_refs refaliasing signatures);
 
 # non core
 use Data::Consumer::Dir;
+use JSON::MaybeXS;
 
 use constant {
-    'MAX_SUBPROCESSES'        => 3,
+    'MAX_SUBPROCESSES'        => 7,
     'PACKAGES_PER_SUBPROCESS' => 100,
     'SLEEP_TIME_USEC'         => 100_000,
     'NEXT_FORK_WAIT_SEC'      => 1,
@@ -44,6 +48,7 @@ has 'data_consumer_dir' => (
         $self->log->trace('creating data_consumer_dir:', $dc_dir);
         $dc_dir->child('unprocessed')->mkpath;
         $dc_dir->child('to_install')->mkpath;
+        $dc_dir->child('all')->mkpath;
         return $dc_dir;
     },
 );
@@ -123,30 +128,79 @@ sub is_parallel($self) {
     return defined $j && $j > 1;
 }
 
-sub push_to_data_consumer ($self, $pkg, $opts = {}) {
-    my $pkg_esc  = _escape_filename($pkg);
-    my $filename = sprintf ('%014d-%s', time * TIME_SHIFT(), $pkg_esc);
-
-    my \%queue = $self->_data_consumer_queue;
-    $queue{$pkg}
-        and $self->log->debug('package is already in the queue:', $pkg)
-        and return;
-
-    $queue{$pkg}++;                                                            # mark this package as processing
-    my $dir  = $self->data_consumer_dir;
-    my @dirs = grep -d, map {$dir->child($_)} qw(unprocessed working failed processed);
-
-    grep -e, map {$_->children(qr/\d{14}-\Q$pkg_esc\E$/ms)} @dirs
-        and $self->log->trace('package is already in the consuming dirs:', $pkg)
-        and return;
-
-    my $as_prereq = int (!!$opts->{'as_prereq'});
-
-    $self->log->debug('package is added to the queue:', $pkg);
-    $dir->child('unprocessed' => $filename)->spew($as_prereq . $pkg);
-    $self->{'_to_process'}++;
+around push_to_data_consumer => sub ($what, $self, $requirements, %options) {
+    state $cache_dir = $self->data_consumer_dir->child('all');
+    open (my $cachedir_fh, '<', $cache_dir->stringify);
+    flock ($cachedir_fh, LOCK_EX);
+    eval {
+        $self->$what($requirements, %options);
+        1;
+    } or do {
+        my $error = $@ || 'zombie error';
+        flock ($cachedir_fh, LOCK_UN);
+        close ($cachedir_fh);
+        die $error; ## no critic [ErrorHandling::RequireCarping]
+    };
+    flock ($cachedir_fh, LOCK_UN);
+    close ($cachedir_fh);
 
     return;
+};
+
+sub push_to_data_consumer ($self, $requirements, %options) {
+    $requirements->%*
+        or return;
+
+    my \%queue = $self->_update_cache;
+
+    my (\@found, \@not_found) = $self->filter_packages_in_cache($requirements, $self->_data_consumer_queue->{'index'});
+    @not_found
+        or return;
+
+    my \@packages = $self->parcel_repo->select_available_packages($requirements, 'continue' => $self->continue);
+
+    my $dir = $self->data_consumer_dir;
+    $self->{'_to_process'} += scalar @packages;
+    foreach my $package (@packages) {
+        if (exists $queue{'index'}{$package->short_name}) {
+            $self->croakf(
+                'Dependency conflict detected. Package %s has version incompatible with version pinned in the request',
+                $package->id,
+            );
+        }
+        $self->log->debug('adding package to the queue:', $package->id);
+        my $data = {
+            'short_name' => $package->short_name,
+            'version'    => $package->version,
+            'release'    => $package->release,
+            'as_prereq'  => $package->as_prereq // $options{'as_prereq'} // 0,
+        };
+        my $encoded_data = encode_json($data);
+
+        my $filename = sprintf ('%014d%06d-%s.json', time * TIME_SHIFT(), $PID, _escape_filename($package->name));
+        $queue{'index'}{$package->short_name}{$package->version}{$package->release}++;
+        $queue{$filename} = $data;
+        $dir->child('all'         => $filename)->spew($encoded_data);          # put file into quieue cache
+        $dir->child('unprocessed' => $filename)->spew($encoded_data);          # put file into consumer queue
+    }
+
+    return;
+}
+
+sub _update_cache ($self) {
+    state \%queue = $self->_data_consumer_queue;
+    state $cache_dir = $self->data_consumer_dir->child('all');
+
+    my %files = map {+($_->basename => $_)} $cache_dir->children(qr/json\z$/);
+    delete @files{keys %queue};
+
+    foreach my $file (keys %files) {
+        my $data = decode_json($files{$file}->slurp);
+        $queue{$file} = $data;
+        $queue{'index'}{$data->{'short_name'}}{$data->{'version'}}{$data->{'release'}}++;
+    }
+
+    return \%queue;
 }
 
 sub _subproc_count ($self) {

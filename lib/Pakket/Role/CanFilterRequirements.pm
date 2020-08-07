@@ -24,7 +24,10 @@ has 'versioners' => (
 );
 
 sub as_requirements ($queries) {
-    return +{map {$_->short_name => $_} $queries->@*};
+    my %result = map {$_->short_name => $_} $queries->@*;
+    carp('Requirement redefinition, should never happen and must be fixed')
+        if scalar $queries->@* != scalar keys %result;
+    return \%result;
 }
 
 sub is_package_in_cache ($self, $package, $cache) {
@@ -40,7 +43,7 @@ sub filter_packages_in_cache ($self, $requirements, $cache) {
 
     my @found;                                                                 # packages
     my @not_found;                                                             # requirements
-    foreach my $short_name (keys %requirements) {
+    foreach my $short_name (sort keys %requirements) {
         my \$requirement = \$requirements{$short_name};
 
         # $self->log->tracef('searching in cache: %s', $requirement->id);
@@ -81,7 +84,7 @@ sub select_best_package ($self, $requirement, $package_cache) {
 
 sub select_best_version_from_cache ($self, $requirement, $package_cache) {
     $requirement->isa('Pakket::Type::PackageQuery')
-        or croak('should be only Pakket::Type::PackageQuery');
+        or confess('should be only Pakket::Type::PackageQuery');
 
     $package_cache
         or return;

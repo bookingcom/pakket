@@ -8,7 +8,7 @@ use warnings;
 use namespace::autoclean;
 
 use Carp;
-use English '-no_match_vars';
+use English qw(-no_match_vars);
 
 use Pakket '-command';
 use Pakket::Utils qw(is_writeable);

@@ -28,13 +28,12 @@ sub recursive_requirements ($self, $queries, %params) {
     my %result;
 
     my \@queries = $queries;
-    while (@queries) {
-        my \%requirements = as_requirements(\@queries);
+    while (@queries) {                                                         # here might be queries with same short_name (from different dependencies)
+        my \%requirements = as_requirements([shift @queries]);
 
         $self->filter_packages_in_cache(\%requirements, \%result);
         my \@packages = $params{'parcel_repo'}->select_available_packages(\%requirements);
 
-        @queries = ();
         foreach my $pkg (@packages) {
             my $spec    = $self->spec_repo->retrieve_package($pkg);
             my $package = Pakket::Type::Package->new_from_specdata($spec);
@@ -70,14 +69,28 @@ sub recursive_requirements ($self, $queries, %params) {
 
 sub validate_requirements ($self, $requirements) {
     my @result;
+    my %failures;
     foreach my $short_name (sort keys $requirements->%*) {
         my \%versions = $requirements->{$short_name};
         %versions == 1
-            or $self->croak('Package has ambigious versions:', $short_name, keys %versions);
+            or $failures{$short_name} = $requirements->{$short_name} and next;
         my (\%releases) = values %versions;
         %releases == 1
-            or $self->croak('Package has ambigious release:', $short_name, keys %versions, keys %releases);
+            or $failures{$short_name} = $requirements->{$short_name} and next;
         push (@result, values %releases);
+    }
+
+    if (%failures) {
+        foreach my $short_name (sort keys %failures) {
+            my \%versions = $failures{$short_name};
+            %versions == 1
+                or $self->log->critical('Package has ambigious versions:', $short_name, keys %versions)
+                and next;
+            my (\%releases) = values %versions;
+            %releases == 1
+                or $self->log->critical('Package has ambigious release:', $short_name, keys %versions, keys %releases);
+        }
+        $self->croak('Package(s) versions/release ambiguity');
     }
 
     return \@result;

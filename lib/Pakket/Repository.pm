@@ -195,10 +195,10 @@ sub select_available_packages ($self, $requirements, %params) {
         or return [];
 
     $self->log->debugf('checking which packages are available in %s repo...', $self->type);
-    my ($packages, $not_found) = $self->filter_packages_in_cache($requirements, $self->all_objects_cache);
-    if ($not_found->@*) {
-        foreach my $package ($not_found->@*) {
-            my @available = $self->available_variants($self->all_objects_cache->{$package->short_name});
+    my (\@packages, \@not_found) = $self->filter_packages_in_cache($requirements, $self->all_objects_cache);
+    if (@not_found) {
+        foreach my $package (@not_found) {
+            my @available = sort $self->available_variants($self->all_objects_cache->{$package->short_name});
             $params{'silent'}
                 or $self->log->warning(
                 'Could not find package in',
@@ -206,7 +206,7 @@ sub select_available_packages ($self, $requirements, %params) {
                 );
         }
 
-        my $msg = sprintf ('Unable to find amount of packages in repo: %d', scalar $not_found->@*);
+        my $msg = sprintf ('Unable to find amount of packages in repo: %d', scalar @not_found);
         if ($params{'continue'}) {
             $params{'silent'}
                 or $self->log->warn($msg);
@@ -215,7 +215,8 @@ sub select_available_packages ($self, $requirements, %params) {
             $self->croak($msg);
         }
     }
-    return $packages;
+
+    return \@packages;
 }
 
 sub add_to_cache ($self, $short_name, $version, $release) {
