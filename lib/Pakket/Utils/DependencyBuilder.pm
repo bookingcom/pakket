@@ -81,16 +81,23 @@ sub validate_requirements ($self, $requirements) {
     }
 
     if (%failures) {
+        my $whole_message = '';
         foreach my $short_name (sort keys %failures) {
             my \%versions = $failures{$short_name};
-            %versions == 1
-                or $self->log->critical('Package has ambigious versions:', $short_name, keys %versions)
-                and next;
+            if (%versions != 1) {
+                my $msg = join (' ', $short_name, sort keys %versions);
+                $self->log->critical('Package has ambigious versions:', $msg);
+                $whole_message = join ("\n", $whole_message, $msg);
+                next;
+            }
             my (\%releases) = values %versions;
-            %releases == 1
-                or $self->log->critical('Package has ambigious release:', $short_name, keys %versions, keys %releases);
+            if (%releases != 1) {
+                my $msg = join (' ', $short_name, sort keys %versions, sort keys %releases);
+                $self->log->critical('Package has ambigious release:', $msg);
+                $whole_message = join ("\n", $whole_message, $msg);
+            }
         }
-        $self->croak('Package(s) versions/release ambiguity');
+        $self->croak("Package(s) version/release ambiguity:$whole_message");
     }
 
     return \@result;
