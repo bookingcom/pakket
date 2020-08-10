@@ -35,7 +35,7 @@ sub description {
 sub opt_spec ($self, @args) {
     return (
         ['file|input-file|f=s', 'process everything listed in this file'],
-        ['overwrite|w+',        'force reinstall if already installed'],
+        ['overwrite|force|w+',  'force reinstall if already installed'],
         ['no-prereqs',          'do not process any dependencies at all'],
         ['continue',            'continue on errors'],
         [
