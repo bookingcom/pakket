@@ -27,7 +27,7 @@ use Pakket::Log;
 use Pakket::Type::Package;
 use Pakket::Type::PackageQuery;
 use Pakket::Type;
-use Pakket::Utils qw(clean_hash is_writeable);
+use Pakket::Utils qw(clean_hash is_writeable difference);
 use Pakket::Utils::DependencyBuilder;
 
 use constant {
@@ -180,8 +180,6 @@ sub _do_install ($self, $queries) {
     %requirements
         or $self->log->notice('All packages are already installed')
         and return 0;
-
-    delete @saved_requirements{keys %requirements};                            # keep only requirements which are already installed
 
     $self->log->notice('Requested packages:', scalar keys %requirements);
     $self->push_to_data_consumer(\%requirements);
@@ -343,6 +341,8 @@ sub _install_packages ($self, $saved_requirements) {
     );
 
     # check here that required versions are not spoiled during dependency resolve
+    my @requirements_not_to_install = difference([keys $saved_requirements->%*], [keys %packages_cache]);
+    delete $saved_requirements->%{@requirements_not_to_install};
     my (undef, \@not_found) = $self->filter_packages_in_cache($saved_requirements, \%packages_cache);
     if (@not_found) {
         $self->log->critical('Required package is spoiled by some prereq:', $_->id) for @not_found;

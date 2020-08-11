@@ -29,6 +29,11 @@ our @EXPORT_OK = qw(
     get_application_version
     is_writeable
     normalize_version
+
+    difference
+    difference_symmetric
+    intersection
+    union
 );
 
 sub get_application_version {
@@ -222,6 +227,33 @@ sub _expand_flags_inplace ($variables, $env) {
         }
     }
     return;
+}
+
+sub union : prototype($$) { ## no critic (Subroutines::RequireArgUnpacking)
+    my %union;
+    $union{$_} = undef foreach ($_[0]->@*, $_[1]->@*);
+    return keys %union;
+}
+
+sub intersection : prototype($$) { ## no critic (Subroutines::RequireArgUnpacking)
+    my %left;
+    $left{$_} = undef foreach $_[0]->@*;
+    return grep {exists $left{$_}} $_[1]->@*;
+}
+
+sub difference : prototype($$) { ## no critic (Subroutines::RequireArgUnpacking)
+    my %left;
+    $left{$_} = undef foreach $_[0]->@*;
+    delete @left{$_[1]->@*};
+    return keys %left;
+}
+
+sub difference_symmetric : prototype($$) { ## no critic (Subroutines::RequireArgUnpacking)
+    my (%left, %right);
+    $left{$_}++ foreach $_[0]->@*;
+    delete $left{$_} // $right{$_}++ foreach $_[1]->@*;
+
+    return +(keys %left, keys %right);
 }
 
 1;
