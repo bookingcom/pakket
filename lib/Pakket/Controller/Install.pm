@@ -342,7 +342,7 @@ sub _install_packages ($self, $saved_requirements) {
 
     # check here that required versions are not spoiled during dependency resolve
     my @requirements_not_to_install = difference([keys $saved_requirements->%*], [keys %packages_cache]);
-    delete $saved_requirements->%{@requirements_not_to_install};
+    delete $saved_requirements->@{@requirements_not_to_install};
     my (undef, \@not_found) = $self->filter_packages_in_cache($saved_requirements, \%packages_cache);
     if (@not_found) {
         $self->log->critical('Required package is spoiled by some prereq:', $_->id) for @not_found;
