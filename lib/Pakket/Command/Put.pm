@@ -37,8 +37,8 @@ sub opt_spec ($self, @args) {
     return (                                                                   # no tidy
         ['repo|r=s',     'repo to put object to'],
         ['parcel|p',     'alias of --repo=parcel'],
-        ['source|u',     'alias of --repo=source'],
-        ['spec|s',       'alias of --repo=spec'],
+        ['source|s',     'alias of --repo=source'],
+        ['spec|j',       'alias of --repo=spec'],
         ['file|f=s',     'path to the file', {'required' => 1}],
         ['overwrite|w+', 'overwrite artifacts even if they are already exist'],
         undef,
@@ -58,8 +58,7 @@ sub validate_args ($self, $opt, $args) {
         ||= $opt->{'repo'}
         || ($opt->{'parcel'} && 'parcel')
         || ($opt->{'spec'}   && 'spec')
-        || ($opt->{'source'} && 'source')
-        || 'spec';
+        || ($opt->{'source'} && 'source');
 
     exists VALID_REPOS()->{$self->{'repo'}}
         or $self->usage_error(

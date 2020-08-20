@@ -176,7 +176,7 @@ sub _do_install ($self, $queries) {
         or croak($self->log->critical(q{Can't write to the installation directory:}, $self->libraries_dir));
 
     my %saved_requirements = %requirements;                                    # save requirements to test against them later
-    $self->_check_against_installed(\%requirements);
+    $self->_check_against_installed(\%requirements, 0);
     %requirements
         or $self->log->notice('All packages are already installed')
         and return 0;
@@ -291,7 +291,7 @@ sub _process_prereqs ($self, $parcel_dir) {
         'types'  => $self->types,
     );
 
-    $self->_check_against_installed(\%requirements);
+    $self->_check_against_installed(\%requirements, 1);
 
     $self->push_to_data_consumer(\%requirements);
 
@@ -390,8 +390,8 @@ sub _move_parcel_dir ($self, $parcel_dir, $work_dir) {
     return;
 }
 
-sub _check_against_installed ($self, $requirements) {
-    $requirements->%* && !$self->overwrite
+sub _check_against_installed ($self, $requirements, $level) {
+    $requirements->%* && ($self->overwrite <= $level)
         or return;
 
     $self->log->debug('checking which packages are already installed...');
