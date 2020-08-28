@@ -11,6 +11,7 @@ use List::Util qw< any min >;
 use Log::Any qw< $log >;
 use POSIX ':sys_wait_h';
 use Time::HiRes qw< time usleep >;
+use Path::Tiny;
 
 use constant {
     'MAX_SUBPROCESSES'        => 3,
@@ -48,7 +49,7 @@ has 'data_consumer_dir' => (
     'lazy'    => 1,
     'default' => sub {
         my ($self) = @_;
-        my $dc_dir = $self->work_dir->child('.install_queue');
+        my $dc_dir = Path::Tiny->tempdir('.install-queue-XXXXXXXXXX', DIR => $self->work_dir->absolute->stringify);
         $dc_dir->child('unprocessed')->mkpath;
         $dc_dir->child('to_install')->mkpath;
         return $dc_dir;
