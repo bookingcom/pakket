@@ -1,9 +1,0 @@
-perl/Net-Amazon-S3=0.86:1
-perl/Dist-Zilla
-perl/Dist-Zilla-Plugin-Git
-perl/Dist-Zilla-Plugin-PromptIfStale
-perl/Code-TidyAll
-perl/Dancer2
-perl/Data-Consumer
-perl/Log-Any
-perl/Test2-Suite

@@ -19,6 +19,7 @@ use experimental qw(declared_refs refaliasing signatures);
 # non core
 use Data::Consumer::Dir;
 use JSON::MaybeXS;
+use Path::Tiny;
 
 use constant {
     'MAX_SUBPROCESSES'        => 7,
@@ -44,7 +45,7 @@ has 'data_consumer_dir' => (
     'is'      => 'ro',
     'lazy'    => 1,
     'default' => sub($self) {
-        my $dc_dir = $self->work_dir->child('.install_queue');
+        my $dc_dir = Path::Tiny->tempdir('.install-queue-XXXXXXXXXX', DIR => $self->work_dir->absolute->stringify);
         $self->log->trace('creating data_consumer_dir:', $dc_dir);
         $dc_dir->child('unprocessed')->mkpath;
         $dc_dir->child('to_install')->mkpath;
