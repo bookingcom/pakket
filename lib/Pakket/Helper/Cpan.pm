@@ -140,8 +140,6 @@ has 'known_modules_to_skip' => (
             'perl_mlb'                 => 1,
             'HTTP::GHTTP'              => 1,
             'Text::MultiMarkdown::XS'  => 1,                                   # ADOPTME
-            'URI::file'                => 1,                                   # in URI, appears with weird version
-            'URI::Escape'              => 1,                                   # in URI, appears with weird version
             'inc::MMPackageStash'      => 1,                                   # unable to find on cpan
             'Test2::Tools::PerlCritic' => 1,
         };
