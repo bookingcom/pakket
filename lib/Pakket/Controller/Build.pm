@@ -180,7 +180,7 @@ sub _do_build_package ($self, $package, %params) {
         $package,
         %params{qw(pkg_dir prefix)},
         'use_prefix' => !!$self->prefix,
-        'sources'    => $self->source_repo->retrieve_package_file($package),
+        'sources'    => $self->source_repo->retrieve_package_file($package, 'cleanup' => !$self->keep),
         %params{qw(build_dir)},
     );
 

@@ -68,7 +68,7 @@ sub all_object_ids ($self) {
     return $ids;
 }
 
-sub retrieve_package_file ($self, $package) {
+sub retrieve_package_file ($self, $package, %params) {
     my $id = $package->id;
 
     my $file = $self->retrieve_location($id)
@@ -76,7 +76,7 @@ sub retrieve_package_file ($self, $package) {
     $self->log->tracef('fetched %s %s to %s', $self->type, $id, $file->stringify);
 
     my $dir = Path::Tiny->tempdir(
-        'CLEANUP'  => 1,
+        'CLEANUP'  => $params{'cleanup'} // 1,
         'TEMPLATE' => join ('', 'pakket-extract-', $package->name, '-XXXXXXXXXX'),
     );
 
