@@ -18,6 +18,7 @@ use JSON::MaybeXS qw(encode_json);
 
 # local
 use Pakket::Helper::Versioner;
+use Pakket::Utils::Package qw(canonical_short_name);
 
 has 'json' => (
     'is'      => 'ro',
@@ -41,21 +42,21 @@ sub absent ($self) {
     my %parc_ids = map {$_ => 1} $self->parcel_repo->all_object_ids()->@*;
     delete @spec_ids{keys (%parc_ids)};
 
-    say foreach sort keys %spec_ids;
+    my @result = sort keys %spec_ids;
 
-    return 0;
+    return $self->_output(\@result);
 }
 
 sub installed ($self) {
-    say foreach sort $self->load_installed_packages($self->active_dir)->@*;
+    my @result = sort $self->load_installed_packages($self->active_dir)->@*;
 
-    return 0;
+    return $self->_output(\@result);
 }
 
 sub updates ($self) {
     my $cpan = use_module('Pakket::Helper::Cpan')->new;
 
-    my \%outdated = $cpan->outdated($self->all_installed_cache);
+    my \%outdated = $cpan->outdated($self->spec_repo->all_objects_cache());
     if ($self->json) {
         say encode_json([map {"$_=$outdated{$_}{'cpan_version'}"} sort keys %outdated]);
     } else {
@@ -65,20 +66,56 @@ sub updates ($self) {
     return 0;
 }
 
-sub parcels ($self) {
-    say foreach sort $self->parcel_repo->all_object_ids()->@*;
+sub upgrades ($self) {
+    my $versioner  = Pakket::Helper::Versioner->new('type' => 'Perl');
+    my \%installed = $self->all_installed_cache;
+    my \%parcels   = $self->parcel_repo->all_objects_cache();
 
-    return 0;
+    my @result;
+    foreach my $short_name (sort keys %installed) {
+        if (exists $parcels{$short_name}) {
+            my @versions            = keys $parcels{$short_name}->%*;
+            my $latest_version      = $versioner->select_latest(\@versions);
+            my ($latest_release)    = (reverse sort keys $parcels{$short_name}{$latest_version}->%*);
+            my ($installed_version) = (keys $installed{$short_name}->%*);
+            my ($installed_release) = (keys $installed{$short_name}{$installed_version}->%*);
+
+            if (   $versioner->compare_version($installed_version, $latest_version) < 0
+                || $installed_release ne $latest_release)
+            {
+                push (@result, canonical_short_name($short_name, $latest_version, $latest_release));
+            }
+        }
+
+    }
+
+    return $self->_output(\@result);
+}
+
+sub parcels ($self) {
+    my @result = sort $self->parcel_repo->all_object_ids()->@*;
+
+    return $self->_output(\@result);
 }
 
 sub sources ($self) {
-    say foreach sort $self->source_repo->all_object_ids()->@*;
+    my @result = sort $self->source_repo->all_object_ids()->@*;
 
-    return 0;
+    return $self->_output(\@result);
 }
 
 sub specs ($self) {
-    say foreach sort $self->spec_repo->all_object_ids()->@*;
+    my @result = sort $self->spec_repo->all_object_ids()->@*;
+
+    return $self->_output(\@result);
+}
+
+sub _output ($self, $result) {
+    if ($self->json) {
+        say encode_json($result);
+    } else {
+        say foreach $result->@*;
+    }
 
     return 0;
 }

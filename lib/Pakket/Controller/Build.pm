@@ -207,7 +207,7 @@ sub _process_package ($self, $package, %params) {
     $builder->execute(
         'name'     => $package->name,
         'metadata' => $metadata,
-        'no-man'   => $self->no_man // $metadata->{'no-man'} // $config->{'build'}{'no-man'} // 0,
+        'no-man'   => $self->no_man  // $metadata->{'no-man'}  // $config->{'build'}{'no-man'}  // 0,
         'no-test'  => $self->no_test // $metadata->{'no-test'} // $config->{'build'}{'no-test'} // 0,
         %params{qw(build_dir pkg_dir prefix use_prefix sources)},
     );

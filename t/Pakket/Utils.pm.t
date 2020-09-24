@@ -88,15 +88,15 @@ describe 'clean_hash' {
         [[undef], [undef], 'non-empty undef array'],
 
         # hashes
-        [+{}, {}, 'empty hash'],
-        [{'a' => 0},    {'a' => 0},    'one false value number'],
-        [{'a' => 42},   {'a' => 42},   'one true value number'],
-        [{'a' => '0'},  {'a' => '0'},  'one false value string'],
-        [{'a' => '42'}, {'a' => '42'}, 'one false value string'],
-        [{'b' => undef}, {}, 'one value undef'],
-        [{'c' => {}},    {}, 'one value empty hash'],
-        [{'c' => {'d' => undef}}, {}, 'one value undef 2'],
-        [{'c' => {'d' => {}}},    {}, 'one value empty hash 2'],
+        [+{},                     {},            'empty hash'],
+        [{'a' => 0},              {'a' => 0},    'one false value number'],
+        [{'a' => 42},             {'a' => 42},   'one true value number'],
+        [{'a' => '0'},            {'a' => '0'},  'one false value string'],
+        [{'a' => '42'},           {'a' => '42'}, 'one false value string'],
+        [{'b' => undef},          {},            'one value undef'],
+        [{'c' => {}},             {},            'one value empty hash'],
+        [{'c' => {'d' => undef}}, {},            'one value undef 2'],
+        [{'c' => {'d' => {}}},    {},            'one value empty hash 2'],
         [{
                 'c' => {
                     'd' => undef,

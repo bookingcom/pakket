@@ -110,7 +110,7 @@ sub execute ($self, $opt, $args) {
         'jobs'           => $config{'jobs'},
         'keep_rollbacks' => $config{'keep_rollbacks'} // 1,
         'pakket_dir'     => $config{'install_dir'},
-        'rollback_tag'   => $opt->{'rollback_tag'} // '',
+        'rollback_tag'   => $opt->{'rollback_tag'}   // '',
         'use_hardlinks'  => $config{'use_hardlinks'} // 0,
         'phases'         => [@phases],
         'types'          => [@types],

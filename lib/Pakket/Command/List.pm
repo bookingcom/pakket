@@ -56,9 +56,15 @@ use constant {
             },
         },
         'updates' => {
-            'match'   => '^up',
+            'match'   => '^upd',
             'handler' => sub ($s) {
                 $s->updates();
+            },
+        },
+        'upgrades' => {
+            'match'   => '^upg',
+            'handler' => sub ($s) {
+                $s->upgrades();
             },
         },
     },
@@ -69,11 +75,23 @@ sub abstract {
 }
 
 sub usage_desc ($self, @) {
-    return $self->SUPER::usage_desc() . ' ' . join ('|', keys SUBJECTS()->%*);
+    return $self->SUPER::usage_desc() . ' [' . join ('|', sort keys SUBJECTS()->%*) . ']';
 }
 
 sub description {
-    return 'List installed packages, parcels/sources/specs available in the repos and absent parcels';
+    my $message = <<~"END_HEREDOC";
+    List installed packages, parcels/sources/specs available in the repos and absent parcels
+
+            absent               List all packages where not all parcels are built
+            installed            List all installed packages
+            parcels              List all parcels
+            sources              List all sources
+            specs                List all specs
+            updates              List all packages which have updated version on METACPAN
+            upgrades             List all packages which have a newer version in a parcel repo
+    END_HEREDOC
+
+    return $message;
 }
 
 sub opt_spec ($self, @args) {

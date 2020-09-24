@@ -346,7 +346,7 @@ sub _install_packages ($self, $saved_requirements) {
     my (undef, \@not_found) = $self->filter_packages_in_cache($saved_requirements, \%packages_cache);
     if (@not_found) {
         $self->log->critical('Required package is spoiled by some prereq:', $_->id) for @not_found;
-        $self->croak('You have inconsistency between required and prereq versions');
+        $self->log->critical('You have inconsistency between required and prereq versions');
     }
 
     my $info_file = $self->load_info_file($self->work_dir);

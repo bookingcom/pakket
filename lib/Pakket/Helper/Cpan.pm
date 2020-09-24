@@ -216,14 +216,14 @@ sub outdated ($self, $cache) {
     my \%cpan_dist = $self->latest_distributions;
 
     my %result;
-    foreach my $package (sort keys $cache->%*) {
-        if (exists $cpan_dist{$package}) {
-            my @versions       = keys $cache->{$package}->%*;
-            my $cpan_version   = $cpan_dist{$package}{'version'};
+    foreach my $short_name (sort keys $cache->%*) {
+        if (exists $cpan_dist{$short_name}) {
+            my @versions       = keys $cache->{$short_name}->%*;
+            my $cpan_version   = $cpan_dist{$short_name}{'version'};
             my $latest_version = $self->versioner->select_latest(\@versions);
 
             if ($self->versioner->compare_version($latest_version, $cpan_version) < 0) {
-                $result{$package} = {
+                $result{$short_name} = {
                     'version'      => $latest_version,
                     'cpan_version' => $cpan_version,
                 };
@@ -462,9 +462,10 @@ sub _build_latest_distributions ($self) {
         $dist->{'dist'} && $dist->{'version'}
             or next;
 
-        if (exists $cpan_dist{$dist->{'dist'}}) {
+        my $short_name = "perl/$dist->{'dist'}";
+        if (exists $cpan_dist{$short_name}) {
             eval {
-                if ($self->versioner->compare_version($cpan_dist{$dist->{'dist'}}{'version'}, $dist->{'version'}) < 0) {
+                if ($self->versioner->compare_version($cpan_dist{$short_name}{'version'}, $dist->{'version'}) < 0) {
                     $cpan_dist{"perl/$dist->{'dist'}"} = $dist;
                 }
                 1;
@@ -473,7 +474,7 @@ sub _build_latest_distributions ($self) {
                 carp "Build latest distributions error $error for $dist->{'dist'}";
             };
         } else {
-            $cpan_dist{"perl/$dist->{'dist'}"} = $dist;
+            $cpan_dist{$short_name} = $dist;
         }
     }
     return \%cpan_dist;

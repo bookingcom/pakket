@@ -58,9 +58,9 @@ sub execute ($self, %params) {
 
     $params{'opts'}              = {'env' => \%env};
     $params{'configure-options'} = expand_variables($params{'metadata'}{'configure-options'}, \%env);
-    $params{'make-options'}      = expand_variables($params{'metadata'}{'make-options'}, \%env);
-    $params{'pre'}               = expand_variables($params{'metadata'}{'pre'}, \%env);
-    $params{'post'}              = expand_variables($params{'metadata'}{'post'}, \%env);
+    $params{'make-options'}      = expand_variables($params{'metadata'}{'make-options'},      \%env);
+    $params{'pre'}               = expand_variables($params{'metadata'}{'pre'},               \%env);
+    $params{'post'}              = expand_variables($params{'metadata'}{'post'},              \%env);
 
     local %ENV = %env;                                                         # keep all env changes locally
     $self->print_env();
@@ -115,7 +115,7 @@ sub _build_pl_cmds ($self, %params) {
     return (
         ['perl', '-V'],                                                        # info
         ['perl', '-f', 'Build.PL', $params{'configure-options'}->@*],          # configure
-        ['perl', '-f', './Build', $params{'make-options'}->@*],                # build
+        ['perl', '-f', './Build',  $params{'make-options'}->@*],               # build
         (['perl', '-f', './Build', 'test']) x !!($params{'no-test'} < 1),      # test TODO support run test ignore failure
         ['perl', '-f', './Build', 'install', '--destdir', $params{'build_dir'}->absolute->stringify],    # install
         (['rm', '-rf', $params{'pkg_dir'}->child('man')->absolute->stringify]) x !!$params{'no-man'},    # cleanup man pages

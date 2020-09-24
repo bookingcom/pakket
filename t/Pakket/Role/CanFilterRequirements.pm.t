@@ -95,13 +95,13 @@ my %cache = (
 #ok($consuming_class->class_method());
 describe 'select_best_version_from_cache' {
     my %tests = (
-        'perl/Tiny1' => [undef, undef],
+        'perl/Tiny1'       => [undef,  undef],
         'perl/Tiny'        => ['0.55', {map {$_ => 1} 1, 5, 8}],
         'perl/Tiny=0.33'   => ['0.33', {map {$_ => 1} 1, 3}],
         'perl/Tiny===0.33' => ['0.33', {map {$_ => 1} 1, 3}],
         'perl/Tiny=<=0.33' => ['0.33', {map {$_ => 1} 1, 3}],
         'perl/Tiny=>=0.33' => ['0.55', {map {$_ => 1} 1, 5, 8}],
-        'perl/Tiny=<0.33'  => [undef, undef],
+        'perl/Tiny=<0.33'  => [undef,  undef],
         'perl/Tiny=>0.33'  => ['0.55', {map {$_ => 1} 1, 5, 8}],
         'perl/Tiny=0.44'   => ['0.44', {map {$_ => 1} 2, 4}],
         'perl/Tiny===0.44' => ['0.44', {map {$_ => 1} 2, 4}],
@@ -114,13 +114,13 @@ describe 'select_best_version_from_cache' {
         'perl/Tiny=<=0.55' => ['0.55', {map {$_ => 1} 1, 5, 8}],
         'perl/Tiny=>=0.55' => ['0.55', {map {$_ => 1} 1, 5, 8}],
         'perl/Tiny=<0.55'  => ['0.44', {map {$_ => 1} 2, 4}],
-        'perl/Tiny=>0.55'  => [undef, undef],
-        'perl/Tiny=0.66'   => [undef, undef],
-        'perl/Tiny===0.66' => [undef, undef],
+        'perl/Tiny=>0.55'  => [undef,  undef],
+        'perl/Tiny=0.66'   => [undef,  undef],
+        'perl/Tiny===0.66' => [undef,  undef],
         'perl/Tiny=<=0.66' => ['0.55', {map {$_ => 1} 1, 5, 8}],
-        'perl/Tiny=>=0.66' => [undef, undef],
+        'perl/Tiny=>=0.66' => [undef,  undef],
         'perl/Tiny=<0.66'  => ['0.55', {map {$_ => 1} 1, 5, 8}],
-        'perl/Tiny=>0.66'  => [undef, undef],
+        'perl/Tiny=>0.66'  => [undef,  undef],
     );
     tests 'requirement' => sub {
         foreach my $test (sort keys %tests) {

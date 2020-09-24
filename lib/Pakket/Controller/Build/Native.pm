@@ -46,9 +46,9 @@ sub execute ($self, %params) {
 
     $params{'opts'}              = {'env' => \%env};
     $params{'configure-options'} = expand_variables($params{'metadata'}{'configure-options'}, \%env);
-    $params{'make-options'}      = expand_variables($params{'metadata'}{'make-options'}, \%env);
-    $params{'pre'}               = expand_variables($params{'metadata'}{'pre'}, \%env);
-    $params{'post'}              = expand_variables($params{'metadata'}{'post'}, \%env);
+    $params{'make-options'}      = expand_variables($params{'metadata'}{'make-options'},      \%env);
+    $params{'pre'}               = expand_variables($params{'metadata'}{'pre'},               \%env);
+    $params{'post'}              = expand_variables($params{'metadata'}{'post'},              \%env);
 
     local %ENV = %env;                                                         # keep all env changes locally
     $self->print_env();
