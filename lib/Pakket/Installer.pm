@@ -345,7 +345,7 @@ sub _fetch_all_packages {
                     my $prereq_data = $runtime_prereqs->{$prereq_name};
 
                     my $p = $self->_get_prereq($prereq_category, $prereq_name, $prereq_data);
-                    if (exists $self->installed_packages->{$p->short_name}
+                    if ($prereq_name ne 'Sub-Quote' && exists $self->installed_packages->{$p->short_name}
                         && $self->_is_version_satisfying($self->installed_packages->{$p->short_name}, $prereq_data))
                     {
                         $log->debug('Prereq is already fulfilled:',
@@ -536,7 +536,7 @@ sub is_installed {
     my ($self, $installer_cache, $package) = @_;
 
     my $installed_package = $self->installed_packages->{$package->short_name};
-    if (!$self->force && $installed_package && $installed_package->full_name eq $package->full_name) {
+    if ($package->name ne 'Sub-Quote' && !$self->force && $installed_package && $installed_package->full_name eq $package->full_name) {
         $log->debugf('%s already installed', $package->full_name);
         return 1;
     }
