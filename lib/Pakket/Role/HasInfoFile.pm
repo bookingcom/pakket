@@ -125,11 +125,21 @@ sub _build_all_installed_cache ($self) {
 
     for my $category (keys %packages) {
         for my $name (keys $packages{$category}->%*) {
-            my \%p = $packages{$category}->{$name};
-            $result{"${category}/${name}"}{$p{'version'}}{$p{'release'}}++;
+            my $short_name = "${category}/${name}";
+            $self->_always_overwrite($short_name)
+                and next;
+            my \%p = $packages{$category}{$name};
+            $result{$short_name}{$p{'version'}}{$p{'release'}}++;
         }
     }
     return \%result;
+}
+
+sub _always_overwrite ($self, $short_name) {                                   # these packages will not be discovered as installed
+    state $default_packages = [qw(perl/Sub-Quote)];
+    state $always_overwrite = {map {$_ => undef} @{$self->config->{'always-overwrite'} // $default_packages}};
+
+    return exists $always_overwrite->{$short_name};
 }
 
 1;
