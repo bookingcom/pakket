@@ -20,8 +20,8 @@ use Pakket::Helper::Download;
 use Pakket::Type::PackageQuery;
 use Pakket::Type::Package;
 use Pakket::Utils qw(
-    env_vars_scaffold
-    env_vars_passthrough
+    env_vars
+    expand_variables
     normalize_version
 );
 
@@ -41,6 +41,7 @@ with qw(
     Pakket::Role::Perl::CanProcessSources
     Pakket::Role::Perl::CoreModules
     Pakket::Role::Perl::HasCpan
+    Pakket::Role::RunCommand
 );
 
 sub execute ($self, $query, $params) {
@@ -49,6 +50,22 @@ sub execute ($self, $query, $params) {
     $params->{'sources'} = $self->_fetch_source_for_package($query, $release_info);
 
     $self->apply_patches($query, $params);
+
+    my $meta = $query->pakket_meta->scaffold // {};
+    my %env  = env_vars(
+        $params->{'build_dir'},
+        $meta->{'environment'},
+        'bootstrap_dir' => $params->{'build_dir'},
+        $params->%*,
+    );
+
+    $params->{'opts'} = {'env' => \%env};
+    $params->{'pre'}  = expand_variables($meta->{'pre'},  \%env);
+    $params->{'post'} = expand_variables($meta->{'post'}, \%env);
+
+    local %ENV = %env;                                                         # keep all env changes locally
+    $self->log->debug($_, '=', $ENV{$_}) foreach sort keys %ENV;
+
     $self->_run_pre_scaffold_commands($query, $params);
 
     $self->_update_release_info($query, $release_info, $params);
@@ -90,26 +107,21 @@ sub _run_pre_scaffold_commands ($self, $query, $params) {
     $query->pakket_meta
         or return;
 
-    my $meta = $query->pakket_meta->scaffold // {};
-    my $env  = {env_vars_passthrough(), env_vars_scaffold($params), %{$meta->{'environment'} // {}}};
-    $self->log->debug($_, '=', $env->{$_}) foreach sort keys $env->%*;
-
-    my $opts = {'env' => $env};
-
-    if ($meta->{'pre'}) {
-        $self->run_command_sequence($params->{'sources'}, $opts, $meta->{'pre'}->@*)
+    if ($params->{'pre'}) {
+        $self->run_command_sequence($params->{'sources'}, $params->{'opts'}, $params->{'pre'}->@*)
             or $self->croak('Failed to run pre-build commands');
     }
 
+    my $meta = $query->pakket_meta->scaffold // {};
     if (!$meta->{'skip'}{'dzil'} && ($query->source && $query->source ne 'cpan')) {
-        $self->process_dist_ini($query, $opts, $params);
+        $self->process_dist_ini($query, $params->{'opts'}, $params);
     }
     if (!$meta->{'skip'}{'dist'} && ($query->source && $query->source ne 'cpan')) {
-        $self->process_makefile_pl($query, $opts, $params);
+        $self->process_makefile_pl($query, $params->{'opts'}, $params);
     }
 
-    if ($meta->{'post'}) {
-        $self->run_command_sequence($params->{'sources'}, $opts, $meta->{'post'}->@*)
+    if ($params->{'post'}) {
+        $self->run_command_sequence($params->{'sources'}, $params->{'opts'}, $params->{'post'}->@*)
             or $self->croak('Failed to run post-build commands');
     }
 
@@ -253,11 +265,11 @@ sub bootstrap ($self, $controller, $modules, $requirements) {
     return;
 }
 
-before [qw(_filter_prereqs)] => sub ($self, @) {
+before [qw(_filter_prereqs execute)] => sub ($self, @) {
     return $self->log_depth_change(+1);
 };
 
-after [qw(_filter_prereqs)] => sub ($self, @) {
+after [qw(_filter_prereqs execute)] => sub ($self, @) {
     return $self->log_depth_change(-1);
 };
 

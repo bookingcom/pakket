@@ -24,7 +24,6 @@ our @EXPORT_OK = qw(
     env_vars
     env_vars_build
     env_vars_passthrough
-    env_vars_scaffold
     expand_variables
     get_application_version
     is_writeable
@@ -34,6 +33,8 @@ our @EXPORT_OK = qw(
     difference_symmetric
     intersection
     union
+
+    print_env
 );
 
 sub get_application_version {
@@ -71,6 +72,10 @@ sub env_vars ($build_dir, $environment, %params) {
         # DO NOT set LD_RUN_PATH onto temp dirs - they will be baked into binary's rpath
         'LD_RUN_PATH' => $params{'prefix'}->child(qw(lib))->absolute->stringify,
     );
+
+    # add path to libperl.so of current perl to LIBRARY_PATH
+    chomp (my $archlib = `perl -MConfig -e 'print \$Config{archlib}'`);
+    $c_opts{'LIBRARY_PATH'} = join (':', $c_opts{'LIBRARY_PATH'}, $archlib . '/CORE');
 
     my @perl5lib = (
         $params{'pkg_dir'}->child(qw(lib perl5))->absolute->stringify,
@@ -123,13 +128,6 @@ sub env_vars_build ($build_dir, %params) {
         'PACKAGE_PREFIX'    => $params{'prefix'}->absolute->stringify,
         'PACKAGE_SOURCES'   => $params{'sources'}->absolute->stringify,
         'PACKAGE_SRC_DIR'   => $params{'sources'}->absolute->stringify,        # backward compatibility
-    );
-}
-
-sub env_vars_scaffold ($params) {
-    return (
-        'PACKAGE_SOURCES' => $params->{'sources'}->absolute->stringify,
-        'PACKAGE_SRC_DIR' => $params->{'sources'}->absolute->stringify,        # backward compatibility
     );
 }
 
@@ -254,6 +252,11 @@ sub difference_symmetric : prototype($$) { ## no critic (Subroutines::RequireArg
     delete $left{$_} // $right{$_}++ foreach $_[1]->@*;
 
     return +(keys %left, keys %right);
+}
+
+sub print_env ($log) {
+    $log->debug($_, '=', $ENV{$_}) foreach sort keys %ENV;
+    return;
 }
 
 1;

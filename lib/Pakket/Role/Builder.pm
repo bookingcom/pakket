@@ -48,11 +48,6 @@ use constant {
     'BOOTSTRAP_DIR_TEMPLATE' => 'pakket-build-bootstrap-XXXXXX',
 };
 
-sub print_env ($self) {
-    $self->log->debug($_, '=', $ENV{$_}) foreach sort keys %ENV;
-    return;
-}
-
 sub _build_bootstrap_dir ($self) {
     return Path::Tiny->tempdir(BOOTSTRAP_DIR_TEMPLATE());
 }

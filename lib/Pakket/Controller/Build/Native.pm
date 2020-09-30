@@ -11,6 +11,7 @@ use namespace::autoclean;
 use Pakket::Utils qw(
     env_vars
     expand_variables
+    print_env
 );
 
 # core
@@ -51,7 +52,7 @@ sub execute ($self, %params) {
     $params{'post'}              = expand_variables($params{'metadata'}{'post'},              \%env);
 
     local %ENV = %env;                                                         # keep all env changes locally
-    $self->print_env();
+    print_env($self->log);
 
     if ($params{'pre'}) {
         $self->run_command_sequence($params{'sources'}, $params{'opts'}, $params{'pre'}->@*)
@@ -94,7 +95,7 @@ sub execute ($self, %params) {
             ['make', 'test']
         ) x !!($params{'no-test'} < 1),
         [                                                                      # install
-            'make', 'install', "DESTDIR=$params{build_dir}", @make_flags,
+            'make', $params{'metadata'}{'install-command'} // 'install', "DESTDIR=$params{build_dir}", @make_flags,
         ],
         (                                                                      # cleanup man pages
             ['rm', '-rf', $params{'pkg_dir'}->child('man')->absolute->stringify]

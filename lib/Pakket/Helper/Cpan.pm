@@ -94,6 +94,7 @@ has 'known_incorrect_name_fixes' => (
             'Data::Sah::Compiler::perl::TH::int'                                 => 'Data::Sah',
             'Data::Sah::Compiler::perl::TH::re'                                  => 'Data::Sah',
             'Data::Sah::Compiler::perl::TH::str'                                 => 'Data::Sah',
+            'URI::_generic'                                                      => 'URI',
         };
     },
 );

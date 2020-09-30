@@ -19,6 +19,7 @@ use Pakket::Type::PackageQuery;
 use Pakket::Utils qw(
     env_vars
     expand_variables
+    print_env
 );
 
 has 'exclude_packages' => (
@@ -52,10 +53,6 @@ sub execute ($self, %params) {
         %params,
     );
 
-    # add path to libperl.so of current perl to LIBRARY_PATH
-    chomp (my $archlib = `perl -MConfig -e 'print \$Config{archlib}'`);
-    $env{'LIBRARY_PATH'} = join (':', $env{'LIBRARY_PATH'}, $archlib . '/CORE');
-
     $params{'opts'}              = {'env' => \%env};
     $params{'configure-options'} = expand_variables($params{'metadata'}{'configure-options'}, \%env);
     $params{'make-options'}      = expand_variables($params{'metadata'}{'make-options'},      \%env);
@@ -63,7 +60,7 @@ sub execute ($self, %params) {
     $params{'post'}              = expand_variables($params{'metadata'}{'post'},              \%env);
 
     local %ENV = %env;                                                         # keep all env changes locally
-    $self->print_env();
+    print_env($self->log);
 
     if ($params{'pre'}) {
         $self->run_command_sequence(@params{qw(sources opts)}, $params{'pre'}->@*)
@@ -128,7 +125,11 @@ sub _makefile_pl_cmds ($self, %params) {
         ['perl', '-f', 'Makefile.PL', 'NO_PACKLIST=1', 'NO_PERLLOCAL=1', $params{'configure-options'}->@*],    # configure
         ['make', $params{'make-options'}->@*],                                 # build
         (['make', 'test'],) x !!($params{'no-test'} < 1),                      # test
-        ['make', 'install', 'DESTDIR=' . $params{'build_dir'}->absolute->stringify],                           # install
+        [
+            'make',
+            $params{'metadata'}{'install-command'} // 'install',
+            'DESTDIR=' . $params{'build_dir'}->absolute->stringify,
+        ],                                                                     # install
         (['rm', '-rf', $params{'pkg_dir'}->child('man')->absolute->stringify]) x !!$params{'no-man'},          # cleanup man pages
     );
 }

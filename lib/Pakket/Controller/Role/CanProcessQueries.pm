@@ -123,7 +123,8 @@ sub process_prereqs ($self, $package, %params) {
     $self->log_depth_change(-1);
 
     $self->log->noticef('Processing prereqs for: %s (%s)->(%s)', $package->id, join (',', @phases), join (',', @types));
-    $self->_process_queries(\@queries, %params);
+    my $handler = $params{'handler'} // \&_process_queries;
+    $handler->($self, \@queries, %params);
     $self->log->info('Processing prereqs done for:', $package->id);
 
     return;
@@ -151,3 +152,5 @@ after [qw(_prepare_external_prereqs _process_queries)] => sub ($self, @) {
 };
 
 1;
+
+__END__
