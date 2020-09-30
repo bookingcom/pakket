@@ -47,20 +47,18 @@ has 'types' => (
     'required' => 1,
 );
 
-sub _execute ($self, %params) { ## no critic [Subroutines::ProhibitUnusedPrivateSubroutines]
+sub process_queries ($self, %params) {
     $params{'prereqs'} && $params{'prereqs'}->%*
         and $params{'queries'} = $self->_prepare_external_prereqs(delete $params{'prereqs'});
 
     $self->log->notice('Processing queries:', scalar $params{'queries'}->@*);
-    $self->_process_queries($params{'queries'}, %params);
+    $self->_process_queries(delete $params{'queries'}, %params);
 
     return $self->_finalize();
 }
 
 sub _process_queries ($self, $queries, %params) {
     foreach my $query ($queries->@*) {
-        $query
-            or next;
         my $log_depth = $self->log_depth_get();
         eval {
             $query->is_module()                                                # no tidy
@@ -109,9 +107,8 @@ sub process_prereqs ($self, $package, %params) {
         $package->pakket_meta->prereqs,
         sub ($phase, $type, $module, $version) {
             my $query = Pakket::Type::PackageQuery->new_from_string(
-                $module,
+                "$module=$version",
                 'default_category' => 'perl',
-                'requirement'      => $version,
                 'as_prereq'        => 1,
             );
             $self->log->infof('Found %9s %10s: %s=%s', $phase, $type, $module, $version);

@@ -38,7 +38,7 @@ sub execute ($self, $query, $params) {
 
     $self->apply_patches($query, $params);
 
-    my $meta = $query->pakket_meta->scaffold // {};
+    my $meta = $query->has_meta ? $query->pakket_meta->scaffold // {} : {};
     my %env  = env_vars(
         $params->{'build_dir'},
         $meta->{'environment'},

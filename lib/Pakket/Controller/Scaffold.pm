@@ -96,7 +96,7 @@ with qw(
 );
 
 sub execute ($self, %params) {
-    return $self->_execute(%params);
+    return $self->process_queries(%params);
 }
 
 sub process_query ($self, $query, %params) {
