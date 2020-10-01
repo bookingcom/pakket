@@ -71,8 +71,14 @@ sub execute ($self, %params) {
     } elsif ($params{'sources'}->child('Configure')->is_file) {
         $configurator = './Configure';
     } elsif ($params{'sources'}->child('CMakeLists.txt')->is_file) {
-        $configurator       = 'cmake';
-        @configurator_flags = ('-DCMAKE_INSTALL_PREFIX=' . $params{'prefix'}->absolute, '.');
+        $configurator = 'cmake';
+        my $out_tree_build = $params{'sources'}->child('pakket-cmake-build');
+        if ($out_tree_build->exists) {
+            @run_params = ($params{'sources'}, {$params{'opts'}->%*, 'cwd' => $out_tree_build->absolute});
+            @configurator_flags = ('-DCMAKE_INSTALL_PREFIX=' . $params{'prefix'}->absolute, '..');
+        } else {
+            @configurator_flags = ('-DCMAKE_INSTALL_PREFIX=' . $params{'prefix'}->absolute, '.');
+        }
     } elsif ($params{'sources'}->child('Makefile')->is_file) {
         $self->log->warn('Only Makefile is found, trying to run it');
         undef @configurator_flags;
@@ -87,16 +93,18 @@ sub execute ($self, %params) {
                 $params{'configure-options'}->@*, @configurator_flags,
             ]
         ) x !!@configurator_flags,
-        [                                                                      # make
-            'make', @{$self->config->{'native'}{'build'}{'make-options'} // []}, $params{'make-options'}->@*,
-            @make_flags,
-        ],
+        ([                                                                  # make
+                'make', @{$self->config->{'native'}{'build'}{'make-options'} // []}, $params{'make-options'}->@*,
+                @make_flags,
+            ]
+        ) x !!!$params{'metadata'}{'no-make'},
         (                                                                      # test
             ['make', 'test']
         ) x !!($params{'no-test'} < 1),
-        [                                                                      # install
-            'make', $params{'metadata'}{'install-command'} // 'install', "DESTDIR=$params{build_dir}", @make_flags,
-        ],
+        ([                                                                  # install
+                'make', $params{'metadata'}{'install-command'} // 'install', "DESTDIR=$params{build_dir}", @make_flags,
+            ]
+        ) x !!!$params{'metadata'}{'no-install'},
         (                                                                      # cleanup man pages
             ['rm', '-rf', $params{'pkg_dir'}->child('man')->absolute->stringify]
         ) x !!$params{'no-man'},
