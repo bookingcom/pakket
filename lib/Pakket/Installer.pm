@@ -477,7 +477,8 @@ sub _get_prereq {
         # This forces us to install the latest version we have of
         # something, instead of finding the latest, based on the
         # version range, which "$prereq_version" contains. -- SX
-        my $ver_rel = $self->parcel_repo->latest_version_release($category, $name, $prereq_data->{'version'});
+        my ($ver, $rel) = $prereq_data->{'version'} =~ m{([^:]*):?(.*)?};
+        my $ver_rel = $self->parcel_repo->latest_version_release($category, $name, $ver);
 
         my ($version, $release) = @{$ver_rel};
 
