@@ -164,7 +164,7 @@ sub push_to_data_consumer ($self, $requirements, %options) {
     $self->{'_to_process'} += scalar @packages;
     foreach my $package (@packages) {
         if (exists $queue{'index'}{$package->short_name}) {
-            $self->croakf(
+            $self->log->warnf(
                 'Dependency conflict detected. Package %s has version incompatible with version pinned in the request',
                 $package->id,
             );
