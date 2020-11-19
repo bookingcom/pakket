@@ -48,7 +48,8 @@ sub absent ($self) {
 }
 
 sub installed ($self) {
-    my @result = sort $self->load_installed_packages($self->active_dir)->@*;
+    my \@result = $self->all_installed_packages();
+    @result = sort @result;
 
     return $self->_output(\@result);
 }

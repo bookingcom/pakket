@@ -11,12 +11,11 @@ use Carp;
 use experimental qw(declared_refs refaliasing signatures switch);
 
 # non core
-use JSON::MaybeXS qw(decode_json);
+use JSON::MaybeXS qw(decode_json encode_json);
 
 # local
 use Pakket::Constants qw(PAKKET_INFO_FILE PARCEL_METADATA_FILE);
 use Pakket::Type::Package;
-use Pakket::Utils qw(encode_json_pretty);
 
 has 'all_installed_cache' => (
     'is'      => 'ro',
@@ -92,12 +91,12 @@ sub save_info_file ($self, $dir, $install_data) {
 
     my $info_file = $dir->child(PAKKET_INFO_FILE());
 
-    $info_file->spew_utf8(encode_json_pretty($install_data));
+    $info_file->spew_utf8(encode_json($install_data));
 
     return;
 }
 
-sub load_installed_packages ($self, $dir) {
+sub all_installed_packages ($self, $dir = $self->active_dir) {
     my @result;
 
     my $install_data = $self->load_info_file($dir);
@@ -111,9 +110,12 @@ sub load_installed_packages ($self, $dir) {
             push (@result, "${category}/${name}=$p{'version'}:$p{'release'}");
         }
     }
+
     return \@result;
 }
 
+# this is a quick search hash for installed packages. It might not include all of them: packages marked as
+# always_overwrite are excluded
 sub _build_all_installed_cache ($self) {
     my %result;
 

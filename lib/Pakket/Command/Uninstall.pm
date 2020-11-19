@@ -5,121 +5,92 @@ package Pakket::Command::Uninstall;
 use v5.22;
 use strict;
 use warnings;
+use open ':std', ':encoding(UTF-8)';
 use namespace::autoclean;
 
-use Carp;
-use Log::Any qw($log);
-use Log::Any::Adapter;
-use IO::Prompt::Tiny qw(prompt);
-use Path::Tiny;
-use Module::Runtime qw(use_module);
+# core
+use experimental qw(declared_refs refaliasing signatures);
 
+# noncore
+use IO::Prompt::Tiny qw(prompt);
+use Log::Any qw($log);
+use Module::Runtime qw(use_module);
+use Path::Tiny;
+
+# local
 use Pakket '-command';
-use Pakket::Utils::Package qw(
-    parse_package_id
-);
 
 sub abstract {
-    return 'Uninstall a package';
+    return 'Uninstall packages';
 }
 
 sub description {
-    return 'Uninstall a package';
+    return 'Uninstall packages';
 }
 
-sub _determine_packages {
-    my ($self, $opt, $args) = @_;
-
-    my @package_strs
-        = defined $opt->{'input_file'}
-        ? path($opt->{'input_file'})->lines_utf8({'chomp' => 1})
-        : @{$args};
-
-    my @packages;
-    foreach my $package_str (@package_strs) {
-        my ($pkg_cat, $pkg_name) = parse_package_id($package_str);
-
-        if (!$pkg_cat || !$pkg_name) {
-            croak($log->critical("Can't parse $package_str. Use format category/package_name"));
-        }
-
-        push @packages,
-            {
-            'category' => $pkg_cat,
-            'name'     => $pkg_name,
-            };
-    }
-
-    return \@packages;
-}
-
-sub _determine_config {
-    my ($self, $opt) = @_;
-
-    # Read configuration
-    my $config_file   = $opt->{'config'};
-    my $config_reader = use_module('Pakket::Config')->new($config_file ? ('files' => [$config_file]) : ());
-
-    my $config = $config_reader->read_config;
-
-    if ($opt->{'pakket_dir'}) {
-        $config->{'install_dir'} = $opt->{'pakket_dir'};
-    }
-
-    if (!$config->{'install_dir'}) {
-        $self->usage_error("please define the library dir --pakket-dir <path_to_library>\n");
-    }
-
-    path($config->{'install_dir'})->exists
-        or $self->usage_error(sprintf ("Library dir: %s doesn't exist\n", $config->{'install_dir'}));
-
-    return $config;
-}
-
-sub opt_spec {
+sub opt_spec ($self, @args) {
     return (
-        ['pakket-dir=s',         'path where installed pakket'],
-        ['input-file=s',         'uninstall everything listed in this file'],
-        ['without-dependencies', 'don\'t remove dependencies'],
-        ['verbose|v+',           'verbose output (can be provided multiple times)'],
+        ['to=s',                'directory where packages are installed'],
+        ['atomic!',             'operation on current library is atomic'],
+        ['file|input-file|f=s', 'process everything listed in this file'],
+        ['no-prereqs',          'don\'t remove dependencies'],
+        ['dry-run',             'dry run uninstall'],
+        undef,
+        $self->SUPER::opt_spec(@args),
     );
 }
 
-sub validate_args {
-    my ($self, $opt, $args) = @_;
+sub validate_args ($self, $opt, $args) {
+    $self->SUPER::validate_args($opt, $args);
 
-    Log::Any::Adapter->set('Dispatch', 'dispatcher' => use_module('Pakket::Log')->build_logger($opt->{'verbose'}));
+    $log->debug('pakket', join (' ', @ARGV));
 
-    $opt->{'config'}   = $self->_determine_config($opt);
-    $opt->{'packages'} = $self->_determine_packages($opt, $args);
+    my \%config = $self->{'config'};
+
+    defined $opt->{'to'}
+        and $config{'install_dir'} = $opt->{'to'};
+    $config{'install_dir'}
+        or $self->usage_error("Missing option where to install\n(Create a configuration or use --to)");
+
+    $config{'atomic'} = $opt->{'atomic'} // $config{'atomic'} // 1;
+
+    my @ids = sort $self->parse_requested_ids($opt, $args)->@*;
+
+    $self->build_queries(\@ids);
+    @{$self->{'queries'} // []}
+        and $log->trace('queries: ' . join (', ', map {$_->id} $self->{'queries'}->@*));
 
     return;
 }
 
-sub execute {
-    my ($self, $opt) = @_;
+sub execute ($self, $opt, $args) {
+    my \%config = $self->{'config'};
 
-    my $uninstaller = use_module('Pakket::Controller::Uninstall')->new(
-        'pakket_dir'           => $opt->{'config'}{'install_dir'},
-        'packages'             => $opt->{'packages'},
-        'without_dependencies' => $opt->{'without_dependencies'},
-        'use_hardlinks'        => $opt->{'config'}{'use_hardlinks'}  // 0,
-        'keep_rollbacks'       => $opt->{'config'}{'keep_rollbacks'} // 1,
+    my @phases = (qw(runtime build configure develop test));
+    my @types  = (qw(requires recommends suggests));
+
+    my $controller = use_module('Pakket::Controller::Uninstall')->new(
+        'atomic'     => $config{'atomic'},
+        'config'     => $self->{'config'},
+        'pakket_dir' => $config{'install_dir'},
+        'phases'     => [@phases],
+        'types'      => [@types],
+        map {defined $opt->{$_} ? +($_ => $opt->{$_}) : +()} qw(dry_run no_prereqs),
     );
 
-    my @packages_for_uninstall = $uninstaller->get_list_of_packages_for_uninstall();
+    # my @packages_for_uninstall = $controller->get_list_of_packages_for_uninstall();
+    #
+    # print "We are going to remove:\n";
+    # for my $package (@packages_for_uninstall) {
+    # print "* $package->{category}/$package->{name}\n";
+    # }
+    #
+    # my $answer = prompt('Continue?', 'y');
+    #
+    # lc $answer eq 'y'
+    # and $controller->execute($self->%{qw(queries prereqs)});
 
-    print "We are going to remove:\n";
-    for my $package (@packages_for_uninstall) {
-        print "* $package->{category}/$package->{name}\n";
-    }
-
-    my $answer = prompt('Continue?', 'y');
-
-    lc $answer eq 'y'
-        and $uninstaller->uninstall();
-
-    return;
+    return $controller->execute($self->%{qw(queries prereqs)});
 }
 
 1;

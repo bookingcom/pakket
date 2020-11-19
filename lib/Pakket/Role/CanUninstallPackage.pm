@@ -15,15 +15,14 @@ use Path::Tiny;
 
 sub uninstall_package ($self, $info_file, $package) {
     $self->log->debug('uninstalling package:', $package->id);
-    my $info = delete $info_file->{'installed_packages'}{$package->category}{$package->name};
+    my \%info = delete $info_file->{'installed_packages'}{$package->category}{$package->name};
 
-    for my $file (sort $info->{'files'}->@*) {
-        $file =~ s{^files/}{}xms;                                              # (compatibility) remove 'files/' part from the begin of the path
+    for my $file (sort $info{'files'}->@*) {
+        $file =~ s{^files/}{}x;                                                # (compatibility) remove 'files/' part from the begin of the path
         my $path = $self->work_dir->child($file);
 
         $self->log->trace('deleting file:', $path);
-        $path->exists
-            and !$path->remove
+        $path->exists && !$path->remove
             and $self->log->error("Could not remove $path: $!");
 
         # remove parent dirs if there are no children

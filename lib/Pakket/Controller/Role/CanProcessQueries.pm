@@ -47,12 +47,18 @@ has 'types' => (
     'required' => 1,
 );
 
+sub check_queries_before_processing (@) {return 1}
+sub check_query (@)                     {return 1}
+
 sub process_queries ($self, %params) {
     $params{'prereqs'} && $params{'prereqs'}->%*
         and $params{'queries'} = $self->_prepare_external_prereqs(delete $params{'prereqs'});
 
-    $self->log->notice('Processing queries:', scalar $params{'queries'}->@*);
-    $self->_process_queries(delete $params{'queries'}, %params);
+    my $queries = delete $params{'queries'};
+    if ($self->check_queries_before_processing($queries, %params)) {
+        $self->log->notice('Processing queries:', scalar $queries->@*);
+        $self->_process_queries($queries, %params);
+    }
 
     return $self->_finalize();
 }
@@ -64,7 +70,8 @@ sub _process_queries ($self, $queries, %params) {
             $query->is_module()                                                # no tidy
                 and $query = $query->clone('name' => $self->determine_distribution($query->name));
 
-            $self->process_query($query, %params);
+            $self->check_query($query, %params) and $self->process_query($query, %params);
+
             1;
         } or do {
             $self->log_depth_set($log_depth);
@@ -75,6 +82,7 @@ sub _process_queries ($self, $queries, %params) {
                 : $self->log->warn($error);
         };
     }
+
     return;
 }
 

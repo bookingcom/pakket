@@ -9,187 +9,102 @@ use namespace::autoclean;
 
 # core
 use Carp;
+use English qw(-no_match_vars);
+use Errno qw(:POSIX);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
-use Log::Any qw($log);
 use Path::Tiny;
-use Types::Path::Tiny qw(Path);
 
 # local
 use Pakket::Log;
 
-with qw(
-    Pakket::Role::CanUninstallPackage
-    Pakket::Role::HasInfoFile
-    Pakket::Role::HasLibDir
+has [qw(atomic)] => (
+    'is'      => 'ro',
+    'isa'     => 'Bool',
+    'default' => 1,
 );
 
-has 'packages' => (
-    'is'       => 'ro',
-    'isa'      => 'ArrayRef',
-    'required' => 1,
-);
-
-has 'without_dependencies' => (
+has [qw(dry_run no_prereqs)] => (
     'is'      => 'ro',
     'isa'     => 'Bool',
     'default' => 0,
 );
 
-sub get_list_of_packages_for_uninstall {
-    my $self = shift;
+has '_state' => (
+    'is'      => 'rw',
+    'isa'     => 'HashRef',
+    'default' => sub {+{}},
+);
 
-    @{$self->packages}
-        or croak($log->critical('Did not receive any packages to uninstall'));
+with qw(
+    Pakket::Controller::Role::CanProcessQueries
+    Pakket::Role::CanFilterRequirements
+    Pakket::Role::CanUninstallPackage
+    Pakket::Role::CanVisitPrereqs
+    Pakket::Role::HasConfig
+    Pakket::Role::HasInfoFile
+    Pakket::Role::HasLibDir
+    Pakket::Role::HasLog
+);
 
-    my $info_file              = $self->load_info_file($self->active_dir);
-    my @packages_for_uninstall = $self->_get_packages_available_for_uninstall($info_file);
+sub execute ($self, %params) {
+    $self->_state->{'info_file'} = $self->load_info_file($self->active_dir);
 
-    return @packages_for_uninstall;
-}
+    my $result = $self->process_queries(%params);
 
-sub uninstall {
-    my $self = shift;
-
-    my $info_file              = $self->load_info_file($self->active_dir);
-    my @packages_for_uninstall = $self->_get_packages_available_for_uninstall($info_file);
-    @packages_for_uninstall
-        or $log->notice("Don't have any packages for uninstall")
-        and return;
-
-    foreach my $package (@packages_for_uninstall) {
-        $self->uninstall_package($info_file, $package);
+    if ($result == 0) {                                                        # do changes persistent only if no falures
+        $self->save_info_file($self->work_dir, $self->_state->{'info_file'});
+        $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
+        $self->activate_work_dir;
     }
 
-    $self->save_info_file($self->work_dir, $info_file);
-    $self->set_rollback_tag($self->work_dir, $self->rollback_tag);
-    $self->activate_work_dir;
+    return $result;
+}
 
-    $log->info(
-        "Finished uninstalling:\n" . join ("\n", map {$_->{'category'} . '/' . $_->{'name'}} @packages_for_uninstall));
-    $log->noticef(
-        'Finished uninstalling %d packages from %s',
-        0 + @packages_for_uninstall,
-        $self->pakket_dir->stringify,
-    );
+sub check_queries_before_processing ($self, $queries, %params) {
+    my \%requirements = as_requirements($queries);
+    my (\@found, \@not_found) = $self->filter_packages_in_cache(\%requirements, $self->all_installed_cache);
+    if (@not_found) {
+        $self->croak("Following packages are not installed: @{[ map $_->id, @not_found ]}");
+    }
+
+    $self->log->notice("Going to unsintall following packages: @{[ map $_->id, @found ]}");
+    $queries->@* = @found;                                                     # substitute queries for packages here
+
+    return scalar @found;
+}
+
+sub process_query ($self, $package, %params) {
+    $self->log->notice('Uninstalling:', $package->id);
+
+    if (!$self->no_prereqs) {
+        $self->log->warn('Uninstalling prereqs is not implemented yet');
+
+        # $self->process_prereqs($package);
+    }
+
+    $self->uninstall_package($self->_state->{'info_file'}, $package);
+    $self->succeeded->{$package->id}++;
 
     return;
 }
 
-sub _get_packages_available_for_uninstall {
-    my ($self, $info_file) = @_;
+sub process_prereqs ($self, $package) {
+    my \%installed_packages = $self->_state->{'info_file'}{'installed_packages'};
+    my \%prereqs            = delete $installed_packages{$package->category}{$package->name}{'prereqs'};
 
-    # Algorithm
-    # Walk through requested packages and their dependency tree and mark them 'to_delete'
-    # Walk through all installed packages without 'to_delete' and their dependencies and mark them 'keep_it'
-    # Remove all packages which have 'to_delete' and missing 'keep_it'
-    #
-    # Special case: throw an error if user explicitly wants to remove packages ('delete_by_requirements'),
-    # but that packages is required by any packages from the list 'keep_it.
+    $self->visit_prereqs(
+        \%prereqs,
+        sub ($phase, $type, $module, $version) {
+            my ($category, $name) = $module =~ m{(.+)/(.+)}x;
+            if (--$installed_packages{$category}{$name}{'as_prereq'} < 1) {
+                $self->log->notice('Uninstalling:', $category, $name);
+            }
+        },
+    );
 
-    #mark packages for uninstall as 'to_delete' and 'to_delete_by_requerement'
-    my $installed_packages = $info_file->{'installed_packages'};
-    my @queue;
-    my (%to_delete, %to_delete_by_requirements);
-    foreach my $package (@{$self->packages}) {
-        $installed_packages->{$package->{'category'}}{$package->{'name'}}
-            or croak($log->critical("Package $package->{'category'}/$package->{'name'} doesn't exists"));
-
-        $to_delete{$package->{'category'}}{$package->{'name'}}++ and next;
-        push @queue, $package;
-        $to_delete_by_requirements{$package->{'category'}}{$package->{'name'}}++;
-    }
-
-    if (1) {
-        croak($log->critical('Not implemented yet'));
-    }
-
-    # walk through dependencies and mark them as 'to delete'
-    #    if (!$self->without_dependencies) {
-    #        while (0 + @queue) {
-    #            my $package  = shift @queue;
-    #            my $category = $package->{'category'};
-    #            my $name     = $package->{'name'};
-    #            exists $installed_packages->{$category} and exists $installed_packages->{$category}{$name}
-    #                or next;
-    #
-    #            my $prereqs = $installed_packages->{$category}{$name}{'prereqs'};
-    #
-    #            for my $category (keys %$prereqs) {
-    #                for my $type (keys %{$prereqs->{$category}}) {
-    #                    for my $name (keys %{$prereqs->{$category}{$type}}) {
-    #                        $to_delete{$category}{$name}++ and next;
-    #                        push @queue,
-    #                            {
-    #                            'category' => $category,
-    #                            'name'     => $name,
-    #                            };
-    #                    }
-    #                }
-    #            }
-    #        }
-    #    }
-    #
-    #    #select all package without 'to_delete' and mark them and theirs dependencies as 'keep_it'
-    #    my %keep_it;
-    #    foreach my $category (keys %$installed_packages) {
-    #        foreach my $name (keys %{$installed_packages->{$category}}) {
-    #            $to_delete{$category}{$name} and next;
-    #            $keep_it{$category}{$name}++ and next;
-    #
-    #            # walk through dependencies
-    #            @queue = ({
-    #                    'category' => $category,
-    #                    'name'     => $name,
-    #                },
-    #            );
-    #            while (0 + @queue) {
-    #                my $package     = shift @queue;
-    #                my $pr_category = $package->{'category'};
-    #                my $pr_name     = $package->{'name'};
-    #
-    #                exists $installed_packages->{$pr_category} and exists $installed_packages->{$pr_category}{$pr_name}
-    #                    or next;
-    #
-    #                my $prereqs = $installed_packages->{$pr_category}->{$pr_name}{'prereqs'};
-    #
-    #                for my $category (keys %$prereqs) {
-    #                    for my $type (keys %{$prereqs->{$category}}) {
-    #                        for my $name (keys %{$prereqs->{$category}{$type}}) {
-    #                            $keep_it{$category}{$name}++ and next;
-    #                            $to_delete_by_requirements{$category}{$name}
-    #                                and croak(
-    #                                $log->critical(
-    #                                          "Can't uninstall package $category/$name, "
-    #                                        . "it's required by $pr_category/$pr_name",
-    #                                ),
-    #                                );
-    #                            push @queue,
-    #                                {
-    #                                'category' => $category,
-    #                                'name'     => $name,
-    #                                };
-    #                            delete $to_delete{$category}{$name};
-    #                        }
-    #                    }
-    #                }
-    #            }
-    #        }
-    #    }
-
-    my @packages_for_uninstall;
-    for my $category (keys %to_delete) {
-        for my $name (keys %{$to_delete{$category}}) {
-            push @packages_for_uninstall,
-                {
-                'category' => $category,
-                'name'     => $name,
-                };
-        }
-    }
-
-    return @packages_for_uninstall;
+    return;
 }
 
 __PACKAGE__->meta->make_immutable;
