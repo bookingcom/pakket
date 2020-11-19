@@ -345,7 +345,7 @@ sub _fetch_all_packages {
                     my $prereq_data = $runtime_prereqs->{$prereq_name};
 
                     my $p = $self->_get_prereq($prereq_category, $prereq_name, $prereq_data);
-                    if ($prereq_name ne 'Sub-Quote' && exists $self->installed_packages->{$p->short_name}
+                    if (!$self->_always_overwrite(sprintf('%s/%s', $prereq_category, $prereq_name)) && exists $self->installed_packages->{$p->short_name}
                         && $self->_is_version_satisfying($self->installed_packages->{$p->short_name}, $prereq_data))
                     {
                         $log->debug('Prereq is already fulfilled:',
@@ -370,6 +370,14 @@ sub _fetch_all_packages {
 
     my $stats = $self->data_consumer->runstats();
     return $stats->{'failed'};
+}
+
+sub _always_overwrite {                                                        # these packages will not be discovered as installed
+    my ($self, $short_name) = @_;
+    state $default_packages = [qw(perl/Sub-Quote)];
+    state $always_overwrite = {map {$_ => undef} @{$self->config->{'always-overwrite'} // $default_packages}};
+
+    return exists $always_overwrite->{$short_name};
 }
 
 sub _check_parcels_fetched {
@@ -537,7 +545,7 @@ sub is_installed {
     my ($self, $installer_cache, $package) = @_;
 
     my $installed_package = $self->installed_packages->{$package->short_name};
-    if ($package->name ne 'Sub-Quote' && !$self->force && $installed_package && $installed_package->full_name eq $package->full_name) {
+    if (!$self->_always_overwrite($package->short_name) && !$self->force && $installed_package && $installed_package->full_name eq $package->full_name) {
         $log->debugf('%s already installed', $package->full_name);
         return 1;
     }
