@@ -165,9 +165,10 @@ sub push_to_data_consumer ($self, $requirements, %options) {
     foreach my $package (@packages) {
         if (exists $queue{'index'}{$package->short_name}) {
             $self->log->warnf(
-                'Dependency conflict detected. Package %s has version incompatible with version pinned in the request',
+                'Dependency conflict detected. Package %s has version incompatible with version pinned in the request. Skipping',
                 $package->id,
             );
+            next;                                                              # temporary solution. later warn should be changed to die
         }
         $self->log->debug('adding package to the queue:', $package->id);
         my $data = {

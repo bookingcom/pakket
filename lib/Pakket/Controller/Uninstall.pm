@@ -69,7 +69,7 @@ sub check_queries_before_processing ($self, $queries, %params) {
         $self->croak("Following packages are not installed: @{[ map $_->id, @not_found ]}");
     }
 
-    $self->log->notice("Going to unsintall following packages: @{[ map $_->id, @found ]}");
+    $self->log->notice("Going to uninstall following packages: @{[ map $_->id, @found ]}");
     $queries->@* = @found;                                                     # substitute queries for packages here
 
     return scalar @found;

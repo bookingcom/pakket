@@ -6,7 +6,7 @@ use warnings;
 
 # core
 use English '-no_match_vars';
-use List::Util qw(any);
+use List::Util qw(all any);
 use System::Command;
 
 # non core
@@ -30,9 +30,12 @@ use Pakket::Utils qw(encode_json_pretty);
 use namespace::clean;
 use Exporter qw(import);
 our @EXPORT_OK = qw(
+    match_all_items
     match_any_item
+    dont_match_any_item
     match_several_items
     test_prepare_context
+    test_prepare_context_corpus
     test_prepare_context_real
     test_run
 );
@@ -92,11 +95,11 @@ sub test_prepare_context () {
     );
 }
 
-sub test_prepare_context_real () {
+sub test_prepare_context_corpus ($root) {
     my $temp = Path::Tiny->tempdir('pakket-test-repos-XXXXX', 'CLEANUP' => !$ENV{'DEBUG'});
     my @dirs = map {my $ret = $temp->child($_); $ret->mkpath; $ret} qw(spec source parcel install);
     foreach my $dir (qw(spec source parcel)) {
-        dircopy("$ENV{'PWD'}/t/corpus/repos.v3/$dir", $temp->child($dir));
+        dircopy("$ENV{'PWD'}/$root/$dir", $temp->child($dir));
     }
 
     my $config_path = $temp->child('pakket.json');
@@ -143,6 +146,10 @@ sub test_prepare_context_real () {
     return %result;
 }
 
+sub test_prepare_context_real () {
+    return test_prepare_context_corpus('t/corpus/repos.v3');
+}
+
 sub test_run ($args, $opt = {}, $wanted_exit_code = 0) {
     my $cmd = System::Command->new($args->@*, $opt,);
 
@@ -168,6 +175,18 @@ sub test_run ($args, $opt = {}, $wanted_exit_code = 0) {
         }
     }
     return $exit_code, \@output;
+}
+
+sub match_all_items ($string, @regexes) {
+    all {$string =~ m/$_/m} @regexes
+        or ok(0, "one of items didn't match: @regexes");
+    return;
+}
+
+sub dont_match_any_item ($array, $match, $name = '', @rest) {
+    my $is_matched = !!(any {m/$match/} $array->@*);
+    ok(!$is_matched, $name || $match, (dump $array) x !$is_matched, @rest);
+    return;
 }
 
 sub match_any_item ($array, $match, $name = '', @rest) {

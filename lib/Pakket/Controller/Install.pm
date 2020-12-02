@@ -128,6 +128,12 @@ sub install_parcel ($self, $package, $parcel_dir, $target_dir) {
 }
 
 sub _do_dry_run_simple ($self, $queries) {
+    if ($self->allow_rollback && $self->rollback_tag) {
+        if ($self->rollback_tag eq $self->get_rollback_tag($self->active_dir)) {
+            return 0;
+        }
+    }
+
     my (undef, \@not_found) = $self->filter_packages_in_cache(as_requirements($queries), $self->all_installed_cache);
 
     @not_found
@@ -329,8 +335,10 @@ sub _install_packages ($self, $saved_requirements) {
                 'as_prereq' => $data->{'as_prereq'},
             );
 
-            exists $packages{$package->short_name}
-                and carp('Package fetched several times: ', $package->id);
+            if (exists $packages{$package->short_name}) {
+                $self->log->warn('Package fetched several times, skipping: ', $package->id);
+                return;
+            }
 
             $packages{$package->short_name} = {
                 'package'    => $package,
