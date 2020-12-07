@@ -10,7 +10,7 @@ use List::Util qw(all any);
 use System::Command;
 
 # non core
-use Data::Dump qw(dd dump);
+use Data::Dumper qw(Dumper);
 use File::Copy::Recursive qw(dircopy);
 use Log::Any::Adapter;
 use Log::Dispatch;
@@ -171,7 +171,7 @@ sub test_run ($args, $opt = {}, $wanted_exit_code = 0) {
     } else {
         pass "The command '$cmdline' exited with code '$exit_code' like we wanted";
         if ($ENV{'DEBUG'}) {
-            note "The output was:\n" . dump (@output);
+            note "The output was:\n" . Dumper(@output);
         }
     }
     return $exit_code, \@output;
@@ -185,13 +185,13 @@ sub match_all_items ($string, @regexes) {
 
 sub dont_match_any_item ($array, $match, $name = '', @rest) {
     my $is_matched = !!(any {m/$match/} $array->@*);
-    ok(!$is_matched, $name || $match, (dump $array) x !$is_matched, @rest);
+    ok(!$is_matched, $name || $match, (Dumper($array)) x !$is_matched, @rest);
     return;
 }
 
 sub match_any_item ($array, $match, $name = '', @rest) {
     my $is_matched = !!(any {m/$match/} $array->@*);
-    ok($is_matched, $name || $match, (dump $array) x !$is_matched, @rest);
+    ok($is_matched, $name || $match, (Dumper($array)) x !$is_matched, @rest);
     return;
 }
 

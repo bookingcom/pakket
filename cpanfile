@@ -66,7 +66,6 @@ requires "vars" => "0";
 requires "version" => "0.77";
 
 on 'test' => sub {
-  requires "Data::Dump" => "0";
   requires "File::Spec" => "0";
   requires "IO::Handle" => "0";
   requires "IPC::Open3" => "0";

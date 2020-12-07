@@ -8,7 +8,6 @@ use warnings;
 use lib '.';
 
 # non core
-use Data::Dump qw(dd dump);
 use Test2::V0;
 use Test2::Tools::Basic qw(todo);
 use Test2::Tools::Spec;

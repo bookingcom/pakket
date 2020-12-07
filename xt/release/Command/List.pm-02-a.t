@@ -6,7 +6,6 @@ use warnings;
 
 # core
 use lib '.';
-use Data::Dumper;
 
 # non core
 use Test2::V0;
