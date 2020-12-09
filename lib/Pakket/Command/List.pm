@@ -55,16 +55,16 @@ use constant {
                 $s->installed();
             },
         },
-        'updates' => {
-            'match'   => '^upd',
+        'cpan-updates' => {
+            'match'   => '^cp',
             'handler' => sub ($s) {
-                $s->updates();
+                $s->cpan_updates();
             },
         },
-        'upgrades' => {
-            'match'   => '^upg',
+        'updates' => {
+            'match'   => '^up',
             'handler' => sub ($s) {
-                $s->upgrades();
+                $s->updates();
             },
         },
     },
@@ -87,8 +87,8 @@ sub description {
             parcels              List all parcels
             sources              List all sources
             specs                List all specs
-            updates              List all packages which have updated version on METACPAN
-            upgrades             List all packages which have a newer version in a parcel repo
+            cpan-updates         List all packages which have updated version on METACPAN
+            updates              List all packages which have a newer version in a parcel repo
     END_HEREDOC
 
     return $message;

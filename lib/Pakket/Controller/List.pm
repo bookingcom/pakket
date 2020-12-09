@@ -54,7 +54,7 @@ sub installed ($self) {
     return $self->_output(\@result);
 }
 
-sub updates ($self) {
+sub cpan_updates ($self) {
     my $cpan = use_module('Pakket::Helper::Cpan')->new;
 
     my \%outdated = $cpan->outdated($self->spec_repo->all_objects_cache());
@@ -67,7 +67,7 @@ sub updates ($self) {
     return 0;
 }
 
-sub upgrades ($self) {
+sub updates ($self) {
     my $versioner  = Pakket::Helper::Versioner->new('type' => 'Perl');
     my \%installed = $self->all_installed_cache;
     my \%parcels   = $self->parcel_repo->all_objects_cache();
