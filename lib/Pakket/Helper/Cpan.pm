@@ -76,75 +76,25 @@ has 'distributions_cache' => (
 has 'known_incorrect_name_fixes' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'default' => sub {
-        +{
-            'App::Fatpacker'                                                     => 'App::FatPacker',
-            'Test::YAML::Meta::Version'                                          => 'Test::YAML::Meta',           # not sure about this
-            'Net::Server::SS::Prefork'                                           => 'Net::Server::SS::PreFork',
-            'Data::Sah::Coerce::perl::To_date::From_float::epoch'                => 'Data::Sah::Coerce',
-            'Data::Sah::Coerce::perl::To_date::From_obj::datetime'               => 'Data::Sah::Coerce',
-            'Data::Sah::Coerce::perl::To_date::From_obj::time_moment'            => 'Data::Sah::Coerce',
-            'Data::Sah::Coerce::perl::To_date::From_str::iso8601'                => 'Data::Sah::Coerce',
-            'Data::Sah::Coerce::perl::To_str::From_str::normalize_perl_distname' => 'Data::Sah::Coerce',
-            'Data::Sah::Coerce::perl::To_str::From_str::normalize_perl_modname'  => 'Data::Sah::Coerce',
-            'Data::Sah::Coerce::perl::To_str::From_str::strip_slashes'           => 'Data::Sah::Coerce',
-            'Data::Sah::Compiler::perl::TH::array'                               => 'Data::Sah',
-            'Data::Sah::Compiler::perl::TH::bool'                                => 'Data::Sah',
-            'Data::Sah::Compiler::perl::TH::date'                                => 'Data::Sah',
-            'Data::Sah::Compiler::perl::TH::int'                                 => 'Data::Sah',
-            'Data::Sah::Compiler::perl::TH::re'                                  => 'Data::Sah',
-            'Data::Sah::Compiler::perl::TH::str'                                 => 'Data::Sah',
-            'URI::_generic'                                                      => 'URI',
-        };
-    },
+    'builder' => '_build_known_incorrect_name_fixes',
 );
 
 has 'known_incorrect_version_fixes' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'default' => sub {
-        +{
-            'Data-Swap'             => '0.08',
-            'Encode-HanConvert'     => '0.35',
-            'ExtUtils-Constant'     => '0.23',
-            'Frontier-RPC'          => '0.07',
-            'IO-Capture'            => '0.05',
-            'Memoize-Memcached'     => '0.04',
-            'Statistics-Regression' => '0.53',
-        };
-    },
+    'builder' => '_build_known_incorrect_version_fixes',
 );
 
 has 'known_incorrect_dependencies' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'default' => sub {
-        +{
-            'Module-Install' => {
-                'libwww-perl' => 1,
-                'PAR-Dist'    => 1,
-            },
-            'libwww-perl' => {
-                'NTLM' => 1,
-            },
-        };
-    },
+    'builder' => '_build_known_incorrect_dependencies',
 );
 
 has 'known_modules_to_skip' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
-    'default' => sub {
-        +{
-            'perl'                     => 1,
-            'tinyperl'                 => 1,
-            'perl_mlb'                 => 1,
-            'HTTP::GHTTP'              => 1,
-            'Text::MultiMarkdown::XS'  => 1,                                   # ADOPTME
-            'inc::MMPackageStash'      => 1,                                   # unable to find on cpan
-            'Test2::Tools::PerlCritic' => 1,
-        };
-    },
+    'builder' => '_build_known_modules_to_skip',
 );
 
 sub BUILDARGS ($class, %args) {
@@ -189,8 +139,10 @@ sub get_release_info ($self, $query) {
 }
 
 sub determine_distribution ($self, $module_name) {
-    exists $self->known_incorrect_name_fixes->{$module_name}
-        and $module_name = $self->known_incorrect_name_fixes->{$module_name};
+    if (exists $self->known_incorrect_name_fixes->{$module_name}) {
+        $self->log->debug('fixing module following known_incorrect_name_fixes:', $module_name);
+        $module_name = $self->known_incorrect_name_fixes->{$module_name};
+    }
 
     exists $self->distributions_cache->{$module_name}                          # check if we've already seen it
         and $self->log->trace('found distribution in cache for:', $module_name)
@@ -479,6 +431,69 @@ sub _build_latest_distributions ($self) {
         }
     }
     return \%cpan_dist;
+}
+
+sub _build_known_incorrect_name_fixes ($self) {
+    return {
+        'App::Fatpacker'                                                     => 'App::FatPacker',
+        'Test::YAML::Meta::Version'                                          => 'Test::CPAN::Meta::YAML',     # not sure about this
+        'Net::Server::SS::Prefork'                                           => 'Net::Server::SS::PreFork',
+        'Data::Sah::Coerce::perl::To_date::From_float::epoch'                => 'Data::Sah::Coerce',
+        'Data::Sah::Coerce::perl::To_date::From_obj::datetime'               => 'Data::Sah::Coerce',
+        'Data::Sah::Coerce::perl::To_date::From_obj::time_moment'            => 'Data::Sah::Coerce',
+        'Data::Sah::Coerce::perl::To_date::From_str::iso8601'                => 'Data::Sah::Coerce',
+        'Data::Sah::Coerce::perl::To_str::From_str::normalize_perl_distname' => 'Data::Sah::Coerce',
+        'Data::Sah::Coerce::perl::To_str::From_str::normalize_perl_modname'  => 'Data::Sah::Coerce',
+        'Data::Sah::Coerce::perl::To_str::From_str::strip_slashes'           => 'Data::Sah::Coerce',
+        'Data::Sah::Compiler::perl::TH::array'                               => 'Data::Sah',
+        'Data::Sah::Compiler::perl::TH::bool'                                => 'Data::Sah',
+        'Data::Sah::Compiler::perl::TH::date'                                => 'Data::Sah',
+        'Data::Sah::Compiler::perl::TH::int'                                 => 'Data::Sah',
+        'Data::Sah::Compiler::perl::TH::re'                                  => 'Data::Sah',
+        'Data::Sah::Compiler::perl::TH::str'                                 => 'Data::Sah',
+        'URI::_generic'                                                      => 'URI',
+        %{$self->config->{'perl'}{'scaffold'}{'known_incorrect_name_fixes'} // {}},
+    };
+}
+
+sub _build_known_incorrect_version_fixes ($self) {
+    return {
+        'Data-Swap'             => '0.08',
+        'Encode-HanConvert'     => '0.35',
+        'ExtUtils-Constant'     => '0.23',
+        'Frontier-RPC'          => '0.07',
+        'IO-Capture'            => '0.05',
+        'Memoize-Memcached'     => '0.04',
+        'Statistics-Regression' => '0.53',
+        %{$self->config->{'perl'}{'scaffold'}{'known_incorrect_version_fixes'} // {}},
+    };
+}
+
+sub _build_known_incorrect_dependencies ($self) {
+    return {
+        'Module-Install' => {
+            'libwww-perl' => 1,
+            'PAR-Dist'    => 1,
+        },
+        'libwww-perl' => {
+            'NTLM' => 1,
+        },
+        %{$self->config->{'perl'}{'scaffold'}{'known_incorrect_dependencies'} // {}},
+    };
+}
+
+sub _build_known_modules_to_skip ($self) {
+    return {
+        'HTTP::GHTTP'              => 1,
+        'Test2::Tools::PerlCritic' => 1,
+        'Test::YAML::Meta'         => 1,
+        'Text::MultiMarkdown::XS'  => 1,                                       # ADOPTME
+        'inc::MMPackageStash'      => 1,                                       # unable to find on cpan
+        'perl'                     => 1,
+        'perl_mlb'                 => 1,
+        'tinyperl'                 => 1,
+        %{$self->config->{'perl'}{'scaffold'}{'known_modules_to_skip'} // {}},
+    };
 }
 
 __PACKAGE__->meta->make_immutable;
