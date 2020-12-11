@@ -176,7 +176,7 @@ sub _filter_prereqs ($self, $query, $prereqs) {
     $self->visit_prereqs(
         $prereqs,
         sub ($phase, $type, $name, $requirement) {
-            $self->_should_skip_module($name)
+            $self->_should_skip_module($name, $requirement)
                 and return;
 
             my $distribution = $self->determine_distribution($name);
@@ -197,7 +197,12 @@ sub _filter_prereqs ($self, $query, $prereqs) {
     return;
 }
 
-sub _should_skip_module ($self, $module) {
+sub _should_skip_module ($self, $module, $requirement) {
+    if ($requirement eq '-') {
+        $self->log->debug('skipping (disabled module):', $module);
+        return 1;
+    }
+
     if (should_skip_core_module($module)) {
         $self->log->debug('skipping (core module, not dual-life):', $module);
         return 1;
