@@ -41,7 +41,7 @@ requires "Moose::Role" => "0";
 requires "Moose::Util::TypeConstraints" => "0";
 requires "MooseX::Clone" => "0";
 requires "MooseX::StrictConstructor" => "0";
-requires "Net::Amazon::S3" => "0";
+requires "Net::Amazon::S3" => "<=0.91";
 requires "POSIX" => "0";
 requires "Parse::CPAN::Packages::Fast" => "0";
 requires "Path::Tiny" => "0";
