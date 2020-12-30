@@ -8,6 +8,7 @@ use namespace::autoclean;
 
 # core
 use Carp;
+use List::Util qw(uniq);
 use experimental qw(declared_refs refaliasing signatures switch);
 
 # non core
@@ -42,6 +43,7 @@ sub add_package_to_info_file ($self, %params) {
 
             my \@file_owners = $install_info{'files'}{$filename->stringify} //= [];
             push (@file_owners, $package->short_name);
+            @file_owners = uniq @file_owners;
 
             if (@file_owners > 1) {
                 $self->log->warn("File '$filename' intersection detected:", @{[@file_owners]});
@@ -133,8 +135,6 @@ sub all_installed_packages ($self, $dir = $self->active_dir) {
     return \@result;
 }
 
-# this is a quick search hash for installed packages. It might not include all of them: packages marked as
-# always_overwrite are excluded
 sub _build_all_installed_cache ($self) {
     my %result;
 
@@ -145,20 +145,11 @@ sub _build_all_installed_cache ($self) {
     my \%packages = $install_info->{'packages'};
 
     for my $short_name (keys %packages) {
-        $self->_always_overwrite($short_name)
-            and next;
         my \%p = $packages{$short_name};
         $result{$short_name}{$p{'version'}}{$p{'release'}}++;
     }
 
     return \%result;
-}
-
-sub _always_overwrite ($self, $short_name) {                                   # these packages will not be discovered as installed
-    state $default_packages = [qw(perl/Sub-Quote)];
-    state $always_overwrite = {map {$_ => undef} @{$self->config->{'always-overwrite'} // []}, $default_packages->@*};
-
-    return exists $always_overwrite->{$short_name};
 }
 
 sub _validate_install_info ($install_info) {
