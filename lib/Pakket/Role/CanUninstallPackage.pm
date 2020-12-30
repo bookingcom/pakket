@@ -15,7 +15,7 @@ use Path::Tiny;
 
 sub uninstall_package ($self, $info_file, $package) {
     $self->log->debug('uninstalling package:', $package->id);
-    my \%info = delete $info_file->{'installed_packages'}{$package->category}{$package->name};
+    my \%info = $self->remove_package_from_info_file($info_file, $package);
 
     my %parents;
     for my $file (sort $info{'files'}->@*) {

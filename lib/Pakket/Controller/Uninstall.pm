@@ -10,7 +10,6 @@ use namespace::autoclean;
 # core
 use Carp;
 use English qw(-no_match_vars);
-use Errno qw(:POSIX);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
@@ -81,7 +80,7 @@ sub process_query ($self, $package, %params) {
     if (!$self->no_prereqs) {
         $self->log->warn('Uninstalling prereqs is not implemented yet');
 
-        # $self->process_prereqs($package);
+        # $self->_process_prereqs($package);
     }
 
     $self->uninstall_package($self->_state->{'info_file'}, $package);
@@ -90,22 +89,22 @@ sub process_query ($self, $package, %params) {
     return;
 }
 
-sub process_prereqs ($self, $package) {
-    my \%installed_packages = $self->_state->{'info_file'}{'installed_packages'};
-    my \%prereqs            = delete $installed_packages{$package->category}{$package->name}{'prereqs'};
-
-    $self->visit_prereqs(
-        \%prereqs,
-        sub ($phase, $type, $module, $version) {
-            my ($category, $name) = $module =~ m{(.+)/(.+)}x;
-            if (--$installed_packages{$category}{$name}{'as_prereq'} < 1) {
-                $self->log->notice('Uninstalling:', $category, $name);
-            }
-        },
-    );
-
-    return;
-}
+# sub _process_prereqs ($self, $package) {
+# my \%installed_packages = $self->_state->{'info_file'}{'installed_packages'};
+# my \%prereqs            = delete $installed_packages{$package->category}{$package->name}{'prereqs'};
+#
+# $self->visit_prereqs(
+# \%prereqs,
+# sub ($phase, $type, $module, $version) {
+# my ($category, $name) = $module =~ m{(.+)/(.+)}x;
+# if (--$installed_packages{$category}{$name}{'as_prereq'} < 1) {
+# $self->log->notice('Uninstalling:', $category, $name);
+# }
+# },
+# );
+#
+# return;
+# }
 
 __PACKAGE__->meta->make_immutable;
 

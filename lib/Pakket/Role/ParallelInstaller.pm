@@ -44,7 +44,7 @@ has 'is_child' => (
 has 'data_consumer_dir' => (
     'is'      => 'ro',
     'lazy'    => 1,
-    'default' => sub($self) {
+    'default' => sub ($self) {
         my $dc_dir = Path::Tiny->tempdir('.install-queue-XXXXXXXXXX', DIR => $self->work_dir->absolute->stringify);
         $self->log->trace('creating data_consumer_dir:', $dc_dir);
         $dc_dir->child('unprocessed')->mkpath;
@@ -57,7 +57,7 @@ has 'data_consumer_dir' => (
 has 'data_consumer' => (
     'is'      => 'ro',
     'lazy'    => 1,
-    'default' => sub($self) {
+    'default' => sub ($self) {
         return Data::Consumer::Dir->new(
             'root'       => $self->data_consumer_dir,
             'create'     => 1,
@@ -91,7 +91,7 @@ sub BUILD ($self, @) {
     }
 }
 
-sub spawn_workers($self) {
+sub spawn_workers ($self) {
     my $subprocs = $self->_subproc_count;
     $subprocs and $self->log->notice('Spawning additional processes', $subprocs);
     for (1 .. $subprocs) {
@@ -110,7 +110,7 @@ sub spawn_workers($self) {
     return;
 }
 
-sub wait_workers($self) {
+sub wait_workers ($self) {
     $self->is_child
         and exit 0;
 
@@ -123,7 +123,7 @@ sub wait_workers($self) {
     return;
 }
 
-sub is_parallel($self) {
+sub is_parallel ($self) {
     my $j = $self->jobs;
 
     return defined $j && $j > 1;
@@ -209,7 +209,7 @@ sub _subproc_count ($self) {
     return min(MAX_SUBPROCESSES(), $self->jobs - 1, abs int ($self->_to_process / PACKAGES_PER_SUBPROCESS()));
 }
 
-sub _escape_filename($file) {
+sub _escape_filename ($file) {
     return $file =~ s{[^[:alnum:].]+}{-}grxms;
 }
 

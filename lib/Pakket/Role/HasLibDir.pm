@@ -9,7 +9,7 @@ use namespace::autoclean;
 # core
 use Carp;
 use English qw(-no_match_vars);
-use Errno qw(:POSIX);
+use Errno;
 use Time::HiRes qw(time);
 use experimental qw(declared_refs refaliasing signatures);
 
@@ -133,7 +133,7 @@ sub activate_dir {
 
         if ($self->libraries_dir->child($link) eq $dir) {
             $self->log->debugf('Directory %s is already active', $dir);
-            return EEXIST;
+            return Errno::EEXIST;
         }
     }
 
