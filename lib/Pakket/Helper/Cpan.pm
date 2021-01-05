@@ -14,7 +14,7 @@ use experimental qw(declared_refs refaliasing signatures);
 # non core
 use CPAN::DistnameInfo;
 use CPAN::Meta;
-use File::ShareDir qw(dist_dir);
+use File::ShareDir qw(dist_file);
 use JSON::MaybeXS qw(decode_json encode_json);
 use Module::Runtime qw(require_module);
 use Parse::CPAN::Packages::Fast;

@@ -7,12 +7,15 @@ use strict;
 use warnings;
 
 # core
+use Carp;
 use List::Util qw(any);
 use experimental qw(declared_refs refaliasing signatures);
 use version 0.77;
 
 # non core
+use File::ShareDir qw(dist_dir);
 use JSON::MaybeXS;
+use Path::Tiny;
 
 # exports
 use namespace::clean;
@@ -35,6 +38,8 @@ our @EXPORT_OK = qw(
     union
 
     print_env
+
+    shared_dir
 );
 
 sub get_application_version {
@@ -257,6 +262,34 @@ sub difference_symmetric : prototype($$) { ## no critic (Subroutines::RequireArg
 sub print_env ($log) {
     $log->debug($_, '=', $ENV{$_}) foreach sort keys %ENV;
     return;
+}
+
+sub shared_dir ($child) {
+    my $result;
+
+    eval {
+        my $dir = path(dist_dir('Pakket'), $child);
+        if ($dir->exists) {
+            $result = $dir->realpath;
+        }
+
+        1;
+    } or do {
+        chomp (my $error = $@ || 'zombie error');
+
+        foreach my $dir (map {+(path($_, qw(auto share dist Pakket), $child), path($_, qw(.. share), $child))} @INC) {
+            $dir->exists
+                or next;
+
+            $result = $dir->realpath;
+            last;
+        }
+
+        $result
+            or carp($error);
+    };
+
+    return $result;
 }
 
 1;

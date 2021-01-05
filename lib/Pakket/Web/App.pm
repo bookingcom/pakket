@@ -8,22 +8,22 @@ use namespace::autoclean '-except' => 'to_app';
 
 # core
 use Carp;
+use List::Util qw(first);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
-use List::Util qw(first);
 use Log::Any qw($log);
 use Module::Runtime qw(use_module);
 use Path::Tiny;
 
 # local
 use Pakket::Web::Repo;
-use Pakket::Utils qw(get_application_version);
+use Pakket::Utils qw(get_application_version shared_dir);
 
 use constant {
     'PATHS' =>
         [$ENV{'PAKKET_WEB_CONFIG'} || (), '~/.config/pakket-web.json', '~/.pakket-web.json', '/etc/pakket-web.json'],
-    'DIRNAME' => dirname(__FILE__),
+    'DIRNAME' => shared_dir('views') || path(__FILE__)->sibling('views'),
 };
 
 set 'content_type' => 'application/json';
@@ -32,7 +32,7 @@ set 'content_type' => 'application/json';
 sub status_page {
     set 'content_type' => 'text/html';
     set 'auto_page'    => 1;
-    set 'views'        => path(DIRNAME(), 'views')->stringify;
+    set 'views'        => DIRNAME()->stringify;
 
     return template 'status';
 }
@@ -156,32 +156,32 @@ sub setup ($class, $config_file = undef) {
     get '/css/error.css' => sub {
         set 'content_type' => 'text/css';
         set 'auto_page'    => 1;
-        set 'views'        => path(DIRNAME(), 'views')->stringify;
+        set 'views'        => DIRNAME()->stringify;
         template 'css/error';
     };
 
     get '/css/styles.css' => sub {
         set 'content_type' => 'text/css';
         set 'auto_page'    => 1;
-        set 'views'        => path(DIRNAME(), 'views')->stringify;
+        set 'views'        => DIRNAME()->stringify;
         template 'css/styles';
     };
 
     get '/js/app.js' => sub {
         set 'content_type' => 'text/javascript';
         set 'auto_page'    => 1;
-        set 'views'        => path(DIRNAME(), 'views')->stringify;
+        set 'views'        => DIRNAME()->stringify;
         template 'js/app';
     };
 
     get '/favicon.ico' => sub {
         set 'content_type' => 'image/x-icon';
-        return send_file(path(DIRNAME(), 'views', 'favicon.ico')->stringify, system_path => 1);
+        return send_file(DIRNAME()->child('favicon.ico')->stringify, system_path => 1);
     };
 
     get '/png/:name' => sub {
         set 'content_type' => 'image/png';
-        return send_file(path(DIRNAME(), 'views', 'png', params->{name})->stringify, system_path => 1);
+        return send_file(DIRNAME()->child('png', params->{name})->stringify, system_path => 1);
     };
 
     return;
