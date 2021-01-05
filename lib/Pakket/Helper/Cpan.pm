@@ -14,7 +14,6 @@ use experimental qw(declared_refs refaliasing signatures);
 # non core
 use CPAN::DistnameInfo;
 use CPAN::Meta;
-use File::ShareDir qw(dist_file);
 use JSON::MaybeXS qw(decode_json encode_json);
 use Module::Runtime qw(require_module);
 use Parse::CPAN::Packages::Fast;
@@ -24,6 +23,7 @@ use Ref::Util qw(is_arrayref is_hashref);
 # local
 use Pakket::Helper::Versioner;
 use Pakket::Helper::Download;
+use Pakket::Utils qw(shared_dir);
 
 with qw(
     Pakket::Role::CanFilterRequirements
@@ -388,25 +388,7 @@ sub _get_cpan_02packages_file ($self) {
 }
 
 sub _build_cpan_02packages_file ($self) {
-    my $file;
-    eval {
-        $file = dist_file('Pakket', '02packages.details.txt');
-        1;
-    } or do {
-        foreach my $dir (@INC) {
-            my $path1 = path($dir)->child(qw(auto share dist Pakket 02packages.details.txt));
-            my $path2 = path($dir)->child(qw(.. share 02packages.details.txt));
-            $self->log->debug('checking 02packages in:', $path1->stringify);
-            $path1->exists
-                and $file = $path1->stringify
-                and last;
-            $self->log->debug('checking 02packages in:', $path2->stringify);
-            $path2->exists
-                and $file = $path2->stringify
-                and last;
-        }
-    };
-    return $file;
+    return shared_dir('02packages.details.txt')->stringify;
 }
 
 sub _build_latest_distributions ($self) {
