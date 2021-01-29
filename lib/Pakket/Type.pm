@@ -98,7 +98,8 @@ sub _coerce_backend_from_arrayref {
 }
 
 sub _coerce_backend_from_hashref ($hash_ref) {
-    my ($type) = delete $hash_ref->{'type'};
+    my %hash_copy = $hash_ref->%*;
+    my ($type) = delete $hash_copy{'type'};
 
     $type = ucfirst lc $type;
     my $class = "Pakket::Repository::Backend::$type";
@@ -109,7 +110,7 @@ sub _coerce_backend_from_hashref ($hash_ref) {
         croak($log->critical("Failed to load backend '$class': $@"));
     };
 
-    return $class->new($hash_ref);
+    return $class->new(\%hash_copy);
 }
 
 # => PakketHelperVersioner --------------------------------------------------------------------------------------- {{{1
