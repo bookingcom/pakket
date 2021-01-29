@@ -24,6 +24,8 @@ use Pakket::Constants qw(
     PAKKET_VALID_PREREQ_TYPES
 );
 
+use experimental qw(declared_refs refaliasing signatures);
+
 # => enums ------------------------------------------------------------------------------------------------------- {{{1
 
 enum 'PakketPhase'      => [keys PAKKET_VALID_PHASES()->%*];
@@ -43,15 +45,18 @@ coerce 'PakketDownloadStrategy', from 'Object', via {return $_};
 
 subtype 'PakketRepositoryBackend', as 'Object', where {
     $_->$_does('Pakket::Role::Repository::Backend')
+        || is_hashref($_)
         || is_arrayref($_)
         || (!is_ref($_) && length)
 }, message {
     'Must be a Pakket::Repository::Backend object or a URI string or arrayref'
 };
 
-coerce 'PakketRepositoryBackend', from 'Str', via {return _coerce_backend_from_str($_);};
+coerce 'PakketRepositoryBackend', from 'Str', via {return _coerce_backend_from_str($_)};
 
-coerce 'PakketRepositoryBackend', from 'ArrayRef', via {return _coerce_backend_from_arrayref($_);};
+coerce 'PakketRepositoryBackend', from 'ArrayRef', via {return _coerce_backend_from_arrayref($_)};
+
+coerce 'PakketRepositoryBackend', from 'HashRef', via {return _coerce_backend_from_hashref($_)};
 
 sub _coerce_backend_from_str {
     my ($uri) = @_;
@@ -90,6 +95,21 @@ sub _coerce_backend_from_arrayref {
     };
 
     return $class->new($data);
+}
+
+sub _coerce_backend_from_hashref ($hash_ref) {
+    my ($type) = delete $hash_ref->{'type'};
+
+    $type = ucfirst lc $type;
+    my $class = "Pakket::Repository::Backend::$type";
+    eval {
+        require_module($class);
+        1;
+    } or do {
+        croak($log->critical("Failed to load backend '$class': $@"));
+    };
+
+    return $class->new($hash_ref);
 }
 
 # => PakketHelperVersioner --------------------------------------------------------------------------------------- {{{1

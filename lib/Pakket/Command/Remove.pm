@@ -37,8 +37,8 @@ sub opt_spec ($self, @args) {
     return (                                                                   # no tidy
         ['repo|r=s', 'repo to get object from'],
         ['parcel|p', 'alias of --repo=parcel'],
-        ['source|u', 'alias of --repo=source'],
-        ['spec|s',   'alias of --repo=spec'],
+        ['source|s', 'alias of --repo=source'],
+        ['spec|j',   'alias of --repo=spec'],
         undef,
         $self->SUPER::opt_spec(@args),
     );

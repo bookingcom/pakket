@@ -41,6 +41,7 @@ sub opt_spec ($self, @args) {
         ['spec|j',       'alias of --repo=spec'],
         ['file|f=s',     'path to the file', {'required' => 1}],
         ['overwrite|w+', 'overwrite artifacts even if they are already exist'],
+        ['ignore|i',     'ignore existing artifacts'],
         undef,
         $self->SUPER::opt_spec(@args),
     );
@@ -51,8 +52,13 @@ sub validate_args ($self, $opt, $args) {
 
     $log->debug('pakket', join (' ', @ARGV));
 
-    $args->@* == 1
-        or $self->usage_error('Invalid args: ' . join (', ', $args->@*));
+    if (-d $opt->{'file'}) {
+        $args->@* == 0
+            or $self->usage_error('Invalid args: ' . join (', ', $args->@*));
+    } else {
+        $args->@* == 1
+            or $self->usage_error('Invalid args: ' . join (', ', $args->@*));
+    }
 
     $self->{'repo'}
         ||= $opt->{'repo'}
@@ -72,9 +78,9 @@ sub execute ($self, $opt, $args) {
 
     my $controller = use_module('Pakket::Controller::Put')->new(
         $self->%{qw(config repo)},
-        $opt->%{qw(file)},
+        'path'    => $opt->{'file'},
         'queries' => \@queries,
-        map {defined $opt->{$_} ? +($_ => $opt->{$_}) : +()} qw(overwrite),
+        map {defined $opt->{$_} ? +($_ => $opt->{$_}) : +()} qw(overwrite ignore),
     );
 
     return $controller->execute();
