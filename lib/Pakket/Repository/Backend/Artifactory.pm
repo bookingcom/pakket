@@ -59,6 +59,17 @@ has '_client' => (
     'builder' => '_build_client',
 );
 
+has '_index_storage' => (
+    'is'      => 'ro',
+    'isa'     => 'HashRef',
+    'default' => sub {+{}},
+);
+
+has '_index_timestamp' => (
+    'is'      => 'ro',
+    'default' => 0,
+);
+
 with qw(
     Pakket::Role::Repository::Backend
 );
@@ -99,9 +110,9 @@ sub has_object ($self, $id) {
 }
 
 sub remove ($self, $id) {
-    state $base_url = join ('/', $self->url, $self->path);
-    my $uri = join ('.', $id,       $self->file_extension);
-    my $url = join ('/', $base_url, $uri);
+    my $base_url = join ('/', $self->url, $self->path);
+    my $uri      = join ('.', $id,        $self->file_extension);
+    my $url      = join ('/', $base_url,  $uri);
 
     my $response = $self->_client->delete($url);
     $response->{'success'}
@@ -114,9 +125,9 @@ sub remove ($self, $id) {
 }
 
 sub retrieve_content ($self, $id) {
-    state $base_url = join ('/', $self->url, $self->path);
-    my $uri = join ('.', $id,       $self->file_extension);
-    my $url = join ('/', $base_url, $uri);
+    my $base_url = join ('/', $self->url, $self->path);
+    my $uri      = join ('.', $id,        $self->file_extension);
+    my $url      = join ('/', $base_url,  $uri);
 
     my $response = $self->_client->get($url);
     $response->{'success'}
@@ -133,9 +144,9 @@ sub retrieve_location ($self, $id) {
 }
 
 sub store_content ($self, $id, $content) {
-    state $base_url = join ('/', $self->url, $self->path);
-    my $uri = join ('.', $id,       $self->file_extension);
-    my $url = join ('/', $base_url, $uri);
+    my $base_url = join ('/', $self->url, $self->path);
+    my $uri      = join ('.', $id,        $self->file_extension);
+    my $url      = join ('/', $base_url,  $uri);
 
     my $sha1     = sha1_hex($content);
     my $response = $self->_client->put(
@@ -162,18 +173,16 @@ sub store_location ($self, $id, $file_to_store) {
 }
 
 sub _index ($self, $force_update = 0) {
-    state $base_url    = join ('/', $self->url, 'api/storage', $self->path);
-    state $update_time = 0;
-    state $index_cache = {};
+    my $base_url = join ('/', $self->url, 'api/storage', $self->path);
 
-    if (time - INDEX_UPDATE_INTERVAL_SEC < $update_time && !$force_update) {
-        return $index_cache;
+    if (time - INDEX_UPDATE_INTERVAL_SEC < $self->_index_timestamp && !$force_update) {
+        return $self->_index_storage;
     }
 
-    my \%index = $index_cache;
+    my \%index = $self->_index_storage;
     %index = ();
     if ($self->api_key) {
-        state $regex = qr{\A [/] (.*) [.] $self->{file_extension}\z}x;
+        my $regex    = qr{\A [/] (.*) [.] $self->{file_extension}\z}x;
         my $response = $self->_client->get(join ('?', $base_url, 'list&deep=1'));
 
         # if we have api_key use more powerful api, this will give us sha1 of the items for free
@@ -186,7 +195,7 @@ sub _index ($self, $force_update = 0) {
             $index{$name} = $it;
         }
     } else {
-        state $regex = qr{\A (.*) [.] $self->{file_extension}\z}x;
+        my $regex = qr{\A (.*) [.] $self->{file_extension}\z}x;
         foreach my $category (DEFAULT_CATEGORIES()->@*) {
             my $response = $self->_client->get(join ('/', $base_url, $category));
 
@@ -206,7 +215,7 @@ sub _index ($self, $force_update = 0) {
         }
     }
 
-    $update_time = time;
+    $self->{'_index_timestamp'} = time;
     return \%index;
 }
 

@@ -415,9 +415,7 @@ The return value is a boolean of the success or fail of this operation.
                 'name'     => 'Path::Tiny',
                 'version'  => 0.100,
                 'release'  => 1,
-            },
-
-            'Prereqs' => {...},
+            }
         },
     );
 

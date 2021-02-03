@@ -163,34 +163,48 @@ An example of a spec in Pakket in JSON:
     {
        "Package" : {
           "category" : "perl",
-          "name" : "HTML-Tidy",
-          "version" : "1.56"
+          "name" : "AnyEvent-YACurl",
+          "release" : "2",
+          "source" : "https://cpan.metacpan.org/authors/id/T/TV/TVDW/AnyEvent-YACurl-0.20.tar.gz",
+          "version" : "0.20"
        },
-       "Prereqs" : {
-          "native" : {
-             "configure" : {
-                "tidyp" : {
-                   "version" : "1.04"
-                }
-             }
+       "Pakket" : {
+          "build" : {
+             "make-options" : [
+                "OTHERLDFLAGS=-Wl,--verbose -L%PACKAGE_PKG_DIR%/lib -lcurl -lcares -lnghttp2 -lbrotlidec -lzstd -lz -lkrb5"
+             ],
+             "pre" : [
+                "yum -y install krb5-devel",
+                "rm -rf /lib/include/curl",
+                "rm -f /usr/lib64/pkgconfig/libcurl.pc",
+                "/bin/bash -c 'rm -f /usr/lib64/libcurl.*'",
+                "/bin/bash -c 'rm -f /usr/lib64/libz.*'"
+             ]
           },
-          "perl" : {
+          "prereqs" : {
+             "build" : {
+                "requires" : {
+                   "perl/ExtUtils-MakeMaker" : "0"
+                }
+             },
              "configure" : {
-                "ExtUtils-MakeMaker" : {
-                   "version" : "7.24"
+                "requires" : {
+                   "perl/ExtUtils-MakeMaker" : "0"
                 }
              },
              "runtime" : {
-                "Test-Simple" : {
-                   "version" : "1.302031"
+                "requires" : {
+                   "native/curl" : "==7.74.0",
+                   "perl/AnyEvent" : "7.0"
                 }
              }
-          }
+          },
+          "version" : "3.060"
        }
     }
 
 The package details are in the C<Package> section. The prereqs are
-in the C<Prereqs> section, under the C<native> or C<perl> categories,
+in the C<prereqs> section, under the C<native> or C<perl> categories,
 under the C<configure> or C<runtime> phase.
 
 Pakket I<might> store these configurations in JSON, but it could also

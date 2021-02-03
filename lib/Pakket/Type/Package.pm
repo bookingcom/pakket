@@ -68,8 +68,7 @@ sub new_from_specdata ($class, $spec, %additional) {
 sub spec ($self) {
     my %result = (
         'Package' => {$self->%{qw(category name version release source)}},
-        $self->pakket_meta ? +('Pakket'  => $self->pakket_meta->as_hash())    : (),
-        $self->pakket_meta ? +('Prereqs' => $self->pakket_meta->prereqs_v2()) : (),
+        $self->pakket_meta ? +('Pakket' => $self->pakket_meta->as_hash()) : (),
     );
     return clean_hash(\%result);
 }

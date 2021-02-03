@@ -48,22 +48,6 @@ sub as_hash ($self) {
     return clean_hash($result);
 }
 
-sub prereqs_v2 ($self) {
-    my $prereqs_v3 = $self->prereqs // {};
-    my %prereqs_v2;
-    foreach my $phase (keys $prereqs_v3->%*) {
-        next if none {$_ eq $phase} qw(build configure runtime);
-        foreach my $type (keys $prereqs_v3->{$phase}->%*) {
-            next if none {$_ eq $type} qw(requires);
-            foreach my $short_name (keys $prereqs_v3->{$phase}{$type}->%*) {
-                my ($category, $name) = split (m{[/]}xms, $short_name);
-                $prereqs_v2{$category}{$phase}{$name}{'version'} = $prereqs_v3->{$phase}{$type}{$short_name};
-            }
-        }
-    }
-    return clean_hash(\%prereqs_v2);
-}
-
 sub new_from_prereqs ($class, $input, %additional) {
     return $class->new(
         'prereqs' => $input,

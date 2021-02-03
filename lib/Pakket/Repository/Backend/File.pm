@@ -351,9 +351,7 @@ This will remove the file from the directory and the index.
                 'name'     => 'Path::Tiny',
                 'version'  => 0.100,
                 'release'  => 1,
-            },
-
-            'Prereqs' => {...},
+            }
         },
     );
 
