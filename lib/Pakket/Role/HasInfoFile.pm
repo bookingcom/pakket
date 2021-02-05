@@ -105,7 +105,7 @@ sub load_info_file ($self, $dir) {
     my $result
         = $path->exists
         ? decode_json($path->slurp_utf8)
-        : {'descriptor' => {'version' => 2}};
+        : {'descriptor' => {'version' => 3}};
 
     return _normalize_install_info($result);
 }
@@ -153,7 +153,7 @@ sub _build_all_installed_cache ($self) {
 }
 
 sub _validate_install_info ($install_info) {
-    $install_info->{'descriptor'}{'version'} == 2
+    $install_info->{'descriptor'}{'version'} == 3
         or croak 'Incorrect info file version';
 
     return;
@@ -161,7 +161,7 @@ sub _validate_install_info ($install_info) {
 
 sub _normalize_install_info ($install_info) {
     if (!defined $install_info->{'descriptor'}{'version'}) {
-        $install_info->{'descriptor'}{'version'} = 2;
+        $install_info->{'descriptor'}{'version'} = 3;
         delete $install_info->{'installed_files'};                             # (compatibility) not creating these objects any more, just cleaning old
         delete $install_info->{'rollback_tag'};
         if ($install_info->{'installed_packages'}) {
@@ -169,13 +169,26 @@ sub _normalize_install_info ($install_info) {
             foreach my $category (keys %packages) {
                 foreach my $name (keys $packages{$category}->%*) {
                     my \%p         = $packages{$category}{$name};
-                    my $files      = delete $p{'files'} // [];
+                    my @files      = map {s{^files/}{}r} @{delete $p{'files'} // []};
                     my $short_name = "$category/$name";
                     $install_info->{'packages'}{$short_name} = \%p;
-                    push ($install_info->{'files'}{$_}->@*, $short_name) foreach $files->@*;
+                    push ($install_info->{'files'}{$_}->@*, $short_name) foreach @files;
                 }
             }
         }
+    } elsif ($install_info->{'descriptor'}{'version'} == 2) {
+        $install_info->{'descriptor'}{'version'} = 3;
+
+        my %files = %{delete $install_info->{'files'} // {}};
+        foreach my $file (keys %files) {
+            if ($file =~ m{^files/}) {
+                my $owners      = delete $files{$file};
+                my $proper_file = $file =~ s{^files/}{}r;
+                push ($files{$proper_file}->@*, $owners->@*);
+            }
+        }
+
+        $install_info->{'files'} = \%files;
     }
 
     _validate_install_info($install_info);
