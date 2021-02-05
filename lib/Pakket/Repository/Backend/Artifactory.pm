@@ -148,7 +148,18 @@ sub store_content ($self, $id, $content) {
     my $uri      = join ('.', $id,        $self->file_extension);
     my $url      = join ('/', $base_url,  $uri);
 
-    my $sha1     = sha1_hex($content);
+    my $sha1 = sha1_hex($content);
+    my \%index = $self->_index;
+
+    if ($index{$id}) {
+        if ($index{$id}{'sha1'} eq $sha1) {
+            $log->noticef('Skipping as sha1 matches the upstream data for: %s', $id);
+            return;
+        } else {
+            $log->warnf('Owerwriting: %s', $id);
+        }
+    }
+
     my $response = $self->_client->put(
         $url,
         {
@@ -162,7 +173,6 @@ sub store_content ($self, $id, $content) {
     $response->{'success'}
         or croak($log->criticalf('Could not store content of %s: [%d] %s', $url, $response->@{qw(status reason)}));
 
-    my \%index = $self->_index;
     $index{$id} = {'sha1' => $sha1};
 
     return;
@@ -210,12 +220,13 @@ sub _index ($self, $force_update = 0) {
 
             foreach my $it (decode_json($response->{'content'})->{'children'}->@*) {
                 my ($name) = $it->{'uri'} =~ $regex;
-                undef $index{$category . $name};
+                $index{$category . $name} = {};
             }
         }
     }
 
     $self->{'_index_timestamp'} = time;
+    $log->debugf("Index of '%s' is initialized, found: %d items", $self->path, scalar %index);
     return \%index;
 }
 

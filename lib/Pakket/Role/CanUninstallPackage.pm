@@ -19,7 +19,6 @@ sub uninstall_package ($self, $info_file, $package) {
 
     my %parents;
     for my $file (sort $info{'files'}->@*) {
-        $file =~ s{^files/}{}x;                                                # (compatibility) remove 'files/' part from the begin of the path
         my $path = $self->work_dir->child($file);
 
         $self->log->trace('deleting file:', $path);
