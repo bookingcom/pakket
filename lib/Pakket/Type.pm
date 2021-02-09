@@ -73,12 +73,11 @@ sub _coerce_backend_from_str {
     return $class->new_from_uri($uri);
 }
 
-sub _coerce_backend_from_arrayref {
-    my ($arrayref) = @_;
+sub _coerce_backend_from_arrayref ($arrayref) {
     my ($scheme, $data) = @{$arrayref};
 
     $scheme = ucfirst lc $scheme;
-    $scheme = 'Http' if ($scheme eq 'Https');
+    $scheme = 'Http' if $scheme eq 'Https';                                    # backend is called Http for both
     $data //= {};
 
     is_hashref($data) or do {                                                  # For backward compatibility with old config.
@@ -89,6 +88,8 @@ sub _coerce_backend_from_arrayref {
     is_hashref($data)
         or croak($log->critical('Second arg to backend is not hash'));
 
+    _show_repo_banner(delete $data->{'banner'});
+
     my $class = "Pakket::Repository::Backend::$scheme";
     eval {require_module($class); 1;} or do {
         croak($log->critical("Failed to load backend '$class': $@"));
@@ -98,9 +99,10 @@ sub _coerce_backend_from_arrayref {
 }
 
 sub _coerce_backend_from_hashref ($hash_ref) {
-    my %hash_copy = $hash_ref->%*;
-    my ($type) = delete $hash_copy{'type'};
+    _show_repo_banner(delete $hash_ref->{'banner'});
 
+    my %hash_copy = $hash_ref->%*;
+    my $type      = delete $hash_copy{'type'};
     $type = ucfirst lc $type;
     my $class = "Pakket::Repository::Backend::$type";
     eval {
@@ -111,6 +113,15 @@ sub _coerce_backend_from_hashref ($hash_ref) {
     };
 
     return $class->new(\%hash_copy);
+}
+
+sub _show_repo_banner ($banner) {
+    $banner
+        or return;
+
+    $log->error($_) foreach split (m/\n/, $banner);
+
+    return;
 }
 
 # => PakketHelperVersioner --------------------------------------------------------------------------------------- {{{1
