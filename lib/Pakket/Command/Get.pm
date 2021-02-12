@@ -35,11 +35,12 @@ sub description {
 
 sub opt_spec ($self, @args) {
     return (                                                                   # no tidy
-        ['repo|r=s', 'repo to get object from (spec is by default)'],
-        ['parcel|p', 'alias of --repo=parcel'],
-        ['source|s', 'alias of --repo=source'],
-        ['spec|j',   'alias of --repo=spec'],
-        ['file|f=s', 'path to save file'],
+        ['repo|r=s',   'repo to get object from (spec is by default)'],
+        ['parcel|p',   'alias of --repo=parcel'],
+        ['source|s',   'alias of --repo=source'],
+        ['spec|j',     'alias of --repo=spec'],
+        ['file|f=s',   'path to save file'],
+        ['output|o=s', 'output format (for non binary)'],
         undef,
         $self->SUPER::opt_spec(@args),
     );
@@ -73,9 +74,10 @@ sub execute ($self, $opt, $args) {
     $log->trace('requested packages:', scalar @queries);
 
     my $controller = use_module('Pakket::Controller::Get')->new(
-        'config'  => $self->{'config'},
-        'repo'    => $self->{'repo'},
-        'file'    => $opt->{'file'},
+        'config' => $self->{'config'},
+        'repo'   => $self->{'repo'},
+        'file'   => $opt->{'file'},
+        ('output' => $opt->{'output'}) x !!$opt->{'output'},
         'queries' => \@queries,
     );
 

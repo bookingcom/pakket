@@ -20,6 +20,12 @@ use Pakket::Utils qw(encode_json_pretty);
 
 extends qw(Pakket::Repository);
 
+has '_cache' => (
+    'is'      => 'ro',
+    'isa'     => 'HashRef',
+    'default' => sub {+{}},
+);
+
 sub BUILDARGS ($class, %args) {
     $args{'type'} //= 'spec';
 
@@ -31,6 +37,10 @@ sub retrieve_package ($self, $package) {
 }
 
 sub retrieve_package_by_id ($self, $id) {
+    if (exists $self->_cache->{$id}) {
+        return $self->_cache->{$id};
+    }
+
     my $spec = eval {                                                          # no tidy
         $self->retrieve_content($id);
     } or do {
@@ -49,7 +59,7 @@ sub retrieve_package_by_id ($self, $id) {
         croak($self->log->critical('Cannot read spec properly:', $error));
     };
 
-    return $config;
+    return ($self->_cache->{$id} = $config);
 }
 
 sub store_package ($self, $package, $spec = undef) {

@@ -14,45 +14,46 @@ use experimental qw(declared_refs refaliasing signatures);
 
 # non core
 use Log::Any qw($log);
-use Net::Amazon::S3;
-use Net::Amazon::S3::Client;
-use Net::Amazon::S3::Client::Object;
+use Module::Runtime qw(require_module);
 use Ref::Util qw(is_arrayref is_hashref);
 
 # local
+use Pakket::Repository;
 use Pakket::Type::PackageQuery;
 use Pakket::Utils::DependencyBuilder;
 
 ## no critic [Modules::RequireExplicitInclusion]
 
 sub expose ($class, $config, $spec_repo, @repos) {
-    my $s3 = Net::Amazon::S3::Client->new(
-        's3' => Net::Amazon::S3->new(
-            'host'                  => $config->{'host'},
-            'aws_access_key_id'     => $config->{'aws_access_key_id'},
-            'aws_secret_access_key' => $config->{'aws_secret_access_key'},
-            'retry'                 => 1,
-        ),
-    );
-    my $bucket = $s3->bucket('name' => $config->{'bucket'});
+    my \%repo_config = $config->{'repository'};
+    my $repo_type    = ucfirst lc delete $repo_config{'type'};
+    my $repo_class   = "Pakket::Repository::Backend::$repo_type";
+    eval {
+        require_module($repo_class);
+        1;
+    } or do {
+        croak($log->critical("Failed to load repo backend '$repo_class': $@"));
+    };
+    my $snapshots_repo = $repo_class->new(\%repo_config);
 
     my $dependency_builder = Pakket::Utils::DependencyBuilder->new(
         'spec_repo' => $spec_repo,
     );
 
-    get '/snapshot' => with_types [['query', 'id', 'Str', 'MissingID']] => sub {
-        my $id     = query_parameters->get('id');
-        my $object = $bucket->object(
-            'key'          => $id,
-            'content_type' => 'application/json',
-        );
+    get '/snapshots' => sub {
+        return encode_json($snapshots_repo->all_object_ids());
+    };
 
-        $object->exists
+    get '/snapshot' => with_types [['query', 'id', 'Str', 'MissingID']] => sub {
+        my $id = query_parameters->get('id');
+        my \@objects = $snapshots_repo->all_object_ids_by_name('', $id);
+
+        @objects
             or send_error("Not found: $id", 404);
 
         return encode_json({
                 'id'    => $id,
-                'items' => $object->get_decoded,
+                'items' => decode_json($snapshots_repo->retrieve_content($id)),
             },
         );
     };
@@ -72,12 +73,10 @@ sub expose ($class, $config, $spec_repo, @repos) {
                 my $checksum = sha256_hex($prefix, @ids);
 
                 my $result = [];
-                my $object = $bucket->object(
-                    'key'          => $checksum,
-                    'content_type' => 'application/json',
-                );
-                if ($object->exists) {
-                    $result = decode_json($object->get);
+                my \@objects = $snapshots_repo->all_object_ids_by_name('', $checksum);
+
+                if (@objects == 1) {
+                    $result = decode_json($snapshots_repo->retrieve_content($checksum));
                 } else {
                     eval {
                         my @queries = map {
@@ -91,7 +90,7 @@ sub expose ($class, $config, $spec_repo, @repos) {
                             'types'       => ['requires'],
                         );
                         $result = [map $_->id, $dependency_builder->validate_requirements($requirements)->@*];
-                        $object->put(encode_json($result));
+                        $snapshots_repo->store_content($checksum, encode_json($result));
                         1;
                     } or do {
                         chomp (my $error = $@ || 'zombie error');

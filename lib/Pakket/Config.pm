@@ -36,6 +36,18 @@ has 'files' => (
     'builder' => '_build_files',
 );
 
+has 'env_name' => (
+    'is'      => 'ro',
+    'isa'     => 'Str',
+    'default' => 'PAKKET_CONFIG_FILE',
+);
+
+has 'required' => (
+    'is'      => 'ro',
+    'isa'     => 'Bool',
+    'default' => 0,
+);
+
 sub read_config ($self) {
     $self->files->@*
         or return {};
@@ -59,8 +71,8 @@ sub read_config ($self) {
 }
 
 sub _build_files ($self) {
-    if ($ENV{'PAKKET_CONFIG_FILE'}) {
-        return [$ENV{'PAKKET_CONFIG_FILE'}];
+    if ($ENV{$self->env_name}) {
+        return [$ENV{$self->env_name}];
     }
 
     my %files;
@@ -84,6 +96,11 @@ sub _build_files ($self) {
     }
 
     # Could not find any files
+    if ($self->required) {
+        my \@paths = $self->{'paths'};
+        croak($log->fatal("Please specify a config file: $self->{'env_name'}, @{[@paths]} {json, yaml}"));
+    }
+
     return [];
 }
 

@@ -19,6 +19,7 @@ use Path::Tiny;
 # local
 use Pakket::Web::Repo;
 use Pakket::Utils qw(get_application_version shared_dir);
+use Pakket::Config;
 
 use constant {
     'PATHS' =>
@@ -41,13 +42,11 @@ sub status_page {
 sub setup ($class, $config_file = undef) {
     my $cpan = use_module('Pakket::Helper::Cpan')->new;
 
-    $config_file //= first {path($_)->exists} PATHS()->@*
-        or croak(
-        $log->fatal(
-            'Please specify a config file: PAKKET_WEB_CONFIG, ~/.config/pakket-web.json, or /etc/pakket-web.json'),
-        );
-
-    my $config = decode_json(path($config_file)->slurp_utf8);
+    my $config = Pakket::Config->new(
+        'required' => 1,
+        'env_name' => 'PAKKET_WEB_CONFIG',
+        'paths'    => ['~/.config/pakket-web', '/etc/pakket-web'],
+    )->read_config;
 
     my $spec_repo;
     my @repos;
@@ -66,8 +65,9 @@ sub setup ($class, $config_file = undef) {
         }
     }
 
-    $spec_repo && defined $config->{'snapshot'}
-        and use_module('Pakket::Web::Snapshot')->expose($config->{'snapshot'}, $spec_repo, @repos);
+    if ($spec_repo && defined $config->{'snapshot'}) {
+        use_module('Pakket::Web::Snapshot')->expose($config->{'snapshot'}, $spec_repo, @repos);
+    }
 
     # status page is accessible via / and /status
     get '/'       => \&status_page;

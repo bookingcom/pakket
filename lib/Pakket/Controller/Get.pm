@@ -12,13 +12,21 @@ use Fatal qw(binmode);
 use experimental qw(declared_refs refaliasing signatures switch);
 
 # non core
+use JSON::MaybeXS qw(decode_json);
 use Module::Runtime qw(use_module);
+use YAML;
 
 extends qw(Pakket::Controller::BaseRemoteOperation);
 
 has 'file' => (
     'is'  => 'ro',
     'isa' => 'Maybe[Str]',
+);
+
+has 'output' => (
+    'is'      => 'ro',
+    'isa'     => 'Str',
+    'default' => 'yaml',
 );
 
 sub execute ($self) {
@@ -47,6 +55,12 @@ sub execute ($self) {
                 $self->{'file'} = join ('.', $name, $repo->backend->file_extension);
             }
         }
+    }
+
+    if ($self->output eq 'json' && $repo->backend->file_extension =~ m/json$/) {
+        ## do nothing
+    } elsif ($self->output eq 'yaml' && $repo->backend->file_extension =~ m/json$/) {
+        $file->spew_raw(YAML::Dump(decode_json($file->slurp_raw)));
     }
 
     if ($self->file eq '-') {

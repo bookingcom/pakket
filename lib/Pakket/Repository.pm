@@ -40,6 +40,7 @@ has 'backend' => (
             all_object_ids_by_name has_object remove
             retrieve_content retrieve_location
             store_content store_location
+            file_extension
             ),
     ],
 );
@@ -197,6 +198,7 @@ sub select_available_packages ($self, $requirements, %params) {
     $self->log->debugf('checking which packages are available in %s repo...', $self->type);
     my (\@packages, \@not_found) = $self->filter_packages_in_cache($requirements, $self->all_objects_cache);
     if (@not_found) {
+        my $msg = sprintf ('Unable to find amount of packages in repo: %d (', scalar @not_found);
         foreach my $package (@not_found) {
             my @available = sort $self->available_variants($self->all_objects_cache->{$package->short_name});
             $params{'silent'}
@@ -204,9 +206,10 @@ sub select_available_packages ($self, $requirements, %params) {
                 'Could not find package in',
                 $self->type, 'repo:', $package->id, ('( available:', join (', ', @available), ')') x !!@available,
                 );
+            $msg .= ' ' . $package->id;
         }
+        $msg .= ' )';
 
-        my $msg = sprintf ('Unable to find amount of packages in repo: %d', scalar @not_found);
         if ($params{'continue'}) {
             $params{'silent'}
                 or $self->log->warn($msg);

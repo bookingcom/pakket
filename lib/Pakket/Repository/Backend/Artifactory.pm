@@ -79,7 +79,8 @@ sub new_from_uri ($class, $uri) {
 }
 
 sub BUILD ($self, @) {
-    $self->{'file_extension'} =~ s{^[.]+}{}x;
+    $self->{'file_extension'} eq ''                                            # add one dot if necessary
+        or $self->{'file_extension'} =~ s{^(?:[.]*)(.*)}{.$1}x;
 
     return;
 }
@@ -95,7 +96,8 @@ sub all_object_ids ($self) {
 sub all_object_ids_by_name ($self, $category, $name) {
     my \%index = $self->_index;
 
-    my @object_ids = grep {my ($c, $n) = parse_package_id($_); $c eq $category and $n eq $name} keys %index;
+    my @object_ids
+        = grep {my ($c, $n) = parse_package_id($_); (!$category || $c eq $category) and $n eq $name} keys %index;
 
     return \@object_ids;
 }
@@ -111,8 +113,8 @@ sub has_object ($self, $id) {
 
 sub remove ($self, $id) {
     my $base_url = join ('/', $self->url, $self->path);
-    my $uri      = join ('.', $id,        $self->file_extension);
-    my $url      = join ('/', $base_url,  $uri);
+    my $uri      = $id . $self->file_extension;
+    my $url      = join ('/', $base_url, $uri);
 
     my $response = $self->_client->delete($url);
     $response->{'success'}
@@ -126,8 +128,8 @@ sub remove ($self, $id) {
 
 sub retrieve_content ($self, $id) {
     my $base_url = join ('/', $self->url, $self->path);
-    my $uri      = join ('.', $id,        $self->file_extension);
-    my $url      = join ('/', $base_url,  $uri);
+    my $uri      = $id . $self->file_extension;
+    my $url      = join ('/', $base_url, $uri);
 
     my $response = $self->_client->get($url);
     $response->{'success'}
@@ -145,8 +147,8 @@ sub retrieve_location ($self, $id) {
 
 sub store_content ($self, $id, $content) {
     my $base_url = join ('/', $self->url, $self->path);
-    my $uri      = join ('.', $id,        $self->file_extension);
-    my $url      = join ('/', $base_url,  $uri);
+    my $uri      = $id . $self->file_extension;
+    my $url      = join ('/', $base_url, $uri);
 
     my $sha1 = sha1_hex($content);
     my \%index = $self->_index;
@@ -192,7 +194,7 @@ sub _index ($self, $force_update = 0) {
     my \%index = $self->_index_storage;
     %index = ();
     if ($self->api_key) {
-        my $regex    = qr{\A [/] (.*) [.] $self->{file_extension}\z}x;
+        my $regex    = qr{\A [/] (.*) $self->{file_extension}\z}x;
         my $response = $self->_client->get(join ('?', $base_url, 'list&deep=1'));
 
         # if we have api_key use more powerful api, this will give us sha1 of the items for free
@@ -205,7 +207,7 @@ sub _index ($self, $force_update = 0) {
             $index{$name} = $it;
         }
     } else {
-        my $regex = qr{\A (.*) [.] $self->{file_extension}\z}x;
+        my $regex = qr{\A (.*) $self->{file_extension}\z}x;
         foreach my $category (DEFAULT_CATEGORIES()->@*) {
             my $response = $self->_client->get(join ('/', $base_url, $category));
 
