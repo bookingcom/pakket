@@ -119,7 +119,7 @@ sub _show_repo_banner ($banner) {
     $banner
         or return;
 
-    $log->error($_) foreach split (m/\n/, $banner);
+    $log->warn($_) foreach split (m/\n/, $banner);
 
     return;
 }
