@@ -3,6 +3,7 @@ package Pakket::Controller::Install;
 # ABSTRACT: Install pakket packages into an installation directory
 
 use v5.22;
+use autodie;
 use Moose;
 use MooseX::StrictConstructor;
 use namespace::autoclean;
@@ -14,7 +15,7 @@ use Errno qw(:POSIX);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
-use File::Copy::Recursive qw(dircopy dirmove);
+use File::Copy::Recursive qw(dirmove);
 use JSON::MaybeXS qw(decode_json);
 use Time::HiRes qw(time usleep);
 
@@ -383,17 +384,46 @@ sub _install_packages ($self, $saved_requirements) {
 }
 
 sub _move_parcel_dir ($self, $parcel_dir, $work_dir) {
-    foreach my $item ($parcel_dir->children) {
-        my $basename = $item->basename;
+    $parcel_dir->visit(                                                        # File::Copy::Recursive::dircopy is a garbage. Writing own implementation
+        sub ($path, $) {
+            my $basename = $path->basename;
 
-        $basename eq PARCEL_METADATA_FILE()                                    # (compatibility) metadata file should be placed in a smarter way
-            and next;
+            $basename eq PARCEL_METADATA_FILE()                                # (compatibility) metadata file should be placed in a smarter way
+                and return;
 
-        my $target_dir = $work_dir->child($basename);
-        local $File::Copy::Recursive::RMTrgFil = 1; ## no critic [Perl::Critic::Policy::Variables::ProhibitPackageVars]
-        dircopy($item, $target_dir)
-            or croak($self->log->criticalf("Can't copy $item to $target_dir ($!)"));
-    }
+            my $relative    = $path->relative($parcel_dir);
+            my $destination = $work_dir->child($relative);
+
+            $self->log->debugf('Copying: %s => %s', $relative, $destination);
+            if ($destination->exists) {
+                if ($path->is_dir && $destination->is_dir) {
+                    ## dont do anything for dirs
+                } elsif ($path->is_file && $destination->is_file) {
+                    $destination->remove;
+                } else {
+                    croak($self->log->criticalf('Cannot change file to dir and vice versa: %s', $relative));
+                }
+            }
+
+            if (!$destination->exists) {
+                my $stat = $path->stat;
+                if (-l $path) {
+                    symlink (readlink ($path), $destination);
+                } else {
+                    if ($path->is_dir) {
+                        $destination->mkpath;
+                    } elsif ($path->is_file) {
+                        $path->copy($destination);
+                    }
+                    $destination->chmod($stat->mode);
+                }
+            }
+        },
+        {
+            'follow_symlinks' => 0,
+            'recurse'         => 1,
+        },
+    );
 
     return;
 }
