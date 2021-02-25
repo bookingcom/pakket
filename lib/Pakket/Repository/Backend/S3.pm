@@ -107,7 +107,7 @@ sub all_object_ids_by_name ($self, $category, $name) {
     $self->_check_index_age();
 
     my @all_object_ids = try {
-        grep {my ($c, $n) = parse_package_id($_); $c eq $category and $n eq $name} keys %{$self->index};
+        grep {my ($c, $n) = parse_package_id($_); (!$category || $c eq $category) and $n eq $name} keys %{$self->index};
     } catch {
         croak($log->criticalf('Could not get remote all_object_ids, reason: %s', $_));
     };

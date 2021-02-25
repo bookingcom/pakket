@@ -70,9 +70,10 @@ sub new_from_metadata ($class, $input, %additional) {
 }
 
 sub new_from_specdata ($class, $input, %additional) {
-    my $params = clean_hash(_try_spec_v3($input) // _try_spec_v2($input) // _try_spec_metafile($input) // {});
-    delete $params->{'version'};
-    return $class->new($params->%*, %additional);
+    my $params      = clean_hash(_try_spec_v3($input) // _try_spec_v2($input) // _try_spec_metafile($input) // {});
+    my %params_copy = $params->%*;
+    delete $params_copy{'version'};
+    return $class->new(%params_copy, %additional);
 }
 
 # private
