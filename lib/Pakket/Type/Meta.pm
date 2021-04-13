@@ -10,17 +10,14 @@ use namespace::autoclean;
 
 # core
 use Carp;
-use List::Util qw(any none);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
 use YAML ();
 
 # local
-use Pakket::Utils::Package qw(
-    parse_package_id
-);
 use Pakket::Utils qw(clean_hash get_application_version);
+use Pakket::Utils::Package qw(parse_package_id);
 
 has [qw(prereqs scaffold build test)] => (
     'is'  => 'ro',
@@ -36,8 +33,10 @@ with qw(
     MooseX::Clone
 );
 
-sub BUILD ($self, @) {
-    return;
+sub BUILDARGS ($class, %args) {
+    delete $args{'version'};
+
+    return \%args;
 }
 
 sub as_hash ($self) {
@@ -62,18 +61,12 @@ sub new_from_metafile ($class, $path, %additional) {
 
 sub new_from_metadata ($class, $input, %additional) {
     my $params = _try_meta_v3($input) // _try_meta_v2($input);
-    delete $params->{'version'};
     return $class->new($params->%*, %additional);
-
-    #ref $meta{'source'} eq 'ARRAY'
-    #and $meta{'source'} = join ('', $meta{'source'}->@*);
 }
 
 sub new_from_specdata ($class, $input, %additional) {
-    my $params      = clean_hash(_try_spec_v3($input) // _try_spec_v2($input) // _try_spec_metafile($input) // {});
-    my %params_copy = $params->%*;
-    delete $params_copy{'version'};
-    return $class->new(%params_copy, %additional);
+    my $params = clean_hash(_try_spec_v3($input) // _try_spec_v2($input) // _try_spec_metafile($input) // {});
+    return $class->new($params->%*, %additional);
 }
 
 # private
