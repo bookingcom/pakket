@@ -39,7 +39,6 @@ on 'test' => sub {
 	requires 'Perl::Tidy', '>= 20200110';
 	requires 'Test2::Harness';
 	requires 'Test2::Mock';
-	requires 'Test2::Plugin::SpecDeclare';
 	requires 'Test2::Tools::Spec';
 	requires 'Test2::V0';
 	requires 'Test::BOM';

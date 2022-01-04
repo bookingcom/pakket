@@ -11,13 +11,12 @@ use lib '.';
 use Test2::V0;
 use Test2::Tools::Basic qw(todo);
 use Test2::Tools::Spec;
-use Test2::Plugin::SpecDeclare;
 
 # local
 use t::lib::Utils qw(match_any_item test_prepare_context_real test_run);
 
 ## no critic [ValuesAndExpressions::ProhibitMagicNumbers]
-describe '"list" command integration' {
+describe '"list" command integration' => sub {
     my %ctx = test_prepare_context_real();
     my $opt = {
         'env' => {
@@ -25,8 +24,8 @@ describe '"list" command integration' {
         },
     };
 
-    before_all 'prepare test environment'          {};
-    before_each 'setup clean environment for test' {};
+    before_all 'prepare test environment'          => sub { };
+    before_each 'setup clean environment for test' => sub { };
 
     tests 'List specs' => sub {
         my ($ecode, $output) = test_run([$ctx{'app_run'}->@*, 'list', 'spe'], $opt, 0);

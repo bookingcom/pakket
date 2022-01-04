@@ -76,6 +76,8 @@ color-severity-low     = bold cyan
 
 [-Bangs::ProhibitCommentedOutCode]
 
+[-Community::EmptyReturn]
+
 # Specific projects should override this
 [-Documentation::RequirePodSections]
 # The sections to require for modules (separated by qr/\s* [|] \s*/xms).

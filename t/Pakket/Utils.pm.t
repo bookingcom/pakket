@@ -10,7 +10,6 @@ use lib '.';
 # non core
 use Test2::V0;
 use Test2::Tools::Spec;
-use Test2::Plugin::SpecDeclare;
 
 # local
 use Pakket::Utils qw(encode_json_pretty normalize_version clean_hash);
@@ -37,7 +36,7 @@ END_MESSAGE
 is($string, $check, 'Pretty JSON');
 
 ## no critic [ValuesAndExpressions::ProhibitMagicNumbers]
-describe 'normalize_version' {
+describe 'normalize_version' => sub {
     my @tests = (
         [undef,      '0',        'undef'],
         [0,          '0',        'false number'],
@@ -58,12 +57,12 @@ describe 'normalize_version' {
     );
 
     foreach my $test (@tests) {
-        tests 'normalize_version works properly with' {
+        tests 'normalize_version works properly with' => sub {
             is(normalize_version($test->[0]), $test->[1], $test->[2]);
         };
     }
 
-    tests 'normalize_version works properly' {
+    tests 'normalize_version works properly' => sub {
         like(
             dies {normalize_version('< 42')},
             qr{Invalid\sversion\sformat}xms,
@@ -72,7 +71,7 @@ describe 'normalize_version' {
     };
 };
 
-describe 'clean_hash' {
+describe 'clean_hash' => sub {
     my @tests = (
 
         # scalars
@@ -125,7 +124,7 @@ describe 'clean_hash' {
     );
 
     foreach my $test (@tests) {
-        tests 'clean_hash works properly' {
+        tests 'clean_hash works properly' => sub {
             my $r1 = clean_hash($test->[0]);                                   # scalar context
             is($r1, $test->[1], $test->[2]);
             my ($r2) = +(clean_hash($test->[0]));                              # list context

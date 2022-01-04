@@ -12,7 +12,6 @@ use JSON::MaybeXS;
 use Path::Tiny;
 use Test2::V0;
 use Test2::Tools::Spec;
-use Test2::Plugin::SpecDeclare;
 use YAML;
 
 # local
@@ -23,8 +22,8 @@ tests 'default constructors' => sub {
         or diag($@);
 };
 
-describe 'metadata' {
-    describe 'v3' {
+describe 'metadata' => sub {
+    describe 'v3' => sub {
         my $metadata_dir = path(qw(t corpus repos.v3 meta perl));
         my $impl_dir     = path(qw(t corpus metadata perl));
         my @metas        = $metadata_dir->children;
@@ -33,15 +32,15 @@ describe 'metadata' {
             my $impl = YAML::Load($impl_dir->child($file->basename)->slurp_utf8)->{'Pakket'};
             delete $impl->{'version'};
             delete $meta->{'version'};
-            tests 'check file' {
+            tests 'check file' => sub {
                 is($meta, $impl, $file->basename);
             };
         }
     };
 };
 
-describe 'specfile' {
-    describe 'v3' {
+describe 'specfile' => sub {
+    describe 'v3' => sub {
         my $specs_dir = path(qw(t corpus repos.v3 spec perl));
         my $impl_dir  = path(qw(t corpus metadata perl));
         my @specs     = $specs_dir->children;
@@ -52,7 +51,7 @@ describe 'specfile' {
             #     or next;
 
             my $meta = Pakket::Type::Meta->new_from_specdata(decode_json($file->slurp_utf8));
-            tests 'check file' {
+            tests 'check file' => sub {
                 ok(
                     lives {$meta = Pakket::Type::Meta->new_from_specdata(decode_json($file->slurp_utf8))},
                     'Can be created from specfile v3: ' . $file->basename,

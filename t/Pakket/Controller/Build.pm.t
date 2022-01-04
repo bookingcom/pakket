@@ -11,7 +11,6 @@ use lib '.';
 use Archive::Any;
 use Test2::V0;
 use Test2::Tools::Spec;
-use Test2::Plugin::SpecDeclare;
 use Path::Tiny;
 
 # local
@@ -25,7 +24,7 @@ my $config = t::lib::Utils::config(@dirs);
 
 can_ok('Pakket::Controller::Build', [qw(execute snapshot_build_dir retrieve_new_files)]);
 
-tests 'Defaults' {
+tests 'Defaults' => sub {
     my $builder = _create_builder();
     isa_ok($builder,                       'Pakket::Controller::Build');
     isa_ok($builder->spec_repo,            'Pakket::Repository::Spec');
@@ -33,7 +32,7 @@ tests 'Defaults' {
     isa_ok($builder->source_repo->backend, 'Pakket::Repository::Backend::File');
 };
 
-tests 'Build simple module' {
+tests 'Build simple module' => sub {
     my $builder       = _create_builder();
     my $fake_dist_dir = t::lib::Utils::generate_modules();
 
@@ -61,7 +60,7 @@ tests 'Build simple module' {
     }
 };
 
-describe '"build" controller' {
+describe '"build" controller' => sub {
     my %ctx = test_prepare_context_real();
     my $opt = {
         'env' => {

@@ -10,7 +10,6 @@ use lib '.';
 # non core
 use Test2::V0;
 use Test2::Tools::Spec;
-use Test2::Plugin::SpecDeclare;
 
 # local
 use Pakket::Repository;

@@ -1,0 +1,18 @@
+REQUIRED_PERL_VERSION=5.34.0
+
+[[ $(perlbrew list) =~ "$REQUIRED_PERL_VERSION" ]] || {
+	echo "Installing required perl: $REQUIRED_PERL_VERSION"
+	perlbrew install -nf -j 5 "perl-$REQUIRED_PERL_VERSION"
+    perlbrew install-cpanm
+}
+
+PAKKET_LIB="${REQUIRED_PERL_VERSION}@pakket-dev"
+[[ $(perlbrew lib-list) =~ "$PAKKET_LIB" ]] || {
+	echo "Creating pakket dev Perl local library: $PAKKET_LIB"
+	perlbrew lib create "$PAKKET_LIB"
+
+	perlbrew use "$PAKKET_LIB"
+	tools/setup-dev-environment
+}
+
+perlbrew use "$PAKKET_LIB"

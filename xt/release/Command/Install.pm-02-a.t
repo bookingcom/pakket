@@ -12,7 +12,6 @@ use Path::Tiny;
 use Test2::V0;
 use Test2::Tools::Basic qw(todo);
 use Test2::Tools::Spec;
-use Test2::Plugin::SpecDeclare;
 
 # local
 use t::lib::Utils qw(
@@ -24,12 +23,12 @@ use t::lib::Utils qw(
 );
 use experimental qw(declared_refs refaliasing signatures);
 
-describe '"install" works properly even if conflict' {
+describe '"install" works properly even if conflict' => sub {
     my %ctx;
     my $opt;
 
-    before_all 'prepare test environment' {};
-    before_each 'setup clean environment for test' {
+    before_all 'prepare test environment'          => sub { };
+    before_each 'setup clean environment for test' => sub {
         %ctx = test_prepare_context_corpus('t/corpus/fake.v3');
         $opt = {
             'env' => {

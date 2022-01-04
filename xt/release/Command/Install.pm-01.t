@@ -11,14 +11,13 @@ use lib '.';
 use Test2::V0;
 use Test2::Tools::Basic qw(todo);
 use Test2::Tools::Spec;
-use Test2::Plugin::SpecDeclare;
 
 # local
 use t::lib::Utils qw(match_any_item test_prepare_context_real test_run);
 
 ## no critic [ValuesAndExpressions::ProhibitMagicNumbers]
 
-tests '"install" command integration' {
+tests '"install" command integration' => sub {
     my %ctx = test_prepare_context_real();
     my $opt = {
         'env' => {

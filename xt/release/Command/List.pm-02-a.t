@@ -11,13 +11,12 @@ use lib '.';
 use Test2::V0;
 use Test2::Tools::Basic qw(todo);
 use Test2::Tools::Spec;
-use Test2::Plugin::SpecDeclare;
 
 # local
 use t::lib::Utils qw(match_any_item test_prepare_context_corpus test_run);
 
 ## no critic [ValuesAndExpressions::ProhibitMagicNumbers]
-describe '"list" command integration with fake repo v3' {
+describe '"list" command integration with fake repo v3' => sub {
     my %ctx = test_prepare_context_corpus('t/corpus/fake.v3');
     my $opt = {
         'env' => {
@@ -25,8 +24,8 @@ describe '"list" command integration with fake repo v3' {
         },
     };
 
-    before_all 'prepare test environment'          {};
-    before_each 'setup clean environment for test' {};
+    before_all 'prepare test environment'          => sub { };
+    before_each 'setup clean environment for test' => sub { };
 
     tests 'List parcels' => sub {
         my ($ecode, $output) = test_run([$ctx{'app_run'}->@*, 'list', 'par'], $opt, 0);

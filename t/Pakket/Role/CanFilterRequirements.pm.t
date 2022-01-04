@@ -16,7 +16,6 @@ use MooseX::Test::Role;
 use Path::Tiny;
 use Test2::V0;
 use Test2::Tools::Spec;
-use Test2::Plugin::SpecDeclare;
 
 # local
 use Pakket::Helper::Versioner;
@@ -93,7 +92,7 @@ my %cache = (
 #is($consumer->method2, 1);
 #my $consuming_class = consuming_class('Pakket::Role::CanFilterRequirements');
 #ok($consuming_class->class_method());
-describe 'select_best_version_from_cache' {
+describe 'select_best_version_from_cache' => sub {
     my %tests = (
         'perl/Tiny1'       => [undef,  undef],
         'perl/Tiny'        => ['0.55', {map {$_ => 1} 1, 5, 8}],
@@ -132,7 +131,7 @@ describe 'select_best_version_from_cache' {
     };
 };
 
-describe 'select_best_package' {
+describe 'select_best_package' => sub {
     my %tests = (
         'perl/Tiny1'                       => undef,
         'perl/Tiny'                        => Pakket::Type::Package->new_from_string('perl/Tiny=0.55:8'),
@@ -193,7 +192,7 @@ describe 'select_best_package' {
     };
 };
 
-describe 'filter_packages_in_cache' {
+describe 'filter_packages_in_cache' => sub {
     my %tests = (
         'perl/AnyEvent-YACurl=<0.09_008:2' => Pakket::Type::Package->new_from_string('perl/AnyEvent-YACurl=0.09_001:2'),
         'perl/Tiny'                        => Pakket::Type::Package->new_from_string('perl/Tiny=0.55:8'),
@@ -206,17 +205,13 @@ describe 'filter_packages_in_cache' {
         +($t->short_name => $t)
     } keys %tests;
 
-    $_->conditions foreach @tests{qw(perl/Test-Simple=2 perl/version=>v1)},
-    values %queries;
+    $_->conditions foreach @tests{qw(perl/Test-Simple=2 perl/version=>v1)}, values %queries;
     my %queries2 = %queries{qw(perl/Test-Simple perl/version)};
 
     my ($found, $not_found) = $consumer->filter_packages_in_cache(\%queries, \%cache);
-    tests 'filter_packages_in_cache works properly' {
-        like(
-            [sort {$a->short_name cmp $b->short_name} $found->@*],
-            [@tests{qw(perl/AnyEvent-YACurl=<0.09_008:2 perl/Encode perl/Tiny)}],
-            'found',
-        );
+    tests 'filter_packages_in_cache works properly' => sub {
+        like([sort {$a->short_name cmp $b->short_name} $found->@*],
+            [@tests{qw(perl/AnyEvent-YACurl=<0.09_008:2 perl/Encode perl/Tiny)}], 'found',);
 
         like(
             [sort {$a->short_name cmp $b->short_name} $not_found->@*],
@@ -242,7 +237,7 @@ describe 'creating and removing packages in repo' => sub {
         1.2.3
     );
 
-    before_all 'Setup' {
+    before_all 'Setup' => sub {
         ref_ok($config, 'HASH', 'Is a hash');
         my $spec_params = $config->{'repositories'}{'spec'};
         ok($spec_params, 'Got spec repo params');
@@ -275,25 +270,25 @@ describe 'creating and removing packages in repo' => sub {
         );
     };
 
-    tests 'Find latest version' {
+    tests 'Find latest version' => sub {
         my ($ver_rel) = $repo->latest_version_release('perl', 'My-Package', '>= 2.0');
 
         is($ver_rel, ['3.1', '1'], 'Latest version and release');
     };
 
-    tests 'Find latest versions (with range)' {
+    tests 'Find latest versions (with range)' => sub {
         my ($ver_rel) = $repo->latest_version_release('perl', 'My-Package', '>= 2.0, < 3.0');
 
         is($ver_rel, ['v2.0.1', '1'], 'Latest version and release');
     };
 
-    tests 'Find latest versions (with range and NOT)' {
+    tests 'Find latest versions (with range and NOT)' => sub {
         my ($ver_rel) = $repo->latest_version_release('perl', 'My-Package', '>= 2.0, < 3.0, != 2.0.1');
 
         is($ver_rel, ['2.0', '1'], 'Latest version and release');
     };
 
-    after_all 'Find latest versions (with different releases)' {
+    after_all 'Find latest versions (with different releases)' => sub {
         $repo->remove_package_file(                                            # Add a few more versions that have different releases
             Pakket::Type::Package->new(
                 'category' => 'perl',

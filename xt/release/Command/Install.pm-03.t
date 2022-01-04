@@ -12,12 +12,11 @@ use Path::Tiny;
 use Test2::V0;
 use Test2::Tools::Basic qw(todo);
 use Test2::Tools::Spec;
-use Test2::Plugin::SpecDeclare;
 
 # local
 use t::lib::Utils qw(match_any_item match_several_items test_prepare_context_real test_run);
 
-describe '"install" accepts STDIN' {
+describe '"install" accepts STDIN' => sub {
     my %ctx = test_prepare_context_real();
     my $opt = {
         'env' => {
