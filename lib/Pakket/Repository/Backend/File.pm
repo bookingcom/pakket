@@ -9,22 +9,21 @@ use namespace::autoclean;
 
 # core
 use Carp;
-use Digest::SHA qw(sha1_hex);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
-use File::NFSLock;
-use JSON::MaybeXS qw(decode_json);
+use CHI;
 use Log::Any qw($log);
 use Path::Tiny;
 use Regexp::Common qw(URI);
-use Types::Path::Tiny qw(Path AbsPath);
+use Types::Path::Tiny qw(AbsPath);
 
 # local
-use Pakket::Utils qw(encode_json_canonical encode_json_pretty);
-use Pakket::Utils::Package qw(
-    parse_package_id
-);
+use Pakket::Utils::Package qw(parse_package_id);
+
+use constant {
+    'CACHE_TTL' => 60 * 10,
+};
 
 has 'directory' => (
     'is'       => 'ro',
@@ -36,45 +35,20 @@ has 'directory' => (
 has 'file_extension' => (
     'is'      => 'ro',
     'isa'     => 'Str',
-    'default' => sub {'sgm'},
+    'default' => 'ext',
 );
 
-has 'index_file' => (
-    'is'      => 'ro',
-    'isa'     => Path,
-    'coerce'  => 1,
-    'default' => sub ($self) {
-        return $self->directory->child('index.json');
-    },
-);
-
-has 'lock_file' => (
-    'is'      => 'ro',
-    'isa'     => Path,
-    'coerce'  => 1,
-    'default' => sub ($self) {
-        return $self->directory->child('index.lock');
-    },
-);
-
-has 'pretty_json' => (
+has 'validate_id' => (
     'is'      => 'ro',
     'isa'     => 'Bool',
-    'default' => sub {1},
+    'default' => 1,
 );
 
-has 'mangle_filename' => (
+has 'cache' => (
     'is'      => 'ro',
-    'isa'     => 'Bool',
-    'default' => sub {0},
-);
-
-has 'index' => (
-    'is'      => 'ro',
-    'isa'     => 'HashRef',
+    'isa'     => 'CHI::Driver::RawMemory',
     'lazy'    => 1,
-    'clearer' => 'clear_index',
-    'builder' => '_build_index',
+    'builder' => '_build_cache',
 );
 
 with qw(
@@ -92,39 +66,49 @@ sub new_from_uri ($class, $uri) {
 sub BUILD ($self, @) {
     $self->directory->mkpath;
 
-    $self->{'file_extension'} =~ s{^[.]+}{}xms;
+    $self->{'file_extension'} eq ''                                            # add one dot if necessary
+        or $self->{'file_extension'} =~ s{^(?:[.]*)(.*)}{.$1}x;
+
     return;
 }
 
 sub all_object_ids ($self) {
-    my @all_object_ids = keys $self->index->%*;
+    my \%index = $self->index;
+    my @all_object_ids = keys %index;
     return \@all_object_ids;
 }
 
 sub all_object_ids_by_name ($self, $category, $name) {
-    my @all_object_ids
-        = grep {my ($c, $n) = parse_package_id($_); $c eq $category and $n eq $name} keys $self->index->%*;
+    my \%index = $self->index;
+    my @all_object_ids = keys %index;
 
-    return \@all_object_ids;
+    my @all_object_ids_by_name
+        = grep {my ($c, $n) = parse_package_id($_); (!$category || !$c || $c eq $category) && $n eq $name}
+        @all_object_ids;
+
+    return \@all_object_ids_by_name;
 }
 
 sub has_object ($self, $id) {
-    return exists $self->index->{$id};
+    my \%index = $self->index;
+    return exists $index{$id};
 }
 
 sub remove ($self, $id) {
-    my $location = $self->retrieve_location($id);
-    $location
-        or return 0;
+    my $location = $self->retrieve_location($id)
+        or return;
 
-    my $lock = File::NFSLock->new($self->lock_file->stringify, 2, undef, 1000);
     $location->remove;
-    $self->_remove_from_index($id);
+    my \%index = $self->index;
+    delete $index{$id};
     return 1;
 }
 
 sub retrieve_content ($self, $id) {
-    return $self->retrieve_location($id)->slurp_utf8({'binmode' => ':raw'});
+    my $location = $self->retrieve_location($id)
+        or croak($log->criticalf('Could not retrieve content of %s', $id));
+
+    return $location->slurp_raw;
 }
 
 sub retrieve_location ($self, $id) {
@@ -132,88 +116,77 @@ sub retrieve_location ($self, $id) {
     $filename
         and return $self->directory->child($filename);
 
-    $log->debug("File for ID '$id' does not exist in storage");
-    return 0;
+    $log->debugf('File for ID %s does not exist in storage', $id);
+
+    return;
 }
 
 sub store_content ($self, $id, $content) {
     my $file_to_store = Path::Tiny->tempfile;
-    $file_to_store->spew({'binmode' => ':raw'}, $content);
+    $file_to_store->spew_raw($content);
 
     return $self->store_location($id, $file_to_store);
 }
 
 sub store_location ($self, $id, $file_to_store) {
-    my $filename  = $self->_store_in_index($id);
-    my $directory = $self->directory;
+    if ($self->validate_id) {
+        my ($category, $name, $version, $release) = parse_package_id($id);
 
-    return path($file_to_store)->copy($directory->child($filename));
-}
-
-sub _build_index ($self) {
-    $self->index_file->is_file
-        and return decode_json($self->index_file->slurp_utf8);
-
-    if ($self->mangle_filename) {
-        return +{};
+        $category && $name && $version && $release
+            or croak($log->critical('Invalid id to store: ', $id));
     }
 
-    my @categories = $self->directory->children();
-    my $match      = join ('.', '', $self->file_extension);
-    my %result;
-    $self->directory->visit(
-        sub ($path, $state) {
-            $path->is_dir
-                or return;
-            my $category = $path->basename;
-            foreach my $file ($path->children()) {
-                my $rel  = $file->relative($self->directory);
-                my $name = $rel->stringify =~ s{$match}{}rxms;
-                $result{$name} = $rel->stringify;
-            }
-        },
-        {
-            'recurse'         => 0,
-            'follow_symlinks' => 0,
+    my $rel = $id . $self->file_extension;
+    my $abs = $self->directory->child($rel)->absolute;
+    $abs->parent->mkpath;
+    $file_to_store->copy($abs);
+
+    my \%index = $self->index;
+    $index{$id} = $rel;
+
+    return 1;
+}
+
+sub index ($self) { ## no critic [Subroutines::ProhibitBuiltinHomonyms]
+    my \%result = $self->cache->compute(
+        $self->directory->stringify,
+        CACHE_TTL(),
+        sub {
+            my $regex = qr{\A (.*) $self->{file_extension}\z}x;
+
+            my %by_id;
+            $self->directory->visit(
+                sub ($path, $) {
+                    $path->is_file && $path =~ $regex
+                        or return;
+
+                    my $rel = $path->relative($self->directory);
+                    my ($id) = $rel =~ $regex;
+
+                    $by_id{$id} = $rel;
+                },
+                {
+                    'recurse'         => 1,
+                    'follow_symlinks' => 0,
+                },
+            );
+
+            return \%by_id;
         },
     );
-
     return \%result;
 }
 
-sub _store_in_index ($self, $id) {
-    my $name;
-    if ($self->mangle_filename) {
-        $name = sha1_hex($id);
-    } else {
-        $name = $id =~ s{[^[:alnum:].=:_+]}{-}rgx;
-    }
-    my $filename = join ('.', $name, $self->file_extension);
-
-    my $lock  = File::NFSLock->new($self->lock_file->stringify, 2, undef, 1000);
-    my %index = $self->index->%*;
-    $index{$id} = $filename;
-    $self->_save_index(\%index);
-
-    return $filename;
-}
-
-sub _save_index ($self, $index) {
-    my $content
-        = $self->pretty_json
-        ? encode_json_pretty($index)
-        : encode_json_canonical($index);
-
-    $self->index_file->spew_utf8($content);
-    $self->{'index'} = $index;
+sub clear_index ($self) {
+    $self->cache->expire($self->directory->stringify);
     return;
 }
 
-sub _remove_from_index ($self, $id) {
-    my %index = $self->index->%*;
-    delete $index{$id};
-
-    return $self->_save_index(\%index);
+sub _build_cache ($self) {
+    return CHI->new(
+        'driver' => 'RawMemory',
+        'global' => 1,
+    );
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -230,8 +203,6 @@ __END__
     my $backend = Pakket::Repository::Backend::File->new(
         'directory'      => '/var/lib/pakket/specs',
         'file_extension' => 'json',
-        'index_file'     => 'index.json',
-        'pretty_json'    => 1,
     );
 
     # Handling locations
@@ -279,35 +250,10 @@ The extension of files it stores. This has no effect on the format of
 the files, only the file extension. The reason is to be able to differ
 between files that contain specs versus files of parcels.
 
-Our preference is C<pkt> for packages, C<spkt> for sources, and C<json>
+Our preference is C<tgz> for packages, C<tgz> for sources, and C<json>
 for specs.
 
-Default: B<< C<sgm> >>.
-
-=head2 index_file
-
-The index file contains a list of all packages IDs and the files that
-correlate to it. Files are stored by their hashed ID and the index
-contains a mapping from the non-hashed ID to the hashed ID.
-
-Default: B<< F<index.json> >>.
-
-=head2 pretty_json
-
-This is a boolean controlling whether the index file should store
-pleasantly-readable JSON.
-
-Default: B<1>.
-
-=head2 mangle_filename
-
-When creating file, use sha1(full_package_name) as name of file.
-By default uses full_package_name as filename.
-
-This flag is useful when your system doesn't support long filenames. Or for
-some another reason you don't like full_package_name as filename.
-
-Default: B<< C<0> >>.
+Default: B<< C<tgz> >>.
 
 =head1 METHODS
 
@@ -373,10 +319,11 @@ return the structure it stores.
 
 =head2 index
 
-    my $repo_index_content = $backend->index();
+    my $repo_index_content = $backend->index;
 
 This retrieves the unserialized content of the index. It is a hash
-reference that maps IDs to hashed IDs that correlate to file paths.
+reference that maps IDs to hashed IDs that correlate to relative file
+paths.
 
 =head2 all_object_ids
 

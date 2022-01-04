@@ -9,7 +9,6 @@ fi
 
 echo 'Installing seacan from git (on cpan it is too old)...'
 cpanm -nq https://github.com/gugod/Seacan/tarball/master
-cpanm -nq https://github.com/perltidy/perltidy/archive/refs/tags/20200907.tar.gz
 echo
 echo 'Installing proper versions of broken modules...'
 # cpanm -nq --force https://cpan.metacpan.org/authors/id/E/ET/ETHER/Devel-Declare-0.006019.tar.gz

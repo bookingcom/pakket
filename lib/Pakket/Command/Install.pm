@@ -143,11 +143,11 @@ __END__
 =head1 SYNOPSIS
 
     # Install the first release of a particular version
-    # of the package "Dancer2" of the category "perl"
+    # of the package "Pakket" of the category "perl"
 
-    #$ pakket install perl/Dancer2=0.205000:1
-    #$ pakket install perl/Dancer2=0.205000
-    #$ pakket install perl/Dancer2
+    #$ pakket install perl/Pakket=3.1415:1
+    #$ pakket install perl/Pakket=3.1415
+    #$ pakket install perl/Pakket
 
     #$ cat file/pakket.list | pakket install -f -
 

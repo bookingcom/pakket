@@ -24,7 +24,7 @@ describe '"list" command integration with fake repo v3' => sub {
         },
     };
 
-    before_all 'prepare test environment'          => sub { };
+    before_all 'prepare test environment' => sub { };
     before_each 'setup clean environment for test' => sub { };
 
     tests 'List parcels' => sub {

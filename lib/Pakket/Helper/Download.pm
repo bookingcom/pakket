@@ -25,7 +25,7 @@ has 'strategy' => (
     'handles'  => [qw(
             download_to_file
             download_to_dir
-            ),
+        ),
     ],
 );
 

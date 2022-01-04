@@ -1,8 +1,8 @@
 package t::lib::Utils; ## no critic [NamingConventions::Capitalization]
 
 use v5.22;
-use strict;
 use warnings;
+use namespace::clean -except => [qw(import)];
 
 # core
 use English '-no_match_vars';
@@ -11,6 +11,7 @@ use System::Command;
 
 # non core
 use Data::Dumper qw(Dumper);
+use Encode;
 use File::Copy::Recursive qw(dircopy);
 use Log::Any::Adapter;
 use Log::Dispatch;
@@ -27,17 +28,17 @@ use Pakket::Repository::Backend::File;
 use Pakket::Utils qw(encode_json_pretty);
 
 # exports
-use namespace::clean;
 use Exporter qw(import);
 our @EXPORT_OK = qw(
+    dont_match_any_item
     match_all_items
     match_any_item
-    dont_match_any_item
     match_several_items
     test_prepare_context
     test_prepare_context_corpus
     test_prepare_context_real
     test_run
+    test_web_prepare_context
 );
 
 Log::Any::Adapter->set(
@@ -66,6 +67,52 @@ sub generate_modules {
     );
 
     return $fake_dist_dir;
+}
+
+sub config_web ($dirs) {
+    return +{
+        'allow_write'      => 1,
+        'default_category' => 'perl',
+        'log_file'         => $dirs->{'parcel'}->sibling('pakket-web.log'),
+        'repositories'     => [{
+                'backend' => {
+                    'directory'      => $dirs->{'parcel'},
+                    'file_extension' => 'tgz',
+                    'type'           => 'file',
+                },
+                'path' => '/co7/5.28.1/parcel',
+                'type' => 'parcel',
+            },
+            {
+                'backend' => {
+                    'directory'      => $dirs->{'snapshot'},
+                    'file_extension' => '',
+                    'type'           => 'file',
+                    'validate_id'    => 0,
+                },
+                'path' => '/snapshot',
+                'type' => 'snapshot',
+            },
+            {
+                'backend' => {
+                    'directory'      => $dirs->{'spec'},
+                    'file_extension' => 'json',
+                    'type'           => 'file',
+                },
+                'path' => '/spec',
+                'type' => 'spec',
+            },
+            {
+                'backend' => {
+                    'directory'      => $dirs->{'source'},
+                    'file_extension' => 'tgz',
+                    'type'           => 'file',
+                },
+                'path' => '/source',
+                'type' => 'source',
+            },
+        ],
+    };
 }
 
 sub config (@dirs) {
@@ -141,7 +188,7 @@ sub test_prepare_context_corpus ($root) {
     $result{'test_dirs'} = \@dirs;
 
     $ENV{'DEBUG'}
-        and diag(`tree $temp`);
+        and diag(Encode::decode('UTF-8', `tree $root`, Encode::FB_CROAK));
 
     return %result;
 }
@@ -200,6 +247,30 @@ sub match_several_items ($array, @match) {
         match_any_item($array, "$line", "Should be in output: $line");
     }
     return;
+}
+
+sub test_web_prepare_context () {
+    my @dirs = qw(spec source parcel snapshot);
+    my $root = Path::Tiny->tempdir('pakket-test-web-XXXXX', 'CLEANUP' => !$ENV{'DEBUG'})->absolute;
+    my %dirs = map {my $p = $root->child($_); $p->mkpath; $_ => $p} @dirs;
+    dircopy("$ENV{'PWD'}/t/corpus/repos.v3/$_", $root->child($_)) foreach @dirs;
+
+    my \%config = config_web(\%dirs);
+    my $config_file = $root->child('pakket-web.json');
+
+    $config_file->spew(encode_json_pretty(\%config));
+
+    $ENV{'PAKKET_WEB_CONFIG'} = $config_file->stringify; ## no critic [Variables::RequireLocalizedPunctuationVars]
+
+    $ENV{'DEBUG'}
+        and diag(Encode::decode('UTF-8', `tree $root`, Encode::FB_CROAK));
+
+    my %ctx = (
+        %config,
+        'test_root' => $root,                                                  # don't clean up test root while context is kept
+    );
+
+    return \%ctx;
 }
 
 1;

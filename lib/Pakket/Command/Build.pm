@@ -113,7 +113,7 @@ __END__
 
 =head1 SYNOPSIS
 
-    #$ pakket build perl/Dancer2
+    #$ pakket build perl/Pakket
 
     #$ pakket build native/tidyp=1.04
 
@@ -125,11 +125,11 @@ generate parcels, which are the build artifacts.
 
 (The parcels are equivalent of C<.rpm> or C<.deb> files.)
 
-    # Build latest version of package "Dancer2" of category "perl"
-    #$ pakket build perl/Dancer2
+    # Build latest version of package "Pakket" of category "perl"
+    #$ pakket build perl/Pakket
 
     # Build specific version
-    #$ pakket build perl/Dancer2=0.205000
+    #$ pakket build perl/Pakket=3.1415
 
 Depending on the configuration you have for Pakket, the result will
 either be saved in a file or in a database or sent to a remote server.

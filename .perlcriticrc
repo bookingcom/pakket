@@ -1,4 +1,4 @@
-# vim: syntax=dosini foldmethod=marker
+# vim: filetype=dosini foldmethod=marker
 # man: perlcritic
 
 severity = 1
@@ -471,7 +471,7 @@ allow = for foreach if
 equivalent_modules = Moo Moo::Role
 
 [ValuesAndExpressions::ProhibitMagicNumbers]
-allowed_values = -1 0 1 2 3 4 5 8 10 42 64 80 100 127 128 200 303 400 401 404 443 500 1000 1900 3600 8080
+allowed_values = -1 0 1 2 3 4 5 8 10 42 60 64 80 100 127 128 200 303 400 401 404 443 500 1000 1900 3600 8080
 # Kind of literals to allow.
 # Valid values: Binary, Exp, Float, Hex, Octal.
 # allowed_types = Float

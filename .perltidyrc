@@ -1,4 +1,4 @@
-# vim: syntax=conf foldmethod=marker
+# vim: filetype=conf foldmethod=marker
 # man: perltidy
 
 # -pbp should be first

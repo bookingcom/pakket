@@ -27,7 +27,7 @@ describe '"install" works properly even if conflict' => sub {
     my %ctx;
     my $opt;
 
-    before_all 'prepare test environment'          => sub { };
+    before_all 'prepare test environment' => sub { };
     before_each 'setup clean environment for test' => sub {
         %ctx = test_prepare_context_corpus('t/corpus/fake.v3');
         $opt = {

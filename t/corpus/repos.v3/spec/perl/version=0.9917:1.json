@@ -1,0 +1,31 @@
+{
+   "Package" : {
+      "category" : "perl",
+      "name" : "version",
+      "release" : 1,
+      "version" : "0.9917"
+   },
+   "Prereqs" : {
+      "perl" : {
+         "configure" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : 0
+            }
+         },
+         "runtime" : {
+            "ExtUtils-MakeMaker" : {
+               "version" : "6.17"
+            },
+            "File-Temp" : {
+               "version" : "0.13"
+            },
+            "Test-Simple" : {
+               "version" : "0.45"
+            },
+            "parent" : {
+               "version" : "0.221"
+            }
+         }
+      }
+   }
+}

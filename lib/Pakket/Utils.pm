@@ -37,6 +37,10 @@ our @EXPORT_OK = qw(
     intersection
     union
 
+    group_by
+
+    flatten
+
     print_env
 
     shared_dir
@@ -190,7 +194,7 @@ sub encode_json_canonical ($content) {
 }
 
 sub encode_json_pretty ($content) {
-    return JSON::MaybeXS->new->canonical->pretty->encode($content);
+    return JSON::MaybeXS->new->convert_blessed->canonical->pretty->encode($content);
 }
 
 sub clean_hash ($data) {
@@ -257,6 +261,18 @@ sub difference_symmetric : prototype($$) { ## no critic (Subroutines::RequireArg
     delete $left{$_} // $right{$_}++ foreach $_[1]->@*;
 
     return +(keys %left, keys %right);
+}
+
+sub group_by ($key_extractor, @values) {
+    my %result;
+    foreach (@values) {
+        push ($result{$key_extractor->($_)}->@*, $_);
+    }
+    return \%result;
+}
+
+sub flatten {
+    return map {ref $_ eq 'ARRAY' ? flatten($_->@*) : $_} @_;
 }
 
 sub print_env ($log) {

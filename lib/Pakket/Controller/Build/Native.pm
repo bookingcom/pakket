@@ -40,7 +40,7 @@ sub execute ($self, %params) {
             $params{'metadata'}{'environment'},
             'bootstrap_dir' => $self->bootstrap_dir,
             %params,
-        ),
+            ),
 
         # 'PREFIX' => $params{'prefix'}->absolute,
     );
@@ -74,7 +74,7 @@ sub execute ($self, %params) {
         $configurator = 'cmake';
         my $out_tree_build = $params{'sources'}->child('pakket-cmake-build');
         if ($out_tree_build->exists) {
-            @run_params = ($params{'sources'}, {$params{'opts'}->%*, 'cwd' => $out_tree_build->absolute});
+            @run_params         = ($params{'sources'}, {$params{'opts'}->%*, 'cwd' => $out_tree_build->absolute});
             @configurator_flags = ('-DCMAKE_INSTALL_PREFIX=' . $params{'prefix'}->absolute, '..');
         } else {
             @configurator_flags = ('-DCMAKE_INSTALL_PREFIX=' . $params{'prefix'}->absolute, '.');
@@ -89,7 +89,7 @@ sub execute ($self, %params) {
 
     my @commands = (                                                           # no tidy
         ([                                                                  # configure
-                $configurator, @{$self->config->{'native'}{'build'}{'configure-options'} // []},
+                $configurator,                    @{$self->config->{'native'}{'build'}{'configure-options'} // []},
                 $params{'configure-options'}->@*, @configurator_flags,
             ]
         ) x !!@configurator_flags,

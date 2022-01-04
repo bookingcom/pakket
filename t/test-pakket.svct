@@ -1,0 +1,58 @@
+---
+pakket:
+  common:
+    type: Mojo
+    verb: get
+    headers:
+      X-Topic: test-service
+    output: ~
+    url: http://localhost:3000
+    save_to: /tmp/svct/$$name.yml
+  sections:
+    info:
+      path: /info
+    all_packages:
+      path: /all_packages
+    updates:
+      path: /updates
+
+    snapshot1:
+      path: /snapshot
+    snapshot2:
+      path: /snapshot
+      query: id=6e146e0eb8b6f22cce4f045e54abc895872c3c68c302733de01b84cad81844a3
+    snapshot3:
+      path: /snapshot/6e146e0eb8b6f22cce4f045e54abc895872c3c68c302733de01b84cad81844a3
+
+    spec-index1:
+      path: /spec
+    spec-index2:
+      path: /spec
+    spec-index3:
+      path: /spec/all_object_ids
+
+    spec-index-filter1:
+      path: /spec/perl/version
+    spec-index-filter2:
+      path: /spec/all_object_ids_by_name
+      query: id=perl/version
+    spec-index-filter3:
+      path: /spec/all_object_ids_by_name/perl/version
+
+    spec-index-check1:
+      path: /spec/has_object/native/zlib=1.2.11:1
+    spec-index-check2:
+      path: /spec/has_object
+      query: id=native/zlib=1.2.11:1
+
+    spec-fetch1:
+      path: /spec/retrieve/content
+      query: id=native/zlib=1.2.11:1
+
+    parcel-post-snapshot:
+      verb: post
+      path: /co7/5.28.1/parcel/snapshot
+      body: [native/zlib=1.2.11:1, perl/version=0.9924:1]
+  specifications:
+    prod:
+      url: http://localhost:3000

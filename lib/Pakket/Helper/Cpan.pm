@@ -12,6 +12,7 @@ use Carp;
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
+use CHI;
 use CPAN::DistnameInfo;
 use CPAN::Meta;
 use JSON::MaybeXS qw(decode_json encode_json);
@@ -57,7 +58,7 @@ has 'cpan_02packages' => (
     'is'      => 'ro',
     'isa'     => 'Parse::CPAN::Packages::Fast',
     'lazy'    => 1,
-    'default' => sub ($self) {Parse::CPAN::Packages::Fast->new($self->_get_cpan_02packages_file())},
+    'builder' => '_build_cpan_02packages',
 );
 
 has 'cpan_02packages_file' => (
@@ -95,6 +96,13 @@ has 'known_modules_to_skip' => (
     'is'      => 'ro',
     'isa'     => 'HashRef',
     'builder' => '_build_known_modules_to_skip',
+);
+
+has 'cache' => (
+    'is'      => 'ro',
+    'isa'     => 'CHI::Driver::RawMemory',
+    'lazy'    => 1,
+    'builder' => '_build_cache',
 );
 
 sub BUILDARGS ($class, %args) {
@@ -392,27 +400,36 @@ sub _build_cpan_02packages_file ($self) {
 }
 
 sub _build_latest_distributions ($self) {
-    my %cpan_dist;
-    foreach my $dist ($self->cpan_02packages->distributions) {
-        $dist->{'dist'} && $dist->{'version'}
-            or next;
+    state $current_sub = (caller (0))[3];
+    return $self->cache->compute(
+        $current_sub,
+        undef,
+        sub {
+            my %cpan_dist;
+            foreach my $dist ($self->cpan_02packages->distributions) {
+                $dist->{'dist'} && $dist->{'version'}
+                    or next;
 
-        my $short_name = "perl/$dist->{'dist'}";
-        if (exists $cpan_dist{$short_name}) {
-            eval {
-                if ($self->versioner->compare_version($cpan_dist{$short_name}{'version'}, $dist->{'version'}) < 0) {
-                    $cpan_dist{"perl/$dist->{'dist'}"} = $dist;
+                my $short_name = "perl/$dist->{'dist'}";
+                if (exists $cpan_dist{$short_name}) {
+                    eval {
+                        if ($self->versioner->compare_version($cpan_dist{$short_name}{'version'}, $dist->{'version'})
+                            < 0)
+                        {
+                            $cpan_dist{"perl/$dist->{'dist'}"} = $dist;
+                        }
+                        1;
+                    } or do {
+                        my $error = $@ || 'zombie error';
+                        carp "Build latest distributions error $error for $dist->{'dist'}";
+                    };
+                } else {
+                    $cpan_dist{$short_name} = $dist;
                 }
-                1;
-            } or do {
-                my $error = $@ || 'zombie error';
-                carp "Build latest distributions error $error for $dist->{'dist'}";
-            };
-        } else {
-            $cpan_dist{$short_name} = $dist;
-        }
-    }
-    return \%cpan_dist;
+            }
+            return \%cpan_dist;
+        },
+    );
 }
 
 sub _build_known_incorrect_name_fixes ($self) {
@@ -476,6 +493,19 @@ sub _build_known_modules_to_skip ($self) {
         'tinyperl'                 => 1,
         %{$self->config->{'perl'}{'scaffold'}{'known_modules_to_skip'} // {}},
     };
+}
+
+sub _build_cpan_02packages ($self) {
+    return $self->cache->compute('Parse::CPAN::Packages::Fast', undef,
+        sub {return Parse::CPAN::Packages::Fast->new($self->_get_cpan_02packages_file())},
+    );
+}
+
+sub _build_cache ($self) {
+    return CHI->new(
+        'driver' => 'RawMemory',
+        'global' => 1,
+    );
 }
 
 __PACKAGE__->meta->make_immutable;

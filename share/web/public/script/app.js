@@ -311,7 +311,7 @@
 
 		let icon
 			= config.data['cpan']
-			? `<a target="_blank" title="${namePieces[1]}" href="https://metacpan.org/release/${namePieces[1]}"><img src="/png/metacpan-icon.png"</img></a>`
+			? `<a target="_blank" title="${namePieces[1]}" href="https://metacpan.org/release/${namePieces[1]}"><img src="/image/metacpan-icon.png"</img></a>`
 			: '';
 
 		let tableRow = `

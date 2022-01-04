@@ -1,0 +1,16 @@
+#!/usr/bin/env perl
+
+# ABSTRACT: The Pakket meta packaging WEB application
+# PODNAME: pakket-web
+
+use v5.28;
+use warnings;
+
+use Mojo::File qw(curfile);
+use Mojolicious::Commands;
+
+use lib curfile()->dirname->sibling('lib')->to_string;
+
+Mojolicious::Commands->start_app('Pakket::Web');
+
+__END__

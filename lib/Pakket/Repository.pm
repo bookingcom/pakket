@@ -9,7 +9,9 @@ use namespace::autoclean;
 
 # core
 use Archive::Tar;
+use Carp;
 use Errno qw(:POSIX);
+use List::Util qw(any);
 use Module::Runtime qw(use_module);
 use experimental qw(declared_refs refaliasing signatures);
 
@@ -24,10 +26,20 @@ use Pakket::Utils::Package qw(
     parse_package_id
 );
 
+use constant {
+    'SUPPORTED_TYPES' => [qw(parcel source snapshot spec)],
+};
+
 has 'type' => (
     'is'       => 'ro',
     'isa'      => 'Str',
     'required' => 1,
+);
+
+has 'path' => (
+    'is'      => 'ro',
+    'isa'     => 'Str',
+    'default' => '',
 );
 
 has 'backend' => (
@@ -41,7 +53,7 @@ has 'backend' => (
             retrieve_content retrieve_location
             store_content store_location
             file_extension
-            ),
+        ),
     ],
 );
 
@@ -58,9 +70,22 @@ with qw(
     Pakket::Role::HasLog
 );
 
+sub new_by_type ($class, %params) {
+    my $type = delete $params{'type'};
+    any {$type eq $_} SUPPORTED_TYPES()->@*
+        or croak(sprintf 'Unsupported repository type: %s', $type);
+
+    my $c = use_module(sprintf '%s::%s', $class, ucfirst $type);
+    return $c->new(%params);
+}
+
 sub BUILD ($self, @) {
     $self->backend();
     return;
+}
+
+sub get_path ($self) {
+    return '/' . join '/', $self->type, $self->{'path'} =~ s{^/}{}r;
 }
 
 sub all_object_ids ($self) {
@@ -229,6 +254,8 @@ sub add_to_cache ($self, $short_name, $version, $release) {
 
 sub _build_all_objects_cache ($self, $ids = undef) {
     my %result;
+    return \%result if $self->type eq 'snapshot';
+
     $ids //= $self->all_object_ids;
     foreach my $id ($ids->@*) {
         my ($category, $name, $version, $release) = parse_package_id($id);

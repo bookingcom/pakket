@@ -62,30 +62,30 @@ tests '"install" command integration' => sub {
     }
 
     {
-        my $package = 'version=0.9923:1';
+        my $package = 'version=0.9917:1';
         my ($ecode, $output) = test_run([$ctx{'app_run'}->@*, 'install', '-v', $package], $opt, 0);
         match_any_item($output, 'Going to replace perl/version');
         ($ecode, $output) = test_run([$ctx{'app_run'}->@*, 'list', 'installed'], $opt, 0);
         match_any_item($output, $package);
-        is(scalar $output->@*, 15, 'amount installed');
+        is(scalar $output->@*, 16, 'amount installed');
     }
 
     {
-        my $package = 'version=0.9923:1';
+        my $package = 'version=0.9917:1';
         my ($ecode, $output) = test_run([$ctx{'app_run'}->@*, 'install', '-v', $package], $opt, 0);
         match_any_item($output, 'Package is already installed');
         ($ecode, $output) = test_run([$ctx{'app_run'}->@*, 'list', 'installed'], $opt, 0);
         match_any_item($output, $package);
-        is(scalar $output->@*, 15, 'amount installed');
+        is(scalar $output->@*, 16, 'amount installed');
     }
 
     {
-        my $package = 'version=0.9923:1';
+        my $package = 'version=0.9917:1';
         my ($ecode, $output) = test_run([$ctx{'app_run'}->@*, 'install', '--overwrite', '-v', $package], $opt, 0);
         match_any_item($output, 'Going to reinstall');
         ($ecode, $output) = test_run([$ctx{'app_run'}->@*, 'list', 'installed'], $opt, 0);
         match_any_item($output, $package);
-        is(scalar $output->@*, 15, 'amount installed');
+        is(scalar $output->@*, 16, 'amount installed');
     }
 };
 

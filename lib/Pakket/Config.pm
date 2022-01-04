@@ -98,7 +98,7 @@ sub _build_files ($self) {
     # Could not find any files
     if ($self->required) {
         my \@paths = $self->{'paths'};
-        croak($log->fatal("Please specify a config file: $self->{'env_name'}, @{[@paths]} {json, yaml}"));
+        croak($log->fatal("Please specify an existing config file: $self->{'env_name'}, @{[@paths]} {json, yaml}"));
     }
 
     return [];

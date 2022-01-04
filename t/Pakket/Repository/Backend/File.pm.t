@@ -17,7 +17,7 @@ use Pakket::Repository::Backend::File;
 
 can_ok(
     'Pakket::Repository::Backend::File',
-    [qw(directory file_extension index_file)],
+    [qw(directory file_extension)],
     'Pakket::Repository::Backend::File has all demanded methods',
 );
 
@@ -27,7 +27,7 @@ like(
     'directory is required to create a new file backend class',
 );
 
-my $index_dir = path(qw(t corpus repos.v2 spec));
+my $index_dir = path(qw(t corpus repos.v3 spec));
 ok(
     lives {
         Pakket::Repository::Backend::File->new('directory' => $index_dir->stringify);
