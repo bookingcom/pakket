@@ -14,8 +14,8 @@ use experimental qw(declared_refs refaliasing signatures);
 # non core
 use CHI;
 use Log::Any qw($log);
+use Mojo::URL;
 use Path::Tiny;
-use Regexp::Common qw(URI);
 use Types::Path::Tiny qw(AbsPath);
 
 # local
@@ -56,11 +56,18 @@ with qw(
 );
 
 sub new_from_uri ($class, $uri) {
-    $uri =~ m/$RE{'URI'}{'file'}{'-keep'}/xms
-        or croak($log->critical('Is not a proper file URI:', $uri));
+    my $url = Mojo::URL->new($uri);
 
-    my $path = $3;                                                             # perldoc Regexp::Common::URI::file
-    return $class->new('directory' => $path);
+    $url->is_abs
+        or croak($log->criticalf('invalid URL: %s', $url->to_string));
+
+    my $query  = $url->query;
+    my %params = (
+        'directory' => $url->host . $url->path,
+        ('file_extension' => $query->param('file_extension')) x !!defined $query->param('file_extension'),
+    );
+
+    return $class->new(%params);
 }
 
 sub BUILD ($self, @) {

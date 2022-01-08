@@ -54,7 +54,6 @@ requires "POSIX" => "0";
 requires "Parse::CPAN::Packages::Fast" => "0";
 requires "Path::Tiny" => "0";
 requires "Ref::Util" => "0";
-requires "Regexp::Common" => "0";
 requires "Safe::Isa" => "0";
 requires "Sys::Syslog" => "0";
 requires "System::Command" => "0";

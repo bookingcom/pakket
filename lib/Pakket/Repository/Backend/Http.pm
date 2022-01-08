@@ -12,9 +12,9 @@ use URI::Escape qw(uri_escape);
 use JSON::MaybeXS qw(decode_json);
 use Path::Tiny;
 use Log::Any qw($log);
+use Mojo::URL;
 use Types::Path::Tiny qw(Path);
 use HTTP::Tiny;
-use Regexp::Common qw(URI);
 use Pakket::Utils qw(encode_json_canonical);
 use Time::HiRes qw(usleep);
 
@@ -76,21 +76,19 @@ with qw(
 sub new_from_uri {
     my ($class, $uri) = @_;
 
-    # We allow the user to not include http, because we're nice like that
-    $uri !~ m{^https?://}xms
-        and $uri = "http://$uri";
+    my $url = Mojo::URL->new($uri);
 
-    $uri =~ /$RE{'URI'}{'HTTP'}{ '-scheme' => qr{https?} }{'-keep'}/xms
-        or croak($log->critical("URI '$uri' is not a proper HTTP URI"));
+    $url->scheme =~ m{^https?}
+        or $url->scheme('http');
 
-    # perldoc Regexp::Common::URI::http
+    $url->is_abs
+        or croak($log->criticalf('URI "%s" is not a proper HTTP URI', $url->to_string));
+
     return $class->new(
-        'scheme' => $2,
-        'host'   => $3,
-
-        # only if matched
-        ('port' => $4) x !!$4,
-        ('base_path' => $5) x !!$5,
+        'scheme' => $url->scheme,
+        'host'   => $url->host,
+        ('port'      => $url->port) x !!$url->port,
+        ('base_path' => $url->path) x !!$url->path,
     );
 }
 
