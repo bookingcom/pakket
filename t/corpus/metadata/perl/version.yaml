@@ -1,0 +1,8 @@
+---
+category: perl
+name: version
+version: 0.9929
+release: 1
+source: cpan
+Pakket:
+  version: 3.1415

@@ -65,7 +65,6 @@ requires "Types::DBI" => "0";
 requires "Types::Path::Tiny" => "0";
 requires "URI::Escape" => "0";
 requires "Unicode::UTF8" => "0";
-requires "YAML" => "0";
 requires "YAML::XS" => "0";
 requires "namespace::autoclean" => "0";
 requires "namespace::clean" => "0";

@@ -12,7 +12,7 @@ use JSON::MaybeXS;
 use Path::Tiny;
 use Test2::V0;
 use Test2::Tools::Spec;
-use YAML;
+use YAML::XS ();
 
 # local
 use Pakket::Type::Meta;
@@ -29,7 +29,7 @@ describe 'metadata' => sub {
         my @metas        = $metadata_dir->children;
         foreach my $file (@metas) {
             my $meta = Pakket::Type::Meta->new_from_metafile($file)->as_hash;
-            my $impl = YAML::Load($impl_dir->child($file->basename)->slurp_utf8)->{'Pakket'};
+            my $impl = YAML::XS::LoadFile($impl_dir->child($file->basename))->{'Pakket'};
             delete $impl->{'version'};
             delete $meta->{'version'};
             tests 'check file' => sub {
@@ -56,9 +56,6 @@ describe 'specfile' => sub {
                     lives {$meta = Pakket::Type::Meta->new_from_specdata(decode_json($file->slurp_utf8))},
                     'Can be created from specfile v3: ' . $file->basename,
                 ) or diag($@);
-
-                # my $impl = YAML::Load($impl_dir->child($impl_file)->slurp_utf8)->{'Pakket'};
-                # is($meta->as_hash, $impl, $file->basename);
             };
         }
     };

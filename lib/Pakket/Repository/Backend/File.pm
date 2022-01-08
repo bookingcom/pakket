@@ -113,8 +113,11 @@ sub retrieve_content ($self, $id) {
 
 sub retrieve_location ($self, $id) {
     my $filename = $self->index->{$id};
-    $filename
-        and return $self->directory->child($filename);
+    if ($filename) {
+        my $file_to_return = Path::Tiny->tempfile;
+        $self->directory->child($filename)->copy($file_to_return);
+        return $file_to_return;
+    }
 
     $log->debugf('File for ID %s does not exist in storage', $id);
 

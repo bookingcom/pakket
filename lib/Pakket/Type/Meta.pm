@@ -13,7 +13,7 @@ use Carp;
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
-use YAML ();
+use YAML::XS ();
 
 # local
 use Pakket::Utils qw(clean_hash get_application_version);
@@ -55,7 +55,7 @@ sub new_from_prereqs ($class, $input, %additional) {
 }
 
 sub new_from_metafile ($class, $path, %additional) {
-    my $input = YAML::Load($path->slurp_utf8);
+    my $input = YAML::XS::LoadFile($path);
     return $class->new_from_metadata($input, %additional, 'path' => $path->absolute);
 }
 

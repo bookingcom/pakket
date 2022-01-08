@@ -1,9 +1,9 @@
-Package:
-  category: perl
-  name: Net-Kafka
-  version: 1.06
-  release: 1
-  source: git+https://github.com/bookingcom/perl-Net-Kafka#9602fd8
+---
+category: perl
+name: Net-Kafka
+version: 1.06
+release: 1
+source: git+https://github.com/bookingcom/perl-Net-Kafka#9602fd8
 Pakket:
   version: 3.1415
   scaffold:

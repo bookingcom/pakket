@@ -1,9 +1,9 @@
-Package:
-  name: DBD-mysql
-  category: perl
-  version: ==4.046
-  release: 5
-  source: cpan
+---
+name: DBD-mysql
+category: perl
+version: 4.046
+release: 5
+source: cpan
 Pakket:
   version: 3.1415
   build:

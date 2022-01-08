@@ -14,7 +14,7 @@ use experimental qw(declared_refs refaliasing signatures switch);
 # non core
 use JSON::MaybeXS qw(decode_json);
 use Module::Runtime qw(use_module);
-use YAML;
+use YAML::XS;
 
 extends qw(Pakket::Controller::BaseRemoteOperation);
 
@@ -60,12 +60,12 @@ sub execute ($self) {
     if ($self->output eq 'json' && $repo->backend->file_extension =~ m/json$/) {
         ## do nothing
     } elsif ($self->output eq 'yaml' && $repo->backend->file_extension =~ m/json$/) {
-        $file->spew_raw(YAML::Dump(decode_json($file->slurp_raw)));
+        YAML::XS::DumpFile($file, decode_json($file->slurp_raw));
     }
 
     if ($self->file eq '-') {
         binmode STDOUT
-            and print {*STDOUT} $file->slurp_raw();
+            and print {*STDOUT} $file->slurp_utf8();
     } else {
         $self->log->noticef(q{Retreiving object '%s' to: %s}, $package->id, $self->file);
         $file->copy($self->file);
