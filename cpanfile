@@ -59,7 +59,6 @@ requires "Sys::Syslog" => "0";
 requires "System::Command" => "0";
 requires "Time::Format" => "0";
 requires "Time::HiRes" => "0";
-requires "Try::Tiny" => "0";
 requires "Types::DBI" => "0";
 requires "Types::Path::Tiny" => "0";
 requires "URI::Escape" => "0";

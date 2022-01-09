@@ -18,7 +18,6 @@ use Net::Amazon::S3;
 use Net::Amazon::S3::Client;
 use Net::Amazon::S3::Client::Object;
 use Path::Tiny;
-use Try::Tiny;
 
 # local
 use Pakket::Utils::Package qw(
@@ -106,10 +105,14 @@ sub all_object_ids ($self) {
 sub all_object_ids_by_name ($self, $category, $name) {
     $self->_check_index_age();
 
-    my @all_object_ids = try {
-        grep {my ($c, $n) = parse_package_id($_); (!$category || $c eq $category) and $n eq $name} keys %{$self->index};
-    } catch {
-        croak($log->criticalf('Could not get remote all_object_ids, reason: %s', $_));
+    my @all_object_ids;
+    eval {
+        @all_object_ids = grep {my ($c, $n) = parse_package_id($_); (!$category || $c eq $category) and $n eq $name}
+            keys %{$self->index};
+        1;
+    } or do {
+        chomp (my $error = $@ || 'zombie error');
+        croak($log->criticalf('Could not get remote all_object_ids, reason: %s', $error));
     };
 
     return \@all_object_ids;
@@ -131,10 +134,12 @@ sub has_object ($self, $id) {
 sub remove ($self, $id) {
     $self->_check_index($id);
 
-    try {
+    eval {
         $self->index->{$id}->delete;
-    } catch {
-        croak($log->criticalf('Could not remove content for %s, reason: %s', $id, $_));
+        1;
+    } or do {
+        chomp (my $error = $@ || 'zombie error');
+        croak($log->criticalf('Could not remove content for %s, reason: %s', $id, $error));
     };
 
     return 1;
@@ -143,10 +148,13 @@ sub remove ($self, $id) {
 sub retrieve_content ($self, $id) {
     $self->_check_index($id);
 
-    my $content = try {
-        $self->index->{$id}->get;
-    } catch {
-        croak($log->criticalf('Could not retrieve content for %s, reason: %s', $id, $_));
+    my $content;
+    eval {
+        $content = $self->index->{$id}->get;
+        1;
+    } or do {
+        chomp (my $error = $@ || 'zombie error');
+        croak($log->criticalf('Could not retrieve content for %s, reason: %s', $id, $error));
     };
 
     return $content;
@@ -155,42 +163,49 @@ sub retrieve_content ($self, $id) {
 sub retrieve_location ($self, $id) {
     $self->_check_index($id);
 
-    my $location = try {
+    my $location;
+    eval {
         my $tmp_file = Path::Tiny->tempfile('pakket-' . ('X' x 10));
         $self->index->{$id}->get_filename($tmp_file->absolute->stringify);
-        $tmp_file;
-    } catch {
-        croak($log->criticalf('Could not retrieve location for id %s, reason: %s', $id, $_));
+        $location = $tmp_file;
+        1;
+    } or do {
+        chomp (my $error = $@ || 'zombie error');
+        croak($log->criticalf('Could not retrieve location for id %s, reason: %s', $id, $error));
     };
 
     return $location;
 }
 
 sub store_content ($self, $id, $content) {
-    try {
+    eval {
         my $object = $self->s3_bucket->object(
             'key'       => join ('.', $id, $self->file_extension),
             'acl_short' => 'public-read',
         );
         $object->put($content);
         $self->{'index'}{$id} = $object;
-    } catch {
-        croak($log->criticalf('Could not store content for id %s, reason: %s', $id, $_));
+        1;
+    } or do {
+        chomp (my $error = $@ || 'zombie error');
+        croak($log->criticalf('Could not store content for id %s, reason: %s', $id, $error));
     };
 
     return;
 }
 
 sub store_location ($self, $id, $file_to_store) {
-    try {
+    eval {
         my $object = $self->s3_bucket->object(
             'key'       => join ('.', $id, $self->file_extension),
             'acl_short' => 'public-read',
         );
         $object->put_filename($file_to_store);
         $self->{'index'}{$id} = $object;
-    } catch {
-        croak($log->criticalf('Could not store location for id %s, reason: %s', $id, $_));
+        1;
+    } or do {
+        chomp (my $error = $@ || 'zombie error');
+        croak($log->criticalf('Could not store location for id %s, reason: %s', $id, $error));
     };
 
     return;
@@ -227,10 +242,13 @@ sub _build_index ($self) {
 }
 
 sub _get_all_object_ids ($self) {
-    my @all_object_ids = try {
-        keys %{$self->index};
-    } catch {
-        croak($log->criticalf('Could not get remote all_object_ids, reason: %s', $_));
+    my @all_object_ids;
+    eval {
+        @all_object_ids = keys %{$self->index};
+        1;
+    } or do {
+        chomp (my $error = $@ || 'zombie error');
+        croak($log->criticalf('Could not get remote all_object_ids, reason: %s', $error));
     };
 
     return \@all_object_ids;

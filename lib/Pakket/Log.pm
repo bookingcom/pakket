@@ -20,7 +20,6 @@ use Log::Dispatch::Screen::Gentoo;
 use Log::Dispatch;
 use Path::Tiny;
 use Time::Format qw(time_format);
-use Try::Tiny;
 use Unicode::UTF8;
 
 use constant {
@@ -121,11 +120,15 @@ sub _file_logger ($class, $file) {
         'callbacks' => [
             sub (%data) {
                 my $localtime = gettimeofday;
-                my $timestr   = try {
-                    time_format('yyyy-mm-dd hh:mm:ss.mmm', $localtime);
-                } catch {
-                    time_format('yyyy-mm-dd hh:mm:ss.mmm', int ($localtime));
+                my $timestr;
+
+                eval {
+                    $timestr = time_format('yyyy-mm-dd hh:mm:ss.mmm', $localtime);
+                    1;
+                } or do {
+                    $timestr = time_format('yyyy-mm-dd hh:mm:ss.mmm', int ($localtime));
                 };
+
                 return sprintf '[%s] %.3s: %s', $timestr, $data{'level'}, $data{'message'};
             },
         ],
