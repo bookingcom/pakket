@@ -23,6 +23,7 @@ use Exporter qw(import);
 our @EXPORT_OK = qw(
     clean_hash
     encode_json_canonical
+    encode_json_one_line
     encode_json_pretty
     env_vars
     env_vars_build
@@ -195,6 +196,10 @@ sub encode_json_canonical ($content) {
 
 sub encode_json_pretty ($content) {
     return JSON::MaybeXS->new->convert_blessed->canonical->pretty->encode($content);
+}
+
+sub encode_json_one_line ($content) {
+    return JSON::MaybeXS->new->convert_blessed->indent(0)->encode($content);
 }
 
 sub clean_hash ($data) {

@@ -168,19 +168,21 @@ sub _setup_legacy_routes ($self, $pakket_config, $repos_ref) {
             $sub->get('/all_object_ids_by_name/*id')->to('action', 'get_filtered_index', 'repo', $repo);
             $sub->get('/has_object')->to('action', 'has_item', 'repo', $repo);
             $sub->get('/has_object/*id')->to('action', 'has_item', 'repo', $repo);
-            $sub->get('/retrieve/content')->to('action', 'get_item', 'repo', $repo);
-            $sub->get('/retrieve/content/*id')->to('action', 'get_item', 'repo', $repo);
-            $sub->get('/*id')->to('action', 'get_filtered_index', 'repo', $repo);
+            $sub->get('/retrieve/content')->to('action', 'get_json', 'repo', $repo);
+            $sub->get('/retrieve/content/*id')->to('action', 'get_json', 'repo', $repo);
+            $sub->get('/retrieve/location')->to('action', 'get_data', 'repo', $repo);
+            $sub->get('/retrieve/location/*id')->to('action', 'get_data', 'repo', $repo);
+            $sub->get('/id/*id')->to('action', 'get_filtered_index', 'repo', $repo);
 
             if ($pakket_config->{'allow_write'}) {
                 ## $sub->put('/*id')->to('action', 'put_item', 'repo', $repo);
-                ## $sub->post('/store/content')->to('action', 'put_item', 'repo', $repo);
-                ## $sub->post('/store/content/*id')->to('action', 'put_item', 'repo', $repo);
-                ## $sub->post('/store/location')->to('action', 'put_item', 'repo', $repo);
-                ## $sub->post('/store/location/*id')->to('action', 'put_item', 'repo', $repo);
+                $sub->post('/store/content')->to('action', 'put_json', 'repo', $repo);
+                $sub->post('/store/content/*id')->to('action', 'put_json', 'repo', $repo);
+                $sub->post('/store/location')->to('action', 'put_data', 'repo', $repo);
+                $sub->post('/store/location/*id')->to('action', 'put_data', 'repo', $repo);
                 ## $sub->delete('/*id')->to('action', 'delete_item', 'repo', $repo);
-                ## $sub->get('/remove/location')->to('action', 'delete_item', 'repo', $repo);
-                ## $sub->get('/remove/location/*id')->to('action', 'delete_item', 'repo', $repo);
+                $sub->get('/remove/location')->to('action', 'delete_item', 'repo', $repo);
+                $sub->get('/remove/location/*id')->to('action', 'delete_item', 'repo', $repo);
             }
 
             if ($repo->type eq 'parcel' && exists $repos{'spec'} && exists $repos{'snapshot'}) {

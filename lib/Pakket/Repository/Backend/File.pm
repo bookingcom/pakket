@@ -35,7 +35,7 @@ has 'directory' => (
 has 'file_extension' => (
     'is'      => 'ro',
     'isa'     => 'Str',
-    'default' => 'ext',
+    'default' => 'tgz',
 );
 
 has 'validate_id' => (
@@ -44,7 +44,7 @@ has 'validate_id' => (
     'default' => 1,
 );
 
-has 'cache' => (
+has '_cache' => (
     'is'      => 'ro',
     'isa'     => 'CHI::Driver::RawMemory',
     'lazy'    => 1,
@@ -102,33 +102,31 @@ sub has_object ($self, $id) {
 }
 
 sub remove ($self, $id) {
-    my $location = $self->retrieve_location($id)
+    my $rel = $self->index->{$id}
         or return;
 
-    $location->remove;
+    $self->directory->child($rel)->remove;
     my \%index = $self->index;
     delete $index{$id};
     return 1;
 }
 
 sub retrieve_content ($self, $id) {
-    my $location = $self->retrieve_location($id)
+    my $rel = $self->index->{$id}
         or croak($log->criticalf('Could not retrieve content of %s', $id));
 
-    return $location->slurp_raw;
+    my $content = $self->directory->child($rel)->slurp_raw;
+    return $content;
 }
 
 sub retrieve_location ($self, $id) {
-    my $filename = $self->index->{$id};
-    if ($filename) {
-        my $file_to_return = Path::Tiny->tempfile;
-        $self->directory->child($filename)->copy($file_to_return);
-        return $file_to_return;
-    }
+    my $rel = $self->index->{$id}
+        or croak($log->criticalf('Could not retrieve location of %s', $id));
 
-    $log->debugf('File for ID %s does not exist in storage', $id);
+    my $tmp = Path::Tiny->tempfile;
+    $self->directory->child($rel)->copy($tmp);
 
-    return;
+    return $tmp;
 }
 
 sub store_content ($self, $id, $content) {
@@ -158,8 +156,8 @@ sub store_location ($self, $id, $file_to_store) {
 }
 
 sub index ($self) { ## no critic [Subroutines::ProhibitBuiltinHomonyms]
-    my \%result = $self->cache->compute(
-        $self->directory->stringify,
+    my \%result = $self->_cache->compute(
+        __PACKAGE__ . $self->directory->stringify,
         CACHE_TTL(),
         sub {
             my $regex = qr{\A (.*) $self->{file_extension}\z}x;
@@ -188,7 +186,7 @@ sub index ($self) { ## no critic [Subroutines::ProhibitBuiltinHomonyms]
 }
 
 sub clear_index ($self) {
-    $self->cache->expire($self->directory->stringify);
+    $self->_cache->expire(__PACKAGE__ . $self->directory->stringify);
     return;
 }
 

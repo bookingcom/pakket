@@ -1,0 +1,25 @@
+---
+allow_rollback: 1
+default_category: perl
+install_dir: ~/.cache/pakket/install
+jobs: 3
+keep_rollbacks: 10
+log_file: ~/.cache/pakket/pakket.log
+native:
+  build:
+    make-options: [-j2]
+    no-test: 2
+perl:
+  build:
+    no-test: 2
+repositories:
+  parcel:
+    scheme: http
+    host: localhost
+    port: 3000
+    base_path: /co7/5.28.1/parcel
+    file_extension: tgz
+    type: http
+  source: http://localhost:3000/source?file_extension=tgz
+  spec: http://localhost:3000/spec?file_extension=json
+use_hardlinks: 1

@@ -13,8 +13,6 @@ use t::lib::Utils qw(test_web_prepare_context);
 
 use experimental qw(declared_refs refaliasing signatures);
 
-## no critic [ValuesAndExpressions::ProhibitLongChainsOfMethodCalls]
-
 describe 'Pakket::Web legacy' => sub {
     Test2::Tools::Spec::spec_defaults tests => (async => 1);
 

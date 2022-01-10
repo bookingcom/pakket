@@ -37,7 +37,7 @@ async sub get_filtered_index ($self) {
 
 async sub has_item ($self) {
     my $repo = $self->stash('repo');
-    my $id   = $self->param('id');
+    my ($id) = $self->_required_params($self->req->params->to_hash, 'id');
 
     my $result = $repo->has_object($id);
     return $self->render(
@@ -50,53 +50,73 @@ async sub has_item ($self) {
     );
 }
 
-async sub get_item ($self) {
+async sub get_json ($self) {
     my $repo = $self->stash('repo');
-    my $id   = $self->param('id');
 
-    my $file;
+    my $content;
     eval {
-        $file = $repo->retrieve_content($id);
+        $content = $repo->retrieve_content($self->_required_params($self->req->params->to_hash, 'id'));
         1;
     } or do {
         return $self->reply->not_found;
     };
 
-    my $format = 'bin';
-    for ($repo->file_extension) {
-        if ($_ eq 'json') {
-            $format = 'json';
-        } elsif ($_ eq 'tgz') {
-            $format = 'gz';
-        }
-    }
-
     return $self->render(
-        'data'   => $file,
-        'format' => $format,
+        'data'   => $content,
+        'format' => 'json',
     );
 }
 
-sub put_item ($self) {
-    my $repo    = $self->stash('repo');
-    my $id      = $self->param('id');
-    my $content = $self->req->body;
+async sub get_data ($self) {
+    my $repo = $self->stash('repo');
 
-    defined && length
-        or $self->reply->exception('Bad input')->rendered(400)
-        for $id, $content;
+    my $file;
+    eval {
+        $file = $repo->retrieve_location($self->_required_params($self->req->params->to_hash, 'id'));
+        1;
+    } or do {
+        return $self->reply->not_found;
+    };
 
-    $repo->store_content($id, $content);
+    return $self->render(
+        'data'   => $file->slurp_raw,
+        'format' => 'bin',
+    );
+}
+
+sub put_json ($self) {
+    my $repo = $self->stash('repo');
+    my \%payload = $self->req->json;
+
+    $repo->store_content($self->_required_params(\%payload, 'id', 'content'));
+    return $self->render('json' => {'success' => 1});
+}
+
+sub put_data ($self) {
+    my $repo = $self->stash('repo');
+    my ($id) = $self->_required_params($self->req->params->to_hash, 'id');
+
+    $repo->store_content($id, $self->req->body);
     return $self->render('json' => {'success' => 1});
 }
 
 sub delete_item ($self) {
     my $repo = $self->stash('repo');
-    my $id   = $self->param('id');
 
-    $repo->remove($id);
+    $repo->remove($self->_required_params($self->req->params->to_hash, 'id'));
 
     return $self->render('json' => {'success' => 1});
+}
+
+sub _required_params ($self, $params, @required) {
+    my %data = map {$_ => $params->{$_}} @required;
+
+    defined $data{$_} && length $data{$_}
+        or return $self->reply->exception("Bad input: $_")->rendered(400)
+        for @required;
+
+    my @result = @data{@required};
+    return @result;
 }
 
 1;

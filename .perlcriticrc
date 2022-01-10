@@ -470,6 +470,9 @@ allow = for foreach if
 [Moose::ProhibitLazyBuild]
 equivalent_modules = Moo Moo::Role
 
+[ValuesAndExpressions::ProhibitLongChainsOfMethodCalls]
+max_chain_length = 8
+
 [ValuesAndExpressions::ProhibitMagicNumbers]
 allowed_values = -1 0 1 2 3 4 5 8 10 42 60 64 80 100 127 128 200 303 400 401 404 443 500 1000 1900 3600 8080
 # Kind of literals to allow.

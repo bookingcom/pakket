@@ -7,267 +7,209 @@ use Moose;
 use MooseX::StrictConstructor;
 use namespace::autoclean;
 
+# core
 use Carp;
-use URI::Escape qw(uri_escape);
-use JSON::MaybeXS qw(decode_json);
-use Path::Tiny;
+use experimental qw(declared_refs refaliasing signatures);
+
+# non core
 use Log::Any qw($log);
 use Mojo::URL;
-use Types::Path::Tiny qw(Path);
-use HTTP::Tiny;
-use Pakket::Utils qw(encode_json_canonical);
-use Time::HiRes qw(usleep);
+use Mojo::UserAgent;
+use Path::Tiny;
+
+# local
+use Pakket::Utils qw(encode_json_one_line);
 
 use constant {
     'HTTP_DEFAULT_PORT' => 80,
     'HTTP_TIMEOUT'      => 599,
     'SLEEP_TIMEOUT'     => 300,
-
 };
 
-has 'scheme' => (
-    'is'      => 'ro',
-    'isa'     => 'Str',
-    'default' => sub {'http'},
-);
-
-has 'host' => (
+has 'url' => (
     'is'       => 'ro',
-    'isa'      => 'Str',
+    'isa'      => 'Mojo::URL',
     'required' => 1,
 );
 
-has 'port' => (
+has 'file_extension' => (
     'is'      => 'ro',
     'isa'     => 'Str',
-    'default' => sub {HTTP_DEFAULT_PORT()},
+    'default' => 'tgz',
 );
 
-has 'base_url' => (
+has '_UA' => (
     'is'      => 'ro',
-    'isa'     => 'Str',
-    'lazy'    => 1,
-    'builder' => '_build_base_url',
-);
-
-has 'base_path' => (
-    'is'      => 'ro',
-    'isa'     => 'Str',
-    'default' => sub {''},
-);
-
-has 'http_client' => (
-    'is'      => 'ro',
-    'isa'     => 'HTTP::Tiny',
-    'default' => sub {HTTP::Tiny->new},
-);
-
-has 'all_object_ids' => (
-    'is'      => 'ro',
-    'lazy'    => 1,
-    'clearer' => 'clear_all_object_ids',
-    'builder' => '_build_all_object_ids',
+    'isa'     => 'Mojo::UserAgent',
+    'default' => sub {Mojo::UserAgent->new},
 );
 
 with qw(
     Pakket::Role::Repository::Backend
 );
 
-sub new_from_uri {
-    my ($class, $uri) = @_;
-
+sub new_from_uri ($class, $uri) {
     my $url = Mojo::URL->new($uri);
+    $log->debugf('%s: %s', (caller (0))[3], $uri);
 
-    $url->scheme =~ m{^https?}
-        or $url->scheme('http');
+    my %params = ('url' => $url);
+    $log->debugf('%s params: %s', (caller (0))[3], encode_json_one_line(\%params));
+
+    return $class->new(\%params);
+}
+
+sub BUILDARGS ($class, $args) {
+    my ($url, $file_extension);
+    if ($args->{'url'}) {
+        $url            = Mojo::URL->new($args->{'url'});
+        $file_extension = $url->query->param('file_extension');
+        $url->path($url->path . '/') if substr ($url->path, -1, 1) ne '/';
+        $url->query('');
+    } else {
+        croak $log->criticalf('Invalid params, host is required: %s', encode_json_one_line($args)) if !$args->{'host'};
+        $file_extension = $args->{'file_extension'};
+        $url            = Mojo::URL->new;
+        $url->host($args->{'host'});
+        $url->scheme($args->{'scheme'} // 'https');
+        $url->port($args->{'port'})      if $args->{'port'};
+        $url->path($args->{'base_path'}) if $args->{'base_path'};
+        $url->path($url->path . '/')     if substr ($url->path, -1, 1) ne '/';
+    }
 
     $url->is_abs
-        or croak($log->criticalf('URI "%s" is not a proper HTTP URI', $url->to_string));
+        or croak($log->criticalf('invalid URL: %s', $url));
 
-    return $class->new(
-        'scheme' => $url->scheme,
-        'host'   => $url->host,
-        ('port'      => $url->port) x !!$url->port,
-        ('base_path' => $url->path) x !!$url->path,
+    return {
+        'url'            => $url,
+        'file_extension' => $file_extension,
+    };
+}
+
+sub BUILD ($self, @) {
+    $self->{'file_extension'} eq ''                                            # add one dot if necessary
+        or $self->{'file_extension'} =~ s{^(?:[.]*)(.*)}{.$1}x;
+
+    return;
+}
+
+sub all_object_ids ($self) {
+    my $url = $self->url->clone->path('all_object_ids');
+    $log->debugf('%s url: %s', (caller (0))[3], $url);
+
+    my $res = $self->_UA->get($url => {'Accept' => 'application/json'})->result;
+    if ($res->is_error) {
+        croak $log->criticalf('Could not fetch from "%s": %s %s %s', $url, $res->code, $res->message, $res->body);
+    }
+
+    return $res->json->{'object_ids'};
+}
+
+sub all_object_ids_by_name ($self, $category, $name) {
+    my $url = $self->url->clone->path('all_object_ids_by_name')->query(
+        'category' => $category,
+        'name'     => $name,
     );
-}
+    $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-sub BUILD {
-    my $self = shift;
-
-    # check that repo exists
-
-    my $url      = $self->base_url . '/all_object_ids';
-    my $response = $self->http_client->get($url);
-    if (!$response->{'success'}) {
-        croak(
-            $log->criticalf(
-                'Could not connect to repository %s : %d -- %s',
-                $url, $response->{'status'}, $response->{'reason'},
-            ),
-        );
-    }
-}
-
-sub _build_base_url {
-    my $self = shift;
-
-    return sprintf ('%s://%s:%s%s', $self->scheme, $self->host, $self->port, $self->base_path);
-}
-
-sub _build_all_object_ids {
-    my $self     = shift;
-    my $url      = '/all_object_ids';
-    my $full_url = $self->base_url . $url;
-    my $response = $self->http_client->get($full_url);
-
-    if (!$response->{'success'}) {
-        croak(
-            $log->criticalf(
-                'Could not get remote all_object_ids: %d -- %s',
-                $response->{'status'}, $response->{'reason'},
-            ),
-        );
+    my $res = $self->_UA->get($url => {'Accept' => 'application/json'})->result;
+    if ($res->is_error) {
+        croak $log->criticalf('Could not fetch from "%s": %s %s %s', $url, $res->code, $res->message, $res->body);
     }
 
-    my $content = decode_json($response->{'content'});
-    return $content->{'object_ids'};
+    my \@object_ids = $res->json->{'object_ids'};
+    return \@object_ids;
 }
 
-sub all_object_ids_by_name {
-    my ($self, $category, $name) = @_;
-    my $response = $self->http_client->get(
-        sprintf (
-            '%s/all_object_ids_by_name?name=%s&category=%s',
-            $self->base_url, uri_escape($name), uri_escape($category),
-        ),
-    );
+sub has_object ($self, $id) {
+    my $url = $self->url->clone->path('has_object')->query('id' => $id);
+    $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    if (!$response->{'success'}) {
-        croak(
-            $log->criticalf(
-                'Could not get remote all_object_ids: %d -- %s',
-                $response->{'status'}, $response->{'reason'},
-            ),
-        );
+    my $res = $self->_UA->get($url => {'Accept' => 'application/json'})->result;
+    if ($res->is_error) {
+        croak $log->criticalf('Could not fetch from "%s": %s %s %s', $url, $res->code, $res->message, $res->body);
     }
 
-    my $content = decode_json($response->{'content'});
-    return $content->{'object_ids'};
+    return int !!$res->json->{'has_object'};
 }
 
-sub has_object {
-    my ($self, $id) = @_;
-    my $response = $self->http_client->get($self->base_url . '/has_object?id=' . uri_escape($id));
+sub remove ($self, $id) {
+    my $url = $self->url->clone->path('remove/location')->query('id' => $id);
+    $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    if (!$response->{'success'}) {
-        croak(
-            $log->criticalf('Could not get remote has_object: %d -- %s', $response->{'status'}, $response->{'reason'}));
+    my $res = $self->_UA->get($url => {'Accept' => 'application/json'})->result;
+    if ($res->is_error) {
+        croak $log->criticalf('Could not remove from "%s": %s %s', $url, $res->code, $res->message);
     }
 
-    my $content = decode_json($response->{'content'});
-    return $content->{'has_object'};
+    return $res->json->{'success'};
 }
 
-sub store_location {
-    my ($self, $id, $file_to_store) = @_;
-    my $content = path($file_to_store)->slurp({'binmode' => ':raw'});
+sub retrieve_content ($self, $id, $retries = 3) {
+    my $url = $self->url->clone->path('retrieve/content')->query('id' => $id);
+    $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    my $url      = '/store/location?id=' . uri_escape($id);
-    my $full_url = $self->base_url . $url;
-
-    my $response = $self->http_client->post(
-        $full_url => {
-            'content' => $content,
-            'headers' => {
-                'Content-Type' => 'application/x-www-form-urlencoded',
-            },
-        },
-    );
-
-    if (!$response->{'success'}) {
-        croak(
-            $log->criticalf(
-                'Could not store location for id %s, URL: %s, Status: %s, Reason: %s',
-                $id, $response->{'url'}, $response->{'status'}, $response->{'reason'},
-            ),
-        );
+    my $res = $self->_UA->get($url => {'Accept' => 'application/json'})->result;
+    if ($res->is_error) {
+        croak $log->criticalf('Could not fetch from "%s": %s %s', $url, $res->code, $res->message);
     }
+
+    return $res->body;
 }
 
-sub retrieve_location {
-    my ($self, $id, $retries) = @_;
-    $retries //= 3;
-    my $url      = '/retrieve/location?id=' . uri_escape($id);
-    my $full_url = $self->base_url . $url;
-    my $response = $self->http_client->get($full_url);
-    if (!$response->{'success'}) {
-        if ($response->{'status'} == HTTP_TIMEOUT() && $retries > 0) {
-            usleep SLEEP_TIMEOUT();
-            return $self->retrieve_location($id, $retries - 1);
-        }
-        if ($response->{'status'} == 404) {
-            return;
-        }
+sub retrieve_location ($self, $id, $retries = 3) {
+    my $url = $self->url->clone->path('retrieve/location')->query('id' => $id);
+    $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-        croak($log->criticalf('Could not retrieve parcel %s: %s', $id, $response->{'content'}));
+    my $res = $self->_UA->get($url => {'Accept' => 'application/octet-stream'})->result;
+    if ($res->is_error) {
+        croak $log->criticalf('Could not fetch from "%s": %s %s', $url, $res->code, $res->message);
     }
-    my $content  = $response->{'content'};
+
     my $location = Path::Tiny->tempfile('X' x 10);
-    $location->touch;
-    $location->append({'binmode' => ':raw'}, $content);
+
+    $location->spew_raw($res->body);
 
     return $location;
 }
 
-sub store_content {
-    my ($self, $id, $content) = @_;
-    my $url      = '/store/content';
-    my $full_url = $self->base_url . $url;
+sub store_content ($self, $id, $content) {
+    my $url = $self->url->clone->path('store/content');
+    $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    my $response = $self->http_client->post(
-        $full_url => {
-            'content' => encode_json_canonical({
-                    'content' => $content,
-                    'id'      => $id,
-                },
-            ),
-
-            'headers' => {
-                'Content-Type' => 'application/json',
-            },
+    my $res = $self->_UA->post(
+        $url => {
+            'Accept' => 'application/json',
         },
-    );
+        'json' => {
+            'content' => $content,
+            'id'      => $id,
+        },
+    )->result;
 
-    if (!$response->{'success'}) {
-        croak($log->criticalf('Could not store content for id %s', $id));
+    if ($res->is_error) {
+        croak $log->criticalf('Could not store content to "%s": %s %s', $url, $res->code, $res->message);
     }
+
+    return;
 }
 
-sub retrieve_content {
-    my ($self, $id) = @_;
-    my $url      = '/retrieve/content?id=' . uri_escape($id);
-    my $full_url = $self->base_url . $url;
-    my $response = $self->http_client->get($full_url);
+sub store_location ($self, $id, $file_to_store) {
+    my $content = path($file_to_store)->slurp_raw;
+    my $url     = $self->url->clone->path('store/location')->query('id' => $id);
+    $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    if (!$response->{'success'}) {
-        croak($log->criticalf('Could not retrieve content for id %s', $id));
+    my $res = $self->_UA->post(
+        $url => {
+            'Accept' => 'application/json',
+        },
+        $content,
+    )->result;
+
+    if ($res->is_error) {
+        croak $log->criticalf('Could not store location to "%s": %s %s', $url, $res->code, $res->message);
     }
 
-    return $response->{'content'};
-}
-
-sub remove {
-    my ($self, $id) = @_;
-    my $url      = '/remove/location?id=' . uri_escape($id);
-    my $full_url = $self->base_url . $url;
-    my $response = $self->http_client->get($full_url);
-
-    if (!$response->{'success'}) {
-        croak($log->criticalf('Could not remove %s, url: %s, err: %s', $id, $response->{'url'}, $response->{'reason'}));
-    }
-
-    return $response->{'success'};
+    return;
 }
 
 __PACKAGE__->meta->make_immutable;

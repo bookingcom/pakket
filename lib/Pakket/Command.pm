@@ -36,6 +36,7 @@ sub validate_args ($self, $opt, $args) {
 
     my $plog = use_module('Pakket::Log');
     Log::Any::Adapter->set('Dispatch', 'dispatcher' => $plog->build_logger($self->{'verbose'}, $self->{'logfile'}));
+    Log::Any::Adapter->set({'category' => qr/^CHI::Driver/}, 'Null');
 
     return;
 }
