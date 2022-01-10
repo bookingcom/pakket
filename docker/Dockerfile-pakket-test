@@ -1,0 +1,11 @@
+FROM perl:latest
+
+WORKDIR /test
+
+COPY cpanfile cpanfile
+RUN cpanm -nq --with-develop --installdeps /test
+
+COPY t/dzil-modules dzil-modules
+RUN cat dzil-modules | xargs cpanm -nq
+
+CMD bash

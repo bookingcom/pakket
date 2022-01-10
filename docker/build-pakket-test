@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+docker build \
+	-t pakket-test \
+	-f docker/Dockerfile-pakket-test \
+	.
