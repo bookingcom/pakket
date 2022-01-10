@@ -2,7 +2,7 @@ FROM perl
 
 WORKDIR /srv/http/app
 COPY    cpanfile /srv/http/app/cpanfile
-RUN     cpanm -n --installdeps .
+RUN     cpanm -nq --installdeps .
 
 RUN     mkdir /srv/http/data
 COPY    t/corpus/repos.v3 /srv/http/data

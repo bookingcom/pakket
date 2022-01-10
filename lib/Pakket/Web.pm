@@ -92,7 +92,7 @@ sub _setup_helpers ($self) {
 }
 
 sub _setup_plugins ($self) {
-    $self->plugin('Status' => {'route' => $self->routes->any('/status')});
+    $self->plugin('Status');
 
     # $self->plugin('OpenAPI' => {'spec' => $self->static->file('api-v1.yaml')->path});
     # $self->plugin(
@@ -126,7 +126,8 @@ sub _setup_legacy_routes ($self, $pakket_config, $repos_ref) {
     }
 
     my $r = $self->routes;
-    $r->get('/' => 'status');
+    $r->get('/'       => 'status');
+    $r->get('/status' => 'status');
 
     $r->get('/info')->to(
         'controller' => 'repos',
