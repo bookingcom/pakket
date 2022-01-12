@@ -92,15 +92,8 @@ sub _setup_helpers ($self) {
 }
 
 sub _setup_plugins ($self) {
-    $self->plugin('Status');
 
     # $self->plugin('OpenAPI' => {'spec' => $self->static->file('api-v1.yaml')->path});
-    # $self->plugin(
-    #     'SwaggerUI' => {
-    #         'title' => 'Mojolicious App',
-    #         'url'   => '/api/v1',
-    #     },
-    # );
 
     return;
 }

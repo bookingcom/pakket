@@ -22,7 +22,6 @@ requires "File::Spec" => "0";
 requires "File::chdir" => "0";
 requires "Future::AsyncAwait" => "0";
 requires "Git::Wrapper" => "0";
-requires "HTTP::Tiny" => "0";
 requires "IO::Interactive" => "0";
 requires "IO::Prompt::Tiny" => "0";
 requires "JSON::MaybeXS" => "0";
@@ -66,7 +65,7 @@ requires "namespace::autoclean" => "0";
 requires "namespace::clean" => "0";
 requires "perl" => "v5.28.0";
 requires "vars" => "0";
-requires "version" => "0.77";
+requires "version" => "0";
 
 on 'build' => sub {
   requires "Module::Build" => "0.3601";

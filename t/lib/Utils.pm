@@ -95,21 +95,17 @@ sub config_web ($dirs) {
             },
             {
                 'backend' => {
-                    'directory'      => $dirs->{'spec'},
-                    'file_extension' => 'json',
-                    'type'           => 'file',
-                },
-                'path' => '/spec',
-                'type' => 'spec',
-            },
-            {
-                'backend' => {
                     'directory'      => $dirs->{'source'},
                     'file_extension' => 'tgz',
                     'type'           => 'file',
                 },
                 'path' => '/source',
                 'type' => 'source',
+            },
+            {
+                'backend' => "file://$dirs->{spec}?file_extension=json",
+                'path'    => '/spec',
+                'type'    => 'spec',
             },
         ],
     };
@@ -118,9 +114,9 @@ sub config_web ($dirs) {
 sub config (@dirs) {
     return +{
         'repositories' => {
-            'spec'   => "file://$dirs[0]",
-            'source' => "file://$dirs[1]",
-            'parcel' => "file://$dirs[2]",
+            'spec'   => "file://$dirs[0]?file_extension=json",
+            'source' => "file://$dirs[1]?file_extension=tgz",
+            'parcel' => "file://$dirs[2]?file_extension=tgz",
         },
     };
 }
@@ -131,9 +127,9 @@ sub test_prepare_context () {
 
     return +(
         'repositories' => {
-            'spec'   => "file://$dirs[0]",
-            'source' => "file://$dirs[1]",
-            'parcel' => "file://$dirs[2]",
+            'spec'   => "file://$dirs[0]?file_extension=json",
+            'source' => "file://$dirs[1]?file_extension=tgz",
+            'parcel' => "file://$dirs[2]?file_extension=tgz",
         },
         'install_dir' => "file://$dirs[3]",
         'dirs'        => \@dirs,

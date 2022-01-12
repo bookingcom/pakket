@@ -10,7 +10,7 @@ use warnings;
 use Carp;
 use List::Util qw(any);
 use experimental qw(declared_refs refaliasing signatures);
-use version 0.77;
+use version;
 
 # non core
 use File::ShareDir qw(dist_dir);

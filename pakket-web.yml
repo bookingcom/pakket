@@ -2,3 +2,8 @@
 secrets:
   session:
     - dev
+plugins:
+  - Status: {}
+  # - SwaggerUI:
+  #   title: pakket
+  #   url: /api/v1

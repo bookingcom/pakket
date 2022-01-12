@@ -70,6 +70,8 @@ color-severity-low     = bold cyan
 [-NamingConventions::ProhibitAmbiguousNames]
 # forbid = abstract bases close contract last left no record right second set
 
+[-RegularExpressions::ProhibitComplexRegexes]
+
 [-ValuesAndExpressions::ProhibitVersionStrings]
 
 # => disabled 2 -------------------------------------------------------------------------------------------------- {{{1

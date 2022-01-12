@@ -12,17 +12,13 @@ use Carp;
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
-use CHI;
 use Log::Any qw($log);
 use Mojo::URL;
 use Path::Tiny;
 use Types::Path::Tiny qw(AbsPath);
 
-# local
-use Pakket::Utils::Package qw(parse_package_id);
-
 use constant {
-    'CACHE_TTL' => 60 * 10,
+    'CACHE_TTL' => 60 * 5,
 };
 
 has 'directory' => (
@@ -30,25 +26,6 @@ has 'directory' => (
     'isa'      => AbsPath,
     'coerce'   => 1,
     'required' => 1,
-);
-
-has 'file_extension' => (
-    'is'      => 'ro',
-    'isa'     => 'Str',
-    'default' => 'tgz',
-);
-
-has 'validate_id' => (
-    'is'      => 'ro',
-    'isa'     => 'Bool',
-    'default' => 1,
-);
-
-has '_cache' => (
-    'is'      => 'ro',
-    'isa'     => 'CHI::Driver::RawMemory',
-    'lazy'    => 1,
-    'builder' => '_build_cache',
 );
 
 with qw(
@@ -67,7 +44,7 @@ sub new_from_uri ($class, $uri) {
         ('file_extension' => $query->param('file_extension')) x !!defined $query->param('file_extension'),
     );
 
-    return $class->new(%params);
+    return $class->new(\%params);
 }
 
 sub BUILD ($self, @) {
@@ -113,7 +90,7 @@ sub remove ($self, $id) {
 
 sub retrieve_content ($self, $id) {
     my $rel = $self->index->{$id}
-        or croak($log->criticalf('Could not retrieve content of %s', $id));
+        or croak($log->criticalf('Not found: %s', $id));
 
     my $content = $self->directory->child($rel)->slurp_raw;
     return $content;
@@ -123,7 +100,7 @@ sub retrieve_location ($self, $id) {
     my $rel = $self->index->{$id}
         or croak($log->criticalf('Could not retrieve location of %s', $id));
 
-    my $tmp = Path::Tiny->tempfile;
+    my $tmp = Path::Tiny->tempfile('pakket-' . ('X' x 10));
     $self->directory->child($rel)->copy($tmp);
 
     return $tmp;
@@ -137,12 +114,7 @@ sub store_content ($self, $id, $content) {
 }
 
 sub store_location ($self, $id, $file_to_store) {
-    if ($self->validate_id) {
-        my ($category, $name, $version, $release) = parse_package_id($id);
-
-        $category && $name && $version && $release
-            or croak($log->critical('Invalid id to store: ', $id));
-    }
+    $self->check_id($id);
 
     my $rel = $id . $self->file_extension;
     my $abs = $self->directory->child($rel)->absolute;
@@ -155,7 +127,9 @@ sub store_location ($self, $id, $file_to_store) {
     return 1;
 }
 
-sub index ($self) { ## no critic [Subroutines::ProhibitBuiltinHomonyms]
+sub index ($self, $force_update = 0) { ## no critic [Subroutines::ProhibitBuiltinHomonyms]
+    $self->clear_index if $force_update;
+
     my \%result = $self->_cache->compute(
         __PACKAGE__ . $self->directory->stringify,
         CACHE_TTL(),
@@ -179,6 +153,7 @@ sub index ($self) { ## no critic [Subroutines::ProhibitBuiltinHomonyms]
                 },
             );
 
+            $log->debugf("Index of '%s' is initialized, found: %d items", $self->directory, scalar %by_id);
             return \%by_id;
         },
     );
@@ -188,13 +163,6 @@ sub index ($self) { ## no critic [Subroutines::ProhibitBuiltinHomonyms]
 sub clear_index ($self) {
     $self->_cache->expire(__PACKAGE__ . $self->directory->stringify);
     return;
-}
-
-sub _build_cache ($self) {
-    return CHI->new(
-        'driver' => 'RawMemory',
-        'global' => 1,
-    );
 }
 
 __PACKAGE__->meta->make_immutable;

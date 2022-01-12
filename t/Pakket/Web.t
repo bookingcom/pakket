@@ -47,12 +47,9 @@ describe 'Pakket::Web legacy' => sub {
     };
 
     tests 'test /snapshot' => sub {
-        my @packages = ('native/zlib=1.2.11:1', 'perl/version=0.9924:1');
-        my $post     = $t->post_ok('/co7/5.28.1/parcel/snapshot' => json => \@packages);
-        $post->status_is(200);
-
-        my $result      = $post->tx->result->json;
-        my $snapshot_id = $result->{'id'};
+        my @packages    = ('native/zlib=1.2.11:1', 'perl/version=0.9924:1');
+        my $post        = $t->post_ok('/co7/5.28.1/parcel/snapshot' => json => \@packages)->status_is(200);
+        my $snapshot_id = $post->tx->result->json('/id');
 
         $t->get_ok('/snapshot')->status_is(200);
         $t->get_ok('/snapshots')->status_is(200);

@@ -8,4 +8,4 @@ export RELEASE_TESTING=1
 export TEST_CRITIC=1
 export TEST_SPELLING=1
 
-dzil run yath test -j 4 -P Moose
+dzil run yath test -j "$(nproc)" -P Moose

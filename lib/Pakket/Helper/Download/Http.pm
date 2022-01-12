@@ -13,22 +13,16 @@ use experimental qw(declared_refs refaliasing signatures);
 
 # non core
 use Path::Tiny;
-use HTTP::Tiny;
 
 with qw(
+    Pakket::Role::HttpAgent
     Pakket::Role::CanDownload
 );
 
 sub download_to_file ($self, $log) {
     my $file = Path::Tiny->tempfile;
-    my $http = HTTP::Tiny->new();
-    my $result
-        = $http->mirror($self->url, $file, {'headers' => {'If-Modified-Since' => 'Thu, 1 Jan 1970 01:00:00 GMT'}});
-    if (!$result->{'success'}) {
-        $log->critical('Status:', $result->{'status'});
-        $log->critical('Reason:', $result->{'reason'});
-        croak($log->critical(q{Can't download:}, $self->name));
-    }
+    my $res  = $self->http_get($self->url)->result;
+    $res->save_to($file);
     return $file;
 }
 

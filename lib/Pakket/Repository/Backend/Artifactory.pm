@@ -13,24 +13,27 @@ use Digest::SHA qw(sha1_hex);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
-use HTTP::Tiny;
 use JSON::MaybeXS;
 use Log::Any qw($log);
+use Mojo::URL;
+use Mojo::Path;
 use Path::Tiny;
 
 # local
+use Pakket::Utils qw(encode_json_one_line);
 use Pakket::Utils::Package qw(
     parse_package_id
 );
 
 use constant {
-    'INDEX_UPDATE_INTERVAL_SEC' => 60 * 5,
-    'DEFAULT_CATEGORIES'        => [qw(perl native)],
+    'CACHE_TTL'          => 60 * 5,
+    'DEFAULT_CATEGORIES' => [qw(perl native)],
 };
 
 has 'url' => (
     'is'       => 'ro',
-    'isa'      => 'Str',
+    'isa'      => 'Mojo::URL',
+    'required' => 1,
     'required' => 1,
 );
 
@@ -46,36 +49,54 @@ has 'api_key' => (
     'default' => sub {$ENV{'JFROG_ARTIFACTORY_API_KEY'} || ''},
 );
 
-has 'file_extension' => (
-    'is'       => 'ro',
-    'isa'      => 'Str',
-    'required' => 1,
-);
-
-has '_client' => (
-    'is'      => 'ro',
-    'isa'     => 'HTTP::Tiny',
-    'lazy'    => 1,
-    'builder' => '_build_client',
-);
-
-has '_index_storage' => (
-    'is'      => 'ro',
-    'isa'     => 'HashRef',
-    'default' => sub {+{}},
-);
-
-has '_index_timestamp' => (
-    'is'      => 'ro',
-    'default' => 0,
-);
-
 with qw(
+    Pakket::Role::HttpAgent
     Pakket::Role::Repository::Backend
 );
 
 sub new_from_uri ($class, $uri) {
-    croak($log->criticalf('new_from_uri: impossible to use with:', $class));
+    my $url = Mojo::URL->new($uri);
+
+    $url->is_abs
+        or croak($log->criticalf('invalid URL: %s', $url->to_string));
+
+    my $query  = $url->query;
+    my %params = (
+        'path' => $url->path->to_string,
+        ('url'            => $query->param('url')) x !!$query->param('url'),
+        ('api_key'        => $query->param('api_key')) x !!$query->param('api_key'),
+        ('file_extension' => $query->param('file_extension')) x !!$query->param('file_extension'),
+    );
+
+    return $class->new(\%params);
+}
+
+sub BUILDARGS ($class, @params) {
+    my %args;
+    if (@params == 1) {
+        \%args = $params[0];
+    } else {
+        %args = @params;
+    }
+
+    if ($args{'url'} && $args{'path'}) {
+        my $url  = Mojo::URL->new($args{'url'});
+        my $path = Mojo::Path->new($args{'path'})->leading_slash(0)->trailing_slash(1);
+        $url->path->trailing_slash(1);
+
+        $url->is_abs
+            or croak($log->criticalf('invalid URL: %s', $url));
+
+        $args{'url'}  = $url;
+        $args{'path'} = $path->to_string;
+    }
+
+    return {
+        'path' => $args{'path'},
+        'url'  => $args{'url'},
+        ('api_key'        => $args{'api_key'}) x !!$args{'api_key'},
+        ('file_extension' => $args{'file_extension'}) x !!defined $args{'file_extension'},
+    };
 }
 
 sub BUILD ($self, @) {
@@ -86,72 +107,77 @@ sub BUILD ($self, @) {
 }
 
 sub all_object_ids ($self) {
-    my \%index = $self->_index;
-
+    $log->debugf('%s: %s', (caller (0))[3], $self->path);
+    my \%index = $self->index;
     my @all_object_ids = keys %index;
-
     return \@all_object_ids;
 }
 
 sub all_object_ids_by_name ($self, $category, $name) {
-    my \%index = $self->_index;
+    $log->debugf('%s: %s %s/%s', (caller (0))[3], $self->path, $category, $name);
 
-    my @object_ids
-        = grep {my ($c, $n) = parse_package_id($_); (!$category || $c eq $category) and $n eq $name} keys %index;
+    my \%index = $self->index;
+    my @all_object_ids = keys %index;
 
-    return \@object_ids;
+    my @all_object_ids_by_name
+        = grep {my ($c, $n) = parse_package_id($_); (!$category || !$c || $c eq $category) && $n eq $name}
+        @all_object_ids;
+
+    return \@all_object_ids_by_name;
 }
 
 sub has_object ($self, $id) {
-    my \%index = $self->_index;
-
-    exists $index{$id}
-        or \%index = $self->_index(1);
-
+    $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
+    my \%index = $self->index;
     return exists $index{$id};
 }
 
 sub remove ($self, $id) {
-    my $base_url = join ('/', $self->url, $self->path);
-    my $uri      = $id . $self->file_extension;
-    my $url      = join ('/', $base_url, $uri);
+    $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
+    my \%index = $self->index;
 
-    my $response = $self->_client->delete($url);
-    $response->{'success'}
-        or croak($log->criticalf('Could not remove %s: [%d] %s', $url, $response->@{qw(status reason)}));
+    $index{$id}
+        or return;
 
-    my \%index = $self->_index;
+    my $url = $self->url->clone->path($self->path)->path($id . $self->file_extension);
+
+    $self->http_delete(
+        $url => {
+            'X-JFrog-Art-Api' => $self->api_key,
+        },
+    );
+
     delete $index{$id};
-
     return 1;
 }
 
 sub retrieve_content ($self, $id) {
-    my $base_url = join ('/', $self->url, $self->path);
-    my $uri      = $id . $self->file_extension;
-    my $url      = join ('/', $base_url, $uri);
+    $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
+    my $rel = $self->index->{$id}
+        or croak($log->criticalf('Not found: %s', $id));
 
-    my $response = $self->_client->get($url);
-    $response->{'success'}
-        or croak($log->criticalf('Could not retrieve content of %s: [%d] %s', $url, $response->@{qw(status reason)}));
+    my $url = $self->url->clone->path($self->path)->path($id . $self->file_extension);
 
-    return $response->{'content'};
+    my $res = $self->http_get($url)->result;
+    return $res->body;
 }
 
 sub retrieve_location ($self, $id) {
-    my $location = Path::Tiny->tempfile('pakket-' . ('X' x 10));
-    $location->spew_raw($self->retrieve_content($id));
+    $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
+    my $tmp = Path::Tiny->tempfile('pakket-' . ('X' x 10));
+    $tmp->spew_raw($self->retrieve_content($id));
 
-    return $location;
+    return $tmp;
 }
 
 sub store_content ($self, $id, $content) {
-    my $base_url = join ('/', $self->url, $self->path);
-    my $uri      = $id . $self->file_extension;
-    my $url      = join ('/', $base_url, $uri);
+    $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
+    $self->check_id($id);
 
+    my $url  = $self->url->clone->path($self->path)->path($id . $self->file_extension);
     my $sha1 = sha1_hex($content);
-    my \%index = $self->_index;
+
+    my \%index = $self->index;
 
     if ($index{$id}) {
         if ($index{$id}{'sha1'} eq $sha1) {
@@ -162,83 +188,73 @@ sub store_content ($self, $id, $content) {
         }
     }
 
-    my $response = $self->_client->put(
-        $url,
-        {
-            'content' => $content,
-            'headers' => {
-                'X-Checksum-Deploy' => 'false',
-                'X-Checksum-Sha1'   => $sha1,
-            },
+    $self->http_put(
+        $url => {
+            'X-Checksum-Deploy' => 'false',
+            'X-Checksum-Sha1'   => $sha1,
+            'X-JFrog-Art-Api'   => $self->api_key,
         },
+        $content,
     );
-    $response->{'success'}
-        or croak($log->criticalf('Could not store content of %s: [%d] %s', $url, $response->@{qw(status reason)}));
 
-    $index{$id} = {'sha1' => $sha1};
+    $index{$id}{'sha1'} = $sha1;
 
     return;
 }
 
 sub store_location ($self, $id, $file_to_store) {
-    return $self->store_content($id, path($file_to_store)->slurp);
+    $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
+    return $self->store_content($id, path($file_to_store)->slurp_raw);
 }
 
-sub _index ($self, $force_update = 0) {
-    my $base_url = join ('/', $self->url, 'api/storage', $self->path);
+sub index ($self, $force_update = 0) { ## no critic [Subroutines::ProhibitBuiltinHomonyms]
+    $self->clear_index if $force_update;
 
-    if (time - INDEX_UPDATE_INTERVAL_SEC < $self->_index_timestamp && !$force_update) {
-        return $self->_index_storage;
-    }
+    my \%result = $self->_cache->compute(
+        __PACKAGE__ . $self->url->to_string,
+        CACHE_TTL(),
+        sub {
+            my %by_id;
 
-    my \%index = $self->_index_storage;
-    %index = ();
-    if ($self->api_key) {
-        my $regex    = qr{\A [/] (.*) $self->{file_extension}\z}x;
-        my $response = $self->_client->get(join ('?', $base_url, 'list&deep=1'));
+            my $base_url = $self->url->clone->path('api/storage/')->path($self->path);
 
-        # if we have api_key use more powerful api, this will give us sha1 of the items for free
-        if (!$response->{'success'}) {
-            croak($log->criticalf('Could not list repository %s: [%d] %s', $base_url, $response->@{qw(status reason)}));
-        }
+            # if we have api_key use more powerful api, this will give us sha1 of the items for free
+            if ($self->api_key) {
+                my $regex = qr{\A [/] (.*) $self->{file_extension}\z}x;
+                my $res   = $self->http_get(
+                    join ('?', $base_url, 'list&deep=1') => {
+                        'X-JFrog-Art-Api' => $self->api_key,
+                    },
+                )->result;
 
-        foreach my $it (decode_json($response->{'content'})->{'files'}->@*) {
-            my ($name) = $it->{'uri'} =~ $regex;
-            $index{$name} = $it;
-        }
-    } else {
-        my $regex = qr{\A (.*) $self->{file_extension}\z}x;
-        foreach my $category (DEFAULT_CATEGORIES()->@*) {
-            my $response = $self->_client->get(join ('/', $base_url, $category));
+                foreach my $it ($res->json->{'files'}->@*) {
+                    my ($id) = $it->{'uri'} =~ $regex;
+                    $by_id{$id} = $it;
+                }
+            } else {
+                my $regex = qr{\A (.*) $self->{file_extension}\z}x;
 
-            if (!$response->{'success'}) {
-                croak(
-                    $log->criticalf(
-                        'Could not list repository %s: [%d] %s',
-                        $base_url, $response->@{qw(status reason)},
-                    ),
-                );
+                foreach my $category (DEFAULT_CATEGORIES()->@*) {
+                    my $res = $self->http_get($base_url->clone->path($category))->result;
+
+                    foreach my $it ($res->json->{'children'}->@*) {
+                        my ($id) = $it->{'uri'} =~ $regex;
+                        $by_id{$category . $id} = {};
+                    }
+                }
             }
 
-            foreach my $it (decode_json($response->{'content'})->{'children'}->@*) {
-                my ($name) = $it->{'uri'} =~ $regex;
-                $index{$category . $name} = {};
-            }
-        }
-    }
-
-    $self->{'_index_timestamp'} = time;
-    $log->debugf("Index of '%s' is initialized, found: %d items", $self->path, scalar %index);
-    return \%index;
-}
-
-sub _build_client ($self) {
-    my %default_headers;
-    $default_headers{'X-JFrog-Art-Api'} = $self->api_key if $self->api_key;
-
-    return HTTP::Tiny->new(
-        default_headers => \%default_headers,
+            $log->debugf("Index of '%s' is initialized, found: %d items", $self->path, scalar %by_id);
+            return \%by_id;
+        },
     );
+    return \%result;
+}
+
+sub clear_index ($self) {
+    $log->debugf('%s: %s', (caller (0))[3], $self->path);
+    $self->_cache->expire(__PACKAGE__ . $self->url->to_string);
+    return;
 }
 
 __PACKAGE__->meta->make_immutable;

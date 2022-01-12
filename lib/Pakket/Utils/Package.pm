@@ -28,7 +28,7 @@ our @EXPORT_OK = qw(
     validate_name
 );
 
-use constant { ## no critic [RegularExpressions::ProhibitComplexRegexes]
+use constant {
     'PAKKET_PACKAGE_STR' => qr{
         \A
         \s*

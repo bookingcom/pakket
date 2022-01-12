@@ -220,12 +220,9 @@ sub _get_distribution_from_02packages_api ($self, $module_name) {
     eval {
         my $url = $self->metacpan_api . '/package/' . $module_name;
         $self->log->debugf('requesting information about package %s (%s)', $module_name, $url);
-        my $res = $self->ua->get($url);
+        my $res = $self->http_get($url)->result;
 
-        $res->{'status'} != 200
-            and croak($self->log->critical('Cannot fetch:', $url));
-
-        my $content = decode_json($res->{'content'});
+        my $content = $res->json;
         $distribution_name = $content->{'distribution'};
         1;
     } or do {
@@ -240,12 +237,9 @@ sub _get_distribution ($self, $module_name) {
     eval {
         my $url = join ('/', $self->metacpan_api, 'module', $module_name);
         $self->log->debugf('requesting information about module %s (%s)', $module_name, $url);
-        my $response = $self->ua->get($url);
+        my $res = $self->http_get($url)->result;
 
-        $response->{'status'} != 200
-            and croak($self->log->critical('Cannot fetch:', $url));
-
-        my $content = decode_json $response->{'content'};
+        my $content = $res->json;
         $distribution_name = $content->{'distribution'};
         1;
     } or do {
@@ -259,11 +253,10 @@ sub _get_distribution ($self, $module_name) {
             my $release_name = $module_name =~ s{::}{-}rgsmx;
             my $url          = $self->metacpan_api . '/release';
             $self->log->debug("Requesting information about distribution $release_name ($url)");
-            my $res = $self->ua->post($url, +{'content' => $self->_get_is_dist_name_query($release_name)});
-            $res->{'status'} != 200
-                and croak($self->log->critical('Cannot fetch:', $url));
+            my $res
+                = $self->http_post($url, {Accept => '*/*'} => $self->_get_is_dist_name_query($release_name))->result;
 
-            my $res_body = decode_json $res->{'content'};
+            my $res_body = $res->json;
             $res_body->{'hits'}{'total'} > 0
                 or croak("Cannot find distribution for module: $module_name");
 
@@ -280,13 +273,13 @@ sub _get_distribution ($self, $module_name) {
 sub _get_latest_release_info_for_distribution ($self, $distribution_name) {
     my $url = join ('/', $self->metacpan_api, 'release', $distribution_name);
     $self->log->debugf('requesting release info for latest version of %s (%s)', $distribution_name, $url);
-    my $res = $self->ua->get($url);
-    if ($res->{'status'} != 200) {
-        $self->log->warnf('Failed receive from %s, status: %s, reason: %s', $url, $res->{'status'}, $res->{'reason'});
+    my $res = $self->http_get_nt($url)->res;
+    if ($res->is_error) {
+        $self->log->warnf('Failed receive from %s, status: %s, reason: %s', $url, $res->code, $res->message);
         return;
     }
 
-    my $content = decode_json($res->{'content'});
+    my $content = $res->json;
     my $version = $self->known_incorrect_version_fixes->{$distribution_name} // $content->{'version'};
 
     return +(
@@ -302,17 +295,10 @@ sub _get_latest_release_info_for_distribution ($self, $distribution_name) {
 sub _get_all_releases_for_distribution ($self, $distribution_name) {
     my $url = join ('/', $self->metacpan_api, 'release');
     $self->log->debugf('requesting release info for all versions of %s (%s)', $distribution_name, $url);
-    my $res = $self->ua->post($url, +{'content' => $self->_get_release_query($distribution_name)});
-    if ($res->{'status'} != 200) {
-        croak(
-            $self->log->criticalf(
-                q{Can't find any release for %s from %s, status: %s, reason: %s},
-                $distribution_name, $url, $res->{'status'}, $res->{'reason'},
-            ),
-        );
-    }
 
-    my $content = decode_json($res->{'content'});
+    my $res = $self->http_post($url, {Accept => '*/*'} => $self->_get_release_query($distribution_name))->result;
+
+    my $content = $res->json;
     is_arrayref($content->{'hits'}{'hits'})
         or croak($self->log->critical(q{Can't find any release for:}, $distribution_name));
 

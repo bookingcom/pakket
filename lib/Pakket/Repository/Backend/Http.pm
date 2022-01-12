@@ -32,19 +32,8 @@ has 'url' => (
     'required' => 1,
 );
 
-has 'file_extension' => (
-    'is'      => 'ro',
-    'isa'     => 'Str',
-    'default' => 'tgz',
-);
-
-has '_UA' => (
-    'is'      => 'ro',
-    'isa'     => 'Mojo::UserAgent',
-    'default' => sub {Mojo::UserAgent->new},
-);
-
 with qw(
+    Pakket::Role::HttpAgent
     Pakket::Role::Repository::Backend
 );
 
@@ -58,30 +47,37 @@ sub new_from_uri ($class, $uri) {
     return $class->new(\%params);
 }
 
-sub BUILDARGS ($class, $args) {
+sub BUILDARGS ($class, @params) {
+    my %args;
+    if (@params == 1) {
+        \%args = $params[0];
+    } else {
+        %args = @params;
+    }
+
     my ($url, $file_extension);
-    if ($args->{'url'}) {
-        $url            = Mojo::URL->new($args->{'url'});
+    if ($args{'url'}) {
+        $url            = Mojo::URL->new($args{'url'});
         $file_extension = $url->query->param('file_extension');
         $url->path($url->path . '/') if substr ($url->path, -1, 1) ne '/';
         $url->query('');
     } else {
-        croak $log->criticalf('Invalid params, host is required: %s', encode_json_one_line($args)) if !$args->{'host'};
-        $file_extension = $args->{'file_extension'};
+        croak $log->criticalf('Invalid params, host is required: %s', encode_json_one_line(\%args)) if !$args{'host'};
+        $file_extension = $args{'file_extension'};
         $url            = Mojo::URL->new;
-        $url->host($args->{'host'});
-        $url->scheme($args->{'scheme'} // 'https');
-        $url->port($args->{'port'})      if $args->{'port'};
-        $url->path($args->{'base_path'}) if $args->{'base_path'};
-        $url->path($url->path . '/')     if substr ($url->path, -1, 1) ne '/';
+        $url->host($args{'host'});
+        $url->scheme($args{'scheme'} // 'https');
+        $url->port($args{'port'})      if $args{'port'};
+        $url->path($args{'base_path'}) if $args{'base_path'};
+        $url->path($url->path . '/')   if substr ($url->path, -1, 1) ne '/';
     }
 
     $url->is_abs
         or croak($log->criticalf('invalid URL: %s', $url));
 
     return {
-        'url'            => $url,
-        'file_extension' => $file_extension,
+        'url' => $url,
+        ('file_extension' => $file_extension) x !!defined $file_extension,
     };
 }
 
@@ -96,10 +92,7 @@ sub all_object_ids ($self) {
     my $url = $self->url->clone->path('all_object_ids');
     $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    my $res = $self->_UA->get($url => {'Accept' => 'application/json'})->result;
-    if ($res->is_error) {
-        croak $log->criticalf('Could not fetch from "%s": %s %s %s', $url, $res->code, $res->message, $res->body);
-    }
+    my $res = $self->http_get($url => {'Accept' => 'application/json'})->result;
 
     return $res->json->{'object_ids'};
 }
@@ -111,10 +104,7 @@ sub all_object_ids_by_name ($self, $category, $name) {
     );
     $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    my $res = $self->_UA->get($url => {'Accept' => 'application/json'})->result;
-    if ($res->is_error) {
-        croak $log->criticalf('Could not fetch from "%s": %s %s %s', $url, $res->code, $res->message, $res->body);
-    }
+    my $res = $self->http_get($url => {'Accept' => 'application/json'})->result;
 
     my \@object_ids = $res->json->{'object_ids'};
     return \@object_ids;
@@ -124,10 +114,7 @@ sub has_object ($self, $id) {
     my $url = $self->url->clone->path('has_object')->query('id' => $id);
     $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    my $res = $self->_UA->get($url => {'Accept' => 'application/json'})->result;
-    if ($res->is_error) {
-        croak $log->criticalf('Could not fetch from "%s": %s %s %s', $url, $res->code, $res->message, $res->body);
-    }
+    my $res = $self->http_get($url => {'Accept' => 'application/json'})->result;
 
     return int !!$res->json->{'has_object'};
 }
@@ -136,10 +123,7 @@ sub remove ($self, $id) {
     my $url = $self->url->clone->path('remove/location')->query('id' => $id);
     $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    my $res = $self->_UA->get($url => {'Accept' => 'application/json'})->result;
-    if ($res->is_error) {
-        croak $log->criticalf('Could not remove from "%s": %s %s', $url, $res->code, $res->message);
-    }
+    my $res = $self->http_get($url => {'Accept' => 'application/json'})->result;
 
     return $res->json->{'success'};
 }
@@ -148,10 +132,7 @@ sub retrieve_content ($self, $id, $retries = 3) {
     my $url = $self->url->clone->path('retrieve/content')->query('id' => $id);
     $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    my $res = $self->_UA->get($url => {'Accept' => 'application/json'})->result;
-    if ($res->is_error) {
-        croak $log->criticalf('Could not fetch from "%s": %s %s', $url, $res->code, $res->message);
-    }
+    my $res = $self->http_get($url => {'Accept' => 'application/json'})->result;
 
     return $res->body;
 }
@@ -160,23 +141,20 @@ sub retrieve_location ($self, $id, $retries = 3) {
     my $url = $self->url->clone->path('retrieve/location')->query('id' => $id);
     $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    my $res = $self->_UA->get($url => {'Accept' => 'application/octet-stream'})->result;
-    if ($res->is_error) {
-        croak $log->criticalf('Could not fetch from "%s": %s %s', $url, $res->code, $res->message);
-    }
+    my $res = $self->http_get($url => {'Accept' => 'application/octet-stream'})->result;
 
-    my $location = Path::Tiny->tempfile('X' x 10);
-
-    $location->spew_raw($res->body);
-
-    return $location;
+    my $tmp = Path::Tiny->tempfile('X' x 10);
+    $res->save_to($tmp);
+    return $tmp;
 }
 
 sub store_content ($self, $id, $content) {
+    $self->check_id($id);
+
     my $url = $self->url->clone->path('store/content');
     $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    my $res = $self->_UA->post(
+    my $res = $self->http_post(
         $url => {
             'Accept' => 'application/json',
         },
@@ -186,28 +164,22 @@ sub store_content ($self, $id, $content) {
         },
     )->result;
 
-    if ($res->is_error) {
-        croak $log->criticalf('Could not store content to "%s": %s %s', $url, $res->code, $res->message);
-    }
-
     return;
 }
 
 sub store_location ($self, $id, $file_to_store) {
+    $self->check_id($id);
+
     my $content = path($file_to_store)->slurp_raw;
     my $url     = $self->url->clone->path('store/location')->query('id' => $id);
     $log->debugf('%s url: %s', (caller (0))[3], $url);
 
-    my $res = $self->_UA->post(
+    my $res = $self->http_post(
         $url => {
             'Accept' => 'application/json',
         },
         $content,
     )->result;
-
-    if ($res->is_error) {
-        croak $log->criticalf('Could not store location to "%s": %s %s', $url, $res->code, $res->message);
-    }
 
     return;
 }
@@ -224,11 +196,7 @@ __END__
 
     my $id      = 'perl/Pakket=0:1';
     my $backend = Pakket::Repository::Backend::Http->new(
-        'scheme'      => 'https',
-        'host'        => 'your.pakket.subdomain.company.com',
-        'port'        => '80',
-        'base_path'   => '/pakket/',
-        'http_client' => HTTP::Tiny->new(),
+        'url' => 'http://localhost:3000/source?file_extension=tgz',
     );
 
     # Handling locations
@@ -242,7 +210,7 @@ __END__
 
     # Getting data
     #my $ids = $backend->all_object_ids; # [ ... ]
-    my $ids = $backend->all_object_ids_by_name('perl', 'Path::Tiny');
+    my $ids = $backend->all_object_ids_by_name('perl', 'Path-Tiny');
     if ( $backend->has_object($id) ) {
         ...
     }
@@ -260,51 +228,19 @@ On the server side you will need to use L<Pakket::Web>.
 
 When creating a new class, you can provide the following attributes:
 
-=head2 scheme
+=head2 url
 
-The scheme to use.
-
-Default: B<https>.
-
-=head2 host
-
-Hostname or IP string to use.
+Full url of backend.
 
 This is a required parameter.
 
-=head2 port
+=head2 file_extension
 
-The port on which the remote server is listening.
+Hint on file format stored in repo.
 
-Default: B<80>.
+This is a required parameter.
 
-=head2 base_path
-
-The default path to prepend to the request URL. This is useful when you
-serve it on a server that also serves other content, or when you have
-multiple pakket instances and they are in subdirectories.
-
-Default: empty.
-
-=head2 base_url
-
-This is an advanced attribute that is generated automatically from the
-C<host>, C<port>, and C<base_path>. This uses B<http> by default but
-you can create your own with B<https>:
-
-    my $backend = Pakket::Repository::Backend::Http->new(
-        'base_path' => 'https://my.path:80/secure_packages/',
-    );
-
-Default: B<<C<http://HOST:PORT/BASE_URL>>>.
-
-=head2 http_client
-
-This is an advanced attribute defining the user agent to be used for
-fetching or updating data. This uses L<HTTP::Tiny> so you need one that
-is compatible or a subclass of it.
-
-Default: L<HTTP::Tiny> object.
+Default: L<tgz>.
 
 =head1 METHODS
 
