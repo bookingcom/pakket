@@ -1,0 +1,32 @@
+---
+allow_rollback: 1
+default_category: perl
+install_dir: ~/.cache/pakket/install
+jobs: 4
+keep_rollbacks: 5
+log_file: ~/.cache/pakket/pakket-cli.log
+native:
+  build:
+    make-options: [-j2]
+    no-test: 2
+perl:
+  build:
+    no-test: 2
+  scaffold:
+    known_incorrect_dependencies:
+      Math-GMP:
+        Test::YAML::Meta: 1
+    known_incorrect_name_fixes:
+      Test::YAML::Meta: Test::CPAN::Meta::YAML
+    known_incorrect_version_fixes:
+      Data-Swap: '0.08'
+    known_modules_to_skip:
+      Test::YAML::Meta: 1
+repositories:
+  parcel:
+    directory: ~/.cache/pakket/pakket-parcel-co7-5.28.1
+    file_extension: .tgz
+    type: file
+  source: file://~/.cache/pakket/pakket-source?file_extension=tgz
+  spec: file://~/.cache/pakket/pakket-spec?file_extension=json
+use_hardlinks: 1

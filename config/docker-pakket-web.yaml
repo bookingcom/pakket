@@ -1,11 +1,11 @@
 ---
 allow_write: 1
 default_category: perl
-log_file: ~/pakket-web.log
+log_file: /var/log/pakket-web.log
 repositories:
   - backend:
       directory: /srv/http/data/parcel
-      file_extension: tgz
+      file_extension: .tgz
       type: file
     path: /co7/5.28.1/parcel
     type: parcel
@@ -16,15 +16,9 @@ repositories:
       validate_id: 0
     path: /snapshot
     type: snapshot
-  - backend:
-      directory: /srv/http/data/source
-      file_extension: tgz
-      type: file
+  - backend: file:///srv/http/data/source?file_extension=tgz
     path: /source
     type: source
-  - backend:
-      directory: /srv/http/data/spec
-      file_extension: json
-      type: file
+  - backend: file:///srv/http/data/spec?file_extension=json
     path: /spec
     type: spec

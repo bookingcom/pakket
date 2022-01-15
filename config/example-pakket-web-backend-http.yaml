@@ -1,0 +1,30 @@
+---
+allow_write: 1
+default_category: perl
+log_file: ~/.cache/pakket/pakket-web.log
+repositories:
+- backend:
+    base_path: /co7/5.28.1/parcel
+    file_extension: .tgz
+    host: localhost
+    port: 3000
+    scheme: http
+    type: http
+  path: /co7/5.28.1/parcel
+  type: parcel
+- backend:
+    base_path: /snapshot
+    file_extension: ''
+    host: localhost
+    port: 3000
+    scheme: http
+    type: http
+    validate_id: 0
+  path: /snapshot
+  type: snapshot
+- backend: http://localhost:3000/source?file_extension=tgz
+  path: /source
+  type: source
+- backend: http://localhost:3000/spec?file_extension=json
+  path: /spec
+  type: spec

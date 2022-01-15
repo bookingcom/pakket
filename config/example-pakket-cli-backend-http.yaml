@@ -2,16 +2,16 @@
 allow_rollback: 1
 default_category: perl
 install_dir: ~/.cache/pakket/install
-jobs: 3
-keep_rollbacks: 10
-log_file: ~/.cache/pakket/pakket.log
+jobs: 4
+keep_rollbacks: 5
+log_file: ~/.cache/pakket/pakket-cli.log
 native:
   build:
     make-options: [-j2]
     no-test: 2
 perl:
   build:
-    no-test: 0
+    no-test: 2
   scaffold:
     known_incorrect_dependencies:
       Math-GMP:
@@ -24,15 +24,12 @@ perl:
       Test::YAML::Meta: 1
 repositories:
   parcel:
-    directory: ~/.cache/pakket/pakket-parcel-co7-5.28.1
+    base_path: /co7/5.28.1/parcel
     file_extension: .tgz
-    type: file
-  source:
-    directory: ~/.cache/pakket/pakket-source
-    file_extension: .tgz
-    type: file
-  spec:
-    directory: ~/.cache/pakket/pakket-spec
-    file_extension: json
-    type: file
+    host: localhost
+    port: 3000
+    scheme: http
+    type: http
+  source: http://localhost:3000/source?file_extension=tgz
+  spec: http://localhost:3000/spec?file_extension=json
 use_hardlinks: 1

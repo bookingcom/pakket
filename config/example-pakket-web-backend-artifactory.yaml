@@ -1,0 +1,25 @@
+---
+allow_write: 1
+default_category: perl
+log_file: ~/.cache/pakket/pakket-web.log
+repositories:
+- backend:
+    file_extension: .tgz
+    path: pakket/dev/parcel/co7/5.28.1
+    type: artifactory
+    url: https://jfrog.domain.com/artifactory
+  path: /co7/5.28.1/parcel
+  type: parcel
+- backend:
+    file_extension: ''
+    path: pakket/dev/snapshot
+    type: artifactory
+    url: https://jfrog.domain.com/artifactory
+  path: /snapshot
+  type: snapshot
+- backend: artifactory://./pakket/dev/source?file_extension=tgz&url=https://jfrog.domain.com/artifactory
+  path: /source
+  type: source
+- backend: artifactory://./pakket/dev/spec?file_extension=json&url=https://jfrog.domain.com/artifactory
+  path: /spec
+  type: spec
