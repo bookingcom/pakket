@@ -42,6 +42,7 @@ sub new_from_uri ($class, $uri) {
     my %params = (
         'directory' => $url->host . $url->path,
         ('file_extension' => $query->param('file_extension')) x !!defined $query->param('file_extension'),
+        ('validate_id'    => $query->param('validate_id')) x !!defined $query->param('validate_id'),
     );
 
     return $class->new(\%params);

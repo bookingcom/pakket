@@ -63,9 +63,10 @@ sub new_from_uri ($class, $uri) {
     my $query  = $url->query;
     my %params = (
         'path' => $url->path->to_string,
-        ('url'            => $query->param('url')) x !!$query->param('url'),
-        ('api_key'        => $query->param('api_key')) x !!$query->param('api_key'),
-        ('file_extension' => $query->param('file_extension')) x !!$query->param('file_extension'),
+        ('url'            => $query->param('url')) x !!defined $query->param('url'),
+        ('api_key'        => $query->param('api_key')) x !!defined $query->param('api_key'),
+        ('file_extension' => $query->param('file_extension')) x !!defined $query->param('file_extension'),
+        ('validate_id'    => $query->param('validate_id')) x !!defined $query->param('validate_id'),
     );
 
     return $class->new(\%params);
@@ -96,6 +97,7 @@ sub BUILDARGS ($class, @params) {
         'url'  => $args{'url'},
         ('api_key'        => $args{'api_key'}) x !!$args{'api_key'},
         ('file_extension' => $args{'file_extension'}) x !!defined $args{'file_extension'},
+        ('validate_id'    => $args{'validate_id'}) x !!defined $args{'validate_id'},
     };
 }
 
@@ -210,8 +212,9 @@ sub store_location ($self, $id, $file_to_store) {
 sub index ($self, $force_update = 0) { ## no critic [Subroutines::ProhibitBuiltinHomonyms]
     $self->clear_index if $force_update;
 
+    my $cache_name = $self->url . $self->path;
     my \%result = $self->_cache->compute(
-        __PACKAGE__ . $self->url->to_string,
+        __PACKAGE__ . $cache_name,
         CACHE_TTL(),
         sub {
             my %by_id;

@@ -17,6 +17,7 @@ use Ref::Util qw(is_arrayref is_hashref);
 
 # local
 use Pakket::Type::PackageQuery;
+use Pakket::Utils qw(get_application_version);
 use Pakket::Utils::DependencyBuilder;
 
 ## no critic [Modules::RequireEndWithOne, Lax::RequireEndWithTrueConst]
@@ -74,20 +75,35 @@ async sub post_ids_array ($self) {
         my @queries = map {
             Pakket::Type::PackageQuery->new_from_string($_, 'default_category' => $self->stash('default_category'))
         } @ids;
-        my $requirements = $dependency_builder->recursive_requirements(
-            \@queries,
-            'parcel_repo' => $parcel_repo,
-            'phases'      => ['runtime'],
-            'types'       => ['requires'],
-        );
-        $result = [map $_->id, $dependency_builder->validate_requirements($requirements)->@*];
-        $snapshot_repo->store_content($checksum, encode_json($result));
+        eval {
+            my $requirements = $dependency_builder->recursive_requirements(
+                \@queries,
+                'parcel_repo' => $parcel_repo,
+                'phases'      => ['runtime'],
+                'types'       => ['requires'],
+            );
+            $result = [map $_->id, $dependency_builder->validate_requirements($requirements)->@*];
+            $snapshot_repo->store_content($checksum, encode_json($result));
+            1;
+        } or do {
+            chomp (my $error = $@ || 'zombie error');
+            $self->log->warn("unable to build dependency tree: $error");
+            return $self->render(
+                'json' => {
+                    'error'   => $error,
+                    'items'   => \@ids,
+                    'version' => get_application_version,
+                },
+                'status' => 400,
+            );
+        };
     }
 
     return $self->render(
         'json' => {
-            'id'    => $checksum,
-            'items' => $result,
+            'id'      => $checksum,
+            'items'   => $result,
+            'version' => get_application_version,
         },
     );
 }

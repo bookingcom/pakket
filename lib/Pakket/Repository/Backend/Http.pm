@@ -55,15 +55,17 @@ sub BUILDARGS ($class, @params) {
         %args = @params;
     }
 
-    my ($url, $file_extension);
+    my ($url, $file_extension, $validate_id);
     if ($args{'url'}) {
         $url            = Mojo::URL->new($args{'url'});
         $file_extension = $url->query->param('file_extension');
+        $validate_id    = $url->query->param('validate_id');
         $url->path($url->path . '/') if substr ($url->path, -1, 1) ne '/';
         $url->query('');
     } else {
         croak $log->criticalf('Invalid params, host is required: %s', encode_json_one_line(\%args)) if !$args{'host'};
         $file_extension = $args{'file_extension'};
+        $validate_id    = $args{'validate_id'};
         $url            = Mojo::URL->new;
         $url->host($args{'host'});
         $url->scheme($args{'scheme'} // 'https');
@@ -78,6 +80,7 @@ sub BUILDARGS ($class, @params) {
     return {
         'url' => $url,
         ('file_extension' => $file_extension) x !!defined $file_extension,
+        ('validate_id'    => $validate_id) x !!defined $validate_id,
     };
 }
 
