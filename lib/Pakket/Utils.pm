@@ -114,14 +114,18 @@ sub env_vars ($build_dir, $environment, %params) {
         'EU_INSTALL_ALWAYS_COPY' => 1,
     );
 
-    return (
+    my %result = (
         'PATH' => generate_bin_path(@params, $params{'sources'}),
         %c_opts,
         %perl_opts,
         env_vars_passthrough(),
         env_vars_build($build_dir, %params),
-        %{$environment // {}},
     );
+
+    my %env_meta = %{$environment // {}};
+    @env_meta{keys %env_meta} = expand_variables_inplace([@env_meta{keys %env_meta}], \%result)->@*;
+
+    return (%result, %env_meta);
 }
 
 sub _expect_inc_dot ($sources) {
@@ -217,28 +221,28 @@ sub clean_hash ($data) {
     return {};
 }
 
-sub expand_variables ($variables, $env) {
-    $variables
+sub expand_variables ($variables_aref, $env_href) {
+    $variables_aref
         or return [];
 
-    my @copy = $variables->@*;
-    _expand_flags_inplace(\@copy, $env);
+    my @copy = $variables_aref->@*;
+    expand_variables_inplace(\@copy, $env_href);
 
     return \@copy;
 }
 
-sub _expand_flags_inplace ($variables, $env) {
-    for my $var ($variables->@*) {
+sub expand_variables_inplace ($variables_aref, $env_href) {
+    for my $var ($variables_aref->@*) {
         if (ref $var eq 'ARRAY') {
-            _expand_flags_inplace($var, $env);
+            __SUB__->($var, $env_href);
             next;
         }
-        for my $key (keys $env->%*) {
+        for my $key (keys $env_href->%*) {
             my $placeholder = '%' . uc ($key) . '%';
-            $var =~ s{$placeholder}{$env->{$key}}msg;
+            $var =~ s{$placeholder}{$env_href->{$key}}msg;
         }
     }
-    return;
+    return $variables_aref;
 }
 
 sub union : prototype($$) { ## no critic (Subroutines::RequireArgUnpacking)

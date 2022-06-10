@@ -109,14 +109,16 @@ sub BUILD ($self, @) {
 }
 
 sub all_object_ids ($self) {
-    $log->debugf('%s: %s', (caller (0))[3], $self->path);
+
+    #     $log->debugf('%s: %s', (caller (0))[3], $self->path);
     my \%index = $self->index;
     my @all_object_ids = keys %index;
     return \@all_object_ids;
 }
 
 sub all_object_ids_by_name ($self, $category, $name) {
-    $log->debugf('%s: %s %s/%s', (caller (0))[3], $self->path, $category, $name);
+
+    #     $log->debugf('%s: %s %s/%s', (caller (0))[3], $self->path, $category, $name);
 
     my \%index = $self->index;
     my @all_object_ids = keys %index;
@@ -129,13 +131,15 @@ sub all_object_ids_by_name ($self, $category, $name) {
 }
 
 sub has_object ($self, $id) {
-    $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
+
+    #     $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
     my \%index = $self->index;
     return exists $index{$id};
 }
 
 sub remove ($self, $id) {
-    $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
+
+    #     $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
     my \%index = $self->index;
 
     $index{$id}
@@ -154,7 +158,8 @@ sub remove ($self, $id) {
 }
 
 sub retrieve_content ($self, $id) {
-    $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
+
+    #     $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
     my $rel = $self->index->{$id}
         or croak($log->criticalf('Not found: %s', $id));
 
@@ -165,7 +170,8 @@ sub retrieve_content ($self, $id) {
 }
 
 sub retrieve_location ($self, $id) {
-    $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
+
+    #     $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
     my $tmp = Path::Tiny->tempfile('pakket-' . ('X' x 10));
     $tmp->spew_raw($self->retrieve_content($id));
 
@@ -173,7 +179,8 @@ sub retrieve_location ($self, $id) {
 }
 
 sub store_content ($self, $id, $content) {
-    $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
+
+    #     $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
     $self->check_id($id);
 
     my $url  = $self->url->clone->path($self->path)->path($id . $self->file_extension);
@@ -205,7 +212,8 @@ sub store_content ($self, $id, $content) {
 }
 
 sub store_location ($self, $id, $file_to_store) {
-    $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
+
+    #     $log->debugf('%s: %s %s', (caller (0))[3], $self->path, $id);
     return $self->store_content($id, path($file_to_store)->slurp_raw);
 }
 

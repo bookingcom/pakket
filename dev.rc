@@ -1,4 +1,4 @@
-REQUIRED_PERL_VERSION=5.34.0
+REQUIRED_PERL_VERSION=5.36.0
 
 [[ $(perlbrew list) =~ "$REQUIRED_PERL_VERSION" ]] || {
 	echo "Installing required perl: $REQUIRED_PERL_VERSION"
