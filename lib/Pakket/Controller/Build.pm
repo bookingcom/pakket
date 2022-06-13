@@ -105,7 +105,9 @@ sub process_query ($self, $query, %params) {
 
     if (!exists $params{'build_dir'}) {
         $params{'build_dir'}
-            = Path::Tiny->tempdir(sprintf (BUILD_DIR_TEMPLATE(), $query->name), 'CLEANUP' => !$self->keep);
+            = $self->config->{'real_prefix'}
+            ? path('/')
+            : Path::Tiny->tempdir(sprintf (BUILD_DIR_TEMPLATE(), $query->name), 'CLEANUP' => !$self->keep);
         $params{'processing'} = {$builder->bootstrap_processing->%*};
     }
     $params{'prefix'}  //= path($self->prefix || DEFAULT_PREFIX())->absolute;
@@ -179,8 +181,7 @@ sub _do_build_package ($self, $package, %params) {
     $self->_process_package(
         $package,
         %params{qw(pkg_dir prefix)},
-        'use_prefix' => !!$self->prefix,
-        'sources'    => $self->source_repo->retrieve_package_file($package, 'cleanup' => !$self->keep),
+        'sources' => $self->source_repo->retrieve_package_file($package, 'cleanup' => !$self->keep),
         %params{qw(build_dir)},
     );
 
@@ -209,7 +210,7 @@ sub _process_package ($self, $package, %params) {
         'metadata' => $metadata,
         'no-man'   => $self->no_man  // $metadata->{'no-man'}  // $config->{'build'}{'no-man'}  // 0,
         'no-test'  => $self->no_test // $metadata->{'no-test'} // $config->{'build'}{'no-test'} // 0,
-        %params{qw(build_dir pkg_dir prefix use_prefix sources)},
+        %params{qw(build_dir pkg_dir prefix sources)},
     );
 
     return;

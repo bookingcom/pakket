@@ -18,7 +18,7 @@ with qw(
 sub execute ($self, %params) {
     $self->croak('Not properly implemented');
 
-    # my ($self, $package, $build_dir, $top_pkg_dir, $prefix, $use_prefix) = @_;
+    # my ($self, $package, $build_dir, $top_pkg_dir, $prefix) = @_;
 
     # $self->log->info('Building NodeJS module:', $params{'name'});
 

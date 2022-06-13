@@ -80,8 +80,7 @@ sub execute ($self, %params) {
     if ($has_build_pl && !exists $must_use_mm{$params{'name'}}) {
         my $has_module_build = any {                                           # Do we have Module::Build?
             $self->run_command(@params{qw(sources opts)}, ['perl', $_, '-e1'])
-        }
-        qw(-MModule::Build -MModule::Build::Tiny);
+        } qw(-MModule::Build -MModule::Build::Tiny);
 
         if ($has_module_build) {
             @sequence = $self->_build_pl_cmds(%params);

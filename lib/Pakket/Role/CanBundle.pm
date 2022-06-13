@@ -86,20 +86,20 @@ sub bundle ($self, $package, $build_dir, $files) {
     return;
 }
 
-sub snapshot_build_dir ($self, $package, $build_dir, $silent = 1) {
+sub snapshot_build_dir ($self, $package, $build_dir, $silent = 0) {
     $build_dir
-        or croak('bla');
+        or croak('Build dir is not set');
 
     $self->log->debug('scanning directory:', $build_dir);
 
-    my $package_files = $self->retrieve_new_files($build_dir);
+    my \%package_files = $self->retrieve_new_files($build_dir);
 
-    !$silent && !$package_files->%*
-        and $self->croak('Build did not generate new files. Cannot package:', $package->id);
+    $silent || %package_files
+        or $self->croak('Build did not generate new files. Cannot package:', $package->id);
 
-    $self->build_files_manifest->@{keys ($package_files->%*)} = values $package_files->%*;
+    $self->build_files_manifest->@{keys %package_files} = values %package_files;
 
-    return $self->normalize_paths($package_files);
+    return $self->normalize_paths(\%package_files);
 }
 
 sub retrieve_new_files ($self, $build_dir) {
@@ -132,7 +132,7 @@ sub _scan_directory ($self, $dir) {
         }
     };
 
-    return $dir->visit(
+    return $dir->realpath->visit(
         $visitor,
         {
             'recurse'         => 1,

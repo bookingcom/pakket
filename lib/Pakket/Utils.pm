@@ -8,7 +8,7 @@ use warnings;
 
 # core
 use Carp;
-use List::Util qw(any);
+use List::Util qw(any uniq);
 use experimental qw(declared_refs refaliasing signatures);
 use version;
 
@@ -67,10 +67,8 @@ sub is_writeable ($path) {
     return -w $path;
 }
 
-## no critic [Subroutines::ProhibitManyArgs]
-
 sub env_vars ($build_dir, $environment, %params) {
-    my @params   = @params{qw(bootstrap_dir pkg_dir prefix use_prefix)};
+    my @params   = @params{qw(bootstrap_dir pkg_dir prefix)};
     my $c_path   = generate_cpath(@params);
     my $lib_path = generate_lib_path(@params);
     my %c_opts   = (
@@ -80,16 +78,18 @@ sub env_vars ($build_dir, $environment, %params) {
         'LIBRARY_PATH'    => $lib_path,                                        # linker searches here after -L
 
         # DO NOT set LD_RUN_PATH onto temp dirs - they will be baked into binary's rpath
-        'LD_RUN_PATH' => $params{'prefix'}->child(qw(lib))->absolute->stringify,
+        'LD_RUN_PATH' => join (':',
+            $params{'prefix'}->child(qw(lib))->absolute->stringify,
+            $params{'prefix'}->child(qw(lib64))->absolute->stringify),
     );
 
     # add path to libperl.so of current perl to LIBRARY_PATH
     chomp (my $archlib = `perl -MConfig -e 'print \$Config{archlib}'`);
     $c_opts{'LIBRARY_PATH'} = join (':', $c_opts{'LIBRARY_PATH'}, $archlib . '/CORE');
 
-    my @perl5lib = (
+    my @perl5lib = uniq(
         $params{'pkg_dir'}->child(qw(lib perl5))->absolute->stringify,
-        ($params{'prefix'}->child(qw(lib perl5))->absolute->stringify) x !!$params{'use_prefix'},
+        $params{'prefix'}->child(qw(lib perl5))->absolute->stringify,
         $params{'sources'}->child(qw(lib))->absolute->stringify,
         $params{'sources'}->child(qw(blib lib))->absolute->stringify,
         $params{'sources'}->child(qw(blib))->absolute->stringify,
@@ -154,10 +154,10 @@ sub env_vars_passthrough {
     return clean_hash(\%result)->%*;
 }
 
-sub generate_cpath ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
-    my @incpaths = (                                                           # no tidy
+sub generate_cpath ($bootstrap_dir, $pkg_dir, $prefix) {
+    my @incpaths = uniq(                                                       # no tidy
         $pkg_dir->child('include'),
-        ($prefix->child('include')) x !!$use_prefix,
+        $prefix->child('include'),
         $bootstrap_dir->child('include'),
     );
 
@@ -170,25 +170,30 @@ sub generate_cpath ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
     return join (':', @paths);
 }
 
-sub generate_bin_path ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix, $sources) {
-    my @paths = map {$_->absolute->stringify} $pkg_dir->child('bin'), ($prefix->child('bin')) x !!$use_prefix,
+sub generate_bin_path ($bootstrap_dir, $pkg_dir, $prefix, $sources) {
+    my @paths = uniq map {$_->absolute->stringify} $pkg_dir->child('bin'), $prefix->child('bin'),
         $sources->child(qw(blib bin)), $bootstrap_dir->child('bin');
     $ENV{'PATH'}
         and push (@paths, $ENV{'PATH'});
     return join (':', @paths);
 }
 
-sub generate_lib_path ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
-    my @paths = map {$_->absolute->stringify} $pkg_dir->child('lib'), ($prefix->child('lib')) x !!$use_prefix,
+sub generate_lib_path ($bootstrap_dir, $pkg_dir, $prefix) {
+    my @paths = uniq map {$_->absolute->stringify} $pkg_dir->child('lib'), $pkg_dir->child('lib64'),
+        $prefix->child('lib'), $prefix->child('lib64'),
         $bootstrap_dir->child('lib');
     $ENV{'LD_LIBRARY_PATH'}
         and push (@paths, $ENV{'LD_LIBRARY_PATH'});
     return join (':', @paths);
 }
 
-sub generate_pkgconfig_path ($bootstrap_dir, $pkg_dir, $prefix, $use_prefix) {
-    my @paths = map {$_->absolute->stringify} $pkg_dir->child(qw(lib pkgconfig)),
-        ($prefix->child(qw(lib pkgconfig))) x !!$use_prefix, $bootstrap_dir->child(qw(lib pkgconfig));
+sub generate_pkgconfig_path ($bootstrap_dir, $pkg_dir, $prefix) {
+    my @paths = uniq map {$_->absolute->stringify}
+        $pkg_dir->child(qw(lib pkgconfig)),
+        $pkg_dir->child(qw(lib64 pkgconfig)),
+        $prefix->child(qw(lib pkgconfig)),
+        $prefix->child(qw(lib64 pkgconfig)),
+        $bootstrap_dir->child(qw(lib pkgconfig));
     $ENV{'PKG_CONFIG_PATH'}
         and push (@paths, $ENV{'PKG_CONFIG_PATH'});
     return join (':', @paths);
