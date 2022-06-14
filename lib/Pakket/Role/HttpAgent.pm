@@ -78,7 +78,7 @@ sub http_delete ($self, $url, @params) {
 }
 
 sub _build_ua {
-    return Mojo::UserAgent->new;
+    return Mojo::UserAgent->new->max_redirects(4)->tap(sub {$_->proxy->detect});
 }
 
 1;
