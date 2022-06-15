@@ -22,7 +22,7 @@ my $dir    = $ENV{'TMPDIR'} ? path($ENV{'TMPDIR'}) : Path::Tiny->tempdir;
 my @dirs   = map {my $ret = $dir->child($_); $ret->mkpath; $ret} 1 .. 3;
 my $config = t::lib::Utils::config(@dirs);
 
-can_ok('Pakket::Controller::Build', [qw(execute snapshot_build_dir retrieve_new_files)]);
+can_ok('Pakket::Controller::Build', [qw(execute snapshot_build_dir)]);
 
 tests 'Defaults' => sub {
     my $builder = _create_builder();

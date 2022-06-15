@@ -134,33 +134,31 @@ sub freeze_location ($self, $orig_path) {
     if ($orig_path->is_file) {
         $base_path = $orig_path->basename;
         push (@files, $orig_path);
-    } elsif ($orig_path->is_dir) {
+    } else {
         $orig_path->children
             or $self->croak('Cannot freeze empty directory:', $orig_path);
 
         $orig_path->visit(
-            sub ($path, $) {
-                $path->is_file
-                    or return;
-                push @files, $path;
+            sub ($path, $) {push (@files, $path) if -l $path || $path->is_file},
+            {
+                'recurse'         => 1,
+                'follow_symlinks' => 0,
             },
-            {'recurse' => 1},
         );
-    } else {
-        $self->croak('Unknown location type:', $orig_path);
     }
 
     @files = map {$_->relative($base_path)->stringify} @files;
 
-    # Write and compress
-    my $arch = Archive::Tar->new();
-    {
+    my $file = do {
+        my $tmp  = Path::Tiny->tempfile();
+        my $arch = Archive::Tar->new();
         local $CWD = $base_path; ## no critic [Variables::ProhibitLocalVars] chdir, to use relative paths in archive
         $arch->add_files(@files);
-    }
-    my $file = Path::Tiny->tempfile();
-    $arch->write($file->stringify, COMPRESS_GZIP);
+        $arch->write($tmp->stringify, COMPRESS_GZIP);
+        $tmp;
+    };
 
+    $self->log->debugf('archive size: %s', $file->size_human({'format' => 'iec'}));
     return $file;
 }
 

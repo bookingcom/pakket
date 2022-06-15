@@ -59,7 +59,7 @@ sub run_command ($self, $cwd, $opts, $command) {
         my $errorcode = system ($command);
         $success = $errorcode == 0;
         if ($success) {
-            $self->log->info('Command: ', $command, 'exited with', $errorcode);
+            $self->log->info('Command:', $command, 'exited with', $errorcode);
         } else {
             if ($CHILD_ERROR == -1) {
                 $self->log->errorf("Command: %s failed to execute: $!", $command);

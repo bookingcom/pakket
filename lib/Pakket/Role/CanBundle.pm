@@ -32,10 +32,10 @@ has [qw(dry_run)] => (
     'isa' => 'Int',
 );
 
-has [qw(build_files_manifest)] => (
+has [qw(_files_manifests)] => (
     'is'      => 'ro',
-    'isa'     => 'HashRef',
-    'default' => sub {+{}},
+    'isa'     => 'ArrayRef',
+    'default' => sub {+[]},
 );
 
 has '_files_to_skip' => (
@@ -50,7 +50,10 @@ has '_files_to_skip' => (
     },
 );
 
-sub bundle ($self, $package, $build_dir, $files) {
+sub bundle ($self, $package, $build_dir) {
+    $self->_files_manifests->@* >= 2
+        or $self->croak('Bundle can be done only based on at least 2 snapshots created');
+
     my $parcel_dir = Path::Tiny->tempdir(
         'TEMPLATE' => 'pakket-bundle-' . $package->name . '-XXXXXXXXXX',
         'CLEANUP'  => 1,
@@ -58,22 +61,25 @@ sub bundle ($self, $package, $build_dir, $files) {
     my $target = $parcel_dir->child(PARCEL_FILES_DIR());
     $target->mkpath;
 
-    foreach my $file (keys $files->%*) {
-        $self->log->debug('bundling file:', $file);
-        my $spath = path($file);
-        my $tpath = $target->child($spath->relative($build_dir));
+    my \%new_or_updated_files = $self->_diff_nodes_list($self->_files_manifests->@[0, -1]);
 
-        $tpath->exists
-            and $self->croak('File already seems to exist in packaging dir. Stopping');
+    foreach my $key (sort keys %new_or_updated_files) {
+        my $abs_path = path($new_or_updated_files{$key});
 
-        $tpath->parent->mkpath;                                                # create directories
+        my $target_path = $target->child($abs_path->relative($build_dir));
 
-        if ($files->{$file} eq '') {                                           # regular file
-            $spath->copy($tpath);
-            $tpath->chmod((stat ($file))[2] & oct ('07777')); ## no critic [Bangs::ProhibitBitwiseOperators]
-        } else {                                                               # symlink
-            symlink $files->{$file}, $tpath
-                or $self->croak('Unable to symlink');
+        $target_path->exists
+            and $self->croak('Stopping. File already seems to exist in packaging dir:', $target_path);
+
+        $target_path->parent->mkpath;
+        if (-l $abs_path) {
+            $self->log->debugf('bundling file: %s -> %s', $abs_path, readlink ($abs_path));
+            symlink (readlink ($abs_path), $target_path)
+                or $self->croak('Unable to symlink:', $target_path);
+        } else {
+            $self->log->debug('bundling file:', $abs_path);
+            $abs_path->copy($target_path);
+            $target_path->chmod($abs_path->lstat->mode & oct ('07777')); ## no critic [Bangs::ProhibitBitwiseOperators]
         }
     }
 
@@ -92,48 +98,28 @@ sub snapshot_build_dir ($self, $package, $build_dir, $silent = 0) {
 
     $self->log->debug('scanning directory:', $build_dir);
 
-    my \%package_files = $self->retrieve_new_files($build_dir);
+    my \%package_files = $self->_scan_directory($build_dir);
 
     $silent || %package_files
         or $self->croak('Build did not generate new files. Cannot package:', $package->id);
 
-    $self->build_files_manifest->@{keys %package_files} = values %package_files;
+    $self->log->debug('files snapshotted:', scalar %package_files);
+    push $self->_files_manifests->@*, \%package_files;
 
-    return $self->normalize_paths(\%package_files);
-}
-
-sub retrieve_new_files ($self, $build_dir) {
-    my $nodes = $self->_scan_directory($build_dir);
-    return $self->_diff_nodes_list($self->build_files_manifest, $nodes);
-}
-
-sub normalize_paths ($self, $package_files) {
-    my $paths;
-    for my $path_and_timestamp (keys $package_files->%*) {
-        my ($path) = $path_and_timestamp =~ /^(.+)_\d+?$/;
-        $paths->{$path} = $package_files->{$path_and_timestamp};
-    }
-    return $paths;
+    return;
 }
 
 sub _scan_directory ($self, $dir) {
-    my $visitor = sub ($node, $state) {
-        $node->is_dir || $self->should_skip_file($node->basename)
-            and return;
-
-        my $path_and_timestamp = sprintf ('%s_%s', $node->absolute, $node->stat->ctime);
-
-        # save the symlink path in order to symlink them
-        if (-l $node) {
-            path($state->{$path_and_timestamp} = readlink $node)->is_absolute
-                and $self->croak("Error. Absolute path symlinks aren't supported.");
-        } else {
-            $state->{$path_and_timestamp} = '';
-        }
-    };
-
+    $dir->mkpath;
     return $dir->realpath->visit(
-        $visitor,
+        sub ($node, $state) {
+            -l $node || ($node->is_file && !$self->should_skip_file($node->basename))
+                or return;
+
+            my $stat = $node->lstat;
+            my $key  = sprintf ('%s-mtime(%s)', $node->absolute, $stat->mtime);
+            $state->{$key} = $node->absolute;
+        },
         {
             'recurse'         => 1,
             'follow_symlinks' => 0,
@@ -145,17 +131,6 @@ sub _diff_nodes_list ($self, $old_nodes, $new_nodes) {
     my %nodes_diff;
     diff_hashes($old_nodes, $new_nodes, 'added' => sub ($key, $value) {$nodes_diff{$key} = $value});
     return \%nodes_diff;
-}
-
-sub fix_timestamps ($src_dir, $dst_dir) {
-    $src_dir->visit(
-        sub ($src, $) {
-            my $dst = path($dst_dir, $src->relative($src_dir));
-            $dst->touch($src->stat->mtime);
-        },
-        {'recurse' => 1},
-    );
-    return;
 }
 
 before [qw(bundle)] => sub ($self, @) {
@@ -180,24 +155,7 @@ __END__
 
 The Pakket::Role::CanBundle
 
-=head1 ATTRIBUTES
-
-=head2 build_files_manifest
-
-After building, the list of built files are stored in this hashref.
-
 =head1 METHODS
-
-=head2 normalize_paths(\%package_files);
-
-Given a set of paths and timestamps, returns a new hashref with
-normalized paths.
-
-=head2 retrieve_new_files($build_dir)
-
-Once a build has finished, we attempt to install the directory to a
-controlled environment. This method scans that directory to find any
-new files generated. This is determined to get packaged in the parcel.
 
 =head2 snapshot_build_dir( $package, $build_dir, $error_out )
 

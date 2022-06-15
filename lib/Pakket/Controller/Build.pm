@@ -185,10 +185,10 @@ sub _do_build_package ($self, $package, %params) {
         %params{qw(build_dir)},
     );
 
-    my $package_files = $self->snapshot_build_dir($package, $params{'pkg_dir'});
+    $self->snapshot_build_dir($package, $params{'pkg_dir'});
 
     $self->log->notice('Bundling:', $package->id);
-    $self->bundle($package, $params{'pkg_dir'}, $package_files);
+    $self->bundle($package, $params{'pkg_dir'});
 
     $self->succeeded->{$package->id}++;
 
