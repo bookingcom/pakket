@@ -10,10 +10,6 @@ fi
 echo 'Installing seacan from git (on cpan it is too old)...'
 cpanm -nq https://github.com/gugod/Seacan/tarball/master
 echo
-echo 'Installing proper versions of broken modules...'
-# cpanm -nq --force https://cpan.metacpan.org/authors/id/E/ET/ETHER/Devel-Declare-0.006019.tar.gz
-# cpanm -nq --force https://cpan.metacpan.org/authors/id/B/BA/BARNEY/Net-Amazon-S3-0.91.tar.gz
-echo
 echo 'Installing prereqs from cpanfile...'
 pushd tools &>/dev/null
 cpanm -nq --installdeps .
