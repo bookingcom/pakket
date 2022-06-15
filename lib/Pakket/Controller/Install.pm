@@ -401,15 +401,16 @@ sub _move_parcel_dir ($self, $parcel_dir, $work_dir) {
                 } elsif ($path->is_file && $destination->is_file) {
                     $destination->remove;
                 } else {
-                    croak($self->log->criticalf('Cannot change file to dir and vice versa: %s', $relative));
+                    $self->croak('Cannot change file to dir and vice versa:', $relative);
                 }
             }
 
             if (!$destination->exists) {
-                my $stat = $path->stat;
                 if (-l $path) {
-                    symlink (readlink ($path), $destination);
+                    symlink (readlink ($path), $destination)
+                        or $self->croak('Cannot create symlink:', $destination);
                 } else {
+                    my $stat = $path->stat;
                     if ($path->is_dir) {
                         $destination->mkpath;
                     } elsif ($path->is_file) {
