@@ -1,18 +1,41 @@
+# vim: filetype=sh
+
+# usage:
+#   source "$(git rev-parse --show-toplevel)/dev.rc"
+
 REQUIRED_PERL_VERSION=5.36.0
 
-[[ $(perlbrew list) =~ "$REQUIRED_PERL_VERSION" ]] || {
-	echo "Installing required perl: $REQUIRED_PERL_VERSION"
-	perlbrew install -nf -j 5 "perl-$REQUIRED_PERL_VERSION"
-    perlbrew install-cpanm
+[[ -x "$(command which -- perlbrew)" ]] || {
+	echo "Please install perlbrew (https://perlbrew.pl/)"
+	return
 }
 
-PAKKET_LIB="${REQUIRED_PERL_VERSION}@pakket-dev"
-[[ $(perlbrew lib-list) =~ "$PAKKET_LIB" ]] || {
-	echo "Creating pakket dev Perl local library: $PAKKET_LIB"
-	perlbrew lib create "$PAKKET_LIB"
+[[ -x "$(command which -- cpanm)" ]] || {
+	perlbrew install-cpanm || return
+}
 
-	perlbrew use "$PAKKET_LIB"
+NPROC=4
+[[ -x "$(command which -- nproc)" ]] && {
+	NPROC="$(nproc)"
+}
+
+PERL_NAME="perl-$REQUIRED_PERL_VERSION"
+[[ $(perlbrew list) =~ $PERL_NAME ]] || {
+	echo "Installing required perl: $PERL_NAME (nproc: $NPROC)"
+	perlbrew install -nf -j "$NPROC" "$REQUIRED_PERL_VERSION" --as "$PERL_NAME" || return
+	echo
+}
+
+REPO_URL=$(git config --get remote.origin.url)
+REPO_NAME=$(basename -s .git "$REPO_URL")
+LIBRARY_NAME="${PERL_NAME}@dev-$REPO_NAME"
+[[ $(perlbrew lib-list) =~ $LIBRARY_NAME ]] || {
+	echo "Creating Perl local dev library: $LIBRARY_NAME"
+	perlbrew lib create "$LIBRARY_NAME" || return
+	echo
+
+	perlbrew use "$LIBRARY_NAME"
 	tools/setup-dev-environment
 }
 
-perlbrew use "$PAKKET_LIB"
+perlbrew use "$LIBRARY_NAME"
