@@ -45,6 +45,7 @@ has '_files_to_skip' => (
     'handles' => {'should_skip_file' => 'exists'},
     'default' => sub {
         +{
+            '.packlist'     => undef,
             'perllocal.pod' => undef,
         };
     },
