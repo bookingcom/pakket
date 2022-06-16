@@ -14,47 +14,44 @@ You need several applications to be able to contribute, run tests, lint and form
 
 * Install perlbrew on your system (https://perlbrew.pl/)
 * Init the perlbrew (only once if you didn't have it before)
+```bash
+    $ perlbrew init
 ```
-    perlbrew init
+* Install perl and all necessary modules to a separate library
+```bash
+    $ source dev.rc
 ```
-* Install Perl interpreter
-```
-    perlbrew install -nf -j 5 perl-5.30.2
-    perlbrew lib create perl-5.30.2@default
-    perlbrew switch perl-5.30.2@default
-```
-* Install cpanm
-```
-    perlbrew install-cpanm
-```
-* restart your shell
-* Install necessary modules
-```
-    tools/setup-dev-environment
+
+## Developing
+
+Prepare your shell by running:
+
+```bash
+    $ source dev.rc
 ```
 
 ## Testing
 
 ## Running perltidy and perlcritic for all files
 
-```
-    t/tidy
+```bash
+    $ t/tidy
 ```
 
 ### Run only unit tests
 
-```
-    t/run
+```bash
+    $ t/run
 ```
 
 ### Run unit and author tests
 
-```
-    t/author
+```bash
+    $ t/author
 ```
 
 ### Run all possible tests before release
 
-```
-    t/release
+```bash
+    $ t/release
 ```
