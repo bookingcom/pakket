@@ -9,11 +9,11 @@ use namespace::autoclean;
 
 # core
 use Carp;
-use Fcntl qw(:flock);
-use English qw(-no_match_vars);
-use List::Util qw(any min);
-use POSIX qw(:sys_wait_h);
-use Time::HiRes qw(time usleep);
+use Fcntl        qw(:flock);
+use English      qw(-no_match_vars);
+use List::Util   qw(any min);
+use POSIX        qw(:sys_wait_h);
+use Time::HiRes  qw(time usleep);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core

@@ -7,8 +7,8 @@ use Moose::Role;
 use namespace::autoclean;
 
 # core
-use Carp ();
-use vars qw(@CARP_NOT);
+use Carp         ();
+use vars         qw(@CARP_NOT);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core

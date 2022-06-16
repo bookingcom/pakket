@@ -9,11 +9,11 @@ use open ':std', ':encoding(UTF-8)';
 use namespace::autoclean;
 
 # core
-use Digest::SHA qw(sha1_hex);
+use Digest::SHA  qw(sha1_hex);
 use experimental qw(declared_refs refaliasing signatures);
 
 # noncore
-use Log::Any qw($log);
+use Log::Any        qw($log);
 use Module::Runtime qw(use_module);
 use Path::Tiny;
 

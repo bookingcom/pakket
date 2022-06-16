@@ -15,7 +15,7 @@ use experimental qw(declared_refs refaliasing signatures);
 use CHI;
 use CPAN::DistnameInfo;
 use CPAN::Meta;
-use JSON::MaybeXS qw(decode_json encode_json);
+use JSON::MaybeXS   qw(decode_json encode_json);
 use Module::Runtime qw(require_module);
 use Parse::CPAN::Packages::Fast;
 use Path::Tiny;

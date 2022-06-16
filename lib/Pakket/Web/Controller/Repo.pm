@@ -8,7 +8,7 @@ use Mojo::Base 'Mojolicious::Controller', -signatures, -async_await;
 
 use experimental qw(declared_refs refaliasing signatures);
 
-use Pakket::Utils qw(get_application_version);
+use Pakket::Utils          qw(get_application_version);
 use Pakket::Utils::Package qw(parse_package_id);
 
 ## no critic [Modules::RequireEndWithOne, Lax::RequireEndWithTrueConst]

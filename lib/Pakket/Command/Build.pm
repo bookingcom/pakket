@@ -11,7 +11,7 @@ use namespace::autoclean;
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
-use Log::Any qw($log);
+use Log::Any        qw($log);
 use Module::Runtime qw(use_module);
 use Path::Tiny;
 

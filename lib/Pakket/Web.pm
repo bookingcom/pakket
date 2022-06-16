@@ -15,7 +15,7 @@ use List::Util qw(first uniq);
 use Log::Any::Adapter;
 use Log::Any::Adapter::Dispatch;
 use Module::Runtime qw(use_module);
-use YAML::XS ();
+use YAML::XS        ();
 
 # local
 use Pakket::Config;

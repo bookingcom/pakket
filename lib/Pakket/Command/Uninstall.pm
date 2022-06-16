@@ -13,8 +13,8 @@ use experimental qw(declared_refs refaliasing signatures);
 
 # noncore
 use IO::Prompt::Tiny qw(prompt);
-use Log::Any qw($log);
-use Module::Runtime qw(use_module);
+use Log::Any         qw($log);
+use Module::Runtime  qw(use_module);
 use Path::Tiny;
 
 # local

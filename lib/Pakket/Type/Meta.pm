@@ -16,7 +16,7 @@ use experimental qw(declared_refs refaliasing signatures);
 use YAML::XS ();
 
 # local
-use Pakket::Utils qw(clean_hash get_application_version);
+use Pakket::Utils          qw(clean_hash get_application_version);
 use Pakket::Utils::Package qw(parse_package_id);
 
 has [qw(prereqs scaffold build test)] => (

@@ -8,8 +8,8 @@ use MooseX::StrictConstructor;
 use namespace::autoclean;
 
 # core
-use Errno qw(:POSIX);
-use Fatal qw(binmode);
+use Errno        qw(:POSIX);
+use Fatal        qw(binmode);
 use experimental qw(declared_refs refaliasing signatures switch);
 
 # non core

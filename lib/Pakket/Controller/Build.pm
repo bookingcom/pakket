@@ -10,11 +10,11 @@ use namespace::autoclean;
 
 # core
 use File::Spec;
-use List::Util qw(any);
+use List::Util   qw(any);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
-use JSON::MaybeXS qw(decode_json);
+use JSON::MaybeXS   qw(decode_json);
 use Module::Runtime qw(use_module);
 use Path::Tiny;
 

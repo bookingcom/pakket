@@ -8,7 +8,7 @@ use MooseX::StrictConstructor;
 use namespace::autoclean;
 
 # core
-use Encode qw(decode);
+use Encode       qw(decode);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
@@ -18,7 +18,7 @@ use Path::Tiny;
 # local
 use Pakket::Type::Package;
 use Pakket::Type::PackageQuery;
-use Pakket::Utils qw(normalize_version);
+use Pakket::Utils     qw(normalize_version);
 use Types::Path::Tiny qw(Path AbsPath);
 
 extends qw(Pakket::Controller::BaseRemoteOperation);

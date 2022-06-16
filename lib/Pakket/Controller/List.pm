@@ -14,7 +14,7 @@ use experimental qw(declared_refs refaliasing signatures);
 
 # non core
 use Module::Runtime qw(use_module);
-use JSON::MaybeXS qw(encode_json);
+use JSON::MaybeXS   qw(encode_json);
 
 # local
 use Pakket::Helper::Versioner;

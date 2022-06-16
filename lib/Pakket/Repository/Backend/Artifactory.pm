@@ -9,7 +9,7 @@ use namespace::autoclean;
 
 # core
 use Carp;
-use Digest::SHA qw(sha1_hex);
+use Digest::SHA  qw(sha1_hex);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
@@ -20,7 +20,7 @@ use Mojo::Path;
 use Path::Tiny;
 
 # local
-use Pakket::Utils qw(encode_json_one_line);
+use Pakket::Utils          qw(encode_json_one_line);
 use Pakket::Utils::Package qw(
     parse_package_id
 );

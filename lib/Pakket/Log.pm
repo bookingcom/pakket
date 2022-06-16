@@ -10,7 +10,7 @@ use namespace::autoclean;
 # core
 use Carp;
 use Sys::Syslog;
-use Time::HiRes qw(gettimeofday);
+use Time::HiRes  qw(gettimeofday);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core

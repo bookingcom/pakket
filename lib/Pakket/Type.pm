@@ -12,7 +12,7 @@ use namespace::autoclean;
 use Carp;
 
 # non core
-use Log::Any qw($log);
+use Log::Any        qw($log);
 use Module::Runtime qw(require_module);
 use Moose::Util::TypeConstraints;
 use Ref::Util qw(is_ref is_arrayref is_hashref);

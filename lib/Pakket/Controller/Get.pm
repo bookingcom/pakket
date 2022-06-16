@@ -8,11 +8,11 @@ use MooseX::StrictConstructor;
 use namespace::autoclean;
 
 # core
-use Fatal qw(binmode);
+use Fatal        qw(binmode);
 use experimental qw(declared_refs refaliasing signatures switch);
 
 # non core
-use JSON::MaybeXS qw(decode_json);
+use JSON::MaybeXS   qw(decode_json);
 use Module::Runtime qw(use_module);
 use YAML::XS;
 

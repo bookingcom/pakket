@@ -10,7 +10,7 @@ use namespace::autoclean;
 use Carp;
 use English qw(-no_match_vars);
 use Errno;
-use Time::HiRes qw(time);
+use Time::HiRes  qw(time);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core

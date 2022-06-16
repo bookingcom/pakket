@@ -8,12 +8,12 @@ use Mojo::Base 'Mojolicious::Controller', -signatures, -async_await;
 
 # core
 use Carp;
-use Digest::SHA qw(sha256_hex);
+use Digest::SHA  qw(sha256_hex);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
 use JSON::MaybeXS qw(decode_json encode_json);
-use Ref::Util qw(is_arrayref is_hashref);
+use Ref::Util     qw(is_arrayref is_hashref);
 
 # local
 use Pakket::Type::PackageQuery;

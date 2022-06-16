@@ -8,7 +8,7 @@ use namespace::autoclean;
 
 # core
 use Carp;
-use List::Util qw(uniq);
+use List::Util   qw(uniq);
 use experimental qw(declared_refs refaliasing signatures switch);
 
 # non core

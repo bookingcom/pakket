@@ -9,7 +9,7 @@ use namespace::autoclean;
 
 # core
 use Carp;
-use English qw(-no_match_vars);
+use English      qw(-no_match_vars);
 use experimental qw(declared_refs refaliasing signatures);
 
 # non core
