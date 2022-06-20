@@ -8,7 +8,7 @@ Pakket:
   build:
     pre:
       - mkdir -p /tmp/mysql-static
-      - export OS_VERSION=$(rpm --eval '%{centos_ver}'); yum-config-manager --add-repo http://yum-mirror.anycast.prod.booking.com/yum/booking.com/$OS_VERSION/mysql-unstable/x86_64/RPMS/ || true
+      - export OS_VERSION=$(rpm --eval '%{centos_ver}'); yum-config-manager --add-repo https://yummirrors.booking.com/yum/booking.com/$OS_VERSION/mysql-unstable/x86_64/RPMS/ || true
       - yum clean all || true
       - export OS_VERSION=$(rpm --eval '%{centos_ver}'); yum -y install mysql-community-devel-5.7.26-1.el${OS_VERSION} && cp /usr/lib64/mysql/libmysqlclient.a /tmp/mysql-static || true
     configure-options:
