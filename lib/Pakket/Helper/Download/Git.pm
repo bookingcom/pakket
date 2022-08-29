@@ -63,7 +63,8 @@ sub download_to_file ($self, $log) {
 sub download_to_dir ($self, $log) {
     $log->debugf('processing git repo %s with commit %s', $self->url, $self->commit // '');
     my $repo = Git::Wrapper->new($self->tempdir->absolute);
-    $repo->clone({recursive => 1}, ('-b', $self->commit) x !!$self->commit, $self->url, $self->tempdir->absolute);
+    $repo->clone({recursive => 1}, $self->url, $self->tempdir->absolute);
+    $self->commit and $repo->checkout(qw/--force --no-track -B pakket/, $self->commit);
 
     if ($self->folder) {
         my $local_folder = Path::Tiny->tempdir('CLEANUP' => 1);
