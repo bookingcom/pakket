@@ -7,4 +7,4 @@ RUN     cpanm -nq --installdeps .
 RUN     mkdir /srv/http/data
 COPY    t/corpus/repos.v3 /srv/http/data
 
-CMD     hypnotoad -f bin/pakket-web
+CMD     hypnotoad -f ./bin/pakket-web

@@ -12,6 +12,9 @@ color-severity-high    = bold white on_yellow
 color-severity-medium  = bold yellow
 color-severity-low     = bold cyan
 
+[-BCritical::CronjobGuide::RequireEmail]
+[-BCritical::EngGuide::RequireStrictDeclarations]
+
 # => disabled 5 -------------------------------------------------------------------------------------------------- {{{1
 
 # Currently misidentifies signatures

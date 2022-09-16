@@ -10,14 +10,13 @@ services:
     container_name: app
     hostname: app
     ports:
-      - 443:443
-      - 80:80
       - 3000:3000
     restart: unless-stopped
     volumes:
       - ./:/srv/http/app
     environment:
+      MOJO_CLIENT_DEBUG: "1"
+      MOJO_IOLOOP_DEBUG: "1"
+      MOJO_PROMISE_DEBUG: "1"
       PAKKET_WEB_CONFIG: /srv/http/app/config/docker-pakket-web.yaml
-      # MOJO_CLIENT_DEBUG: "1"
-      # MOJO_REDIS_DEBUG: "1"
-    entrypoint: morbo bin/pakket-web
+    entrypoint: morbo -v ./bin/pakket-web
