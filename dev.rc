@@ -1,4 +1,5 @@
 # vim: filetype=sh
+# shellcheck shell=bash
 
 # usage:
 #   source "$(git rev-parse --show-toplevel)/dev.rc"
@@ -14,13 +15,20 @@ REQUIRED_PERL_VERSION=5.36.0
 	perlbrew install-cpanm || return
 }
 
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+PERLCRITIC_PATH="$REPO_ROOT/.perlcriticrc"
+if [[ -r "$PERLCRITIC_PATH" ]]; then
+	export PERLCRITIC="$PERLCRITIC_PATH"
+fi
+
 NPROC=4
 [[ -x "$(command which -- nproc)" ]] && {
 	NPROC="$(nproc)"
 }
 
 PERL_NAME="perl-$REQUIRED_PERL_VERSION"
-[[ $(perlbrew list) =~ $PERL_NAME ]] || {
+PERL_NAME_MATCH="\b${PERL_NAME}\b"
+[[ $(perlbrew list) =~ $PERL_NAME_MATCH ]] || {
 	echo "Installing required perl: $PERL_NAME (nproc: $NPROC)"
 	perlbrew install -nf -j "$NPROC" "$REQUIRED_PERL_VERSION" --as "$PERL_NAME" || return
 	echo
@@ -29,11 +37,11 @@ PERL_NAME="perl-$REQUIRED_PERL_VERSION"
 REPO_URL=$(git config --get remote.origin.url)
 REPO_NAME=$(basename -s .git "$REPO_URL")
 LIBRARY_NAME="${PERL_NAME}@dev-$REPO_NAME"
-[[ $(perlbrew lib-list) =~ $LIBRARY_NAME ]] || {
+LIBRARY_NAME_MATCH="\b${LIBRARY_NAME}\b"
+[[ $(perlbrew lib-list) =~ $LIBRARY_NAME_MATCH ]] || {
 	echo "Creating Perl local dev library: $LIBRARY_NAME"
 	perlbrew lib create "$LIBRARY_NAME" || return
 	echo
-
 	perlbrew use "$LIBRARY_NAME"
 	tools/setup-dev-environment
 }
