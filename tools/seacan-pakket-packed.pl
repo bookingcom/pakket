@@ -6052,7 +6052,7 @@ unshift @INC, bless \%fatpacked, $class;
 # available in the tools/git-hooks directory, as such:
 # ( cd .git/hooks && ln -s ../../tools/git-hooks/pre-commit )
 
-use v5.22;
+use v5.16;
 use strict;
 use warnings;
 use diagnostics;
