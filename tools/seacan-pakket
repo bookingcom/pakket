@@ -17,7 +17,7 @@ use IPC::Open3 qw(open3);
 use Path::Tiny qw(path tempdir);
 
 use constant {
-    'DEFAULT_PERL_VERSION' => '5.28.1',
+    'DEFAULT_PERL_VERSION' => '5.38.0',
 };
 
 my $app_dir = path('.');
@@ -69,7 +69,6 @@ foreach my $node (@additional_files, 'cpanfile') {
 
 my $seacan = App::Seacan->new(
     'config' => {
-
         'seacan' => {
             'app_name' => 'pakket',
             'output'   => $dest_dir,
@@ -96,7 +95,7 @@ my @cmd = (
     '--file=' . path('pakket.tar.gz')->absolute, '.',
 );
 say join (' ', @cmd);
-system (@cmd)
+system (@cmd) == 0
     or die 'Unable to run command';
 
 sub _print_help {
