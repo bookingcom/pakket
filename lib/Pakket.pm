@@ -8,6 +8,11 @@ use warnings;
 use namespace::autoclean;
 
 use App::Cmd::Setup '-app';
+use Pakket::Utils qw(get_application_version);
+
+sub VERSION {
+    return get_application_version();
+}
 
 sub allow_any_unambiguous_abbrev {
     return 0;

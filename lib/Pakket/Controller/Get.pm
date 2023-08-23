@@ -46,14 +46,11 @@ sub execute ($self) {
     my $file    = $repo->retrieve_location($package->id);
 
     if (!$self->file) {
-        given ($repo->type) {
-            when ('spec') {
-                $self->{'file'} = '-';
-            }
-            default {
-                my $name = join ('-', $package->category, $package->name, $package->version, $package->release);
-                $self->{'file'} = join ('.', $name, $repo->backend->file_extension);
-            }
+        if ($repo->type eq 'spec') {
+            $self->{'file'} = '-';
+        } else {
+            my $name = join ('-', $package->category, $package->name, $package->version, $package->release);
+            $self->{'file'} = join ('.', $name, $repo->backend->file_extension);
         }
     }
 

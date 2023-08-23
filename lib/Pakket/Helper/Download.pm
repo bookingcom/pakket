@@ -40,22 +40,19 @@ sub BUILDARGS ($class, %args) {
     );
     delete @args{qw(log log_depth)};
 
-    given ($args{'url'}) {
-        when (m/^http/) {
+    for ($args{'url'}) {
+        if (m/^http/) {
             $result{'strategy'} = Pakket::Helper::Download::Http->new(%args{qw(name url)});
-        }
-        when (m/^git/) {
+        } elsif (m/^git/) {
             $result{'strategy'} = Pakket::Helper::Download::Git->new(%args{qw(name url)});
-        }
-        when (m/^file/) {
+        } elsif (m/^file/) {
             $result{'strategy'} = Pakket::Helper::Download::File->new(%args{qw(name url)});
-        }
-        default {
+        } else {
             croak('Unsupported url:' . $args{'url'});
         }
     }
 
-    return Pakket::Role::HasLog->BUILDARGS(%result); ## no critic [Modules::RequireExplicitInclusion]
+    return Pakket::Role::HasLog->BUILDARGS(%result);
 }
 
 sub to_file ($self) {

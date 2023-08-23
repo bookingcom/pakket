@@ -52,25 +52,21 @@ sub validate_args ($self, $opt, $args) {
 
     $log->debug('pakket', join (' ', @ARGV));
 
-    given ($opt->{'type'}) {
-        when ('archive') {
+    for ($opt->{'type'}) {
+        if ($_ eq 'archive') {
             $self->validate_provided_file($opt);
             $self->validate_only_one_arg($args);
-        }
-        when ('meta') {
+        } elsif ($_ eq 'meta') {
             $self->validate_provided_file($opt);
             $self->validate_no_args_with_type($opt, $args);
-        }
-        when (['cpan', undef]) {
+        } elsif (!defined || $_ eq 'cpan') {
             $opt->{'file'}
                 ? $self->validate_only_one_arg($args)
                 : $self->validate_at_least_one_arg($args);
-        }
-        when ('cpanfile') {
+        } elsif ($_ eq 'cpanfile') {
             $self->validate_provided_file($opt);
             $self->validate_no_args_with_type($opt, $args);
-        }
-        default {
+        } else {
             $self->usage_error('Invalid --type: ' . $opt->{'type'});
         }
     }
@@ -100,18 +96,16 @@ sub execute ($self, $opt, $args) {
 sub _determine_queries ($self, $opt, $args) {
     my $query;
     my $pq = use_module('Pakket::Type::PackageQuery');
-    given ($opt->{'type'}) {
-        when ('archive') {
+    for ($opt->{'type'}) {
+        if ($_ eq 'archive') {
             $query = $pq->new_from_string(
                 $args->[0],
                 'default_category' => $self->{'config'}->{'default_category'},
                 'source'           => $opt->{'file'},
             );
-        }
-        when ('meta') {
+        } elsif ($_ eq 'meta') {
             $query = $pq->new_from_pakket_metafile(path($opt->{'file'}));
-        }
-        when (['cpan', 'cpanfile', undef]) {
+        } elsif (!defined || $_ eq 'cpan' || $_ eq 'cpanfile') {
             my @ids = sort $self->parse_requested_ids($opt, $args)->@*;
             $self->build_queries(\@ids);
             return;

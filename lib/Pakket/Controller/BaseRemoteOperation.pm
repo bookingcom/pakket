@@ -35,17 +35,14 @@ with qw(
 );
 
 sub get_repo ($self) {
-    given ($self->repo) {
-        when ('source') {
+    for ($self->repo) {
+        if ($_ eq 'source') {
             return $self->source_repo;
-        }
-        when ('spec') {
+        } elsif ($_ eq 'spec') {
             return $self->spec_repo;
         }
-        default {
-            return $self->parcel_repo;
-        }
     }
+    return $self->parcel_repo;
 }
 
 sub check_against_repository ($self, $repo, $requirements) {

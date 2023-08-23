@@ -43,17 +43,15 @@ sub validate_args ($self, $opt, $args) {
 
 sub parse_requested_ids ($self, $opt, $args) {
     my @ids;
-    given ($opt->{'file'}) {
-        when (not defined) {
+    for ($opt->{'file'}) {
+        if (!defined) {
             @ids = $args->@*;
-        }
-        when ('-') {
+        } elsif ($_ eq '-') {
             open my $fh, '<&', *STDIN
                 or $self->usage_error("Unable to open stdin for reading: $!");
             chomp (@ids = <STDIN>);
             close $fh;
-        }
-        default {
+        } else {
             my @lines = path($opt->{'file'})->lines_utf8({'chomp' => 1});
             if ($self->_is_cpan_file(\@lines)) {
                 $self->_read_cpan_file($opt->{'file'});
