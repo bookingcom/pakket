@@ -52,7 +52,7 @@ sub BUILDARGS ($class, %args) {
         }
     }
 
-    return Pakket::Role::HasLog->BUILDARGS(%result);
+    return Pakket::Role::HasLog->BUILDARGS(%result); ## no critic [Modules::RequireExplicitInclusion]
 }
 
 sub to_file ($self) {
