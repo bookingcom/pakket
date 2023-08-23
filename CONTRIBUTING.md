@@ -32,26 +32,34 @@ Prepare your shell by running:
 
 ## Testing
 
-## Running perltidy and perlcritic for all files
+### Running perltidy and perlcritic for all files
 
 ```bash
-    $ t/tidy
+    $ make tidy
 ```
 
 ### Run only unit tests
 
 ```bash
-    $ t/run
+    $ make unit-test
 ```
 
 ### Run unit and author tests
 
 ```bash
-    $ t/author
+    $ make author-test
 ```
 
 ### Run all possible tests before release
 
 ```bash
-    $ t/release
+    $ make release-test
+```
+
+## Releasing
+
+### Prepare release archive
+
+```bash
+    $ make build
 ```
