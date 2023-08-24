@@ -160,6 +160,7 @@ sub bootstrap ($self, $controller, $modules, $requirements) {
         'no_continue' => 1,
         'no_test'     => 2,
         'dry_run'     => 1,
+        'keep'        => 0,
     );
     {                                                                          # Pass I: bootstrap toolchain - build without dependencies
         $self->log->notice('Pass I: bootstrap perl builder - build without dependencies');
@@ -185,6 +186,7 @@ sub bootstrap ($self, $controller, $modules, $requirements) {
         $bootstrap_builder->clone(
             'no_test' => $self->config->{'perl'}{'build'}{'no-test'} // 0,
             'dry_run' => 0,
+            'keep'    => $controller->keep,
         )->_process_queries(
             [$requirements->@{$modules->@*}],
             'phases'     => [@phases],

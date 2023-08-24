@@ -57,12 +57,12 @@ sub bundle ($self, $package, $build_dir) {
 
     my $parcel_dir = Path::Tiny->tempdir(
         'TEMPLATE' => 'pakket-bundle-' . $package->name . '-XXXXXXXXXX',
-        'CLEANUP'  => 1,
+        'CLEANUP'  => !$self->keep,
     );
     my $target = $parcel_dir->child(PARCEL_FILES_DIR());
     $target->mkpath;
 
-    my \%new_or_updated_files = $self->_diff_nodes_list($self->_files_manifests->@[0, -1]);
+    my \%new_or_updated_files = $self->_diff_nodes_list($self->_files_manifests->@[-2, -1]);
 
     foreach my $key (sort keys %new_or_updated_files) {
         my $abs_path = path($new_or_updated_files{$key});
@@ -93,20 +93,39 @@ sub bundle ($self, $package, $build_dir) {
     return;
 }
 
-sub snapshot_build_dir ($self, $package, $build_dir, $silent = 0) {
+sub snapshot_build_dir ($self, $package, $build_dir, $init = 0) {
     $build_dir
         or croak('Build dir is not set');
 
     $self->log->debug('scanning directory:', $build_dir);
 
+    if ($init) {
+        $self->_reset_file_timestamps($build_dir);
+    }
+
     my \%package_files = $self->_scan_directory($build_dir);
 
-    $silent || %package_files
+    $init || %package_files
         or $self->croak('Build did not generate new files. Cannot package:', $package->id);
 
     $self->log->debug('files snapshotted:', scalar %package_files);
     push $self->_files_manifests->@*, \%package_files;
 
+    return;
+}
+
+sub _reset_file_timestamps ($self, $dir) {
+    $dir->mkpath;
+    $dir->realpath->visit(
+        sub ($node, @) {
+            utime (42, 42, $node)
+                or $self->log->warn('Unable to set mtime');
+        },
+        {
+            'recurse'         => 1,
+            'follow_symlinks' => 0,
+        },
+    );
     return;
 }
 

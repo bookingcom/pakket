@@ -5,6 +5,7 @@ install_dir: ~/.cache/pakket/install
 jobs: 4
 keep_rollbacks: 5
 log_file: ~/.cache/pakket/pakket-cli.log
+real_prefix: 1
 native:
   build:
     make-options: [-j2]
@@ -24,7 +25,7 @@ perl:
       Test::YAML::Meta: 1
 repositories:
   parcel:
-    directory: ~/.cache/pakket/pakket-parcel-co7-5.28.1
+    directory: ~/.cache/pakket/pakket-parcel-cos9-5.36.0
     file_extension: .tgz
     type: file
   source: file://~/.cache/pakket/pakket-source?file_extension=tgz
