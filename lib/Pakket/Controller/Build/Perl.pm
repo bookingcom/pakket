@@ -96,12 +96,13 @@ sub execute ($self, %params) {
     @sequence
         or $self->croak('Could not find an installer (Makefile.PL/Build.PL)');
 
+    ## no critic  [ErrorHandling::RequireCarping]
     $self->run_command_sequence(@params{qw(sources opts)}, @sequence)
-        or $self->croak('Failed to run build commands for', $params{'name'});
+        or die sprintf ("Failed to run build commands for %s\n", $params{'id'});
 
     if ($params{'post'}) {
         $self->run_command_sequence(@params{qw(sources opts)}, $params{'post'}->@*)
-            or $self->croak('Failed to run post-build commands for', $params{'name'});
+            or die sprintf ("Failed to run post-build commands for %s\n", $params{'id'});
     }
 
     return;

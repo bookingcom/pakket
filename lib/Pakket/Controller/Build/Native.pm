@@ -84,7 +84,8 @@ sub execute ($self, %params) {
         undef @configurator_flags;
         push (@make_flags, 'PREFIX=' . $params{'prefix'}->absolute);
     } else {
-        $self->croak("Cannot find configurator '[Cc]onfigure', 'config' or cmake for:", $params{'name'});
+        ## no critic  [ErrorHandling::RequireCarping]
+        die sprintf ("Cannot find configurator '[Cc]onfigure', 'config' or cmake for: %s\n", $params{'id'});
     }
 
     my @commands = (                                                           # no tidy
@@ -110,12 +111,13 @@ sub execute ($self, %params) {
         ) x !!$params{'no-man'},
     );
 
+    ## no critic  [ErrorHandling::RequireCarping]
     $self->run_command_sequence(@run_params, @commands)
-        or $self->croak('Failed to build native package:', $params{'name'});
+        or die sprintf ("Failed to run build commands for package: %s\n", $params{'id'});
 
     if ($params{'post'}) {
         $self->run_command_sequence($params{'sources'}, $params{'opts'}, $params{'post'}->@*)
-            or $self->croak('Failed to run post-build commands');
+            or die sprintf ("Failed to run post-build commands for %s\n", $params{'id'});
     }
 
     return;

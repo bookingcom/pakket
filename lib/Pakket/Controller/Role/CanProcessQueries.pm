@@ -74,11 +74,12 @@ sub _process_queries ($self, $queries, %params) {
 
             1;
         } or do {
+            ## no critic  [ErrorHandling::RequireCarping]
             $self->log_depth_set($log_depth);
             chomp (my $error = $@ || 'zombie error');
             $self->failed->{$query->short_name} = $error;
             $self->no_continue || $query->as_prereq
-                ? $self->croak($error)
+                ? die $error . "\n"
                 : $self->log->warn($error);
         };
     }

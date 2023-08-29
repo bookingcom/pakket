@@ -206,6 +206,7 @@ sub _process_package ($self, $package, %params) {
 
     $self->log->notice('Building:', $package->id);
     $builder->execute(
+        'id'       => $package->id,
         'name'     => $package->name,
         'metadata' => $metadata,
         'no-man'   => $self->no_man  // $metadata->{'no-man'}  // $config->{'build'}{'no-man'}  // 0,
