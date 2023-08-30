@@ -2,7 +2,7 @@
 	attach build-test run \
 	build                 \
 	tidy                  \
-	author-test release-test unit-test
+	test test-author test-release
 
 attach:
 	podman-compose exec app bash
@@ -19,11 +19,11 @@ build:
 tidy:
 	@t/tidy
 
-author-test:
+test:
+	@nice t/run
+
+test-author:
 	@nice t/author
 
-release-test:
+test-release:
 	@nice t/release
-
-unit-test:
-	@nice t/run

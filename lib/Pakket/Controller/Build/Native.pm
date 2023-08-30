@@ -54,9 +54,10 @@ sub execute ($self, %params) {
     local %ENV = %env;                                                         # keep all env changes locally
     print_env($self->log);
 
+    ## no critic  [ErrorHandling::RequireCarping]
     if ($params{'pre'}) {
         $self->run_command_sequence($params{'sources'}, $params{'opts'}, $params{'pre'}->@*)
-            or $self->croak('Failed to run pre-build commands');
+            or die sprintf ("Failed to run pre-build commands for %s\n", $params{'id'});
     }
 
     my @run_params         = ($params{'sources'}, $params{'opts'});
@@ -84,7 +85,6 @@ sub execute ($self, %params) {
         undef @configurator_flags;
         push (@make_flags, 'PREFIX=' . $params{'prefix'}->absolute);
     } else {
-        ## no critic  [ErrorHandling::RequireCarping]
         die sprintf ("Cannot find configurator '[Cc]onfigure', 'config' or cmake for: %s\n", $params{'id'});
     }
 
@@ -111,7 +111,6 @@ sub execute ($self, %params) {
         ) x !!$params{'no-man'},
     );
 
-    ## no critic  [ErrorHandling::RequireCarping]
     $self->run_command_sequence(@run_params, @commands)
         or die sprintf ("Failed to run build commands for package: %s\n", $params{'id'});
 

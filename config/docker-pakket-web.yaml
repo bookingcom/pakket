@@ -7,7 +7,7 @@ repositories:
       directory: /srv/http/data/parcel
       file_extension: .tgz
       type: file
-    path: /co7/5.28.1/parcel
+    path: /cos9/5.36.0/parcel
     type: parcel
   - backend:
       directory: /srv/http/data/snapshot

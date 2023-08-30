@@ -25,9 +25,9 @@ perl:
       Test::YAML::Meta: 1
 repositories:
   parcel:
-    directory: ~/.cache/pakket/pakket-parcel-cos9-5.36.0
+    directory: ~/.cache/pakket/parcel/cos9/5.36.0
     file_extension: .tgz
     type: file
-  source: file://~/.cache/pakket/pakket-source?file_extension=tgz
-  spec: file://~/.cache/pakket/pakket-spec?file_extension=json
+  source: file://~/.cache/pakket/source?file_extension=tgz
+  spec: file://~/.cache/pakket/spec?file_extension=json
 use_hardlinks: 1

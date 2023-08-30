@@ -62,9 +62,10 @@ sub execute ($self, %params) {
     local %ENV = %env;                                                         # keep all env changes locally
     print_env($self->log);
 
+    ## no critic  [ErrorHandling::RequireCarping]
     if ($params{'pre'}) {
         $self->run_command_sequence(@params{qw(sources opts)}, $params{'pre'}->@*)
-            or $self->croak('Failed to run pre-build commands for', $params{'name'});
+            or die sprintf ("Failed to run pre-build commands for %s\n", $params{'id'});
     }
 
     # taken from cpanminus
@@ -96,7 +97,6 @@ sub execute ($self, %params) {
     @sequence
         or $self->croak('Could not find an installer (Makefile.PL/Build.PL)');
 
-    ## no critic  [ErrorHandling::RequireCarping]
     $self->run_command_sequence(@params{qw(sources opts)}, @sequence)
         or die sprintf ("Failed to run build commands for %s\n", $params{'id'});
 
