@@ -1,0 +1,1 @@
+common --override_module=rules_perl=../rules_perl

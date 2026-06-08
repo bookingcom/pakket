@@ -1,0 +1,8 @@
+load("@rules_perl//perl/cpan:cpan_compiler.bzl", "cpan_compiler")
+
+cpan_compiler(
+    name = "cpanfile.snapshot.lock.update",
+    cpanfile = "cpanfile",
+    lockfile = "cpanfile.snapshot.lock.json",
+    visibility = ["//visibility:public"],
+)

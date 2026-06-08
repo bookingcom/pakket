@@ -1,0 +1,9 @@
+load("@rules_perl//perl:perl.bzl", "perl_binary")
+
+perl_binary(
+    name = "pakket",
+    srcs = ["pakket.pl"],
+    deps = [
+        "//lib:pakket"
+    ]
+)
